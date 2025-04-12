@@ -1,119 +1,94 @@
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
-import { publishAuthEvent } from '@/auth/bridge';
-import { mapRolesToPermissions } from '@/auth/rbac/roles';
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { authBridge } from '@/bridges/AuthBridge';
+import { UserRole } from '@/shared/types';
+import { ADMIN_PERMISSIONS } from '../constants/permissions';
 
-interface AdminState {
-  permissions: PermissionValue[];
-  isLoadingPermissions: boolean;
+export interface AdminState {
+  roles: UserRole[];
+  permissions: string[];
   isInitialized: boolean;
-  sidebarExpanded: boolean;
+  isLoading: boolean;
+  error: string | null;
+  
+  // Actions
+  initialize: () => Promise<void>;
+  hasPermission: (permission: string) => boolean;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
 }
 
-interface AdminActions {
-  setPermissions: (permissions: PermissionValue[]) => void;
-  loadPermissions: () => Promise<void>;
-  toggleSidebar: () => void;
-  savePreferences: () => Promise<void>;
-}
+export const useAdminStore = create<AdminState>((set, get) => ({
+  roles: [],
+  permissions: [],
+  isInitialized: false,
+  isLoading: false,
+  error: null,
 
-type AdminStore = AdminState & AdminActions;
-
-export const useAdminStore = create<AdminStore>()(
-  persist(
-    (set, get) => ({
-      // State
-      permissions: [],
-      isLoadingPermissions: false,
-      isInitialized: false,
-      sidebarExpanded: true,
-      
-      // Actions
-      setPermissions: (permissions) => {
-        set({ permissions, isInitialized: true });
-        
-        // Notify through bridge
-        publishAuthEvent({
-          type: 'AUTH_PERMISSION_CHANGED',
-          payload: { permissions }
-        });
-      },
-      
-      loadPermissions: async () => {
-        const logger = getLogger();
-        
-        try {
-          set({ isLoadingPermissions: true });
+  initialize: async () => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      // Subscribe to auth events
+      const unsubscribe = authBridge.subscribeToEvent('AUTH_STATE_CHANGE', (user) => {
+        if (user) {
+          // Extract roles from user
+          const roles = (user.app_metadata?.roles || []) as UserRole[];
           
-          // In real app, this would load from API
-          // For now, just simulate using the auth store
-          const authStore = (await import('@/auth/store/auth.store')).useAuthStore;
-          const roles = authStore.getState().roles;
+          // Derive permissions from roles
+          const permissions: string[] = [];
           
-          // Map roles to permissions
-          const permissions = mapRolesToPermissions(roles);
+          if (roles.includes('superadmin')) {
+            // Superadmin has all permissions
+            Object.values(ADMIN_PERMISSIONS).forEach(permission => {
+              permissions.push(permission);
+            });
+          } else if (roles.includes('admin')) {
+            // Admin has specific permissions
+            permissions.push(
+              ADMIN_PERMISSIONS.VIEW_ADMIN_PANEL,
+              ADMIN_PERMISSIONS.MANAGE_USERS,
+              ADMIN_PERMISSIONS.MANAGE_CONTENT,
+              ADMIN_PERMISSIONS.MANAGE_SETTINGS
+            );
+          } else if (roles.includes('moderator')) {
+            // Moderator has limited permissions
+            permissions.push(
+              ADMIN_PERMISSIONS.VIEW_ADMIN_PANEL,
+              ADMIN_PERMISSIONS.MANAGE_CONTENT
+            );
+          }
           
-          // Update state
-          set({ 
-            permissions,
-            isLoadingPermissions: false,
-            isInitialized: true
-          });
-          
-          logger.info('Admin permissions loaded', {
-            category: LogCategory.ADMIN,
-            source: 'admin.store',
-            details: { permissionsCount: permissions.length }
-          });
-          
-        } catch (error) {
-          logger.error('Failed to load admin permissions', {
-            category: LogCategory.ADMIN,
-            source: 'admin.store',
-            details: { error }
-          });
-          
-          set({ isLoadingPermissions: false });
-          throw error;
+          set({ roles, permissions });
+        } else {
+          set({ roles: [], permissions: [] });
         }
-      },
+      });
       
-      toggleSidebar: () => {
-        set(state => ({ sidebarExpanded: !state.sidebarExpanded }));
-      },
+      set({ isInitialized: true, isLoading: false });
       
-      savePreferences: async () => {
-        const logger = getLogger();
-        const { sidebarExpanded } = get();
-        
-        try {
-          // In real app, save to backend
-          logger.info('Admin preferences saved', {
-            category: LogCategory.ADMIN,
-            source: 'admin.store',
-            details: { sidebarExpanded }
-          });
-          
-        } catch (error) {
-          logger.error('Failed to save admin preferences', {
-            category: LogCategory.ADMIN,
-            source: 'admin.store',
-            details: { error }
-          });
-          
-          throw error;
-        }
-      }
-    }),
-    {
-      name: 'admin-store',
-      partialize: (state) => ({
-        sidebarExpanded: state.sidebarExpanded
-      }),
+      return () => {
+        unsubscribe();
+      };
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to initialize admin store',
+        isLoading: false
+      });
     }
-  )
-);
+  },
+
+  hasPermission: (permission) => {
+    const { permissions } = get();
+    return permissions.includes(permission);
+  },
+
+  hasRole: (role) => {
+    const { roles } = get();
+    
+    if (Array.isArray(role)) {
+      return role.some(r => roles.includes(r));
+    }
+    
+    return roles.includes(role);
+  }
+}));

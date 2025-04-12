@@ -1,14 +1,41 @@
 
-/**
- * auth/index.ts
- * 
- * Central exports for the auth module
- */
+import { AuthProvider, useAuth } from './components/AuthProvider';
+import { RequireAuth } from './components/RequireAuth';
+import { RequirePermission } from './components/RequirePermission';
+import { AdminOnly } from './components/AdminOnly';
+import { GoogleLoginButton } from './components/GoogleLoginButton';
+import { LinkedAccountAlert } from './components/LinkedAccountAlert';
+import { AccountLinkingModal } from './components/AccountLinkingModal';
+import { useAuthState } from './hooks/useAuthState';
+import { useHasRole } from './hooks/useHasRole';
+import { authBridge } from '@/bridges/AuthBridge';
+import { UserMenu } from './components/UserMenu';
+import { UserAvatar } from './components/UserAvatar';
 
-// Re-export everything from the core modules
-export * from './hooks/useHasRole';
-export * from './utils/hasRole';
-export * from './types/auth.types';
+// Hook for composing auth utilities
+import { useAuthStore } from './store/auth.store';
 
-// Re-export from the AuthBridge
-export { AuthBridge, subscribeToAuthEvents, publishAuthEvent } from '@/bridges/AuthBridge';
+// Utils
+import { redirectIfAuthenticated, redirectIfUnauthenticated, redirectIfNotAdmin } from './utils/redirect';
+import { hasRole } from './utils/hasRole';
+
+export {
+  AuthProvider,
+  useAuth,
+  RequireAuth,
+  RequirePermission,
+  AdminOnly,
+  GoogleLoginButton,
+  UserMenu,
+  UserAvatar,
+  LinkedAccountAlert,
+  AccountLinkingModal,
+  useAuthState,
+  useHasRole,
+  useAuthStore,
+  authBridge,
+  redirectIfAuthenticated,
+  redirectIfUnauthenticated,
+  redirectIfNotAdmin,
+  hasRole
+};

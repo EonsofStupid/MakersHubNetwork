@@ -1,53 +1,25 @@
 
-/**
- * Logging system type definitions
- */
+// Define log levels
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'critical';
 
-import { LogLevel } from './constants/log-level';
-import React from 'react';
-
+// Define log categories
 export enum LogCategory {
-  DEFAULT = 'default',
-  SYSTEM = 'system',
-  NETWORK = 'network',
+  APP = 'app',
   AUTH = 'auth',
+  API = 'api',
+  DB = 'db',
   UI = 'ui',
+  SYSTEM = 'system',
   ADMIN = 'admin',
-  CHAT = 'chat',
-  DATABASE = 'database',
-  PERFORMANCE = 'performance',
-  CONTENT = 'content'
+  USER = 'user',
 }
 
-export interface LogEntry {
-  id: string;
-  timestamp: Date;
+// Define log event structure
+export interface LogEvent {
   level: LogLevel;
+  message: string;
+  timestamp: Date;
+  source: string;
   category: LogCategory;
-  message: string | React.ReactNode;
-  details?: Record<string, unknown>;
-  source?: string;
-  userId?: string;
-  sessionId?: string;
-  duration?: number; // For performance logs
-  tags?: string[];
+  details: Record<string, unknown>;
 }
-
-export interface LogTransport {
-  log(entry: LogEntry): void;
-  flush?(): Promise<void>;
-}
-
-export interface LoggingConfig {
-  minLevel: LogLevel;
-  enabledCategories?: LogCategory[];
-  transports: LogTransport[];
-  bufferSize?: number;
-  flushInterval?: number;
-  includeSource?: boolean;
-  includeUser?: boolean;
-  includeSession?: boolean;
-}
-
-// Re-export LogLevel for backward compatibility
-export { LogLevel } from './constants/log-level';

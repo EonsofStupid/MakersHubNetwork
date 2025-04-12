@@ -1,79 +1,96 @@
 
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { useAdminStore } from '@/admin/store/admin.store';
-import { useAdminSync } from '@/admin/hooks/useAdminSync';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { PERMISSIONS } from '@/auth/permissions';
-import { AdminPermissionValue } from '@/admin/types/permissions';
-import { mapRolesToPermissions } from '@/auth/rbac/roles';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import { useToast } from '@/shared/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useLogger } from '@/logging/hooks/use-logger';
+import { LogCategory } from '@/logging/types';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { hasAdminPermission } from '../utils/permissions';
+import { ADMIN_PERMISSIONS } from '../constants/permissions';
 
-// Create context
 interface AdminContextValue {
-  initialized: boolean;
+  isInitialized: boolean;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AdminContext = createContext<AdminContextValue | undefined>(undefined);
 
-// Provider component
-export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const { setPermissions } = useAdminStore();
-  const { isSyncing } = useAdminSync();
-  const [initialized, setInitialized] = useState(false);
-  const initAttemptedRef = useRef<boolean>(false);
-  const logger = useLogger('AdminContext', LogCategory.ADMIN);
-  
-  // Get permissions directly from auth state to avoid circular dependencies
-  const { roles, status } = useAuthState();
-  
-  // Initialize admin context only once
-  useEffect(() => {
-    // Guard against multiple initialization attempts and wait until auth is ready
-    if (initAttemptedRef.current || initialized || status === 'loading') {
-      return;
-    }
-    
-    // Mark initialization as attempted immediately to prevent multiple attempts
-    initAttemptedRef.current = true;
-    
-    try {
-      logger.info('Initializing admin context', {
-        details: { userRoles: roles, authStatus: status }
-      });
-      
-      // Use the proper role mapping function to get typed permissions
-      const adminPermissions: AdminPermissionValue[] = 
-        mapRolesToPermissions(roles);
-      
-      // Update permissions in store
-      setPermissions(adminPermissions);
-      setInitialized(true);
-      
-      logger.info('Admin context initialized successfully', {
-        details: { permissionsCount: adminPermissions.length }
-      });
-    } catch (error) {
-      logger.error('Failed to initialize admin context', {
-        details: { error }
-      });
-    }
-  }, [logger, roles, initialized, setPermissions, status]);
-  
-  const value = { initialized };
-  
-  return (
-    <AdminContext.Provider value={value}>
-      {children}
-    </AdminContext.Provider>
-  );
+interface AdminProviderProps {
+  children: ReactNode;
 }
 
-// Hook to use admin context
-export function useAdminContext() {
+export function AdminProvider({ children }: AdminProviderProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const logger = useLogger('AdminContext', LogCategory.ADMIN);
+  const { user, roles } = useAuthStore();
+
+  // Initialize admin context
+  useEffect(() => {
+    const initializeAdmin = async () => {
+      try {
+        // Check if user has admin permissions
+        const isAdmin = hasAdminPermission(roles, ADMIN_PERMISSIONS.VIEW_ADMIN_PANEL);
+        
+        logger.info('Admin context initialized', {
+          details: {
+            isAdmin
+          }
+        });
+        
+        if (!isAdmin) {
+          logger.warn('User attempted to access admin without permissions', {
+            details: {
+              error: 'Insufficient permissions'
+            }
+          });
+          
+          toast({
+            title: 'Access Denied',
+            description: 'You do not have permission to access the admin area.',
+            variant: 'destructive',
+          });
+          
+          navigate('/');
+          return;
+        }
+        
+        setIsInitialized(true);
+      } catch (error) {
+        logger.error('Failed to initialize admin context', {
+          details: {
+            error: error instanceof Error ? error.message : String(error)
+          }
+        });
+      }
+    };
+
+    initializeAdmin();
+  }, [user, roles, navigate, toast, logger]);
+
+  const hasPermission = (permission: string) => {
+    return hasAdminPermission(roles, permission);
+  };
+
+  const value = {
+    isInitialized,
+    hasPermission,
+  };
+
+  return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
+}
+
+export const useAdmin = (): AdminContextValue => {
   const context = useContext(AdminContext);
-  if (context === undefined) {
-    throw new Error('useAdminContext must be used within an AdminProvider');
+  if (!context) {
+    throw new Error('useAdmin must be used within an AdminProvider');
   }
   return context;
-}
+};

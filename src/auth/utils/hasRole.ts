@@ -1,31 +1,26 @@
 
-import { UserRole, ROLES } from '@/types/shared';
-import { AuthBridge } from '@/bridges/AuthBridge';
+import { UserRole } from '@/shared/types';
 
 /**
- * Check if user has one of the specified roles
- * Use AuthBridge to ensure consistent behavior across the app
- * @param role Single role or array of roles to check against
- * @returns Boolean indicating if user has at least one of the specified roles
+ * Checks if a user has the specified role(s)
+ * @param userRoles Array of user roles
+ * @param requiredRole Single role or array of roles to check
+ * @returns Boolean indicating if user has the required role(s)
  */
-export const hasRole = (role: UserRole | UserRole[]): boolean => {
-  return AuthBridge.hasRole(role);
-};
-
-/**
- * Check if user has admin access (admin or super_admin)
- * Use AuthBridge to ensure consistent behavior across the app
- * @returns Boolean indicating if user has admin access
- */
-export const hasAdminAccess = (): boolean => {
-  return AuthBridge.isAdmin();
-};
-
-/**
- * Check if user is a super admin
- * Use AuthBridge to ensure consistent behavior across the app
- * @returns Boolean indicating if user is a super admin
- */
-export const isSuperAdmin = (): boolean => {
-  return AuthBridge.isSuperAdmin();
-};
+export function hasRole(
+  userRoles: UserRole[],
+  requiredRole: UserRole | UserRole[]
+): boolean {
+  // If no user roles, return false
+  if (!userRoles || userRoles.length === 0) return false;
+  
+  // Superadmin has all roles
+  if (userRoles.includes('superadmin')) return true;
+  
+  // Check for specific roles
+  if (Array.isArray(requiredRole)) {
+    return requiredRole.some(role => userRoles.includes(role));
+  }
+  
+  return userRoles.includes(requiredRole);
+}
