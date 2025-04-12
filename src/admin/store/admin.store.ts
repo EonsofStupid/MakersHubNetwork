@@ -28,8 +28,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      // Subscribe to auth events
-      const unsubscribe = authBridge.subscribeToEvent('AUTH_STATE_CHANGE', (event) => {
+      // Subscribe to auth events - fixed function name
+      const unsubscribe = authBridge.subscribeToAuthEvents((event) => {
         if (event.user) {
           // Extract roles from user
           const roles = (event.user?.app_metadata?.roles || []) as UserRole[];
@@ -37,12 +37,12 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           // Derive permissions from roles
           const permissions: string[] = [];
           
-          if (roles.includes('super_admin')) {
+          if (roles.includes(UserRole.SUPER_ADMIN)) {
             // Superadmin has all permissions
             Object.values(ADMIN_PERMISSIONS).forEach(permission => {
               permissions.push(permission);
             });
-          } else if (roles.includes('admin')) {
+          } else if (roles.includes(UserRole.ADMIN)) {
             // Admin has specific permissions
             permissions.push(
               ADMIN_PERMISSIONS.VIEW_ADMIN_PANEL,
@@ -50,7 +50,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
               ADMIN_PERMISSIONS.MANAGE_CONTENT,
               ADMIN_PERMISSIONS.MANAGE_SETTINGS
             );
-          } else if (roles.includes('moderator')) {
+          } else if (roles.includes(UserRole.MODERATOR)) {
             // Moderator has limited permissions
             permissions.push(
               ADMIN_PERMISSIONS.VIEW_ADMIN_PANEL,

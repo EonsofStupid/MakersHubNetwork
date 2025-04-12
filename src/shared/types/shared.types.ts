@@ -30,7 +30,8 @@ export enum AuthStatus {
   LOADING = 'LOADING',
   INITIAL = 'INITIAL',
   AUTHENTICATED = 'AUTHENTICATED',
-  UNAUTHENTICATED = 'UNAUTHENTICATED'
+  UNAUTHENTICATED = 'UNAUTHENTICATED',
+  ERROR = 'ERROR' // Added error state
 }
 
 export enum AuthEventType {
@@ -46,12 +47,13 @@ export enum AuthEventType {
 export interface AuthEvent {
   type: AuthEventType;
   payload?: any;
+  user?: User; // Added user property
 }
 
 // User role - important for RBAC
 export enum UserRole {
   USER = 'user',
-  BUILDER = 'builder', // Added builder role
+  BUILDER = 'builder',
   MODERATOR = 'moderator',
   ADMIN = 'admin',
   SUPER_ADMIN = 'super_admin',
@@ -67,11 +69,13 @@ export enum LogCategory {
   API = 'api',
   PERF = 'perf',
   USER = 'user',
-  ADMIN = 'admin',
+  ADMIN = 'admin', 
   CONTENT = 'content',
   CHAT = 'chat',
   NETWORK = 'network',
-  DEFAULT = 'default'
+  DEFAULT = 'default',
+  APP = 'app', // Added APP category
+  EDITOR = 'editor'
 }
 
 export enum LogLevel {
@@ -140,21 +144,25 @@ export type BuildStatus = 'pending' | 'approved' | 'rejected' | 'needs_revision'
 export interface BuildPart {
   id: string;
   build_id: string;
-  name: string; // Added name field
+  name: string;
   part_name?: string;
   part_url?: string;
   quantity: number;
   notes?: string;
+  // Additional fields
+  type?: string;
 }
 
 export interface BuildMod {
   id: string;
   build_id: string;
-  name: string; // Added name field
+  name: string;
   mod_name?: string;
   mod_description?: string;
   complexity?: number;
   mod_url?: string;
+  // Additional fields
+  description?: string;
 }
 
 export interface BuildPagination {
@@ -196,6 +204,7 @@ export interface BuildReview {
   status: string;
   created_at: string;
   updated_at: string;
+  // Optional fields for compatibility
   approved?: boolean;
   reviewer_name?: string;
   body?: string | null;
@@ -209,4 +218,19 @@ export interface ReviewStats {
   totalReviews: number;
   avgRating: number;
   ratingsCount: Record<ReviewRating, number>;
+  // Added for backward compatibility
+  averageRating?: number;
 }
+
+// Export LOG_LEVEL_VALUES for use in other modules
+export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+  [LogLevel.TRACE]: 0,
+  [LogLevel.DEBUG]: 1,
+  [LogLevel.INFO]: 2,
+  [LogLevel.SUCCESS]: 3,
+  [LogLevel.WARN]: 4,
+  [LogLevel.ERROR]: 5,
+  [LogLevel.FATAL]: 6,
+  [LogLevel.CRITICAL]: 7,
+  [LogLevel.SILENT]: 8
+};

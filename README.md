@@ -1,69 +1,60 @@
-# Welcome to your Lovable project
 
-## Project info
+# Project Architecture
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+This project follows a clean architecture approach with domain-driven design principles.
 
-## How can I edit this code?
+## Folder Structure
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+├── admin/             # Admin panel features
+│   ├── atoms/         # Jotai atoms for component state
+│   ├── components/    # Admin UI components  
+│   ├── hooks/         # Admin-specific hooks
+│   ├── store/         # Zustand stores (global state)
+│   └── types/         # Admin domain types
+├── app/               # Main application
+│   ├── components/    # App-specific components
+│   ├── hooks/         # App-specific hooks  
+│   └── layout/        # Application layouts
+├── auth/              # Authentication domain
+│   ├── components/    # Auth-specific components
+│   ├── hooks/         # Auth-related hooks
+│   └── store/         # Auth state management
+├── shared/            # Shared utilities and components
+│   ├── types/         # Global type definitions
+│   └── ui/            # Reusable UI components
+└── bridges/           # Communication bridges between domains
 ```
 
-**Edit a file directly in GitHub**
+## State Management
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The application follows a strict state management strategy:
 
-**Use GitHub Codespaces**
+- **Zustand**: Used for global, app-wide state
+- **Jotai**: Used for component-level state and derived state
+- **Context**: Used for component trees that need shared state
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Type System
 
-## What technologies are used for this project?
+All types are explicitly defined and exported:
 
-This project is built with React, TypeScript, Tailwind CSS, and shadcn/ui components for a modern, type-safe, and beautiful user interface.
+- Enums for discrete values
+- Literal types for fixed values
+- Interfaces for complex objects
 
-- React + TypeScript for robust frontend development
-- Tailwind CSS for utility-first styling
-- shadcn/ui for beautiful, accessible components
-- React Router for client-side routing
-- Tanstack Query for data fetching
+## Module Boundaries
 
-## How can I deploy this project?
+Each domain is isolated with clear boundaries:
+- Communication happens through defined bridges
+- No direct imports between domains except through bridges
+- State is owned by a single domain
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## UI Components
 
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+UI components follow these principles:
+- Small, focused components
+- Clear prop interfaces
+- Responsive by default
+- Accessible
+- Theme-aware
