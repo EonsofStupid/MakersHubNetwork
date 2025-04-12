@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { LogCategory } from '@/shared/types/shared.types';
 import { AccessDenied } from './auth/AccessDenied';
-import { UserRole } from '@/types/shared';
-import { useToast } from '@/hooks/use-toast';
+import { UserRole } from '@/shared/types/shared.types';
+import { useToast } from '@/shared/hooks/use-toast';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useHasRole, useHasAdminAccess } from '@/auth/hooks/useHasRole';
 

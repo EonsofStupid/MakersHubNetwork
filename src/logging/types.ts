@@ -1,38 +1,25 @@
 
-import { LogLevel } from './constants/log-level';
-import { LogCategory } from './constants/log-category';
+// Re-export shared logging types
+export { LogLevel, LogCategory, LogEntry, LogEvent } from '@/shared/types/shared.types';
 
-export interface LogEntryOptions {
-  category?: LogCategory;
-  details?: Record<string, unknown>;
-  timestamp?: number;
-}
-
-export interface LogEntry {
-  level: LogLevel;
-  message: string;
-  category: LogCategory;
-  timestamp: number;
-  source?: string;
-  details?: Record<string, unknown>;
-}
-
+// Logging specific types not shared with other boundaries
 export interface LoggingConfig {
   minLevel: LogLevel;
+  defaultCategory: LogCategory;
   enabledCategories: LogCategory[];
-  debugMode: boolean;
-  showSourceInConsole: boolean;
-  showTimestampInConsole: boolean;
-  filters: {
-    showDebug: boolean;
-    showInfo: boolean;
-    showWarning: boolean;
-    showError: boolean;
-    showCritical: boolean;
-  };
+  transports?: LogTransport[];
 }
 
 export interface LogTransport {
   log(entry: LogEntry): void;
   clear(): void;
+}
+
+export interface LogFilter {
+  level?: LogLevel;
+  category?: LogCategory;
+  source?: string;
+  search?: string;
+  startTime?: Date;
+  endTime?: Date;
 }

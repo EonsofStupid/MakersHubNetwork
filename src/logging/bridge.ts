@@ -1,141 +1,45 @@
 
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
+import { EventEmitter } from 'events';
+import { LogEntry, LogEvent } from './types';
 
-// Define log event types
-export type LogEventType = 
-  | 'LOG_INFO'
-  | 'LOG_DEBUG'
-  | 'LOG_WARNING'
-  | 'LOG_ERROR'
-  | 'LOG_CRITICAL'
-  | 'LOG_CONFIG_CHANGED'
-  | 'LOG_VIEWER_OPENED'
-  | 'LOG_VIEWER_CLOSED';
+class LoggingBridgeImpl {
+  private emitter: EventEmitter;
 
-export interface LogEvent {
-  type: LogEventType;
-  source: string;
-  category: LogCategory;
-  message: string;
-  details?: any;
-  timestamp: number;
+  constructor() {
+    this.emitter = new EventEmitter();
+    this.emitter.setMaxListeners(20); // Increase max listeners to avoid warnings
+  }
+
+  public log(entry: LogEntry): void {
+    const event: LogEvent = { entry };
+    this.emitter.emit('log', event);
+    this.emitter.emit(`log:${entry.level}`, event);
+    this.emitter.emit(`log:${entry.category}`, event);
+  }
+
+  public subscribe(handler: (event: LogEvent) => void): () => void {
+    this.emitter.on('log', handler);
+    return () => this.emitter.off('log', handler);
+  }
+
+  public subscribeToLevel(level: string, handler: (event: LogEvent) => void): () => void {
+    const eventName = `log:${level}`;
+    this.emitter.on(eventName, handler);
+    return () => this.emitter.off(eventName, handler);
+  }
+
+  public subscribeToCategory(category: string, handler: (event: LogEvent) => void): () => void {
+    const eventName = `log:${category}`;
+    this.emitter.on(eventName, handler);
+    return () => this.emitter.off(eventName, handler);
+  }
 }
 
-type LogEventHandler = (event: LogEvent) => void;
+// Create a singleton instance
+export const loggingBridge = new LoggingBridgeImpl();
 
-// Create event system
-const eventHandlers: LogEventHandler[] = [];
-
-/**
- * Subscribe to log events
- * @param handler The handler function to call when a log event occurs
- * @returns Unsubscribe function
- */
-export function subscribeToLogEvents(handler: LogEventHandler): () => void {
-  eventHandlers.push(handler);
-  
-  return () => {
-    const index = eventHandlers.indexOf(handler);
-    if (index !== -1) {
-      eventHandlers.splice(index, 1);
-    }
-  };
-}
-
-/**
- * Publish a log event
- * @param event The log event to publish
- */
-export function publishLogEvent(event: LogEvent): void {
-  // Don't log the log event publishing to avoid infinite loops
-  eventHandlers.forEach(handler => {
-    try {
-      handler(event);
-    } catch (error) {
-      console.error('Error in log event handler', error);
-    }
-  });
-}
-
-/**
- * Initialize logging bridge
- */
+// Helper function to initialize logging bridge
 export function initializeLoggingBridge(): void {
-  const logger = getLogger();
-  
-  logger.info('Initializing logging bridge', {
-    category: LogCategory.SYSTEM,
-    source: 'logging/bridge'
-  });
-  
-  // Intercept console methods
-  const originalConsole = {
-    log: console.log,
-    info: console.info,
-    warn: console.warn,
-    error: console.error,
-    debug: console.debug
-  };
-  
-  // Override console methods to publish events
-  console.log = (...args: any[]) => {
-    publishLogEvent({
-      type: 'LOG_INFO',
-      source: 'console',
-      category: LogCategory.DEFAULT,
-      message: args.map(arg => String(arg)).join(' '),
-      details: args,
-      timestamp: Date.now()
-    });
-    originalConsole.log(...args);
-  };
-  
-  console.info = (...args: any[]) => {
-    publishLogEvent({
-      type: 'LOG_INFO',
-      source: 'console',
-      category: LogCategory.DEFAULT,
-      message: args.map(arg => String(arg)).join(' '),
-      details: args,
-      timestamp: Date.now()
-    });
-    originalConsole.info(...args);
-  };
-  
-  console.warn = (...args: any[]) => {
-    publishLogEvent({
-      type: 'LOG_WARNING',
-      source: 'console',
-      category: LogCategory.DEFAULT,
-      message: args.map(arg => String(arg)).join(' '),
-      details: args,
-      timestamp: Date.now()
-    });
-    originalConsole.warn(...args);
-  };
-  
-  console.error = (...args: any[]) => {
-    publishLogEvent({
-      type: 'LOG_ERROR',
-      source: 'console',
-      category: LogCategory.DEFAULT,
-      message: args.map(arg => String(arg)).join(' '),
-      details: args,
-      timestamp: Date.now()
-    });
-    originalConsole.error(...args);
-  };
-  
-  console.debug = (...args: any[]) => {
-    publishLogEvent({
-      type: 'LOG_DEBUG',
-      source: 'console',
-      category: LogCategory.DEFAULT,
-      message: args.map(arg => String(arg)).join(' '),
-      details: args,
-      timestamp: Date.now()
-    });
-    originalConsole.debug(...args);
-  };
+  console.log('Logging bridge initialized');
+  // Additional initialization logic can be added here
 }

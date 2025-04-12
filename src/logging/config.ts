@@ -1,54 +1,97 @@
 
-import { LoggingConfig, LogCategory } from './types';
-import { LogLevel } from './constants/log-level';
-import { ConsoleTransport } from './transports/console-transport';
-import { UITransport } from './transports/ui-transport';
-import { MemoryTransport, memoryTransport } from './transports/memory-transport';
+import { LogLevel, LogCategory } from './types';
+import { consoleTransport } from './transports/console-transport';
+import { memoryTransport } from './transports/memory-transport';
+import { LoggingConfig } from './types';
 
-// Default logging configuration
-export const defaultLoggingConfig: LoggingConfig = {
-  minLevel: LogLevel.INFO, // Log info and above by default
+// Default configuration
+const defaultConfig: LoggingConfig = {
+  minLevel: LogLevel.DEBUG,
+  defaultCategory: LogCategory.DEFAULT,
+  enabledCategories: Object.values(LogCategory),
   transports: [
-    new ConsoleTransport(), // Always log to console
-    new UITransport(),      // Show UI toasts for logs
-    memoryTransport,        // Keep logs in memory for UI components
-  ],
-  bufferSize: 10,          // Buffer size before flush
-  flushInterval: 5000,     // Flush interval in ms
-  includeSource: true,     // Include source file/component info
-  includeUser: true,       // Include user ID if available
-  includeSession: true,    // Include session ID
+    consoleTransport,
+    memoryTransport
+  ]
 };
 
-// Get config based on environment
-export function getLoggingConfig(): LoggingConfig {
-  // In development, debug everything
-  if (import.meta.env.DEV) {
-    return {
-      ...defaultLoggingConfig,
-      minLevel: LogLevel.DEBUG,
-      enabledCategories: Object.values(LogCategory),
-    };
-  }
-  
-  // In production, more selective
-  return {
-    ...defaultLoggingConfig,
-    minLevel: LogLevel.INFO,
-    // Exclude DEBUG level from UI transport in production
-    transports: [
-      new ConsoleTransport(),
-      new UITransport({
-        showDebug: false,
-        showInfo: true,
-        showWarning: true,
-        showError: true,
-        showCritical: true,
-      }),
-      memoryTransport,
-    ],
-  };
+// Development configuration
+const devConfig: LoggingConfig = {
+  ...defaultConfig,
+  minLevel: LogLevel.DEBUG
+};
+
+// Production configuration
+const prodConfig: LoggingConfig = {
+  ...defaultConfig,
+  minLevel: LogLevel.INFO,
+  transports: [
+    memoryTransport,
+    {
+      log: (entry) => {
+        // In production, only log warnings and above to console
+        if ([LogLevel.WARN, LogLevel.ERROR, LogLevel.CRITICAL].includes(entry.level)) {
+          consoleTransport.log(entry);
+        }
+      },
+      clear: () => consoleTransport.clear()
+    }
+  ]
+};
+
+// Test configuration
+const testConfig: LoggingConfig = {
+  ...defaultConfig,
+  minLevel: LogLevel.SILENT, // Don't log in tests by default
+};
+
+// Export configuration based on environment
+let currentConfig: LoggingConfig;
+
+switch (process.env.NODE_ENV) {
+  case 'production':
+    currentConfig = prodConfig;
+    break;
+  case 'test':
+    currentConfig = testConfig;
+    break;
+  default:
+    currentConfig = devConfig;
 }
 
-// Export the memory transport for direct access in components
-export { memoryTransport };
+// Getter for the current config
+export function getConfig(): LoggingConfig {
+  return currentConfig;
+}
+
+// Update the configuration
+export function updateConfig(updates: Partial<LoggingConfig>): LoggingConfig {
+  currentConfig = { ...currentConfig, ...updates };
+  return currentConfig;
+}
+
+// Configure log filtering
+export function setLogFilter({
+  showDebug = true,
+  showInfo = true,
+  showWarning = true,
+  showError = true,
+  showCritical = true,
+}: {
+  showDebug?: boolean;
+  showInfo?: boolean;
+  showWarning?: boolean;
+  showError?: boolean;
+  showCritical?: boolean;
+}): void {
+  const enabledLevels: LogLevel[] = [];
+  
+  if (showDebug) enabledLevels.push(LogLevel.DEBUG);
+  if (showInfo) enabledLevels.push(LogLevel.INFO);
+  if (showWarning) enabledLevels.push(LogLevel.WARN);
+  if (showError) enabledLevels.push(LogLevel.ERROR);
+  if (showCritical) enabledLevels.push(LogLevel.CRITICAL);
+  
+  // Custom log filtering logic can be implemented here
+  console.log('Log filter updated', enabledLevels);
+}

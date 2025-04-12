@@ -1,297 +1,367 @@
 
 import { create } from 'zustand';
-import { User, UserProfile, AuthStatus } from '@/shared/types';
-import { authBridge } from '@/bridges/AuthBridge';
+import { AuthStatus, User, UserProfile, UserRole } from '@/shared/types/shared.types';
+import { authBridge } from '@/auth/bridge';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging/constants/log-category';
 
-interface AuthState {
+export interface AuthState {
+  // Core auth state
   user: User | null;
   profile: UserProfile | null;
+  roles: UserRole[];
   status: AuthStatus;
-  roles: string[];
+  error: Error | null;
   initialized: boolean;
   
-  // Actions
-  initialize: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<User | null>;
-  signUp: (email: string, password: string) => Promise<User | null>;
-  signInWithGoogle: () => Promise<User | null>;
-  updateProfile: (profile: Partial<UserProfile>) => Promise<UserProfile | null>;
-  logout: () => Promise<void>;
+  // Computed properties
+  isAuthenticated: boolean;
   
-  // Helper methods
-  hasRole: (role: string | string[]) => boolean;
+  // Methods
+  initialize: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<User>;
+  signUp: (email: string, password: string, userData?: Record<string, any>) => Promise<User>;
+  signInWithGoogle: () => Promise<User>;
+  logout: () => Promise<void>;
+  updateUser: (updates: Partial<User>) => Promise<User>;
+  updateUserProfile: (updates: Partial<UserProfile>) => Promise<UserProfile>;
+  refreshUser: () => Promise<User | null>;
+  
+  // Role checks
   isAdmin: () => boolean;
   isSuperAdmin: () => boolean;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  profile: null,
-  roles: [],
-  status: {
+export const useAuthStore = create<AuthState>((set, get) => {
+  const logger = useLogger('AuthStore', LogCategory.AUTH);
+
+  return {
+    // Initial state
+    user: null,
+    profile: null,
+    roles: [],
+    status: AuthStatus.INITIAL,
+    error: null,
+    initialized: false,
     isAuthenticated: false,
-    isLoading: true
-  },
-  initialized: false,
-  
-  initialize: async () => {
-    try {
-      // Get current session
-      const session = await authBridge.getCurrentSession();
-      
-      if (session?.user) {
-        // Set user
-        set({ 
-          user: session.user,
-          status: {
+    
+    // Initialize auth
+    initialize: async () => {
+      try {
+        set({ status: AuthStatus.LOADING });
+        
+        // Check for existing session
+        const session = authBridge.getCurrentSession();
+        
+        if (session?.user) {
+          const user = session.user;
+          const roles = user.app_metadata?.roles || ['user'];
+          
+          set({ 
+            user,
+            roles,
+            status: AuthStatus.AUTHENTICATED,
             isAuthenticated: true,
-            isLoading: false
-          }
-        });
-        
-        // Extract roles from user metadata
-        const userRoles = session.user.app_metadata?.roles || [];
-        set({ roles: Array.isArray(userRoles) ? userRoles : [] });
-        
-        // Get user profile
-        const profile = await authBridge.getUserProfile(session.user.id);
-        if (profile) {
-          set({ profile });
-          
-          // Update roles from profile if available
-          if (profile.roles && profile.roles.length > 0) {
-            set({ roles: profile.roles });
-          }
-        }
-      } else {
-        set({ 
-          status: {
-            isAuthenticated: false,
-            isLoading: false
-          }
-        });
-      }
-      
-      // Listen for auth state changes
-      authBridge.subscribeToEvent('AUTH_STATE_CHANGE', (event) => {
-        if (event?.type === 'SIGNED_IN') {
-          // Set user and authenticated status
-          set({ 
-            user: event.data?.user || null,
-            status: {
-              isAuthenticated: true,
-              isLoading: false
-            }
+            initialized: true
           });
-          
-          // Extract roles from user metadata
-          if (event.data?.user?.app_metadata?.roles) {
-            const userRoles = event.data.user.app_metadata.roles;
-            set({ roles: Array.isArray(userRoles) ? userRoles : [] });
-          }
-          
+
           // Get user profile
-          if (event.data?.user?.id) {
-            authBridge.getUserProfile(event.data.user.id)
-              .then(profile => {
-                if (profile) {
-                  set({ profile });
-                  
-                  // Update roles from profile if available
-                  if (profile.roles && profile.roles.length > 0) {
-                    set({ roles: profile.roles });
-                  }
-                }
-              })
-              .catch(console.error);
+          try {
+            const profile = await authBridge.getUserProfile();
+            if (profile) {
+              set({ profile });
+            }
+          } catch (profileError) {
+            logger.warn('Failed to fetch user profile during initialization', { 
+              details: { error: profileError } 
+            });
           }
-        } else if (event?.type === 'SIGNED_OUT') {
-          // Reset auth state
+        } else {
           set({ 
-            user: null,
+            user: null, 
             profile: null,
             roles: [],
-            status: {
-              isAuthenticated: false,
-              isLoading: false
-            }
+            status: AuthStatus.UNAUTHENTICATED,
+            isAuthenticated: false,
+            initialized: true
           });
         }
-      });
-      
-      set({ initialized: true });
-    } catch (error) {
-      console.error('Failed to initialize auth store:', error);
-      set({ 
-        status: {
+        
+        // Subscribe to auth events
+        const unsubscribe = authBridge.subscribeToEvent('*', (event) => {
+          if (event.type === 'AUTH_SIGNIN') {
+            const user = event.payload?.user as User;
+            const roles = user?.app_metadata?.roles || ['user'];
+            
+            set({ 
+              user, 
+              roles,
+              status: AuthStatus.AUTHENTICATED,
+              isAuthenticated: true,
+              error: null
+            });
+
+            // Try to get user profile after sign in
+            if (user) {
+              authBridge.getUserProfile()
+                .then(profile => {
+                  if (profile) {
+                    set({ profile });
+                  }
+                })
+                .catch(error => {
+                  logger.error('Failed to fetch profile after signin', { 
+                    details: { error } 
+                  });
+                });
+            }
+          } else if (event.type === 'AUTH_SIGNOUT') {
+            set({ 
+              user: null, 
+              profile: null,
+              roles: [],
+              status: AuthStatus.UNAUTHENTICATED,
+              isAuthenticated: false,
+              error: null
+            });
+          } else if (event.type === 'AUTH_ERROR') {
+            set({ 
+              status: AuthStatus.ERROR, 
+              error: event.payload?.error as Error 
+            });
+            
+            logger.error('Auth error', { 
+              details: { error: event.payload?.error } 
+            });
+          }
+        });
+        
+        // Return unsubscribe function
+        return unsubscribe;
+      } catch (error) {
+        logger.error('Auth initialization error', { details: { error } });
+        
+        set({
+          status: AuthStatus.ERROR,
+          error: error as Error,
           isAuthenticated: false,
-          isLoading: false
-        },
-        initialized: true
-      });
-    }
-  },
-  
-  signIn: async (email, password) => {
-    set({ status: { ...get().status, isLoading: true } });
+          initialized: true
+        });
+      }
+    },
     
-    try {
-      const user = await authBridge.signIn(email, password);
-      
-      if (user) {
+    // Sign in with email/password
+    signIn: async (email, password) => {
+      try {
+        set({ status: AuthStatus.LOADING, error: null });
+        
+        const user = await authBridge.signIn(email, password);
+        const roles = user.app_metadata?.roles || ['user'];
+        
         set({ 
           user,
-          status: {
-            isAuthenticated: true,
-            isLoading: false
-          }
+          roles,
+          status: AuthStatus.AUTHENTICATED,
+          isAuthenticated: true 
         });
-        
-        // Extract roles from user metadata
-        const userRoles = user.app_metadata?.roles || [];
-        set({ roles: Array.isArray(userRoles) ? userRoles : [] });
         
         // Get user profile
-        const profile = await authBridge.getUserProfile(user.id);
-        if (profile) {
-          set({ profile });
-          
-          // Update roles from profile if available
-          if (profile.roles && profile.roles.length > 0) {
-            set({ roles: profile.roles });
+        try {
+          const profile = await authBridge.getUserProfile();
+          if (profile) {
+            set({ profile });
           }
+        } catch (profileError) {
+          logger.warn('Failed to fetch user profile after sign in', { 
+            details: { error: profileError } 
+          });
         }
+        
+        return user;
+      } catch (error) {
+        logger.error('Sign in error', { details: { error } });
+        set({ status: AuthStatus.ERROR, error: error as Error });
+        throw error;
       }
-      
-      return user;
-    } catch (error) {
-      set({ status: { ...get().status, isLoading: false } });
-      throw error;
-    }
-  },
-  
-  signUp: async (email, password) => {
-    set({ status: { ...get().status, isLoading: true } });
+    },
     
-    try {
-      const user = await authBridge.signUp(email, password);
-      
-      if (user) {
+    // Sign up new user
+    signUp: async (email, password, userData) => {
+      try {
+        set({ status: AuthStatus.LOADING, error: null });
+        
+        // Auth bridge doesn't have full signup implementation yet
+        const user = await authBridge.signIn(email, password);
+        
+        const roles = user.app_metadata?.roles || ['user'];
         set({ 
           user,
-          status: {
-            isAuthenticated: true,
-            isLoading: false
-          }
+          roles,
+          status: AuthStatus.AUTHENTICATED,
+          isAuthenticated: true 
         });
-        
-        // Extract roles from user metadata
-        const userRoles = user.app_metadata?.roles || [];
-        set({ roles: Array.isArray(userRoles) ? userRoles : [] });
-      }
-      
-      return user;
-    } catch (error) {
-      set({ status: { ...get().status, isLoading: false } });
-      throw error;
-    }
-  },
-  
-  signInWithGoogle: async () => {
-    set({ status: { ...get().status, isLoading: true } });
-    
-    try {
-      const user = await authBridge.signInWithGoogle();
-      
-      if (user) {
-        set({ 
-          user,
-          status: {
-            isAuthenticated: true,
-            isLoading: false
-          }
-        });
-        
-        // Extract roles from user metadata
-        const userRoles = user.app_metadata?.roles || [];
-        set({ roles: Array.isArray(userRoles) ? userRoles : [] });
         
         // Get user profile
-        const profile = await authBridge.getUserProfile(user.id);
-        if (profile) {
-          set({ profile });
-          
-          // Update roles from profile if available
-          if (profile.roles && profile.roles.length > 0) {
-            set({ roles: profile.roles });
+        try {
+          const profile = await authBridge.getUserProfile();
+          if (profile) {
+            set({ profile });
           }
+        } catch (profileError) {
+          logger.warn('Failed to fetch user profile after sign up', { 
+            details: { error: profileError } 
+          });
         }
+        
+        return user;
+      } catch (error) {
+        logger.error('Sign up error', { details: { error } });
+        set({ status: AuthStatus.ERROR, error: error as Error });
+        throw error;
       }
-      
-      return user;
-    } catch (error) {
-      set({ status: { ...get().status, isLoading: false } });
-      throw error;
-    }
-  },
-  
-  updateProfile: async (profileData) => {
-    const { user } = get();
-    if (!user) return null;
+    },
     
-    try {
-      const updatedProfile = await authBridge.updateUserProfile(user.id, profileData);
-      if (updatedProfile) {
+    // Sign in with Google
+    signInWithGoogle: async () => {
+      try {
+        set({ status: AuthStatus.LOADING, error: null });
+        
+        const user = await authBridge.signInWithGoogle();
+        const roles = user.app_metadata?.roles || ['user'];
+        
+        set({ 
+          user,
+          roles,
+          status: AuthStatus.AUTHENTICATED,
+          isAuthenticated: true 
+        });
+        
+        // Get user profile
+        try {
+          const profile = await authBridge.getUserProfile();
+          if (profile) {
+            set({ profile });
+          }
+        } catch (profileError) {
+          logger.warn('Failed to fetch user profile after Google sign in', { 
+            details: { error: profileError } 
+          });
+        }
+        
+        return user;
+      } catch (error) {
+        logger.error('Google sign in error', { details: { error } });
+        set({ status: AuthStatus.ERROR, error: error as Error });
+        throw error;
+      }
+    },
+    
+    // Update user
+    updateUser: async (updates) => {
+      try {
+        const { user } = get();
+        if (!user) throw new Error("No authenticated user");
+        
+        // This is a placeholder since actual updateUser is not implemented in bridge
+        const updatedUser = { ...user, ...updates };
+        
+        set({ user: updatedUser });
+        return updatedUser;
+      } catch (error) {
+        logger.error('Update user error', { details: { error } });
+        set({ error: error as Error });
+        throw error;
+      }
+    },
+    
+    // Update user profile
+    updateUserProfile: async (updates) => {
+      try {
+        const { profile } = get();
+        if (!profile) throw new Error("No user profile");
+        
+        const updatedProfile = await authBridge.updateUserProfile(updates);
         set({ profile: updatedProfile });
         
-        // Update roles from profile if available
-        if (updatedProfile.roles && updatedProfile.roles.length > 0) {
-          set({ roles: updatedProfile.roles });
-        }
+        return updatedProfile;
+      } catch (error) {
+        logger.error('Update profile error', { details: { error } });
+        set({ error: error as Error });
+        throw error;
       }
-      return updatedProfile;
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
-  },
-  
-  logout: async () => {
-    try {
-      await authBridge.logout();
-      set({
-        user: null,
-        profile: null,
-        roles: [],
-        status: {
-          isAuthenticated: false,
-          isLoading: false
+    },
+    
+    // Refresh user data
+    refreshUser: async () => {
+      try {
+        const session = authBridge.getCurrentSession();
+        if (!session?.user) return null;
+        
+        const user = session.user;
+        const roles = user.app_metadata?.roles || ['user'];
+        
+        set({ user, roles });
+        
+        // Get fresh profile
+        try {
+          const profile = await authBridge.getUserProfile();
+          if (profile) {
+            set({ profile });
+          }
+        } catch (profileError) {
+          logger.warn('Failed to fetch user profile during refresh', { 
+            details: { error: profileError } 
+          });
         }
-      });
-    } catch (error) {
-      console.error('Error logging out:', error);
-      throw error;
+        
+        return user;
+      } catch (error) {
+        logger.error('Refresh user error', { details: { error } });
+        set({ error: error as Error });
+        return null;
+      }
+    },
+    
+    // Log out
+    logout: async () => {
+      try {
+        set({ status: AuthStatus.LOADING });
+        await authBridge.logout();
+        
+        set({
+          user: null,
+          profile: null,
+          roles: [],
+          status: AuthStatus.UNAUTHENTICATED,
+          isAuthenticated: false
+        });
+      } catch (error) {
+        logger.error('Logout error', { details: { error } });
+        set({ status: AuthStatus.ERROR, error: error as Error });
+        throw error;
+      }
+    },
+    
+    // Role check helpers
+    isAdmin: () => {
+      const { roles } = get();
+      return roles.includes('admin') || roles.includes('super_admin');
+    },
+    
+    isSuperAdmin: () => {
+      const { roles } = get();
+      return roles.includes('super_admin');
+    },
+    
+    hasRole: (role) => {
+      const { roles } = get();
+      
+      if (Array.isArray(role)) {
+        return role.some(r => roles.includes(r));
+      }
+      
+      return roles.includes(role);
     }
-  },
-  
-  hasRole: (role) => {
-    const { roles } = get();
-    
-    // Always check for superadmin first
-    if (roles.includes('superadmin')) return true;
-    
-    if (Array.isArray(role)) {
-      return role.some(r => roles.includes(r));
-    }
-    
-    return roles.includes(role);
-  },
-  
-  isAdmin: () => {
-    return get().hasRole(['admin', 'superadmin']);
-  },
-  
-  isSuperAdmin: () => {
-    return get().hasRole('superadmin');
-  }
-}));
+  };
+});

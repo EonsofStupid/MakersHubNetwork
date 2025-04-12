@@ -8,8 +8,8 @@ import { useEffect, useRef } from "react";
 import { initializeAuthBridge } from "@/auth/bridge";
 import { initializeLoggingBridge } from "@/logging/bridge";
 import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging';
-import { AppInitializer } from "@/components/AppInitializer";
+import { LogCategory } from '@/shared/types/shared.types';
+import { AppInitializer } from "@/app/components/AppInitializer";
 import { AuthProvider } from "@/auth/components/AuthProvider";
 import { DebugOverlay } from '@/admin/components/debug/DebugOverlay';
 import { ComponentInspector } from '@/admin/components/debug/ComponentInspector';
@@ -33,7 +33,7 @@ import "@/admin/styles/cyber-effects.css";
 function App() {
   const location = useLocation();
   const bridgesInitializedRef = useRef<boolean>(false);
-  const logger = getLogger();
+  const logger = getLogger('App', LogCategory.SYSTEM);
 
   // Initialize bridges only once on app mount
   useEffect(() => {
@@ -45,10 +45,7 @@ function App() {
     // Mark as initialized immediately to prevent race conditions
     bridgesInitializedRef.current = true;
     
-    logger.info('Initializing app bridges', {
-      category: LogCategory.SYSTEM,
-      source: 'App'
-    });
+    logger.info('Initializing app bridges');
     
     try {
       // Initialize logging bridge first
@@ -61,16 +58,12 @@ function App() {
           initializeAuthBridge();
         } catch (error) {
           logger.error('Auth bridge initialization error', {
-            category: LogCategory.SYSTEM,
-            source: 'App',
             details: { error }
           });
         }
       }, 100);
     } catch (error) {
       logger.error('Bridge initialization error', {
-        category: LogCategory.SYSTEM,
-        source: 'App',
         details: { error }
       });
     }
