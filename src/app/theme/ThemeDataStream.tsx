@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/cn";
 
 interface ThemeDataStreamProps {
   className?: string;
