@@ -47,7 +47,6 @@ export * from './accordion';
 
 // Layout helpers
 export * from './scroll-area';
-export * from './aspect-ratio';
 export * from './skeleton';
 export * from './spinner';
 

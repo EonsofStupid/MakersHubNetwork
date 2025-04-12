@@ -1,4 +1,3 @@
-
 /**
  * Shared types used across multiple modules
  */
@@ -405,3 +404,4 @@ export const WorkflowFieldType = {
   DATE: 'date' as WorkflowFieldType,
   FILE: 'file' as WorkflowFieldType
 } as const;
+
