@@ -1,50 +1,19 @@
 
-import { useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { LogCategory, LogLevel } from '@/shared/types/shared.types';
-import { getLogger as getLoggerService } from '@/logging';
+import { useCallback, useMemo } from 'react';
+import { getLogger } from '@/logging';
+import { LogCategory } from '@/shared/types/shared.types';
 
 /**
- * Hook for accessing the logging service with a predefined source and category
+ * Hook to create and use a logger with a specific source and category
  * 
- * @param source The source of the logs (component or module name)
- * @param category The category of logs
- * @returns Object with logging methods for different log levels
+ * @param source The source component/module using the logger
+ * @param category The log category (defaults to APP)
+ * @returns A logger instance
  */
-export function useLogger(source: string, category: LogCategory = LogCategory.DEFAULT) {
-  const logger = getLoggerService(source, category);
-  
-  // Debug level logs
-  const debug = useCallback((message: string, options?: { details?: Record<string, unknown> }) => {
-    logger.debug(message, options);
-  }, [logger]);
-  
-  // Info level logs
-  const info = useCallback((message: string, options?: { details?: Record<string, unknown> }) => {
-    logger.info(message, options);
-  }, [logger]);
-  
-  // Warning level logs
-  const warn = useCallback((message: string, options?: { details?: Record<string, unknown> }) => {
-    logger.warn(message, options);
-  }, [logger]);
-  
-  // Error level logs
-  const error = useCallback((message: string, options?: { details?: Record<string, unknown> }) => {
-    logger.error(message, options);
-  }, [logger]);
-  
-  // Critical level logs
-  const critical = useCallback((message: string, options?: { details?: Record<string, unknown> }) => {
-    logger.critical(message, options);
-  }, [logger]);
-  
-  // Return the logger object with all methods
-  return {
-    debug,
-    info,
-    warn,
-    error,
-    critical,
-  };
+export function useLogger(source: string, category: LogCategory = LogCategory.APP) {
+  const logger = useMemo(() => {
+    return getLogger(source, category);
+  }, [source, category]);
+
+  return logger;
 }

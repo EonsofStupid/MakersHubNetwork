@@ -1,190 +1,167 @@
 
-import { LogCategory, LogEvent, LogLevel } from './types';
+import { nanoid } from "nanoid";
+import { LogCategory, LogLevel, LOG_LEVEL_VALUES } from "@/shared/types/shared.types";
+import { ConsoleTransport } from "./transports/console-transport";
+import { LogTransport } from "./types";
+import type { LogEvent } from "./types";
 
-// Define log levels
-const LOG_LEVELS: Record<LogLevel, number> = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3,
-  critical: 4,
-};
+// Create the level values mapping
+const levelValues: Record<LogLevel, number> = LOG_LEVEL_VALUES;
 
-// Options for logger
-export interface LoggerOptions {
-  details?: Record<string, unknown>;
-}
-
-// Interface for log transport
-export interface LogTransport {
-  id: string;
-  log: (event: LogEvent) => void | Promise<void>;
-  getMinLevel: () => LogLevel;
-}
+// Default transports
+const defaultTransports: LogTransport[] = [
+  new ConsoleTransport()
+];
 
 /**
- * Logger class for structured application logging
+ * Logger class for consistent logging throughout the application
  */
 export class Logger {
-  private transports: LogTransport[] = [];
-  private category: LogCategory;
   private source: string;
+  private category: LogCategory;
+  private static transports: LogTransport[] = [...defaultTransports];
+  private static listeners: Array<(event: LogEvent) => void> = [];
 
-  constructor(source: string, category: LogCategory = LogCategory.APP) {
+  /**
+   * Create a new logger instance
+   * 
+   * @param source The source of the logs (component/module name)
+   * @param category The category of logs (default: LogCategory.DEFAULT)
+   */
+  constructor(source: string, category: LogCategory = LogCategory.DEFAULT) {
     this.source = source;
     this.category = category;
   }
 
   /**
-   * Register a transport to receive logs
+   * Add a transport to the logger
    */
-  addTransport(transport: LogTransport): void {
-    if (this.transports.find(t => t.id === transport.id)) {
-      return;
-    }
+  static addTransport(transport: LogTransport): void {
     this.transports.push(transport);
   }
 
   /**
-   * Remove a transport by ID
+   * Remove a transport from the logger
    */
-  removeTransport(transportId: string): void {
-    this.transports = this.transports.filter(t => t.id !== transportId);
+  static removeTransport(transport: LogTransport): void {
+    this.transports = this.transports.filter(t => t !== transport);
   }
 
   /**
-   * Log at debug level
+   * Debug level logging
    */
-  debug(message: string, options?: LoggerOptions): void {
-    this.log('debug', message, options);
+  debug(message: string, meta?: { details?: Record<string, unknown> }): void {
+    this.log(LogLevel.DEBUG, message, meta);
   }
 
   /**
-   * Log at info level
+   * Info level logging
    */
-  info(message: string, options?: LoggerOptions): void {
-    this.log('info', message, options);
+  info(message: string, meta?: { details?: Record<string, unknown> }): void {
+    this.log(LogLevel.INFO, message, meta);
   }
 
   /**
-   * Log at warn level
+   * Warning level logging
    */
-  warn(message: string, options?: LoggerOptions): void {
-    this.log('warn', message, options);
+  warn(message: string, meta?: { details?: Record<string, unknown> }): void {
+    this.log(LogLevel.WARN, message, meta);
   }
 
   /**
-   * Log at error level
+   * Error level logging
    */
-  error(message: string, options?: LoggerOptions): void {
-    this.log('error', message, options);
+  error(message: string, meta?: { details?: Record<string, unknown> }): void {
+    this.log(LogLevel.ERROR, message, meta);
   }
 
   /**
-   * Log at critical level
+   * Critical error logging
    */
-  critical(message: string, options?: LoggerOptions): void {
-    this.log('critical', message, options);
+  critical(message: string, meta?: { details?: Record<string, unknown> }): void {
+    this.log(LogLevel.CRITICAL, message, meta);
   }
 
   /**
-   * Create a child logger with the same category but different source
+   * Success logging
    */
-  child(source: string): Logger {
-    const childLogger = new Logger(`${this.source}.${source}`, this.category);
+  success(message: string, meta?: { details?: Record<string, unknown> }): void {
+    this.log(LogLevel.SUCCESS, message, meta);
+  }
+
+  /**
+   * Trace logging
+   */
+  trace(message: string, meta?: { details?: Record<string, unknown> }): void {
+    this.log(LogLevel.TRACE, message, meta);
+  }
+
+  /**
+   * Subscribe to log events
+   */
+  static subscribe(listener: (event: LogEvent) => void): () => void {
+    this.listeners.push(listener);
     
-    // Copy transports from parent
-    this.transports.forEach(transport => {
-      childLogger.addTransport(transport);
-    });
-    
-    return childLogger;
+    // Return unsubscribe function
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
   }
 
   /**
-   * Create a specialized logger for a specific category
+   * Core logging method
    */
-  forCategory(category: LogCategory): Logger {
-    const categoryLogger = new Logger(this.source, category);
-    
-    // Copy transports from parent
-    this.transports.forEach(transport => {
-      categoryLogger.addTransport(transport);
-    });
-    
-    return categoryLogger;
-  }
-
-  /**
-   * Main log method
-   */
-  private log(level: LogLevel, message: string, options?: LoggerOptions): void {
-    const timestamp = new Date();
-    
-    const event: LogEvent = {
+  private log(level: LogLevel, message: string, meta?: { details?: Record<string, unknown> }): void {
+    const logEvent = {
+      id: nanoid(),
       level,
       message,
-      timestamp,
+      timestamp: Date.now(),
       source: this.source,
       category: this.category,
-      details: options?.details || {},
+      details: meta?.details || {}
     };
 
-    // Forward the log to each transport if their level is appropriate
-    for (const transport of this.transports) {
-      const minLevel = transport.getMinLevel();
+    // Send to all transports
+    Logger.transports.forEach(transport => {
+      // Check if this transport should handle this log based on level
+      const minLevelValue = levelValues[transport.minLevel] || 0;
+      const currentLevelValue = levelValues[level] || 0;
       
-      if (LOG_LEVELS[level] >= LOG_LEVELS[minLevel || 'info']) {
+      if (currentLevelValue >= minLevelValue) {
         try {
-          transport.log(event);
+          if (typeof transport.details === 'object' && transport.details?.excludeCategories?.includes(this.category)) {
+            return; // Skip this transport if the category is excluded
+          }
+          
+          transport.log(logEvent);
         } catch (error) {
-          // Don't let transport errors crash the application
-          console.error(`Error in log transport ${transport.id}:`, error);
+          console.error(`Transport error:`, error);
         }
       }
-    }
+    });
+    
+    // Notify all listeners
+    Logger.listeners.forEach(listener => {
+      try {
+        listener(logEvent);
+      } catch (error) {
+        console.error('Logger listener error:', error);
+      }
+    });
   }
 }
 
-// Create default transports
-const consoleTransport: LogTransport = {
-  id: 'console',
-  log: (event: LogEvent) => {
-    const { level, message, timestamp, source, category } = event;
-    
-    // Format timestamp
-    const timeString = timestamp.toISOString();
-    
-    // Format details
-    const detailsStr = event.details && Object.keys(event.details).length > 0
-      ? ` ${JSON.stringify(event.details)}`
-      : '';
-    
-    // Choose console method based on level
-    const logMethod = level === 'error' || level === 'critical'
-      ? console.error
-      : level === 'warn'
-        ? console.warn
-        : level === 'info'
-          ? console.info
-          : console.debug;
-    
-    // Output the log
-    logMethod(`[${timeString}] [${level.toUpperCase()}] [${category}] [${source}] ${message}${detailsStr}`);
-  },
-  getMinLevel: () => 'debug',
-};
-
-// Create and configure the root logger
-const rootLogger = new Logger('root');
-rootLogger.addTransport(consoleTransport);
-
-// Factory function to create loggers
-export function createLogger(source: string, category: LogCategory = LogCategory.APP): Logger {
-  const logger = new Logger(source, category);
-  
-  // Add default transports from root logger
-  logger.addTransport(consoleTransport);
-  
-  return logger;
+/**
+ * Get a logger instance
+ * 
+ * @param source The source of the logs (component/module name)
+ * @param category The category of logs
+ * @returns A Logger instance
+ */
+export function getLogger(source: string, category: LogCategory = LogCategory.DEFAULT): Logger {
+  return new Logger(source, category);
 }
+
+// Re-export needed types
+export type { LogTransport } from './types';
