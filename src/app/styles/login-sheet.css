@@ -9,8 +9,11 @@
     100% 100%,     /* Bottom-right */
     0 85%          /* Bottom-left offset to create slant */
   );
+  border-left: 2px solid var(--primary);
+  box-shadow: -5px 0 15px rgba(0, 240, 255, 0.2);
 }
 
+/* Background darkening effect when hovering */
 .trapezoid-sheet::before {
   content: '';
   position: fixed;
@@ -36,11 +39,6 @@
 }
 
 /* Cyber effect styling for the sheet */
-.trapezoid-sheet {
-  border-left: 2px solid var(--primary);
-  box-shadow: -5px 0 15px rgba(0, 240, 255, 0.2);
-}
-
 .trapezoid-sheet::after {
   content: '';
   position: absolute;
@@ -51,4 +49,15 @@
   background: var(--primary);
   transform: rotate(45deg);
   box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+/* Glowing accent line */
+.trapezoid-sheet .sheet-accent {
+  position: absolute;
+  bottom: 15%;
+  left: 0;
+  width: 30%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+  opacity: 0.6;
 }

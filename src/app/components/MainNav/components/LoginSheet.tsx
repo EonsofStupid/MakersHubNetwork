@@ -3,7 +3,7 @@ import React from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/shared/ui/sheet';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
-import { useToast } from '@/shared/hooks/use-toast';
+import { useToast } from '@/shared/ui/use-toast';
 import { useState, useEffect } from 'react';
 import { authBridge } from '@/auth/bridge';
 import { GoogleLoginButton } from '@/auth/components/GoogleLoginButton';
@@ -11,6 +11,7 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 import { useNavigate } from 'react-router-dom';
 import { Shield } from 'lucide-react';
+import { UserRole } from '@/shared/types/shared.types';
 import { useAuthStore } from '@/auth/store/auth.store';
 
 export function LoginSheet() {
@@ -31,10 +32,8 @@ export function LoginSheet() {
   useEffect(() => {
     if (isAuthenticated && roles) {
       const isAdmin = roles.some(role => 
-        role === 'ADMIN' || 
-        role === 'SUPER_ADMIN' || 
-        role === 'admin' || 
-        role === 'super_admin'
+        role === UserRole.ADMIN || 
+        role === UserRole.SUPER_ADMIN
       );
       setHasAdminAccess(isAdmin);
     } else {
@@ -91,6 +90,7 @@ export function LoginSheet() {
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-sm trapezoid-sheet">
+        <div className="sheet-accent" aria-hidden="true" />
         <SheetHeader>
           <SheetTitle>Sign In</SheetTitle>
           <SheetDescription>

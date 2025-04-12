@@ -1,11 +1,11 @@
 
 /**
  * Import fix script - intended to be used with a build tool or CI process
+ * This script updates all imports to use the standardized paths
  */
 import fs from 'fs';
 import path from 'path';
 import glob from 'glob';
-import { getNewImportPath } from '../src/lib/paths';
 
 // Run through all TypeScript files
 const files = glob.sync('src/**/*.{ts,tsx}');
@@ -36,11 +36,25 @@ files.forEach(file => {
         return `import ${importClause} from '@/shared/types/${typesPath}'`;
       }
     )
-    // Fix store imports
+    // Fix store imports (theme)
     .replace(
       /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/stores\/theme\/([^'"]+)['"]/g,
       (match, importClause, storePath) => {
         return `import ${importClause} from '@/shared/stores/theme/${storePath}'`;
+      }
+    )
+    // Fix theme store imports
+    .replace(
+      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/theme\/store\/([^'"]+)['"]/g,
+      (match, importClause, storePath) => {
+        return `import ${importClause} from '@/shared/stores/theme/${storePath}'`;
+      }
+    )
+    // Fix auth related imports
+    .replace(
+      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/types\/shared['"]/g,
+      (match, importClause) => {
+        return `import ${importClause} from '@/shared/types/shared.types'`;
       }
     );
   
