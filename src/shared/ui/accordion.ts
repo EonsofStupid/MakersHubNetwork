@@ -1,6 +1,6 @@
 
 // Re-export accordion component from shadcn
-export { 
+export {
   Accordion,
   AccordionContent,
   AccordionItem,

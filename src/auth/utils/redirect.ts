@@ -1,76 +1,45 @@
+import { AuthStatus, UserRole } from '@/shared/types/shared.types';
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/auth.store';
-import { UserRole } from '@/shared/types';
+export function redirectIfAuthenticated(status: AuthStatus, roles?: UserRole[]) {
+  if (status === 'AUTHENTICATED') {
+    // Redirect logic here
+    return true;
+  }
 
-/**
- * Hook to redirect authenticated users
- * @param redirectPath Path to redirect to
- * @param condition Optional condition to determine if redirect should happen
- */
-export function redirectIfAuthenticated(
-  redirectPath: string = '/dashboard',
-  condition: () => boolean = () => true
-): void {
-  const navigate = useNavigate();
-  const { status } = useAuthStore();
-  const { isAuthenticated, isLoading } = status;
+  if (status === 'LOADING') {
+    // Loading logic here
+    return true;
+  }
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated && condition()) {
-      navigate(redirectPath, { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate, redirectPath, condition]);
+  return false;
 }
 
-/**
- * Hook to redirect unauthenticated users
- * @param redirectPath Path to redirect to
- * @param condition Optional condition to determine if redirect should happen
- */
-export function redirectIfUnauthenticated(
-  redirectPath: string = '/auth',
-  condition: () => boolean = () => true
-): void {
-  const navigate = useNavigate();
-  const { status } = useAuthStore();
-  const { isAuthenticated, isLoading } = status;
+export function redirectIfNotAuthenticated(status: AuthStatus, roles?: UserRole[]) {
+  if (status !== 'AUTHENTICATED') {
+    // Redirect logic here
+    return true;
+  }
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated && condition()) {
-      navigate(redirectPath, { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate, redirectPath, condition]);
+  return false;
 }
 
-/**
- * Hook to redirect users without admin role
- * @param redirectPath Path to redirect to
- * @param requiredRoles Roles that are allowed access
- */
-export function redirectIfNotAdmin(
-  redirectPath: string = '/',
-  requiredRoles: UserRole[] = ['admin', 'superadmin']
-): void {
-  const navigate = useNavigate();
-  const { status, hasRole } = useAuthStore();
-  const { isAuthenticated, isLoading } = status;
-  const hasRequiredRole = hasRole(requiredRoles);
+export function redirectIfNoAccess(status: AuthStatus, role: UserRole | UserRole[], hasRole: (role: UserRole[]) => boolean) {
+  const requiredRoles = Array.isArray(role) ? role : [role];
+  
+  if (status !== 'AUTHENTICATED') {
+    // Redirect logic for not authenticated
+    return true;
+  }
 
-  useEffect(() => {
-    // Only check roles if authenticated and not loading
-    if (!isLoading) {
-      // If not authenticated, redirect to login
-      if (!isAuthenticated) {
-        navigate('/auth', { replace: true });
-        return;
-      }
-      
-      // If authenticated but doesn't have the required role, redirect
-      if (!hasRequiredRole) {
-        navigate(redirectPath, { replace: true });
-      }
-    }
-  }, [isAuthenticated, isLoading, hasRequiredRole, navigate, redirectPath]);
+  if (status === 'LOADING') {
+    // Loading logic
+    return true;
+  }
+
+  if (!hasRole(requiredRoles)) {
+    // No access logic
+    return true;
+  }
+
+  return false;
 }

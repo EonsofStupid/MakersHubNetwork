@@ -1,4 +1,3 @@
-
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { User, UserRole } from './shared.types';
 
@@ -39,4 +38,23 @@ export function extractUserRoles(user: User | null): UserRole[] {
  */
 export function isValidUserRole(role: string): role is UserRole {
   return ['USER', 'ADMIN', 'EDITOR', 'SUPER_ADMIN', 'MODERATOR', 'BUILDER'].includes(role as UserRole);
+}
+
+export interface UserProfile {
+  id: string;
+  email?: string;
+  display_name?: string;
+  avatar_url?: string;
+  theme_preference?: string;
+  is_active?: boolean;
+  last_login?: string;
+  created_at?: string;
+  updated_at?: string;
+  roles?: UserRole[];
+  bio?: string;
+  social_links?: Record<string, string>;
+  preferences?: Record<string, any>;
+  location?: string;
+  website?: string;
+  user_id?: string;
 }
