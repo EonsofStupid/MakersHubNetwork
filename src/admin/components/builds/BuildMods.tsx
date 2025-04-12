@@ -3,7 +3,7 @@ import React from "react";
 import { Card } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { Wrench } from "lucide-react";
-import { BuildMod } from "@/shared/types/shared.types";
+import { BuildMod } from "@/shared/types/build.types";
 
 interface BuildModsProps {
   mods: BuildMod[];

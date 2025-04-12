@@ -3,8 +3,6 @@
  * Build types for the application
  */
 
-import { User } from './shared.types';
-
 // Build status enum
 export enum BuildStatus {
   PENDING = 'pending',
@@ -31,6 +29,7 @@ export interface BuildMod {
   id: string;
   name: string;
   description: string;
+  complexity?: number;
   status?: BuildStatus;
   build_id: string;
   created_at: string;
@@ -47,7 +46,7 @@ export interface BuildFilters {
     to?: Date;
   };
   approved?: boolean;
-  sortBy?: 'newest' | 'oldest' | 'alphabetical';
+  sortBy?: 'newest' | 'oldest' | 'complexity' | 'alphabetical';
 }
 
 // Build pagination
@@ -58,22 +57,29 @@ export interface BuildPagination {
   totalPages: number;
 }
 
+// Build user interface (simplified from full User)
+interface BuildUser {
+  displayName?: string | null;
+  avatarUrl?: string | null;
+}
+
 // Build interface
 export interface Build {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   status: BuildStatus;
   creator_id: string;
   created_at: string;
   updated_at: string;
+  complexity?: number;
   category?: string[];
   approved?: boolean;
   reviewed_by?: string;
   reviewed_at?: string;
   parts?: BuildPart[];
   mods?: BuildMod[];
-  user?: User;
+  user?: BuildUser;
   image_urls?: string[];
   tags?: string[];
   featured?: boolean;
@@ -99,5 +105,5 @@ export interface BuildAdminStore {
   updateFilters: (filters: Partial<BuildFilters>) => void;
   changePage: (page: number) => void;
   changePageSize: (size: number) => void;
-  searchBuilds: (term: string) => Promise<void>;
+  clearError: () => void;
 }

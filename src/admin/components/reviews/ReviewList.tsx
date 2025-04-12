@@ -4,8 +4,8 @@ import { useReviewAdminStore } from "@/admin/store/reviewAdmin.store";
 import { ReviewCard } from "./ReviewCard";
 import { ReviewStatsDisplay } from "./ReviewStats";
 import { Loader2 } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -56,7 +56,7 @@ export function ReviewList({
   
   // Handle rejecting a review
   const handleReject = async (reviewId: string) => {
-    await rejectReview(reviewId);
+    await rejectReview(reviewId, "Rejected during review");
   };
   
   if (isLoading && reviews.length === 0) {
@@ -89,7 +89,7 @@ export function ReviewList({
           )}
           
           {/* Filters */}
-          {showFilters && (
+          {showFilters && filters && (
             <div className={cn(
               "flex items-end gap-4", 
               showStats ? "md:col-span-2" : "md:col-span-3"
@@ -97,9 +97,9 @@ export function ReviewList({
               <div className="w-full md:w-[200px]">
                 <label className="text-sm font-medium mb-1.5 block">Sort By</label>
                 <Select
-                  value={filters.sortBy}
+                  value={filters.sortBy || 'newest'}
                   onValueChange={(value) => 
-                    updateFilters({ sortBy: value as typeof filters.sortBy })
+                    updateFilters({ sortBy: value })
                   }
                 >
                   <SelectTrigger>

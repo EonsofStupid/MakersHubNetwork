@@ -1,249 +1,270 @@
 
-import { create } from "zustand";
-import { supabase } from "@/integrations/supabase/client";
+import { create } from 'zustand';
 import { 
-  ReviewAdminStore, 
-  BuildReview, 
+  Review, 
   ReviewStats, 
-  ReviewCategory, 
-  ReviewRating 
-} from "../types/review.types";
-import { toast } from "sonner";
+  BuildReview, 
+  ReviewRating,
+  ReviewAdminStore
+} from '@/shared/types/shared.types';
 
+// Create a store to manage reviews in the admin panel
 export const useReviewAdminStore = create<ReviewAdminStore>((set, get) => ({
+  // State
   reviews: [],
-  pendingReviews: [],
   selectedReview: null,
+  pendingReviews: [],
   stats: null,
-  filters: {
-    sortBy: 'newest',
-    approvedOnly: false,
-  },
   isLoading: false,
   error: null,
-
-  fetchReviews: async (buildId) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const { filters } = get();
-      
-      // Build the query
-      let query = supabase
-        .from('build_reviews')
-        .select(`
-          *,
-          profiles:user_id (display_name, avatar_url)
-        `)
-        .eq('build_id', buildId);
-      
-      // Apply filters
-      if (filters.approvedOnly) {
-        query = query.eq('approved', true);
-      }
-      
-      if (filters.minRating) {
-        query = query.gte('rating', filters.minRating);
-      }
-      
-      if (filters.categoryFilter && filters.categoryFilter.length > 0) {
-        const categoryConditions = filters.categoryFilter.map(category => 
-          `category::text[] @> '{${category}}'`
-        );
-        query = query.or(categoryConditions.join(','));
-      }
-      
-      // Apply sorting
-      switch (filters.sortBy) {
-        case 'newest':
-          query = query.order('created_at', { ascending: false });
-          break;
-        case 'highest_rated':
-          query = query.order('rating', { ascending: false });
-          break;
-        // Most helpful would ideally use a votes system that we'll implement later
-        default:
-          query = query.order('created_at', { ascending: false });
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      
-      // Transform data to match our BuildReview interface
-      const reviews = data.map(review => {
-        const profiles = review.profiles as { display_name?: string; avatar_url?: string } | null;
-        return {
-          ...review,
-          reviewer_name: profiles?.display_name,
-        };
-      }) as BuildReview[];
-      
-      set({ reviews, isLoading: false });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch reviews';
-      set({ error: errorMessage, isLoading: false });
-      console.error('Error fetching reviews:', error);
-    }
+  filters: {
+    buildId: undefined,
+    approved: 'all',
+    rating: 'all',
+    sort: 'newest',
+    approvedOnly: false,
+    sortBy: 'newest',
   },
   
-  fetchPendingReviews: async () => {
+  // Fetch reviews, optionally filtered by build ID
+  fetchReviews: async (buildId?: string) => {
+    set({ isLoading: true, error: null });
+    
     try {
-      set({ isLoading: true, error: null });
-      
-      const { data, error } = await supabase
-        .from('build_reviews')
-        .select(`
-          *,
-          profiles:user_id (display_name, avatar_url),
-          builds:build_id (title)
-        `)
-        .eq('approved', false)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Transform data to match our BuildReview interface
-      const pendingReviews = data.map(review => {
-        const profiles = review.profiles as { display_name?: string; avatar_url?: string } | null;
-        const builds = review.builds as { title?: string } | null;
-        
-        return {
-          ...review,
-          reviewer_name: profiles?.display_name,
-          // Include build title if needed
-          build_title: builds?.title,
-        };
-      }) as BuildReview[];
-      
-      set({ pendingReviews, isLoading: false });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch pending reviews';
-      set({ error: errorMessage, isLoading: false });
-      console.error('Error fetching pending reviews:', error);
-    }
-  },
-  
-  approveReview: async (reviewId) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const { error } = await supabase
-        .from('build_reviews')
-        .update({ approved: true })
-        .eq('id', reviewId);
-      
-      if (error) throw error;
-      
-      toast.success('Review approved successfully');
-      
-      // Refresh pending reviews
-      await get().fetchPendingReviews();
-      
-      set({ isLoading: false });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to approve review';
-      set({ error: errorMessage, isLoading: false });
-      console.error('Error approving review:', error);
-      toast.error('Failed to approve review');
-    }
-  },
-  
-  rejectReview: async (reviewId) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const { error } = await supabase
-        .from('build_reviews')
-        .delete()
-        .eq('id', reviewId);
-      
-      if (error) throw error;
-      
-      toast.success('Review rejected and removed');
-      
-      // Refresh pending reviews
-      await get().fetchPendingReviews();
-      
-      set({ isLoading: false });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to reject review';
-      set({ error: errorMessage, isLoading: false });
-      console.error('Error rejecting review:', error);
-      toast.error('Failed to reject review');
-    }
-  },
-  
-  fetchReviewStats: async (buildId) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const { data, error } = await supabase
-        .from('build_reviews')
-        .select('rating, category')
-        .eq('build_id', buildId)
-        .eq('approved', true);
-      
-      if (error) throw error;
-      
-      if (!data || data.length === 0) {
-        set({ 
-          stats: {
-            averageRating: 0,
-            totalReviews: 0,
-            categoryBreakdown: {} as Record<ReviewCategory, number>,
-            ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
-          },
-          isLoading: false 
-        });
+      // If buildId is provided, fetch reviews for that build
+      if (buildId) {
+        await get().fetchReviewsByBuildId(buildId);
         return;
       }
       
-      // Calculate average rating
-      const ratings = data.map(review => review.rating || 0).filter(rating => rating > 0);
-      const sum = ratings.reduce((acc, rating) => acc + rating, 0);
-      const averageRating = ratings.length > 0 ? sum / ratings.length : 0;
+      // In a real app, this would be an API call with filters
+      await new Promise(resolve => setTimeout(resolve, 600));
       
-      // Calculate rating distribution
-      const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<ReviewRating, number>;
-      ratings.forEach(rating => {
-        if (rating >= 1 && rating <= 5) {
-          ratingDistribution[rating as ReviewRating] = (ratingDistribution[rating as ReviewRating] || 0) + 1;
-        }
-      });
-      
-      // Calculate category breakdown
-      const categoryBreakdown = {} as Record<ReviewCategory, number>;
-      data.forEach(review => {
-        if (review.category && Array.isArray(review.category)) {
-          review.category.forEach(category => {
-            const categoryKey = category as ReviewCategory;
-            categoryBreakdown[categoryKey] = (categoryBreakdown[categoryKey] || 0) + 1;
-          });
-        }
-      });
-      
-      set({
-        stats: {
-          averageRating,
-          totalReviews: data.length,
-          categoryBreakdown,
-          ratingDistribution
+      // Mock data
+      const mockReviews: Review[] = [
+        {
+          id: "review-1",
+          build_id: "build-1",
+          user_id: "user-1",
+          rating: ReviewRating.EXCELLENT,
+          content: "Amazing build, really well thought out.",
+          created_at: new Date().toISOString(),
+          approved: true,
+          categories: ["quality", "innovation"]
         },
-        isLoading: false
-      });
+        {
+          id: "review-2",
+          build_id: "build-2",
+          user_id: "user-2",
+          rating: ReviewRating.GOOD,
+          content: "Good build, but could use some improvements.",
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+          approved: false,
+          categories: ["quality", "usability"]
+        }
+      ];
+      
+      set({ reviews: mockReviews, isLoading: false });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch review stats';
-      set({ error: errorMessage, isLoading: false });
-      console.error('Error fetching review stats:', error);
+      set({ 
+        error: error instanceof Error ? error.message : String(error),
+        isLoading: false 
+      });
     }
   },
   
-  updateFilters: (filters) => {
-    set({ filters: { ...get().filters, ...filters } });
+  // Fetch reviews for a specific build
+  fetchReviewsByBuildId: async (buildId: string) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Mock data for a specific build
+      const mockReviews: Review[] = [
+        {
+          id: "review-1",
+          build_id: buildId,
+          user_id: "user-1",
+          rating: ReviewRating.EXCELLENT,
+          content: "Amazing build, really well thought out.",
+          created_at: new Date().toISOString(),
+          approved: true,
+          categories: ["quality", "innovation"],
+          status: "published" as any
+        },
+        {
+          id: "review-2",
+          build_id: buildId,
+          user_id: "user-2",
+          rating: ReviewRating.OK,
+          content: "It's okay, but I've seen better.",
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+          approved: true,
+          categories: ["usability"],
+          status: "published" as any
+        }
+      ];
+      
+      set({ reviews: mockReviews, isLoading: false });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : String(error),
+        isLoading: false 
+      });
+    }
   },
   
-  setSelectedReview: (review) => {
-    set({ selectedReview: review });
+  // Fetch pending reviews (awaiting approval)
+  fetchPendingReviews: async () => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 700));
+      
+      // Mock data
+      const mockPendingReviews: BuildReview[] = [
+        {
+          id: "review-3",
+          build_id: "build-3",
+          user_id: "user-3",
+          rating: ReviewRating.GOOD,
+          content: "Pretty good overall.",
+          title: "Good Quality Build",
+          body: "This build has good quality components and is well designed. I particularly like the cooling system.",
+          created_at: new Date().toISOString(),
+          approved: false,
+          categories: ["quality", "cooling"],
+          status: "pending" as any,
+          reviewer_name: "Janet Builder",
+          category: ["quality", "cooling"],
+          image_urls: ["https://via.placeholder.com/300x200?text=Review+Image"]
+        },
+        {
+          id: "review-4",
+          build_id: "build-4",
+          user_id: "user-4",
+          rating: ReviewRating.BAD,
+          content: "Not impressed with this build.",
+          title: "Disappointing Build",
+          body: "I had high hopes for this build but the quality doesn't match the description. The parts don't fit well together.",
+          created_at: new Date(Date.now() - 172800000).toISOString(),
+          approved: false,
+          categories: ["quality"],
+          status: "pending" as any,
+          reviewer_name: "Critical User",
+          category: ["quality"],
+        }
+      ];
+      
+      set({ 
+        pendingReviews: mockPendingReviews, 
+        isLoading: false 
+      });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : String(error),
+        isLoading: false 
+      });
+    }
+  },
+  
+  // Fetch review statistics
+  fetchReviewStats: async (buildId?: string) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 400));
+      
+      // Mock data
+      const mockStats: ReviewStats = {
+        totalReviews: 24,
+        avgRating: 4.2,
+        totalApproved: 20,
+        totalPending: 3,
+        totalRejected: 1,
+        ratingCounts: {
+          [ReviewRating.EXCELLENT]: 10,
+          [ReviewRating.GOOD]: 8,
+          [ReviewRating.OK]: 4,
+          [ReviewRating.BAD]: 1,
+          [ReviewRating.AWFUL]: 1
+        }
+      };
+      
+      set({ stats: mockStats, isLoading: false });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : String(error),
+        isLoading: false 
+      });
+    }
+  },
+  
+  // Approve a review
+  approveReview: async (reviewId: string, message?: string) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      // Update local state for the review
+      set(state => ({
+        reviews: state.reviews.map(review => 
+          review.id === reviewId 
+            ? { ...review, approved: true } 
+            : review
+        ),
+        pendingReviews: state.pendingReviews.filter(review => 
+          review.id !== reviewId
+        ),
+        isLoading: false
+      }));
+      
+      // Refetch pending reviews
+      get().fetchPendingReviews();
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : String(error),
+        isLoading: false 
+      });
+    }
+  },
+  
+  // Reject a review
+  rejectReview: async (reviewId: string, reason: string) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      // Update local state
+      set(state => ({
+        pendingReviews: state.pendingReviews.filter(review => 
+          review.id !== reviewId
+        ),
+        isLoading: false
+      }));
+      
+      // Refetch pending reviews
+      get().fetchPendingReviews();
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : String(error),
+        isLoading: false 
+      });
+    }
+  },
+  
+  // Update filters
+  updateFilters: (newFilters: any) => {
+    set((state) => ({
+      filters: { ...state.filters, ...newFilters }
+    }));
   }
 }));

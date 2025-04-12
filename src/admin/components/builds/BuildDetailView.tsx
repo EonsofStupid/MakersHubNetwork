@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
@@ -7,12 +8,12 @@ import {
   CardFooter, 
   CardHeader, 
   CardTitle 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Label } from "@/shared/ui/label";
+import { Textarea } from "@/shared/ui/textarea";
+import { Badge } from "@/shared/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
 import { AlertCircle, ArrowLeft, Clock, Package, ThumbsDown, ThumbsUp, Wrench, MessageSquare } from "lucide-react";
 import { formatDistance } from "date-fns";
@@ -33,7 +34,7 @@ export function BuildDetailView() {
     selectedBuild, 
     isLoading, 
     error, 
-    fetchBuildById,
+    fetchBuild,
     approveBuild,
     rejectBuild,
     requestRevision,
@@ -47,13 +48,13 @@ export function BuildDetailView() {
   
   useEffect(() => {
     if (buildId) {
-      fetchBuildById(buildId);
+      fetchBuild(buildId);
     }
     
     return () => {
       clearError();
     };
-  }, [buildId, fetchBuildById, clearError]);
+  }, [buildId, fetchBuild, clearError]);
   
   const handleReviewSubmit = async (status: 'approved' | 'rejected' | 'needs_revision') => {
     if (!buildId) return;
@@ -117,7 +118,7 @@ export function BuildDetailView() {
             Back to Builds
           </Button>
           {buildId && (
-            <Button size="sm" onClick={() => fetchBuildById(buildId)}>
+            <Button size="sm" onClick={() => fetchBuild(buildId)}>
               Retry
             </Button>
           )}
@@ -157,7 +158,7 @@ export function BuildDetailView() {
             <div>
               <CardTitle className="text-2xl">{selectedBuild.title}</CardTitle>
               <CardDescription className="mt-2">
-                Submitted by {selectedBuild.display_name || "Unknown User"} {' '}
+                Submitted by {selectedBuild.user?.displayName || "Unknown User"} {' '}
                 {selectedBuild.created_at && (
                   <span title={new Date(selectedBuild.created_at).toLocaleString()}>
                     {formatDistance(new Date(selectedBuild.created_at), new Date(), { addSuffix: true })}
@@ -168,15 +169,15 @@ export function BuildDetailView() {
             <div className="flex items-center gap-3">
               <div className="flex items-center">
                 <Package className="w-4 h-4 mr-1 text-muted-foreground" />
-                <span>{selectedBuild.parts_count} parts</span>
+                <span>{(selectedBuild.parts || []).length} parts</span>
               </div>
               <div className="flex items-center">
                 <Wrench className="w-4 h-4 mr-1 text-muted-foreground" />
-                <span>{selectedBuild.mods_count} mods</span>
+                <span>{(selectedBuild.mods || []).length} mods</span>
               </div>
               <Badge variant="outline" className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                Complexity: {selectedBuild.complexity_score.toFixed(1)}
+                Complexity: {selectedBuild.complexity || 0}
               </Badge>
             </div>
           </div>
@@ -196,7 +197,7 @@ export function BuildDetailView() {
             
             <TabsContent value="details" className="mt-0">
               <div className="space-y-4">
-                <ImageGallery images={selectedBuild.images || []} />
+                <ImageGallery images={selectedBuild.image_urls || []} />
                 
                 <div>
                   <h3 className="font-medium mb-2">Description</h3>
