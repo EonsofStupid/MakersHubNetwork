@@ -10,9 +10,7 @@ import { GoogleLoginButton } from '@/auth/components/GoogleLoginButton';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 import { Shield } from 'lucide-react';
-import { UserRole } from '@/shared/types/shared.types';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/cn';
 import { useAdminNavigation } from '@/admin/hooks/useAdminNavigation';
 
 export function LoginSheet() {
@@ -23,15 +21,8 @@ export function LoginSheet() {
   const { toast } = useToast();
   const logger = useLogger('LoginSheet', LogCategory.AUTH);
   
-  // Get auth state from store
-  const { user, roles } = useAuthStore();
-  const isAuthenticated = !!user;
-  
   // Use the admin navigation hook
   const { navigateToAdmin, hasAdminAccess } = useAdminNavigation();
-  
-  // If already authenticated, don't show the login button
-  if (isAuthenticated) return null;
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
