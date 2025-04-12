@@ -35,6 +35,9 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
     setUserMenuOpen(false);
   };
 
+  // Get user's first initial for avatar fallback
+  const userInitial = user?.user_metadata?.full_name?.charAt(0) || 'U';
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center gap-2">
@@ -72,7 +75,7 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
           >
             <UserAvatar
               user={user}
-              fallbackText={user?.user_metadata?.full_name?.charAt(0) || 'U'}
+              fallbackText={userInitial}
               size="sm"
               className="h-8 w-8"
             />

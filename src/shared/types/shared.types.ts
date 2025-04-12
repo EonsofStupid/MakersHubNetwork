@@ -20,11 +20,13 @@ export type UserProfile = {
   updated_at?: string;
 };
 
+// Convert AuthStatus from type to enum so it can be used as a value
 export enum AuthStatus {
   LOADING = 'LOADING',
   AUTHENTICATED = 'AUTHENTICATED',
   UNAUTHENTICATED = 'UNAUTHENTICATED',
-  ERROR = 'ERROR'
+  ERROR = 'ERROR',
+  INITIAL = 'INITIAL'
 }
 
 export type AuthEvent = {
@@ -53,7 +55,7 @@ export type Permission = {
   description: string;
 };
 
-// Logging Types
+// Logging Types - Convert from type to enum
 export enum LogLevel {
   TRACE = 'TRACE',
   DEBUG = 'DEBUG',
@@ -81,10 +83,15 @@ export enum LogCategory {
 }
 
 export type LogEvent = {
+  entry: LogEntry;
+};
+
+export type LogEntry = {
   id: string;
   level: LogLevel;
   message: string;
   source: string;
+  category: LogCategory;
   timestamp: Date;
   details?: Record<string, unknown>;
 };
@@ -98,16 +105,7 @@ export type LogFilter = {
   to?: Date;
 };
 
-export type LogEntry = {
-  id: string;
-  level: LogLevel;
-  message: string;
-  source: string;
-  category: LogCategory;
-  timestamp: Date;
-  details?: Record<string, unknown>;
-};
-
+// Map LogLevel to numeric values for comparison
 export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.TRACE]: 0,
   [LogLevel.DEBUG]: 1,

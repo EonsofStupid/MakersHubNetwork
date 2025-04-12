@@ -1,39 +1,54 @@
 
+import { useCallback } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { UserRole } from '@/shared/types/shared.types';
 
 /**
- * Hook to check if the current user has a specific role or roles
- *
- * @param role - Single role or array of roles to check
- * @returns boolean indicating if user has at least one of the roles
+ * Hook to check if the current user has a specific role
+ * @param role The role or roles to check for
+ * @returns Boolean indicating if the user has the role
  */
-export function useHasRole(role: UserRole | UserRole[]): boolean {
+export function useHasRole(role: UserRole | UserRole[]) {
   const roles = useAuthStore(state => state.roles);
   
-  if (Array.isArray(role)) {
-    return role.some(r => roles.includes(r));
-  }
+  return useCallback(() => {
+    if (!roles.length) {
+      return false;
+    }
+    
+    // Super admin has all roles
+    if (roles.includes('super_admin')) {
+      return true;
+    }
+    
+    if (Array.isArray(role)) {
+      return role.some(r => roles.includes(r));
+    }
+    
+    return roles.includes(role);
+  }, [roles, role]);
+}
+
+/**
+ * Hook to check if the user has admin-level access
+ * @returns Boolean indicating if the user has admin access
+ */
+export function useHasAdminAccess() {
+  const hasRole = useAuthStore(state => state.hasRole);
   
-  return roles.includes(role);
+  return useCallback(() => {
+    return hasRole(['admin', 'super_admin']);
+  }, [hasRole]);
 }
 
 /**
- * Hook to check if current user has admin access
- *
- * @returns boolean indicating if user is admin or super_admin
+ * Hook to check if the user is a super admin
+ * @returns Boolean indicating if the user is a super admin
  */
-export function useHasAdminAccess(): boolean {
-  const isAdmin = useAuthStore(state => state.isAdmin());
-  return isAdmin;
-}
-
-/**
- * Hook to check if current user is super admin
- *
- * @returns boolean indicating if user is super_admin
- */
-export function useIsSuperAdmin(): boolean {
-  const isSuperAdmin = useAuthStore(state => state.isSuperAdmin());
-  return isSuperAdmin;
+export function useIsSuperAdmin() {
+  const hasRole = useAuthStore(state => state.hasRole);
+  
+  return useCallback(() => {
+    return hasRole('super_admin');
+  }, [hasRole]);
 }

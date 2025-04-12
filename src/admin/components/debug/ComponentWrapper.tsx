@@ -13,7 +13,9 @@ interface ComponentWrapperProps {
 
 export const ComponentWrapper = forwardRef<HTMLDivElement, ComponentWrapperProps>(
   ({ children, componentName, className, id, onClick, ...props }, ref) => {
-    const { isSuperAdmin } = useAuth();
+    const { hasRole } = useAuth();
+    // Check if user is a super_admin
+    const isSuperAdmin = hasRole('super_admin');
     
     // Generate a stable component ID that won't change on re-renders
     const stableId = useMemo(() => {

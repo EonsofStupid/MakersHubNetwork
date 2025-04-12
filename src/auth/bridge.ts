@@ -3,7 +3,13 @@
 // It abstracts away the implementation details of the auth provider
 
 import { createClient, User, Session } from '@supabase/supabase-js';
-import { AuthEvent, AuthEventType, UserProfile, UserRole } from '@/shared/types/shared.types';
+import { 
+  AuthEvent, 
+  AuthEventType, 
+  UserProfile, 
+  UserRole, 
+  AuthStatus 
+} from '@/shared/types/shared.types';
 
 // Define event types
 export type AuthEventHandler = (event: AuthEvent) => void;
@@ -102,6 +108,14 @@ export class AuthBridgeImpl {
     
     return data.session;
   }
+
+  /**
+   * Get the current session
+   * Alias for getSession for compatibility
+   */
+  public async getCurrentSession(): Promise<Session | null> {
+    return this.getSession();
+  }
   
   /**
    * Get the current user
@@ -111,21 +125,37 @@ export class AuthBridgeImpl {
     if (error && error.name !== 'AuthSessionMissingError') throw error;
     return data?.user || null;
   }
+
+  /**
+   * Get a user's profile
+   */
+  public async getUserProfile(userId: string): Promise<UserProfile | null> {
+    // This would typically query a profiles table in your database
+    // For now we return a placeholder profile
+    return {
+      id: userId,
+      user_id: userId,
+      display_name: null,
+      avatar_url: null,
+    };
+  }
   
   /**
    * Check if user has a specific role
    */
   public hasRole(roles: UserRole | UserRole[]): boolean {
     // Implementation depends on how roles are stored
-    // For now, we'll just return false
-    return false;
+    // This is a placeholder implementation
+    return Array.isArray(roles) ? roles.includes('user') : roles === 'user';
   }
   
   /**
    * Link a social account to the current user
    */
   public async linkAccount(provider: string): Promise<void> {
-    throw new Error('Not implemented');
+    // Placeholder implementation
+    console.log(`Linking account with provider: ${provider}`);
+    // In a real implementation, you would call the appropriate Supabase method
   }
   
   /**
@@ -147,8 +177,22 @@ export class AuthBridgeImpl {
   /**
    * Update a user's profile information
    */
-  public async updateUserProfile(profileData: Partial<UserProfile>): Promise<void> {
-    throw new Error('Not implemented');
+  public async updateUserProfile(profileData: Partial<UserProfile>): Promise<UserProfile> {
+    // This would typically update a profile in your database
+    // For now we return the input as a placeholder
+    return {
+      id: profileData.id || '',
+      user_id: profileData.user_id || '',
+      display_name: profileData.display_name || null,
+      avatar_url: profileData.avatar_url || null,
+    };
+  }
+
+  /**
+   * Update profile - alias for updateUserProfile for compatibility
+   */
+  public async updateProfile(profileData: Partial<UserProfile>): Promise<UserProfile> {
+    return this.updateUserProfile(profileData);
   }
 }
 
