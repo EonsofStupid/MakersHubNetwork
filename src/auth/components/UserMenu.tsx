@@ -1,98 +1,88 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/logging/constants/log-category';
 import { Button } from '@/shared/ui/button';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { authBridge } from '@/auth/bridge';
+import { useAuthStore } from '../store/auth.store';
 import { UserAvatar } from './UserAvatar';
-import { ProfileDialog } from '@/app/components/profile/ProfileDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu';
-import { ChevronDown, User, Settings, LogOut } from 'lucide-react';
-import { cn } from '@/shared/utils/cn';
 
 export function UserMenu() {
-  const [open, setOpen] = useState(false);
-  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
-  const { user, logout, isAdmin } = useAuthStore();
   const navigate = useNavigate();
-
-  if (!user) return null;
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
+  const logger = useLogger('UserMenu', LogCategory.AUTH);
+  const { user, roles } = useAuthStore();
+  
+  // Display name fallback hierarchy: displayName -> username -> email -> 'User'
+  const displayName = 
+    user?.profile?.display_name || 
+    user?.profile?.username || 
+    (user?.email ? user.email.split('@')[0] : 'User');
+  
+  const handleSignOut = async () => {
+    try {
+      await authBridge.signOut();
+      navigate('/');
+    } catch (error) {
+      logger.error('Error signing out', { details: { error } });
+    }
   };
-
+  
   const handleProfileClick = () => {
-    setOpen(false);
-    setProfileDialogOpen(true);
+    navigate('/profile');
   };
-
+  
+  const handleDashboardClick = () => {
+    navigate('/dashboard');
+  };
+  
   const handleAdminClick = () => {
-    setOpen(false);
     navigate('/admin');
   };
-
+  
+  const isAdmin = roles?.includes('admin') || roles?.includes('super_admin');
+  
   return (
-    <>
-      <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="relative h-10 w-10 rounded-full border border-primary/10 p-0 hover:border-primary/30"
-          >
-            <UserAvatar user={user} />
-            <ChevronDown className="absolute -bottom-4 left-1/2 h-4 w-4 -translate-x-1/2" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="mt-2 w-56" align="end">
-          <div className="flex items-center justify-start gap-2 p-2">
-            <div className="flex flex-col space-y-0.5">
-              <p className="text-sm font-medium">
-                {user.user_metadata?.name || 'User'}
-              </p>
-              <p className="text-xs text-muted-foreground">{user.email}</p>
-            </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full">
+          <UserAvatar user={user} size="sm" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{displayName}</p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user?.email}
+            </p>
           </div>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem 
-            onClick={handleProfileClick}
-            className="cursor-pointer"
-          >
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleProfileClick}>
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDashboardClick}>
+          Dashboard
+        </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem onClick={handleAdminClick}>
+            Admin Panel
           </DropdownMenuItem>
-          
-          {isAdmin() && (
-            <DropdownMenuItem 
-              onClick={handleAdminClick}
-              className="cursor-pointer"
-            >
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Admin Panel</span>
-            </DropdownMenuItem>
-          )}
-          
-          <DropdownMenuSeparator />
-          <DropdownMenuItem 
-            onClick={handleLogout} 
-            className="cursor-pointer text-destructive focus:text-destructive"
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            <span>Log out</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      
-      <ProfileDialog
-        open={profileDialogOpen}
-        onClose={() => setProfileDialogOpen(false)}
-      />
-    </>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut}>
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

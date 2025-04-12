@@ -1,111 +1,51 @@
-import { Session } from '@supabase/supabase-js';
 
-// Auth types
-export type UserRole = 'user' | 'moderator' | 'admin' | 'superadmin' | 'builder';
+// Core shared types used across the application
 
-export interface User {
-  id: string;
-  email: string;
-  user_metadata?: {
-    name?: string;
-    avatar_url?: string;
-    [key: string]: any;
-  };
-  app_metadata?: {
-    roles?: string[];
-    provider?: string;
-    [key: string]: any;
-  };
-  [key: string]: any; // For other potential fields from auth providers
-}
+// Auth-related types
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'moderator' | 'editor';
 
 export interface UserProfile {
   id: string;
-  user_id: string;
+  username?: string;
   display_name?: string;
-  full_name?: string;
   avatar_url?: string;
   bio?: string;
-  website?: string;
-  roles?: UserRole[];
-  [key: string]: any; // For future profile fields
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface AuthStatus {
+export interface User {
+  id: string;
+  email?: string;
+  profile?: UserProfile;
+  roles?: UserRole[];
+}
+
+export enum AuthStatus {
+  INITIAL = 'INITIAL',
+  AUTHENTICATED = 'AUTHENTICATED',
+  UNAUTHENTICATED = 'UNAUTHENTICATED',
+  LOADING = 'LOADING',
+  ERROR = 'ERROR'
+}
+
+export interface AuthState {
+  status: AuthStatus;
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
 
+export type AuthEventType = 
+  | 'AUTH_STATE_CHANGE'
+  | 'AUTH_SIGNIN' 
+  | 'AUTH_SIGNOUT' 
+  | 'AUTH_ERROR'
+  | 'AUTH_SESSION_EXPIRED'
+  | 'AUTH_LINKING_REQUIRED';
+
 export interface AuthEvent {
   type: AuthEventType;
-  timestamp: string;
-  data?: {
-    user?: User;
-    profile?: UserProfile;
-    session?: Session;
-    [key: string]: any;
-  };
-}
-
-export type AuthEventType = 
-  | 'SIGNED_IN'
-  | 'SIGNED_OUT'
-  | 'USER_UPDATED'
-  | 'PROFILE_FETCHED'
-  | 'PROFILE_UPDATED'
-  | 'SESSION_REFRESHED'
-  | 'AUTH_ERROR'
-  | 'AUTH_STATE_CHANGE';
-
-// Application types
-export interface AppConfig {
-  features: {
-    [key: string]: boolean;
-  };
-  theme: ThemeConfig;
-  version: string;
-  apiVersion: string;
-}
-
-export interface ThemeConfig {
-  primary: string;
-  mode: 'dark' | 'light' | 'system';
-}
-
-// Other shared types
-export interface PaginationParams {
-  page: number;
-  perPage: number;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    total: number;
-    page: number;
-    perPage: number;
-    pageCount: number;
-  };
-}
-
-export interface ApiResponse<T> {
-  data?: T;
-  error?: ApiError;
-  meta?: {
-    [key: string]: any;
-  };
-}
-
-export interface ApiError {
-  code: string;
-  message: string;
-  details?: any;
-}
-
-// Events
-export interface BaseEvent<T = any> {
-  type: string;
-  payload?: T;
-  timestamp: string;
-  source: string;
+  payload?: Record<string, any>;
+  timestamp: number;
 }

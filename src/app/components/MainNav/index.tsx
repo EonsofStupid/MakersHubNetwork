@@ -1,23 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from '@/shared/ui/navigation-menu';
-import { Button } from '@/shared/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { LoginSheet } from './components/LoginSheet';
+import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/shared/ui/navigation-menu';
+import { Button } from '@/shared/ui/button';
 import { UserMenu } from '@/auth/components/UserMenu';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { SearchButton } from './components/SearchButton';
 
 export function MainNav() {
   const navigate = useNavigate();
-  const { status } = useAuthStore();
-  const { isAuthenticated, isLoading } = status;
+  const { status, isAuthenticated, isLoading } = useAuthStore();
 
   return (
     <div className="flex justify-between items-center py-3">
@@ -77,7 +70,13 @@ export function MainNav() {
         ) : isAuthenticated ? (
           <UserMenu />
         ) : (
-          <LoginSheet />
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/login')}
+          >
+            Sign In
+          </Button>
         )}
       </div>
     </div>

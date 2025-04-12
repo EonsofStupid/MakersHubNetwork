@@ -1,46 +1,43 @@
 
 import React from 'react';
+import { User } from '@/shared/types/shared.types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
-import { cn } from '@/shared/utils/cn';
-import { User } from '@/shared/types';
 
 interface UserAvatarProps {
   user: User | null;
-  fallbackText?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  className?: string;
+  size?: 'sm' | 'md' | 'lg';
+  fallback?: React.ReactNode;
 }
 
 export function UserAvatar({ 
   user, 
-  fallbackText = 'U',
-  size = 'md',
-  className
+  size = 'md', 
+  fallback 
 }: UserAvatarProps) {
-  const avatarUrl = user?.user_metadata?.avatar_url;
+  const getInitials = (name?: string): string => {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
   
-  // Generate fallback initials if no specific fallback provided
-  const initials = fallbackText || 
-    (user?.user_metadata?.name ? 
-      user.user_metadata.name.charAt(0).toUpperCase() : 
-      'U');
-  
-  // Size mappings
   const sizeClasses = {
     sm: 'h-8 w-8 text-xs',
     md: 'h-10 w-10 text-sm',
-    lg: 'h-16 w-16 text-lg',
-    xl: 'h-24 w-24 text-2xl'
+    lg: 'h-16 w-16 text-xl',
   };
   
+  const displayName = user?.profile?.display_name || user?.email?.split('@')[0] || '?';
+  const avatarUrl = user?.profile?.avatar_url;
+  
   return (
-    <Avatar className={cn(sizeClasses[size], className)}>
-      <AvatarImage
-        src={avatarUrl}
-        alt={user?.user_metadata?.name || 'User avatar'}
-      />
-      <AvatarFallback className="bg-primary/10 text-primary">
-        {initials}
+    <Avatar className={sizeClasses[size]}>
+      {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+      <AvatarFallback>
+        {fallback || getInitials(displayName)}
       </AvatarFallback>
     </Avatar>
   );
