@@ -13,13 +13,14 @@ import { useNavigate } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { UserRole } from '@/shared/types/shared.types';
 import { useAuthStore } from '@/auth/store/auth.store';
+import { useHasRole } from '@/auth/hooks/useHasRole';
+import { cn } from '@/lib/utils';
 
 export function LoginSheet() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [hasAdminAccess, setHasAdminAccess] = useState(false);
   const { toast } = useToast();
   const logger = useLogger('LoginSheet', LogCategory.AUTH);
   const navigate = useNavigate();
@@ -28,18 +29,8 @@ export function LoginSheet() {
   const { user, roles } = useAuthStore();
   const isAuthenticated = !!user;
   
-  // Check for admin access
-  useEffect(() => {
-    if (isAuthenticated && roles) {
-      const isAdmin = roles.some(role => 
-        role === UserRole.ADMIN || 
-        role === UserRole.SUPER_ADMIN
-      );
-      setHasAdminAccess(isAdmin);
-    } else {
-      setHasAdminAccess(false);
-    }
-  }, [isAuthenticated, roles]);
+  // Use the useHasRole hook to check for admin access
+  const { hasAdminAccess } = useHasRole();
   
   // If already authenticated, don't show the login button
   if (isAuthenticated) return null;
@@ -134,15 +125,16 @@ export function LoginSheet() {
             </Button>
           </form>
 
-          {hasAdminAccess && (
+          {hasAdminAccess() && (
             <div className="pt-2">
               <Button
                 variant="outline"
-                className="w-full bg-primary/5 hover:bg-primary/10"
+                className={cn("w-full bg-primary/5 hover:bg-primary/10", "group relative overflow-hidden")}
                 onClick={handleAdminClick}
               >
                 <Shield className="mr-2 h-4 w-4 text-primary" />
                 <span className="text-primary">Admin Dashboard</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
               </Button>
             </div>
           )}
