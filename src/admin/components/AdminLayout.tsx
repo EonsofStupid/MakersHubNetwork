@@ -9,15 +9,15 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 
 export function AdminLayout() {
-  const { initAdmin } = useAdminStore();
+  const { initialize } = useAdminStore(); // Changed from initAdmin to initialize
   const [isEditMode] = useAtom(adminEditModeAtom);
   const logger = useLogger('AdminLayout', LogCategory.SYSTEM);
   
   // Initialize admin module
   useEffect(() => {
     logger.info('Initializing Admin layout');
-    initAdmin();
-  }, [initAdmin, logger]);
+    initialize();
+  }, [initialize, logger]);
   
   return (
     <div className="admin-layout">

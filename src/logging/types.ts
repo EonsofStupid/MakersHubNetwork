@@ -21,6 +21,10 @@ export interface LogFilter {
   category?: LogCategory;
   source?: string;
   search?: string;
+  // Additional filter properties
+  userId?: string;
+  startTime?: number;
+  endTime?: number;
 }
 
 export interface LoggingConfig {
@@ -32,11 +36,19 @@ export interface LoggingConfig {
   console: boolean;
   ui: boolean;
   remoteLogging: boolean;
+  // Additional config properties
+  defaultCategory?: LogCategory;
+  transports?: string[];
 }
 
 export interface LogTransport {
   log: (entry: LogEntry) => void;
   dispose?: () => void;
+  // Add these properties to fix errors
+  minLevel?: LogLevel;
+  details?: {
+    excludeCategories?: LogCategory[];
+  };
 }
 
 export { LogCategory, LogLevel };

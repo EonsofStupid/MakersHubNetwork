@@ -34,9 +34,11 @@ export function AdminAuthGuard({
 
       if (!auth.isAuthenticated) {
         logger.info('User not authenticated', { 
-          path: redirectPath,
-          required: requiredRole ? JSON.stringify(requiredRole) : null,
-          permission: requiredPermission
+          details: {
+            path: redirectPath,
+            required: requiredRole ? JSON.stringify(requiredRole) : null,
+            permission: requiredPermission
+          }
         });
         setIsAuthorized(false);
         return;
@@ -47,8 +49,10 @@ export function AdminAuthGuard({
         const hasRequiredRole = auth.hasRole(requiredRole);
         if (!hasRequiredRole) {
           logger.warn('User lacks required role', { 
-            required: JSON.stringify(requiredRole),
-            userRoles: JSON.stringify(auth.roles)
+            details: {
+              required: JSON.stringify(requiredRole),
+              userRoles: JSON.stringify(auth.roles)
+            }
           });
           setIsAuthorized(false);
           return;
@@ -61,7 +65,9 @@ export function AdminAuthGuard({
         const hasPermission = true; // Placeholder
         if (!hasPermission) {
           logger.warn('User lacks required permission', { 
-            requiredPerm: requiredPermission 
+            details: {
+              requiredPerm: requiredPermission 
+            }
           });
           setIsAuthorized(false);
           return;
