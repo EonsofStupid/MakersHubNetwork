@@ -9,7 +9,7 @@ import { Badge } from "@/shared/ui/badge"
 import { cn } from "@/shared/utils/cn"
 import { UserRole } from "@/shared/types/shared.types"
 import { authBridge } from "@/auth/bridge"
-import { useNavigate } from "react-router-dom"
+import { useAdminNavigation } from "@/admin/hooks/useAdminNavigation"
 
 interface UserMenuSheetProps {
   isOpen: boolean
@@ -20,7 +20,6 @@ interface UserMenuSheetProps {
   isLoadingLogout?: boolean
   onShowProfile?: () => void
   onLogout?: () => void
-  hasAdminAccess?: boolean
   roles?: UserRole[]
 }
 
@@ -33,10 +32,9 @@ export function UserMenuSheet({
   isLoadingLogout = false,
   onShowProfile,
   onLogout,
-  hasAdminAccess = false,
   roles = []
 }: UserMenuSheetProps) {
-  const navigate = useNavigate()
+  const { navigateToAdmin, hasAdminAccess } = useAdminNavigation();
 
   // Get user initials for avatar fallback
   const getUserInitials = () => {
@@ -50,8 +48,8 @@ export function UserMenuSheet({
   }
 
   const handleAdminClick = () => {
-    onOpenChange(false) // Close the sheet
-    navigate("/admin") // Navigate to admin
+    navigateToAdmin();
+    onOpenChange(false); // Close the sheet
   }
 
   return (
@@ -108,7 +106,7 @@ export function UserMenuSheet({
           </Button>
         </div>
 
-        {hasAdminAccess && (
+        {hasAdminAccess() && (
           <>
             <Separator className="my-4" />
             <div className="flex flex-col gap-2 py-4">
@@ -131,8 +129,8 @@ export function UserMenuSheet({
                 variant="ghost"
                 className="justify-start gap-2"
                 onClick={() => {
-                  onOpenChange(false)
-                  navigate("/admin/settings")
+                  onOpenChange(false);
+                  navigateToAdmin();
                 }}
               >
                 <Settings className="h-4 w-4" />

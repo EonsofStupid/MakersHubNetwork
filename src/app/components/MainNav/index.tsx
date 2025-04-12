@@ -7,11 +7,14 @@ import { Button } from '@/shared/ui/button';
 import { UserMenu } from '@/auth/components/UserMenu';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { SearchButton } from './components/SearchButton';
+import { useAdminNavigation } from '@/admin/hooks/useAdminNavigation';
+import { Shield } from 'lucide-react';
 
 export function MainNav() {
   const navigate = useNavigate();
   const { status, isAuthenticated } = useAuthStore();
   const isLoading = status === 'loading';
+  const { navigateToAdmin, hasAdminAccess } = useAdminNavigation();
 
   return (
     <div className="flex justify-between items-center py-3">
@@ -58,6 +61,18 @@ export function MainNav() {
                 onClick={() => navigate('/dashboard')}
               >
                 Dashboard
+              </Button>
+            </NavigationMenuItem>
+          )}
+          {isAuthenticated && hasAdminAccess() && (
+            <NavigationMenuItem>
+              <Button 
+                variant="ghost"
+                className="text-sm font-medium transition-colors hover:text-primary p-0 flex items-center gap-1"
+                onClick={() => navigateToAdmin()}
+              >
+                <Shield className="h-3 w-3" />
+                Admin
               </Button>
             </NavigationMenuItem>
           )}

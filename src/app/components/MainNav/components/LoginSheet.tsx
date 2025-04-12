@@ -4,17 +4,16 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { useToast } from '@/shared/ui/use-toast';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { authBridge } from '@/auth/bridge';
 import { GoogleLoginButton } from '@/auth/components/GoogleLoginButton';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
-import { useNavigate } from 'react-router-dom';
 import { Shield } from 'lucide-react';
 import { UserRole } from '@/shared/types/shared.types';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { useHasRole } from '@/auth/hooks/useHasRole';
 import { cn } from '@/lib/utils';
+import { useAdminNavigation } from '@/admin/hooks/useAdminNavigation';
 
 export function LoginSheet() {
   const [email, setEmail] = useState('');
@@ -23,14 +22,13 @@ export function LoginSheet() {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const logger = useLogger('LoginSheet', LogCategory.AUTH);
-  const navigate = useNavigate();
   
   // Get auth state from store
   const { user, roles } = useAuthStore();
   const isAuthenticated = !!user;
   
-  // Use the useHasRole hook to check for admin access
-  const { hasAdminAccess } = useHasRole();
+  // Use the admin navigation hook
+  const { navigateToAdmin, hasAdminAccess } = useAdminNavigation();
   
   // If already authenticated, don't show the login button
   if (isAuthenticated) return null;
@@ -70,7 +68,7 @@ export function LoginSheet() {
 
   const handleAdminClick = () => {
     setIsOpen(false);
-    navigate("/admin");
+    navigateToAdmin();
   };
 
   return (
