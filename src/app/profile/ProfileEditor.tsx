@@ -1,162 +1,200 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import { Button } from '@/shared/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
-import { Textarea } from '@/shared/ui/textarea';
-import { useToast } from '@/shared/hooks/use-toast';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { useLogger } from '@/logging/hooks/use-logger';
-import { LogCategory } from '@/logging/types';
+import { UserProfile } from '@/shared/types/shared.types';
+import { useToast } from '@/shared/hooks/use-toast';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
+
+const profileSchema = z.object({
+  display_name: z.string().min(2, { message: 'Display name must be at least 2 characters.' }),
+  avatar_url: z.string().optional(),
+  bio: z.string().optional(),
+  website: z.string().url({ message: 'Must be a valid URL' }).optional().or(z.literal('')),
+  location: z.string().optional(),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface ProfileEditorProps {
   onClose?: () => void;
 }
 
 export function ProfileEditor({ onClose }: ProfileEditorProps) {
-  const { user, updateProfile } = useAuthStore();
   const { toast } = useToast();
-  const logger = useLogger('ProfileEditor', LogCategory.USER);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const updateUserProfile = useAuthStore(state => state.updateUserProfile);
+  const user = useAuthStore(state => state.user);
+  const profile = useAuthStore(state => state.profile);
+  const logger = useLogger('ProfileEditor', LogCategory.AUTH);
   
-  const [form, setForm] = useState({
-    displayName: user?.user_metadata?.name || '',
-    bio: user?.profile?.bio || '',
-    website: user?.profile?.website || '',
-    avatarUrl: user?.user_metadata?.avatar_url || '',
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Use profile from auth store, fallback to empty values
+  const defaultValues: ProfileFormValues = {
+    display_name: profile?.display_name || user?.user_metadata?.full_name || '',
+    avatar_url: profile?.avatar_url || user?.user_metadata?.avatar_url || '',
+    bio: profile?.bio || '',
+    website: profile?.website || '',
+    location: profile?.location || '',
+  };
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues,
+    mode: 'onChange',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    
-    setIsSubmitting(true);
-    
+  const onSubmit = async (data: ProfileFormValues) => {
     try {
-      await updateProfile({
-        display_name: form.displayName,
-        full_name: form.displayName,
-        bio: form.bio,
-        website: form.website,
-        avatar_url: form.avatarUrl,
-      });
+      setIsLoading(true);
+      
+      logger.info('Submitting profile update', { details: data });
+      
+      await updateUserProfile(data as Partial<UserProfile>);
       
       toast({
         title: 'Profile updated',
-        description: 'Your profile has been updated successfully.',
+        description: 'Your profile information has been updated successfully.',
       });
       
-      logger.info('User profile updated');
       onClose?.();
     } catch (error) {
-      toast({
-        title: 'Update failed',
-        description: 
-          error instanceof Error 
-            ? error.message 
-            : 'Failed to update profile. Please try again.',
-        variant: 'destructive',
+      logger.error('Failed to update profile', { 
+        details: { 
+          error: error instanceof Error ? error.message : 'Unknown error', 
+        } 
       });
       
-      logger.error('Failed to update user profile', {
-        details: { error: error instanceof Error ? error.message : String(error) }
+      toast({
+        title: 'Update failed',
+        description: error instanceof Error ? error.message : 'An error occurred while updating your profile',
+        variant: 'destructive',
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  if (!user) {
-    return (
-      <div className="p-4 text-center">
-        You need to be signed in to edit your profile.
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="displayName" className="text-sm font-medium">
-          Display Name
-        </label>
-        <Input
-          id="displayName"
-          name="displayName"
-          value={form.displayName}
-          onChange={handleChange}
-          placeholder="Your display name"
-        />
-      </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="flex flex-col items-center space-y-4">
+          <Avatar className="h-24 w-24">
+            <AvatarImage src={form.watch('avatar_url') || undefined} alt="User avatar" />
+            <AvatarFallback className="text-lg">
+              {form.watch('display_name')?.substring(0, 2)?.toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          
+          <FormField
+            control={form.control}
+            name="avatar_url"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Avatar URL</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="https://example.com/avatar.png" 
+                    {...field} 
+                    value={field.value || ''} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-      <div className="space-y-2">
-        <label htmlFor="avatarUrl" className="text-sm font-medium">
-          Avatar URL
-        </label>
-        <Input
-          id="avatarUrl"
-          name="avatarUrl"
-          value={form.avatarUrl}
-          onChange={handleChange}
-          placeholder="https://example.com/avatar.jpg"
+        <FormField
+          control={form.control}
+          name="display_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Display Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Your name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {form.avatarUrl && (
-          <div className="mt-2">
-            <img
-              src={form.avatarUrl}
-              alt="Avatar preview"
-              className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/placeholder-avatar.png';
-              }}
-            />
-          </div>
-        )}
-      </div>
 
-      <div className="space-y-2">
-        <label htmlFor="bio" className="text-sm font-medium">
-          Bio
-        </label>
-        <Textarea
-          id="bio"
+        <FormField
+          control={form.control}
           name="bio"
-          value={form.bio}
-          onChange={handleChange}
-          placeholder="Tell us about yourself"
-          rows={3}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bio</FormLabel>
+              <FormControl>
+                <Input placeholder="A short bio about yourself" {...field} value={field.value || ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
 
-      <div className="space-y-2">
-        <label htmlFor="website" className="text-sm font-medium">
-          Website
-        </label>
-        <Input
-          id="website"
-          name="website"
-          value={form.website}
-          onChange={handleChange}
-          placeholder="https://yourwebsite.com"
-        />
-      </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="website"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Website</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="https://yoursite.com" 
+                    {...field} 
+                    value={field.value || ''} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="City, Country" 
+                    {...field} 
+                    value={field.value || ''} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end gap-3 pt-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            disabled={isLoading || !form.formState.isDirty}
+          >
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

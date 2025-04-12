@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { FcGoogle } from 'react-icons/fc';
 import { Link as LinkIcon, X } from 'lucide-react';
-import { authBridge, subscribeToAuthEvents } from '@/auth/bridge';
+import { authBridge } from '@/auth/bridge';
 import { useToast } from '@/shared/hooks/use-toast';
 import { AuthEventType } from '@/shared/types/shared.types';
 
@@ -16,7 +16,7 @@ export function LinkedAccountAlert() {
   
   useEffect(() => {
     // Listen for AUTH_LINKING_REQUIRED events
-    const unsubscribe = subscribeToAuthEvents((event) => {
+    const unsubscribe = authBridge.onAuthEvent((event) => {
       if (event.type === 'AUTH_LINKING_REQUIRED' && event.payload?.provider) {
         setProvider(event.payload.provider);
         setShow(true);
@@ -34,7 +34,7 @@ export function LinkedAccountAlert() {
       setLinking(true);
       
       if (provider === 'google') {
-        await authBridge.linkSocialAccount('google');
+        await authBridge.linkAccount('google');
         
         toast({
           title: 'Account linked successfully',

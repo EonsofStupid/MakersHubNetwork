@@ -1,97 +1,154 @@
 
-import React from 'react';
-import { CheckCircle, XCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Package, AlertCircle, CheckCircle, XCircle, Clock } from "lucide-react";
+import { BuildStatus } from "@/admin/types/build.types";
+
+interface BuildItem {
+  id: string;
+  title: string;
+  status: BuildStatus;
+  submittedBy: string;
+  submittedAt: string;
+}
 
 export function BuildApprovalWidget() {
-  // Sample data for pending approvals
-  const pendingApprovals = [
+  const navigate = useNavigate();
+  
+  // Mock data - in a real app, this would come from an API call
+  const pendingBuilds: BuildItem[] = [
     {
-      id: 'build-1',
-      name: 'Ender 3 V2 Direct Drive Mod',
-      author: 'JohnMaker',
-      submitted: '2 days ago',
-      type: 'modification'
+      id: "build-1",
+      title: "Voron 2.4 with custom hotend",
+      status: "pending",
+      submittedBy: "maker42",
+      submittedAt: "2023-10-15T10:30:00Z"
     },
     {
-      id: 'build-2',
-      name: 'CR-10 Improved Fan Duct',
-      author: 'PrinterPro',
-      submitted: '3 days ago',
-      type: 'accessory'
+      id: "build-2",
+      title: "Ender 3 V2 linear rail mod",
+      status: "pending",
+      submittedBy: "printmaster",
+      submittedAt: "2023-10-14T15:45:00Z"
     },
     {
-      id: 'build-3',
-      name: 'Prusa i3 MK3S+ Enclosure',
-      author: 'MakerSpace',
-      submitted: '1 week ago',
-      type: 'enclosure'
+      id: "build-3",
+      title: "Custom CoreXY with carbon frame",
+      status: "needs_revision",
+      submittedBy: "innovator3d",
+      submittedAt: "2023-10-13T09:15:00Z"
     }
   ];
   
-  const handleApprove = (id: string) => {
-    console.log(`Approved build: ${id}`);
+  const getStatusIcon = (status: BuildStatus) => {
+    switch(status) {
+      case "pending":
+        return <Clock className="h-4 w-4 text-amber-500" />;
+      case "approved":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "rejected":
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case "needs_revision":
+        return <AlertCircle className="h-4 w-4 text-blue-500" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
   };
   
-  const handleReject = (id: string) => {
-    console.log(`Rejected build: ${id}`);
+  const getStatusBadge = (status: BuildStatus) => {
+    let className = "";
+    let label = "";
+    
+    switch(status) {
+      case "pending":
+        className = "bg-amber-500/10 text-amber-500 border-amber-500/20";
+        label = "Pending";
+        break;
+      case "approved":
+        className = "bg-green-500/10 text-green-500 border-green-500/20";
+        label = "Approved";
+        break;
+      case "rejected":
+        className = "bg-red-500/10 text-red-500 border-red-500/20";
+        label = "Rejected";
+        break;
+      case "needs_revision":
+        className = "bg-blue-500/10 text-blue-500 border-blue-500/20";
+        label = "Needs Revision";
+        break;
+    }
+    
+    return (
+      <Badge variant="outline" className={className}>
+        <span className="flex items-center gap-1">
+          {getStatusIcon(status)}
+          {label}
+        </span>
+      </Badge>
+    );
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
   
   return (
-    <div className="space-y-4">
-      {pendingApprovals.length === 0 ? (
-        <div className="text-center py-6 text-[var(--impulse-text-secondary)]">
-          No builds waiting for approval
+    <Card className="bg-card/80 backdrop-blur-md border border-primary/10 shadow-lg">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="space-y-1">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Package className="h-5 w-5 text-primary" />
+            Build Approval Queue
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {pendingBuilds.length} builds pending review
+          </p>
         </div>
-      ) : (
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="text-xs"
+          onClick={() => navigate("/admin/builds")}
+        >
+          View All
+        </Button>
+      </CardHeader>
+      <CardContent>
         <div className="space-y-3">
-          {pendingApprovals.map((build) => (
-            <div 
-              key={build.id}
-              className="border border-[var(--impulse-border)] rounded-md p-3 bg-[var(--impulse-bg-muted)]"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium text-[var(--impulse-text-primary)]">{build.name}</h3>
-                  <div className="text-sm text-[var(--impulse-text-secondary)]">
-                    By {build.author} • {build.submitted}
-                  </div>
-                  <div className="mt-1">
-                    <span className="inline-flex items-center rounded-full bg-[var(--impulse-bg-muted)] px-2 py-1 text-xs font-medium">
-                      {build.type}
-                    </span>
-                  </div>
+          {pendingBuilds.length > 0 ? (
+            pendingBuilds.map(build => (
+              <div 
+                key={build.id}
+                className="p-3 rounded-md border border-primary/10 hover:border-primary/30 transition-colors bg-card/50"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-sm truncate max-w-[200px]">
+                    {build.title}
+                  </h3>
+                  {getStatusBadge(build.status)}
                 </div>
-                <div className="flex space-x-2">
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    className="text-red-500 hover:text-red-600 hover:bg-red-100/10"
-                    onClick={() => handleReject(build.id)}
-                  >
-                    <XCircle className="h-4 w-4 mr-1" />
-                    Reject
-                  </Button>
-                  <Button 
-                    size="sm"
-                    variant="ghost" 
-                    className="text-green-500 hover:text-green-600 hover:bg-green-100/10"
-                    onClick={() => handleApprove(build.id)}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Approve
-                  </Button>
+                <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
+                  <span>by {build.submittedBy}</span>
+                  <span>{formatDate(build.submittedAt)}</span>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">
+              No builds waiting for approval
+            </p>
+          )}
         </div>
-      )}
-      <div className="text-center">
-        <Button variant="outline" size="sm">
-          View All Pending Approvals
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
