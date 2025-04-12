@@ -55,3 +55,5 @@ export * from './calendar';
 export * from './steps';
 export * from './data-table';
 export * from './pagination';
+export * from './aspect-ratio';
+export * from './collapsible';

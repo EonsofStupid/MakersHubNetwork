@@ -1,25 +1,41 @@
 
 import { LogLevel } from '@/shared/types/shared.types';
-import { LOG_LEVEL_VALUES } from '../constants/log-level';
+import { LOG_COLORS } from '../config';
 
-// Map log level to string representation for UI
-export const LOG_LEVEL_MAP: Record<LogLevel, string> = {
-  [LogLevel.TRACE]: 'trace',
-  [LogLevel.DEBUG]: 'debug',
-  [LogLevel.INFO]: 'info',
-  [LogLevel.SUCCESS]: 'success',
-  [LogLevel.WARN]: 'warn',
-  [LogLevel.ERROR]: 'error',
-  [LogLevel.CRITICAL]: 'critical',
-  [LogLevel.SILENT]: 'silent'
+export const mapLogLevelToColor = (level: LogLevel): string => {
+  return LOG_COLORS[level] || '#000000';
 };
 
-/**
- * Checks if a log level is at least as severe as another log level
- * @param level The level to check
- * @param minLevel The minimum level required
- * @returns boolean indicating if level meets or exceeds minLevel
- */
-export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
-  return LOG_LEVEL_VALUES[level] >= LOG_LEVEL_VALUES[minLevel];
-}
+// Map log levels to emoji
+export const mapLogLevelToEmoji = (level: LogLevel): string => {
+  const emojiMap: Record<LogLevel, string> = {
+    trace: '🔍',
+    debug: '🐞',
+    info: 'ℹ️',
+    warn: '⚠️',
+    error: '❌',
+    fatal: '💀',
+    success: '✅',
+    critical: '🚨',
+    silent: '🔇'
+  };
+  
+  return emojiMap[level] || 'ℹ️';
+};
+
+// Map log levels to CSS class
+export const mapLogLevelToClass = (level: LogLevel): string => {
+  const classMap: Record<LogLevel, string> = {
+    trace: 'text-gray-400',
+    debug: 'text-blue-400',
+    info: 'text-blue-500',
+    warn: 'text-yellow-500',
+    error: 'text-red-500',
+    fatal: 'text-red-700 font-bold',
+    success: 'text-green-500',
+    critical: 'text-red-700 bg-red-100 font-bold',
+    silent: ''
+  };
+  
+  return classMap[level] || '';
+};

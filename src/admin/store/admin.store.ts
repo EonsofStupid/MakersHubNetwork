@@ -1,29 +1,41 @@
-import { createStore } from 'zustand/vanilla';
-import { UserProfile } from '@/shared/types/auth-mapped.types';
+
+import { create } from 'zustand';
+import { AuthStatus, UserProfile } from '@/shared/types/shared.types';
 
 export interface AdminState {
   user: UserProfile | null;
   isReady: boolean;
   isAuthenticated: boolean;
+  status: AuthStatus;
   error: string | null;
   
   setAdminUser: (user: UserProfile | null) => void;
+  logout: () => void;
 }
 
-const adminStore = createStore<AdminState>()(
-  (set) => ({
-    user: null,
-    isReady: false,
-    isAuthenticated: false,
-    error: null,
-    
-    setAdminUser: (user: UserProfile | null) => {
-      set({ 
-        user,
-        isAuthenticated: !!user,
-      });
-    },
-  })
-);
+// Create the store
+const useAdminStore = create<AdminState>((set) => ({
+  user: null,
+  isReady: false,
+  isAuthenticated: false,
+  status: 'UNAUTHENTICATED',
+  error: null,
+  
+  setAdminUser: (user: UserProfile | null) => {
+    set({ 
+      user,
+      isAuthenticated: !!user,
+      status: user ? 'AUTHENTICATED' : 'UNAUTHENTICATED',
+    });
+  },
 
-export const useAdminStore = adminStore;
+  logout: () => {
+    set({
+      user: null,
+      isAuthenticated: false,
+      status: 'UNAUTHENTICATED',
+    });
+  }
+}));
+
+export { useAdminStore };

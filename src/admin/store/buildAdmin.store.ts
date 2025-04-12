@@ -1,186 +1,160 @@
-import { createStore } from 'zustand/vanilla';
-import { useStore } from 'zustand';
-import { Build, BuildStatus } from '@/shared/types/shared.types';
-import { DateRange } from '@/shared/types/shared.types';
+
+import { create } from 'zustand';
+import { Build, BuildStatus, DateRange } from '@/shared/types/shared.types';
 
 export interface BuildFilters {
   status?: BuildStatus | 'all';
   dateRange?: DateRange;
-  sortBy?: string;
   search?: string;
-  category?: string;
-  complexity?: number;
-  userId?: string;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
-export interface BuildPagination {
-  page: number;
-  pageSize: number;
-  total: number;
-}
-
-export interface BuildAdminStore {
+export interface BuildAdminState {
   builds: Build[];
   selectedBuild: Build | null;
-  filters: BuildFilters;
-  pagination: BuildPagination;
-  loading: boolean;
+  isLoading: boolean;
   error: string | null;
-  
+  filters: BuildFilters;
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface BuildAdminStore extends BuildAdminState {
   fetchBuilds: () => Promise<void>;
   fetchBuild: (id: string) => Promise<void>;
   approveBuild: (id: string, comment?: string) => Promise<void>;
   rejectBuild: (id: string, reason: string) => Promise<void>;
-  requestRevision: (id: string, comment: string) => Promise<void>;
   deleteBuild: (id: string) => Promise<void>;
-  updateFilters: (filters: Partial<BuildFilters>) => void;
-  updatePagination: (pagination: Partial<BuildPagination>) => void;
-  clearError: () => void;
+  setFilters: (filters: Partial<BuildFilters>) => void;
+  setPage: (page: number) => void;
+  setPageSize: (size: number) => void;
+  reset: () => void;
 }
 
-const initialState = {
+const initialState: BuildAdminState = {
   builds: [],
   selectedBuild: null,
+  isLoading: false,
+  error: null,
   filters: {
     status: 'all',
+    search: '',
     sortBy: 'created_at',
+    sortDirection: 'desc',
   },
-  pagination: {
-    page: 1,
-    pageSize: 10,
-    total: 0,
-  },
-  loading: false,
-  error: null,
+  totalCount: 0,
+  page: 1,
+  pageSize: 10,
 };
 
-const buildAdminStore = createStore<BuildAdminStore>()((set, get) => ({
+export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
   ...initialState,
-  
+
   fetchBuilds: async () => {
+    set({ isLoading: true });
     try {
-      set({ loading: true, error: null });
-      // Implement actual fetch logic here
-      // const builds = await fetchBuildsFromApi(get().filters, get().pagination);
-      // set({ builds, pagination: { ...get().pagination, total: builds.length } });
+      // Mock API call for now
+      const mockData: Build[] = [
+        // Mock builds would go here
+      ];
+      set({
+        builds: mockData,
+        isLoading: false,
+        totalCount: mockData.length,
+      });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch builds' });
-    } finally {
-      set({ loading: false });
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch builds',
+        isLoading: false,
+      });
     }
   },
-  
+
   fetchBuild: async (id: string) => {
+    set({ isLoading: true });
     try {
-      set({ loading: true, error: null });
-      // Implement actual fetch logic here
-      // const build = await fetchBuildById(id);
-      // set({ selectedBuild: build });
+      // Mock API call for now
+      const mockBuild: Build = {
+        id,
+        title: 'Sample Build',
+        description: 'A sample build for testing',
+        status: 'PENDING',
+        submitted_by: 'user123',
+        complexity_score: 3.5,
+        parts_count: 12,
+        mods_count: 2,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      set({ selectedBuild: mockBuild, isLoading: false });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch build' });
-    } finally {
-      set({ loading: false });
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch build',
+        isLoading: false,
+      });
     }
   },
-  
+
   approveBuild: async (id: string, comment?: string) => {
+    set({ isLoading: true });
     try {
-      set({ loading: true, error: null });
-      // Implement actual approval logic here
-      // await approveBuildApi(id, comment);
-      // Update the local state
-      // set(state => ({
-      //   builds: state.builds.map(build => 
-      //     build.id === id ? { ...build, status: 'APPROVED' } : build
-      //   ),
-      //   selectedBuild: state.selectedBuild?.id === id 
-      //     ? { ...state.selectedBuild, status: 'APPROVED' } 
-      //     : state.selectedBuild
-      // }));
+      // Mock API call for now
+      set({ isLoading: false });
+      await get().fetchBuilds();
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to approve build' });
-    } finally {
-      set({ loading: false });
+      set({
+        error: error instanceof Error ? error.message : 'Failed to approve build',
+        isLoading: false,
+      });
     }
   },
-  
+
   rejectBuild: async (id: string, reason: string) => {
+    set({ isLoading: true });
     try {
-      set({ loading: true, error: null });
-      // Implement actual rejection logic here
-      // await rejectBuildApi(id, reason);
-      // Update the local state
-      // set(state => ({
-      //   builds: state.builds.map(build => 
-      //     build.id === id ? { ...build, status: 'REJECTED' } : build
-      //   ),
-      //   selectedBuild: state.selectedBuild?.id === id 
-      //     ? { ...state.selectedBuild, status: 'REJECTED' } 
-      //     : state.selectedBuild
-      // }));
+      // Mock API call for now
+      set({ isLoading: false });
+      await get().fetchBuilds();
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to reject build' });
-    } finally {
-      set({ loading: false });
+      set({
+        error: error instanceof Error ? error.message : 'Failed to reject build',
+        isLoading: false,
+      });
     }
   },
-  
-  requestRevision: async (id: string, comment: string) => {
-    try {
-      set({ loading: true, error: null });
-      // Implement actual revision logic here
-      // await requestBuildRevision(id, comment);
-      // Update the local state
-      // set(state => ({
-      //   builds: state.builds.map(build => 
-      //     build.id === id ? { ...build, status: 'NEEDS_REVISION' } : build
-      //   ),
-      //   selectedBuild: state.selectedBuild?.id === id 
-      //     ? { ...state.selectedBuild, status: 'NEEDS_REVISION' } 
-      //     : state.selectedBuild
-      // }));
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to request revision' });
-    } finally {
-      set({ loading: false });
-    }
-  },
-  
+
   deleteBuild: async (id: string) => {
+    set({ isLoading: true });
     try {
-      set({ loading: true, error: null });
-      // Implement actual delete logic here
-      // await deleteBuildApi(id);
-      // Update the local state
-      // set(state => ({
-      //   builds: state.builds.filter(build => build.id !== id),
-      //   selectedBuild: state.selectedBuild?.id === id ? null : state.selectedBuild
-      // }));
+      // Mock API call for now
+      set({ isLoading: false });
+      await get().fetchBuilds();
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to delete build' });
-    } finally {
-      set({ loading: false });
+      set({
+        error: error instanceof Error ? error.message : 'Failed to delete build',
+        isLoading: false,
+      });
     }
   },
-  
-  updateFilters: (filters: Partial<BuildFilters>) => {
+
+  setFilters: (filters: Partial<BuildFilters>) => {
     set((state) => ({
       filters: { ...state.filters, ...filters },
-      pagination: { ...state.pagination, page: 1 }, // Reset to first page when filters change
+      page: 1, // Reset to first page on filter change
     }));
   },
-  
-  updatePagination: (pagination: Partial<BuildPagination>) => {
-    set((state) => ({
-      pagination: { ...state.pagination, ...pagination },
-    }));
+
+  setPage: (page: number) => {
+    set({ page });
   },
-  
-  clearError: () => {
-    set({ error: null });
-  }
+
+  setPageSize: (pageSize: number) => {
+    set({ pageSize, page: 1 });
+  },
+
+  reset: () => {
+    set(initialState);
+  },
 }));
-
-export const useBuildAdminStore = () => useStore(buildAdminStore);
-
-export default buildAdminStore;
