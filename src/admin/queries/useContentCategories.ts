@@ -1,80 +1,138 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { adminKeys } from "@/admin/types/queries"
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/auth/lib/supabase';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
+import { ContentCategory } from '@/admin/types/content';
 
-// Export the needed hook functions that are referenced in CategoryManagement.tsx
-export const useCategories = () => {
+/**
+ * Hook for fetching categories
+ */
+export function useCategories() {
+  const logger = useLogger('useCategories', LogCategory.CONTENT);
+
   return useQuery({
-    queryKey: [...adminKeys.all, 'categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('content_categories')
-        .select('*')
-        .order('name')
-      
-      if (error) throw error
-      return data || []
+    queryKey: ['categories'],
+    queryFn: async (): Promise<ContentCategory[]> => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('name', { ascending: true });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        return data as ContentCategory[];
+      } catch (err) {
+        logger.error('Failed to fetch categories', {
+          details: { error: String(err) }
+        });
+        throw err;
+      }
     }
-  })
+  });
 }
 
-export const useCreateCategory = () => {
-  const queryClient = useQueryClient()
-  
+/**
+ * Hook for creating a category
+ */
+export function useCreateCategory() {
+  const queryClient = useQueryClient();
+  const logger = useLogger('useCreateCategory', LogCategory.CONTENT);
+
   return useMutation({
-    mutationFn: async (categoryData: { name: string, slug: string }) => {
+    mutationFn: async (category: Omit<ContentCategory, 'id'>) => {
       const { data, error } = await supabase
-        .from('content_categories')
-        .insert([categoryData])
+        .from('categories')
+        .insert([category])
         .select()
-      
-      if (error) throw error
-      return data[0]
+        .single();
+
+      if (error) throw new Error(error.message);
+      return data as ContentCategory;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      logger.info(`Category created: ${data.name}`, {
+        details: { categoryId: data.id }
+      });
       queryClient.invalidateQueries({
-        queryKey: [...adminKeys.all, 'categories']
-      })
+        queryKey: ['categories']
+      });
+    },
+    onError: (error) => {
+      logger.error('Failed to create category', {
+        details: { error: String(error) }
+      });
     }
-  })
+  });
 }
 
-export const useUpdateCategory = () => {
-  const queryClient = useQueryClient()
+/**
+ * Hook for updating a category
+ */
+export function useUpdateCategory() {
+  const queryClient = useQueryClient();
+  const logger = useLogger('useUpdateCategory', LogCategory.CONTENT);
 
   return useMutation({
-    mutationFn: async ({ id, name, slug }: { id: string, name: string, slug: string }) => {
+    mutationFn: async (category: Partial<ContentCategory> & { id: string }) => {
       const { data, error } = await supabase
-        .from('content_categories')
-        .update({ name, slug })
-        .eq('id', id)
+        .from('categories')
+        .update(category)
+        .eq('id', category.id)
         .select()
+        .single();
 
-      if (error) throw error
-      return data ? data[0] : null
+      if (error) throw new Error(error.message);
+      return data as ContentCategory;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'categories'] })
+    onSuccess: (data) => {
+      logger.info(`Category updated: ${data.name}`, {
+        details: { categoryId: data.id }
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['categories']
+      });
     },
-  })
+    onError: (error) => {
+      logger.error('Failed to update category', {
+        details: { error: String(error) }
+      });
+    }
+  });
 }
 
-export const useDeleteCategory = () => {
-  const queryClient = useQueryClient()
+/**
+ * Hook for deleting a category
+ */
+export function useDeleteCategory() {
+  const queryClient = useQueryClient();
+  const logger = useLogger('useDeleteCategory', LogCategory.CONTENT);
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from('content_categories')
+      const { error } = await supabase
+        .from('categories')
         .delete()
-        .eq('id', id)
+        .eq('id', id);
 
-      if (error) throw error
-      return data
+      if (error) throw new Error(error.message);
+      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [...adminKeys.all, 'categories'] })
+    onSuccess: (id) => {
+      logger.info(`Category deleted`, {
+        details: { categoryId: id }
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['categories']
+      });
     },
-  })
+    onError: (error) => {
+      logger.error('Failed to delete category', {
+        details: { error: String(error) }
+      });
+    }
+  });
 }

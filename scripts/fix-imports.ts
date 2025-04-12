@@ -14,13 +14,21 @@ files.forEach(file => {
   const content = fs.readFileSync(file, 'utf8');
   
   // Replace old component imports with new paths
-  let updated = content.replace(
-    /import\s+?(\{[^}]+\})\s+?from\s+?['"](@\/components\/ui\/[^'"]+)['"]/g,
-    (match, importClause, oldPath) => {
-      const newPath = getNewImportPath(oldPath);
-      return `import ${importClause} from '${newPath}'`;
-    }
-  );
+  let updated = content
+    // Fix UI component imports from @/components/ui to @/shared/ui
+    .replace(
+      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/components\/ui\/([^'"]+)['"]/g,
+      (match, importClause, componentPath) => {
+        return `import ${importClause} from '@/shared/ui/${componentPath}'`;
+      }
+    )
+    // Fix types imports
+    .replace(
+      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/types\/([^'"]+)['"]/g,
+      (match, importClause, typesPath) => {
+        return `import ${importClause} from '@/shared/types/${typesPath}'`;
+      }
+    );
   
   if (updated !== content) {
     fs.writeFileSync(file, updated, 'utf8');
