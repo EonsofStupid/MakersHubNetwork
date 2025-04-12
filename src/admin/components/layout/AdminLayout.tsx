@@ -1,26 +1,39 @@
 
 import React, { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import AdminOverlay from '../debug/AdminOverlay';
 import { AdminOverlayToggleButton } from '../debug/AdminOverlayToggleButton';
 import { useHasRole } from '@/auth/hooks/useHasRole';
-import { useNavigate } from 'react-router-dom';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
+import { useToast } from '@/shared/ui/use-toast';
 
 export function AdminLayout() {
   const { hasAdminAccess } = useHasRole();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const logger = useLogger('AdminLayout', LogCategory.ADMIN);
   
   // Check if user has admin access
   useEffect(() => {
     const checkAccess = async () => {
-      const hasAccess = await hasAdminAccess();
+      const hasAccess = hasAdminAccess();
+      
       if (!hasAccess) {
-        navigate('/unauthorized');
+        logger.warn('Unauthorized access attempt to admin area');
+        toast({
+          title: 'Access Denied',
+          description: 'You don\'t have permission to access the admin area',
+          variant: 'destructive'
+        });
+        navigate('/');
+      } else {
+        logger.info('Admin access granted');
       }
     };
     
     checkAccess();
-  }, [hasAdminAccess, navigate]);
+  }, [hasAdminAccess, navigate, toast, logger]);
   
   return (
     <div className="min-h-screen bg-background">
