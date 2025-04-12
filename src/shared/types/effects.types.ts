@@ -1,15 +1,6 @@
 
 import { ReactNode } from 'react';
-
-export type ThemeEffectType = 
-  | 'glow'
-  | 'flicker'
-  | 'pulse'
-  | 'shimmer'
-  | 'neon'
-  | 'cyber'
-  | 'noise'
-  | 'distortion';
+import { ThemeEffectType } from './theme.types';
 
 export interface ThemeEffect {
   id: string;
@@ -28,4 +19,6 @@ export interface ThemeEffectProps {
 
 export interface ThemeEffectProviderProps {
   children: ReactNode;
+  className?: string; 
+  effect?: ThemeEffect;
 }

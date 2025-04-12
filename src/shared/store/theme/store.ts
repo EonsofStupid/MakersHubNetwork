@@ -1,35 +1,70 @@
 
 import { create } from 'zustand';
-import { ComponentTokens, DesignTokens, Theme, ThemeState, ThemeVariables } from '@/shared/types/theme.types';
+import { Theme, ThemeState, ComponentTokens, DesignTokens } from '@/shared/types/theme.types';
+import { ThemeContext, ThemeStatus } from '@/shared/types/shared.types';
 
-// Default theme state
+// Initial state
 const initialState: ThemeState = {
   themes: [],
-  activeTheme: 'cyberpunk',
-  componentTokens: {} as ComponentTokens,
-  designTokens: {} as DesignTokens,
-  isLoading: true
+  activeTheme: '',
+  componentTokens: {},
+  isLoading: false,
+  error: null
 };
 
-// Create theme store
-export const useThemeStore = create<
-  ThemeState & {
-    setActiveTheme: (themeId: string) => void;
-    loadTheme: (themeId: string) => Promise<void>;
-    updateComponentToken: (component: string, token: string, value: string) => void;
-    updateDesignToken: (category: string, token: string, value: string) => void;
-    resetTheme: () => void;
-  }
->((set, get) => ({
+// Create the store
+const useThemeStore = create<ThemeState & {
+  setThemes: (themes: Theme[]) => void;
+  setActiveTheme: (themeId: string) => void;
+  setDesignTokens: (tokens: DesignTokens) => void;
+  setComponentTokens: (tokens: ComponentTokens) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
+  loadTheme: (themeId: string) => Promise<void>;
+  updateComponentToken: (component: string, token: string, value: string) => void;
+  updateDesignToken: (category: string, token: string, value: string) => void;
+  resetTheme: () => void;
+}>((set) => ({
   ...initialState,
 
-  setActiveTheme: (themeId: string) => {
-    set({ activeTheme: themeId });
-    // This would typically trigger a theme load
+  setThemes: (themes) => {
+    set({ themes });
   },
 
-  loadTheme: async (themeId: string) => {
-    set({ isLoading: true });
+  setActiveTheme: (themeId) => {
+    set({ activeTheme: themeId });
+  },
+
+  setDesignTokens: (tokens) => {
+    set((state) => {
+      const activeTheme = state.themes.find(theme => theme.id === state.activeTheme);
+      if (activeTheme) {
+        const updatedThemes = state.themes.map(theme => {
+          if (theme.id === state.activeTheme) {
+            return { ...theme, design_tokens: tokens };
+          }
+          return theme;
+        });
+        return { themes: updatedThemes };
+      }
+      return { themes: state.themes };
+    });
+  },
+
+  setComponentTokens: (tokens) => {
+    set({ componentTokens: tokens });
+  },
+
+  setIsLoading: (isLoading) => {
+    set({ isLoading });
+  },
+
+  setError: (error) => {
+    set({ error });
+  },
+
+  loadTheme: async (themeId) => {
+    set({ isLoading: true, error: null });
     
     try {
       // Mock theme loading
@@ -37,46 +72,53 @@ export const useThemeStore = create<
         id: themeId,
         name: 'Cyberpunk',
         description: 'A futuristic cyberpunk theme',
+        status: ThemeStatus.ACTIVE,
+        context: ThemeContext.SITE,
         is_system: true,
-        is_default: true
+        is_default: true,
+        design_tokens: {
+          colors: {
+            primary: '#00ffcc',
+            secondary: '#ff00cc',
+            background: '#111122',
+            text: '#ffffff'
+          },
+          spacing: {
+            small: '0.5rem',
+            medium: '1rem',
+            large: '2rem'
+          }
+        },
+        component_tokens: {
+          button: {
+            backgroundColor: 'var(--colors-primary)',
+            textColor: 'var(--colors-text)',
+            borderRadius: '4px'
+          },
+          card: {
+            backgroundColor: 'var(--colors-background)',
+            boxShadow: '0 0 10px rgba(0,255,204,0.5)'
+          }
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        version: 1
       };
       
-      const mockDesignTokens: DesignTokens = {
-        colors: {
-          primary: '#00ffcc',
-          secondary: '#ff00cc',
-          background: '#111122',
-          text: '#ffffff'
-        },
-        spacing: {
-          small: '0.5rem',
-          medium: '1rem',
-          large: '2rem'
-        }
-      };
-      
-      const mockComponentTokens: ComponentTokens = {
-        button: {
-          backgroundColor: 'var(--colors-primary)',
-          textColor: 'var(--colors-text)',
-          borderRadius: '4px'
-        },
-        card: {
-          backgroundColor: 'var(--colors-background)',
-          boxShadow: '0 0 10px rgba(0,255,204,0.5)'
-        }
-      };
+      const mockComponentTokens = mockTheme.component_tokens;
       
       set({
         themes: [mockTheme],
         activeTheme: themeId,
-        designTokens: mockDesignTokens,
         componentTokens: mockComponentTokens,
         isLoading: false
       });
     } catch (error) {
       console.error('Failed to load theme:', error);
-      set({ isLoading: false });
+      set({ 
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Failed to load theme'
+      });
     }
   },
 
@@ -95,14 +137,25 @@ export const useThemeStore = create<
 
   updateDesignToken: (category: string, token: string, value: string) => {
     set((state) => {
-      const updatedTokens = { ...state.designTokens };
-      if (!updatedTokens[category]) {
-        updatedTokens[category] = {};
+      const activeTheme = state.themes.find(theme => theme.id === state.activeTheme);
+      if (activeTheme) {
+        const updatedDesignTokens = { ...activeTheme.design_tokens };
+        if (!updatedDesignTokens[category]) {
+          updatedDesignTokens[category] = {};
+        }
+        
+        updatedDesignTokens[category][token] = value;
+        
+        const updatedThemes = state.themes.map(theme => {
+          if (theme.id === state.activeTheme) {
+            return { ...theme, design_tokens: updatedDesignTokens };
+          }
+          return theme;
+        });
+        
+        return { themes: updatedThemes };
       }
-      
-      updatedTokens[category][token] = value;
-      
-      return { designTokens: updatedTokens };
+      return { themes: state.themes };
     });
   },
 
@@ -110,3 +163,5 @@ export const useThemeStore = create<
     set(initialState);
   }
 }));
+
+export { useThemeStore };

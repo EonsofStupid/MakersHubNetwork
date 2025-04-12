@@ -1,34 +1,24 @@
 
-import { LogCategory, LogLevel, LogDetails } from '@/shared/types/shared.types';
+import { LogCategory, LogLevel, LogDetails, LogEntry as SharedLogEntry, LogEvent as SharedLogEvent, LogFilter as SharedLogFilter } from '@/shared/types/shared.types';
 
-export interface LogOptions {
-  timestamp?: number;
-  details?: LogDetails;
-  source?: string;
+// Re-export shared types with a more specific naming
+export type { LogCategory, LogLevel, LogDetails };
+
+// Extend the LogEntry for logging-specific functionality
+export interface LogEntry extends SharedLogEntry {
+  timestamp: number; // Override as number for the logging module
 }
 
-export interface LogEntry {
-  id: string;
-  level: LogLevel;
-  message: string;
-  category: LogCategory;
-  timestamp: number;
-  source?: string;
-  details?: LogDetails;
-}
-
-export interface LogEvent {
+export interface LogEvent extends SharedLogEvent {
   type: string;
   entry: LogEntry;
 }
 
-export interface LogFilter {
-  level?: LogLevel;
-  category?: LogCategory;
-  search?: string;
-  userId?: string;
-  startTime?: Date;
-  endTime?: Date;
+export type LogFilter = SharedLogFilter;
+
+export interface LogOptions {
+  timestamp?: number;
+  details?: LogDetails;
   source?: string;
 }
 
@@ -46,6 +36,8 @@ export interface Transport {
   setMinLevel(level: LogLevel): void;
   getMinLevel(): LogLevel;
 }
+
+export type LogTransport = Transport; // Alias for backward compatibility
 
 export interface TransportOptions {
   minLevel?: LogLevel;

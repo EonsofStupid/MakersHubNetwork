@@ -17,9 +17,10 @@ export enum BuildStatus {
 }
 
 export enum ContentStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED'
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
+  ARCHIVED = 'archived',
+  SCHEDULED = 'scheduled' // Adding missing SCHEDULED status
 }
 
 export enum PartStatus {
@@ -38,10 +39,10 @@ export enum UserRole {
   ADMIN = 'admin',
   USER = 'user',
   MODERATOR = 'moderator',
-  SUPERADMIN = 'superadmin',
+  SUPERADMIN = 'superadmin', // Fixed to match usage
   EDITOR = 'editor',
   BUILDER = 'builder',
-  MAKER = 'maker',
+  MAKER = 'maker', 
   VIEWER = 'viewer'
 }
 
@@ -71,10 +72,11 @@ export enum LogCategory {
   THEME = 'THEME',
   ADMIN = 'ADMIN',
   SYSTEM = 'SYSTEM',
-  CONTENT = 'CONTENT',
+  CONTENT = 'CONTENT', // Added missing CONTENT category
   CHAT = 'CHAT',
   NETWORK = 'NETWORK',
-  DEFAULT = 'DEFAULT'
+  DEFAULT = 'DEFAULT',
+  APP = 'APP' // Added missing APP category
 }
 
 // Log level values for numeric comparison
@@ -95,13 +97,6 @@ export interface LogDetails {
   [key: string]: unknown;
 }
 
-export interface ThemeLogDetails extends LogDetails {
-  themeName?: string;
-  themeId?: string;
-  tokens?: number;
-  componentCount?: number;
-}
-
 // Base entity interface
 export interface BaseEntity {
   id: string;
@@ -113,6 +108,41 @@ export interface AuditableEntity extends BaseEntity {
   created_by: string;
 }
 
+// User profile interface
+export interface UserProfile {
+  id: string;
+  email?: string;
+  display_name?: string;
+  avatar_url?: string;
+  roles: UserRole[];
+  location?: string;
+  website?: string;
+  bio?: string;
+  theme_preference?: string;
+  is_active?: boolean;
+  last_login?: string;
+  user_metadata?: Record<string, any>;
+  social_links?: Record<string, string>;
+  preferences?: Record<string, any>;
+}
+
+// Create an explicit User interface
+export interface User {
+  id: string;
+  email?: string;
+  created_at?: string;
+  updated_at?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+    [key: string]: any;
+  };
+  app_metadata?: {
+    roles?: string[];
+    [key: string]: any;
+  };
+}
+
 // Build interfaces
 export interface Build extends BaseEntity {
   id: string;
@@ -121,9 +151,19 @@ export interface Build extends BaseEntity {
   status: BuildStatus;
   submitted_by: string;
   complexity_score: number;
+  complexity?: number; // Added for compatibility
   parts_count: number;
   mods_count: number;
+  parts?: any[]; // Added for compatibility
+  mods?: any[]; // Added for compatibility
   images?: string[];
+  image_urls?: string[]; // Added for compatibility
+  user?: { // Added for compatibility
+    id: string;
+    displayName?: string;
+    email?: string;
+    avatarUrl?: string;
+  };
   processed_at?: string;
 }
 
@@ -135,9 +175,13 @@ export interface BuildReview extends BaseEntity {
   rating: number;
   title: string;
   body: string;
+  content?: string; // Added for compatibility
   approved: boolean;
   category?: string[];
+  categories?: string[]; // Added for compatibility
+  is_verified_purchase?: boolean; // Added for compatibility
   image_urls?: string[];
+  updated_at: string;
   user?: {
     id: string;
     displayName?: string;
@@ -156,8 +200,25 @@ export interface BuildPart {
 export interface ReviewStats {
   totalReviews: number;
   averageRating: number;
+  avgRating?: number; // Added for compatibility
   ratingCounts: Record<number, number>;
   recentReviews: BuildReview[];
+}
+
+// Review draft interface
+export interface ReviewDraft {
+  build_id?: string;
+  product_id?: string;
+  rating: number;
+  content: string;
+  categories: string[];
+  image_urls?: string[];
+}
+
+export interface ReviewRating {
+  rating: number;
+  count: number;
+  percentage: number;
 }
 
 // Date range type for filtering
@@ -172,7 +233,7 @@ export interface LogEntry {
   level: LogLevel;
   message: string;
   category: LogCategory;
-  timestamp: string;
+  timestamp: string; // Keep as string for base type
   source?: string;
   details?: LogDetails;
 }
@@ -201,21 +262,42 @@ export interface AuthEvent {
   metadata?: Record<string, unknown>;
 }
 
-// User profile interface
-export interface UserProfile {
-  id: string;
-  email?: string;
-  roles: UserRole[];
-  display_name?: string;
-  avatar_url?: string;
-  user_metadata?: {
-    full_name?: string;
-    avatar_url?: string;
-    [key: string]: any;
-  };
-}
-
 // Auth events callback type
 export interface AuthEventCallback {
   (event: AuthEvent): void;
+}
+
+// Theme log details
+export interface ThemeLogDetails extends LogDetails {
+  themeName?: string;
+  themeId?: string;
+  tokens?: number;
+  componentCount?: number;
+}
+
+// Export AuthEventType enum
+export enum AuthEventType {
+  // Auth state changes
+  AUTH_STATE_CHANGE = 'AUTH_STATE_CHANGE',
+  
+  // User events
+  SIGNED_IN = 'SIGNED_IN',
+  SIGNED_UP = 'SIGNED_UP',
+  SIGNED_OUT = 'SIGNED_OUT',
+  USER_UPDATED = 'USER_UPDATED',
+  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
+  PASSWORD_UPDATED = 'PASSWORD_UPDATED',
+  
+  // Session events
+  TOKEN_REFRESHED = 'TOKEN_REFRESHED',
+  SESSION_DELETED = 'SESSION_DELETED',
+  
+  // Profile events
+  PROFILE_UPDATED = 'PROFILE_UPDATED',
+  
+  // Account management
+  ACCOUNT_LINKED = 'ACCOUNT_LINKED',
+  ACCOUNT_UNLINKED = 'ACCOUNT_UNLINKED',
+  MFA_ENABLED = 'MFA_ENABLED',
+  MFA_DISABLED = 'MFA_DISABLED'
 }
