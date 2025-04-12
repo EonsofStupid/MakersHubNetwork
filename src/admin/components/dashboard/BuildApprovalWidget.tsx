@@ -5,7 +5,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Package, AlertCircle, CheckCircle, XCircle, Clock } from "lucide-react";
-import { BuildStatus } from "@/shared/types/shared.types";
+import { BuildStatus } from "@/shared/types/build.types";
 
 interface BuildItem {
   id: string;

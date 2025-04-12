@@ -24,7 +24,7 @@ export function ContentManagementWidget() {
     {
       id: "content-1",
       title: "Guide to Custom Hotends",
-      status: "published",
+      status: ContentStatus.PUBLISHED,
       author: "admin",
       updatedAt: "2023-10-15T14:30:00Z",
       type: "guide"
@@ -32,7 +32,7 @@ export function ContentManagementWidget() {
     {
       id: "content-2",
       title: "Weekly Community Update",
-      status: "draft",
+      status: ContentStatus.DRAFT,
       author: "community-manager",
       updatedAt: "2023-10-14T11:20:00Z",
       type: "post"
@@ -40,7 +40,7 @@ export function ContentManagementWidget() {
     {
       id: "content-3",
       title: "Featured Builds October",
-      status: "scheduled",
+      status: ContentStatus.SCHEDULED,
       author: "editor",
       updatedAt: "2023-10-13T09:45:00Z",
       type: "featured"
@@ -49,13 +49,13 @@ export function ContentManagementWidget() {
   
   const getStatusIcon = (status: ContentStatus) => {
     switch(status) {
-      case "published":
+      case ContentStatus.PUBLISHED:
         return <FileText className="h-4 w-4 text-green-500" />;
-      case "draft":
+      case ContentStatus.DRAFT:
         return <Edit className="h-4 w-4 text-amber-500" />;
-      case "archived":
+      case ContentStatus.ARCHIVED:
         return <Archive className="h-4 w-4 text-gray-500" />;
-      case "scheduled":
+      case ContentStatus.SCHEDULED:
         return <Clock className="h-4 w-4 text-blue-500" />;
       default:
         return <FileText className="h-4 w-4" />;
@@ -66,16 +66,16 @@ export function ContentManagementWidget() {
     let className = "";
     
     switch(status) {
-      case "published":
+      case ContentStatus.PUBLISHED:
         className = "bg-green-500/10 text-green-500 border-green-500/20";
         break;
-      case "draft":
+      case ContentStatus.DRAFT:
         className = "bg-amber-500/10 text-amber-500 border-amber-500/20";
         break;
-      case "archived":
+      case ContentStatus.ARCHIVED:
         className = "bg-gray-500/10 text-gray-500 border-gray-500/20";
         break;
-      case "scheduled":
+      case ContentStatus.SCHEDULED:
         className = "bg-blue-500/10 text-blue-500 border-blue-500/20";
         break;
     }
