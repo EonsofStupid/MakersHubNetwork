@@ -1,5 +1,5 @@
 
-import { UserRole } from '@/shared/types';
+import { UserRole } from '@/shared/types/shared.types';
 
 /**
  * Checks if a user has the specified role(s)
@@ -15,7 +15,7 @@ export function hasRole(
   if (!userRoles || userRoles.length === 0) return false;
   
   // Superadmin has all roles
-  if (userRoles.includes('superadmin')) return true;
+  if (userRoles.includes('super_admin')) return true;
   
   // Check for specific roles
   if (Array.isArray(requiredRole)) {

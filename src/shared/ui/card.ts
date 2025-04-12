@@ -1,10 +1,3 @@
 
-// Re-export from components/ui/card
-export { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+// Re-export card component from shadcn
+export * from '@/components/ui/card';

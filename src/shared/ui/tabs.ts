@@ -1,8 +1,3 @@
 
-// Re-export from components/ui/tabs
-export { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
+// Re-export tabs component from shadcn
+export * from '@/components/ui/tabs';

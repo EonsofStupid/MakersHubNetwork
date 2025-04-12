@@ -62,13 +62,13 @@ export function ReviewCard({
   // If review object is provided, use its properties instead of individual props
   const reviewId = review?.id || id || '';
   const reviewTitle = review?.title || title || '';
-  const reviewContent = review?.content || content || '';
+  const reviewContent = review?.body || review?.content || content || '';
   const reviewRating = review?.rating || rating || 0;
   const reviewCategories = review?.categories || categories || [];
-  const reviewUserName = review?.reviewer_name || userName || 'Anonymous';
+  const reviewUserName = review?.user?.displayName || userName || 'Anonymous';
   const reviewDate = review?.created_at ? new Date(review.created_at).toLocaleDateString() : date || '';
   const reviewImages = review?.image_urls || images || [];
-  const reviewIsVerified = review?.approved || isVerified;
+  const reviewIsVerified = review?.is_verified_purchase || isVerified;
   const isPendingReview = isPending || (review && !review.approved);
   
   // State
