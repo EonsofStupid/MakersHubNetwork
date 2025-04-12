@@ -1,56 +1,53 @@
 
-/**
- * Common shared types used across the application
- */
+// Shared type definitions
 
-// Log levels
-export enum LogLevel {
-  TRACE = 'trace',
-  DEBUG = 'debug',
-  INFO = 'info',
-  SUCCESS = 'success',
-  WARN = 'warn',
-  ERROR = 'error',
-  CRITICAL = 'critical',
-  FATAL = 'fatal',
-  SILENT = 'silent',
+// User roles
+export enum UserRole {
+  USER = "user",
+  BUILDER = "builder",
+  MODERATOR = "moderator",
+  EDITOR = "editor",
+  ADMIN = "admin",
+  SUPER_ADMIN = "super_admin"
+}
+
+// Authentication status
+export enum AuthStatus {
+  LOADING = "LOADING",
+  AUTHENTICATED = "AUTHENTICATED",
+  UNAUTHENTICATED = "UNAUTHENTICATED",
+  ERROR = "ERROR"
 }
 
 // Log categories
 export enum LogCategory {
-  SYSTEM = 'system',
-  AUTH = 'auth',
-  ADMIN = 'admin',
-  CONTENT = 'content',
-  UI = 'ui',
-  API = 'api',
-  DATABASE = 'database',
-  THEME = 'theme',
-  CHAT = 'chat',
-  APP = 'app',
-  OTHER = 'other',
+  DEFAULT = "default",
+  SYSTEM = "system",
+  AUTH = "auth",
+  UI = "ui",
+  API = "api",
+  ADMIN = "admin",
+  CHAT = "chat",
+  DATABASE = "database",
+  PERFORMANCE = "performance",
+  ERROR = "error",
+  SECURITY = "security"
 }
 
-// User roles
-export enum UserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-  EDITOR = 'EDITOR',
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  MODERATOR = 'MODERATOR',
-  BUILDER = 'BUILDER',
+// Log levels
+export enum LogLevel {
+  TRACE = "trace",
+  DEBUG = "debug",
+  INFO = "info",
+  SUCCESS = "success",
+  WARN = "warn",
+  ERROR = "error",
+  CRITICAL = "critical",
+  FATAL = "fatal",
+  SILENT = "silent"
 }
 
-// Auth status
-export enum AuthStatus {
-  INITIAL = 'INITIAL',
-  LOADING = 'LOADING',
-  AUTHENTICATED = 'AUTHENTICATED',
-  UNAUTHENTICATED = 'UNAUTHENTICATED',
-  ERROR = 'ERROR',
-}
-
-// Log entry structure
+// Log entry
 export interface LogEntry {
   id: string;
   level: LogLevel;
@@ -58,60 +55,63 @@ export interface LogEntry {
   timestamp: number;
   source: string;
   category: LogCategory;
-  details?: LogDetails;
+  details?: Record<string, unknown>;
 }
 
-// Log event structure
-export interface LogEvent {
-  entry: LogEntry;
-}
-
-// Log filter structure
+// Log filter
 export interface LogFilter {
   level?: LogLevel | LogLevel[];
   category?: LogCategory | LogCategory[];
   source?: string | string[];
+  from?: Date;
+  to?: Date;
   search?: string;
-  limit?: number;
-  startTime?: number;
-  endTime?: number;
-  userId?: string;
 }
 
-// Log details interface
-export interface LogDetails {
-  [key: string]: unknown;
-  moduleId?: string;
-  moduleName?: string;
-  path?: string;
-  errorMessage?: string;
-  required?: string;
-  requiredPerm?: string;
-  eventType?: string;
+// Build related types
+export enum BuildStatus {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  NEEDS_REVISION = "needs_revision"
 }
 
-// User profile structure
-export interface UserProfile {
+export interface BuildPart {
   id: string;
-  user_id: string;
-  display_name?: string | null;
-  avatar_url?: string | null;
-  bio?: string | null;
-  location?: string | null;
-  website?: string | null;
-  updated_at?: string | null;
+  name: string;
+  quantity: number;
+  notes?: string;
 }
 
-// User structure
-export interface User {
+export interface BuildMod {
   id: string;
-  email: string;
-  user_metadata: Record<string, any>;
-  app_metadata: Record<string, any>;
+  name: string;
+  description?: string;
+  complexity?: number;
+}
+
+export interface Build {
+  id: string;
+  title: string;
+  description?: string;
+  status: BuildStatus;
   created_at: string;
-  updated_at: string | null;
-  confirmed_at: string | null;
+  updated_at: string;
+  user_id: string;
+  display_name?: string;
+  avatar_url?: string;
+  parts_count: number;
+  mods_count: number;
+  complexity_score: number;
+  parts?: BuildPart[];
+  mods?: BuildMod[];
+  images?: string[];
 }
 
-// Permission type
-export type Permission = string;
+// Generic types
+export type LogDetails = Record<string, unknown>;
+
+// Event types
+export interface LogEvent {
+  entry: LogEntry;
+}

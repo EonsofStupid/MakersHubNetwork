@@ -1,0 +1,63 @@
+
+/**
+ * Global theme variables
+ */
+:root {
+  /* Base colors */
+  --site-background: hsl(240 10% 3.9%);
+  --site-foreground: hsl(0 0% 98%);
+  --site-card: hsl(240 10% 3.9%);
+  --site-card-foreground: hsl(0 0% 98%);
+  --site-primary: hsl(0 0% 98%);
+  --site-primary-foreground: hsl(240 5.9% 10%);
+  --site-secondary: hsl(240 3.7% 15.9%);
+  --site-secondary-foreground: hsl(0 0% 98%);
+  --site-muted: hsl(240 3.7% 15.9%);
+  --site-muted-foreground: hsl(240 5% 64.9%);
+  --site-accent: hsl(240 3.7% 15.9%);
+  --site-accent-foreground: hsl(0 0% 98%);
+  --site-destructive: hsl(0 62.8% 30.6%);
+  --site-destructive-foreground: hsl(0 0% 98%);
+  --site-border: hsl(240 3.7% 15.9%);
+  --site-input: hsl(240 3.7% 15.9%);
+  --site-ring: hsl(240 4.9% 83.9%);
+  
+  /* Effect colors */
+  --site-effect-color: #00F0FF;
+  --site-effect-secondary: #FF2D6E;
+  --site-effect-tertiary: #00FF9D;
+  
+  /* Animation timings */
+  --site-transition-fast: 0.15s;
+  --site-transition-normal: 0.3s;
+  --site-transition-slow: 0.5s;
+  --site-animation-fast: 0.5s;
+  --site-animation-normal: 1s;
+  --site-animation-slow: 2s;
+  
+  /* Border radii */
+  --site-radius-sm: 0.25rem;
+  --site-radius-md: 0.5rem;
+  --site-radius-lg: 0.75rem;
+  --site-radius-full: 9999px;
+}
+
+.light-theme {
+  --site-background: hsl(0 0% 100%);
+  --site-foreground: hsl(240 10% 3.9%);
+  --site-card: hsl(0 0% 100%);
+  --site-card-foreground: hsl(240 10% 3.9%);
+  --site-primary: hsl(240 5.9% 10%);
+  --site-primary-foreground: hsl(0 0% 98%);
+  --site-secondary: hsl(240 4.8% 95.9%);
+  --site-secondary-foreground: hsl(240 5.9% 10%);
+  --site-muted: hsl(240 4.8% 95.9%);
+  --site-muted-foreground: hsl(240 3.8% 46.1%);
+  --site-accent: hsl(240 4.8% 95.9%);
+  --site-accent-foreground: hsl(240 5.9% 10%);
+  --site-destructive: hsl(0 84.2% 60.2%);
+  --site-destructive-foreground: hsl(0 0% 98%);
+  --site-border: hsl(240 5.9% 90%);
+  --site-input: hsl(240 5.9% 90%);
+  --site-ring: hsl(240 5.9% 10%);
+}

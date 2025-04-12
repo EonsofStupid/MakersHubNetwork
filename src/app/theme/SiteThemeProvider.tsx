@@ -1,13 +1,12 @@
-
 // This provider component handles the global theming for the site
 // It applies CSS variables and provides theme context to components
 
 import React, { createContext, useMemo, useEffect, useState } from "react";
-import { Theme, ComponentTokens } from "@/shared/types/shared.types";
-import { useThemeStore } from "@/stores/theme/store";
+import { Theme, ComponentTokens } from "@/shared/types/theme.types";
+import { useThemeStore } from "@/shared/stores/theme/store";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/shared/types/shared.types";
-import { ThemeLogDetails } from "@/shared/types/theme";
+import { ThemeLogDetails } from "@/shared/types/theme.types";
 
 export interface SiteThemeContextType {
   theme: Theme | null;
