@@ -36,7 +36,7 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
   };
 
   // Get user's first initial for avatar fallback
-  const userInitial = user?.user_metadata?.full_name?.charAt(0) || 'U';
+  const userInitial = user?.user_metadata?.full_name?.[0] || 'U';
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">

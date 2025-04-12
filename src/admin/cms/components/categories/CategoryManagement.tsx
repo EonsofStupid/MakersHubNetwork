@@ -349,7 +349,6 @@ export function CategoryManagement() {
                   )}
                 </TableCell>
               </TableRow>
-              {/* Conditionally render expanded content */}
               {expandedRows.has(category.id) && (
                 <TableRow>
                   <TableCell colSpan={5} className="p-4">
@@ -360,7 +359,6 @@ export function CategoryManagement() {
                       <p>
                         <strong>Updated At:</strong> {category.updated_at}
                       </p>
-                      {/* Add more details here as needed */}
                     </div>
                   </TableCell>
                 </TableRow>

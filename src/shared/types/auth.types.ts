@@ -1,53 +1,48 @@
 
-import { UserRole } from './shared.types';
-import { AuthStatus } from './shared.types';
-import { Session, User } from '@supabase/supabase-js';
+import { UserRole, AuthStatus } from './shared.types';
 
-export interface UserProfile {
+export interface UserSession {
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  expires_at?: number;
+  user: User;
+}
+
+export interface User {
   id: string;
-  email: string;
-  full_name?: string;
-  avatar_url?: string;
-  display_name?: string;
-  bio?: string;
-  roles?: UserRole[];
-  is_active?: boolean;
+  email?: string;
   created_at?: string;
   updated_at?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+    [key: string]: any;
+  };
+  app_metadata?: {
+    roles?: string[];
+    [key: string]: any;
+  };
 }
 
 export interface AuthState {
-  user: UserProfile | null;
+  user: User | null;
   status: AuthStatus;
-  session: Session | null;
   error: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  roles: UserRole[];
   isReady: boolean;
-}
-
-export interface UseAuthResult {
-  user: UserProfile | null;
-  status: AuthStatus;
-  session: Session | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
-export interface HasRoleOptions {
-  requireAll?: boolean;
-}
-
-export interface UseHasRoleResult {
-  hasRole: (role: UserRole | UserRole[], options?: HasRoleOptions) => boolean;
-  hasPermission: (permission: string | string[], options?: HasRoleOptions) => boolean;
-  isAdmin: boolean;
-  isModerator: boolean;
-  isSuperAdmin: boolean;
-}
-
-export interface UseAdminAuthResult {
-  user: UserProfile | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+  initialized: boolean;
+  
+  // Methods
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, metadata?: any) => Promise<void>;
+  logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
+  updateUserProfile: (profile: Partial<User>) => Promise<void>;
+  initialize: () => Promise<void>;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  isAdmin: () => boolean;
 }

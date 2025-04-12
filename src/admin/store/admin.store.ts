@@ -18,14 +18,14 @@ const useAdminStore = create<AdminState>((set) => ({
   user: null,
   isReady: false,
   isAuthenticated: false,
-  status: 'UNAUTHENTICATED',
+  status: AuthStatus.UNAUTHENTICATED,
   error: null,
   
   setAdminUser: (user: UserProfile | null) => {
     set({ 
       user,
       isAuthenticated: !!user,
-      status: user ? 'AUTHENTICATED' : 'UNAUTHENTICATED',
+      status: user ? AuthStatus.AUTHENTICATED : AuthStatus.UNAUTHENTICATED,
     });
   },
 
@@ -33,7 +33,7 @@ const useAdminStore = create<AdminState>((set) => ({
     set({
       user: null,
       isAuthenticated: false,
-      status: 'UNAUTHENTICATED',
+      status: AuthStatus.UNAUTHENTICATED,
     });
   }
 }));
