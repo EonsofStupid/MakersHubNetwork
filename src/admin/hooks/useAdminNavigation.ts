@@ -4,24 +4,29 @@ import { useNavigate } from 'react-router-dom';
 import { useHasRole } from '@/auth/hooks/useHasRole';
 import { useToast } from '@/shared/ui/use-toast';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import { LogCategory, UserRole } from '@/shared/types/shared.types';
 
 /**
  * Hook to handle admin navigation with consistent checks
  */
 export function useAdminNavigation() {
   const navigate = useNavigate();
-  const { hasAdminAccess } = useHasRole();
+  const { hasRole } = useHasRole();
   const { toast } = useToast();
   const logger = useLogger('AdminNavigation', LogCategory.ADMIN);
+
+  /**
+   * Check if the user has admin access
+   */
+  const hasAdminAccess = useCallback(() => {
+    return hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  }, [hasRole]);
 
   /**
    * Navigate to admin dashboard with permission check
    */
   const navigateToAdmin = useCallback(() => {
-    const canAccess = hasAdminAccess();
-    
-    if (canAccess) {
+    if (hasAdminAccess()) {
       logger.info('Navigating to admin dashboard');
       navigate('/admin');
       return true;

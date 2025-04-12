@@ -5,11 +5,11 @@ import AdminOverlay from '../debug/AdminOverlay';
 import { AdminOverlayToggleButton } from '../debug/AdminOverlayToggleButton';
 import { useHasRole } from '@/auth/hooks/useHasRole';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import { LogCategory, UserRole } from '@/shared/types/shared.types';
 import { useToast } from '@/shared/ui/use-toast';
 
 export function AdminLayout() {
-  const { hasAdminAccess } = useHasRole();
+  const { hasRole } = useHasRole();
   const navigate = useNavigate();
   const { toast } = useToast();
   const logger = useLogger('AdminLayout', LogCategory.ADMIN);
@@ -17,7 +17,7 @@ export function AdminLayout() {
   // Check if user has admin access
   useEffect(() => {
     const checkAccess = async () => {
-      const hasAccess = hasAdminAccess();
+      const hasAccess = hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
       
       if (!hasAccess) {
         logger.warn('Unauthorized access attempt to admin area');
@@ -33,7 +33,7 @@ export function AdminLayout() {
     };
     
     checkAccess();
-  }, [hasAdminAccess, navigate, toast, logger]);
+  }, [hasRole, navigate, toast, logger]);
   
   return (
     <div className="min-h-screen bg-background">
