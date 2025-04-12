@@ -1,77 +1,41 @@
 
-/**
- * auth.atoms.ts
- * 
- * Jotai atoms that read from Zustand store but never write back.
- * These are used for derived state or UI components that need reactivity.
- */
-
 import { atom } from 'jotai';
-import { UserRole, ROLES } from '@/types/shared';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { UserRole, AuthStatus, User } from '@/shared/types/shared.types';
 
-/**
- * Create a helper function to create atoms that are synchronized with the store
- * This avoids repeated boilerplate and ensures consistent behavior
- */
-function atomWithStoreSync<T>(selector: (state: any) => T) {
-  // Create a basic atom that reads from the store
-  return atom((get) => {
-    return selector(useAuthStore.getState());
-  });
-}
+// Core auth atoms
+export const userAtom = atom<User | null>(null);
+export const profileAtom = atom<any | null>(null);
+export const rolesAtom = atom<UserRole[]>([]);
+export const authStatusAtom = atom<AuthStatus>(AuthStatus.IDLE);
+export const authErrorAtom = atom<Error | null>(null);
 
-// Core state atoms - all derived from Zustand store
-export const userAtom = atomWithStoreSync((state) => state.user);
-export const sessionAtom = atomWithStoreSync((state) => state.session);
-export const profileAtom = atomWithStoreSync((state) => state.profile);
-export const rolesAtom = atomWithStoreSync((state) => state.roles);
-export const statusAtom = atomWithStoreSync((state) => state.status);
-export const isAuthenticatedAtom = atomWithStoreSync((state) => state.isAuthenticated);
-export const authErrorAtom = atomWithStoreSync((state) => state.error);
-export const isLoadingAtom = atomWithStoreSync((state) => state.isLoading);
-
-// Derived state atoms
-export const isAdminAtom = atomWithStoreSync((state) => 
-  state.roles.includes(ROLES.ADMIN) || state.roles.includes(ROLES.SUPER_ADMIN)
+// Derived atoms
+export const isAuthenticatedAtom = atom(
+  (get) => get(authStatusAtom) === AuthStatus.AUTHENTICATED
 );
 
-export const isSuperAdminAtom = atomWithStoreSync((state) => 
-  state.roles.includes(ROLES.SUPER_ADMIN)
+export const isLoadingAtom = atom(
+  (get) => get(authStatusAtom) === AuthStatus.LOADING
 );
 
-export const hasAdminAccessAtom = atomWithStoreSync((state) => 
-  state.roles.includes(ROLES.ADMIN) || state.roles.includes(ROLES.SUPER_ADMIN)
+export const userNameAtom = atom(
+  (get) => get(profileAtom)?.display_name || get(userAtom)?.email?.split('@')[0] || 'User'
 );
 
-// UI-specific derived atoms
-export const userNameAtom = atom((get) => {
-  const profile = get(profileAtom);
-  const user = get(userAtom);
-  
-  return profile?.display_name || user?.user_metadata?.full_name || user?.email || 'User';
-});
+export const userAvatarAtom = atom(
+  (get) => get(profileAtom)?.avatar_url || null
+);
 
-export const userAvatarAtom = atom((get) => {
-  const profile = get(profileAtom);
-  const user = get(userAtom);
-  
-  return profile?.avatar_url || user?.user_metadata?.avatar_url || null;
-});
-
-// For backward compatibility
-export type AuthStatusType = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
-export { isAuthenticatedAtom as authStatusAtom };
-
-// Has role utility function atom - returns a function
-export const hasRoleAtom = atom(
-  (get) => (role: UserRole | UserRole[]): boolean => {
+export const isAdminAtom = atom(
+  (get) => {
     const roles = get(rolesAtom);
-    
-    if (Array.isArray(role)) {
-      return role.some(r => roles.includes(r));
-    }
-    
-    return roles.includes(role);
+    return roles.includes(UserRole.ADMIN) || roles.includes(UserRole.SUPER_ADMIN);
   }
 );
+
+export const hasAdminAccessAtom = atom(
+  (get) => get(isAdminAtom)
+);
+
+// Type export for intellisense
+export type AuthStatusType = AuthStatus;

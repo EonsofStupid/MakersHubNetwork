@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Badge } from "@/shared/ui/badge";
-import { BuildStatus } from "@/shared/types/build.types";
+import { BuildStatus } from "@/shared/types/shared.types";
 import { AlertCircle, CheckCircle, XCircle, RotateCcw } from "lucide-react";
 
 interface BuildStatusBadgeProps {

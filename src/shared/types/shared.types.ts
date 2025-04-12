@@ -299,3 +299,57 @@ export interface ThemeLogDetails extends Record<string, unknown> {
   theme?: string;
   details?: Record<string, unknown>;
 }
+
+// Export build status as string literal type
+export type BuildStatus = 
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'needs_revision';
+
+// Constants for BuildStatus
+export const BuildStatus = {
+  PENDING: 'pending' as BuildStatus,
+  APPROVED: 'approved' as BuildStatus,
+  REJECTED: 'rejected' as BuildStatus,
+  NEEDS_REVISION: 'needs_revision' as BuildStatus
+} as const;
+
+// Define review types as string literal types
+export interface Review {
+  id: string;
+  user_id: string;
+  build_id?: string;
+  product_id?: string;
+  rating: number;
+  content: string;
+  categories: string[];
+  status: ReviewStatus;
+  image_urls?: string[];
+  created_at: string;
+}
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+
+export interface ReviewAdminStore {
+  reviews: Review[];
+  selectedReview: Review | null;
+  isLoading: boolean;
+  error: string | null;
+  stats: ReviewStats;
+  
+  fetchReviews: () => Promise<void>;
+  fetchReviewById: (id: string) => Promise<void>;
+  approveReview: (id: string) => Promise<void>;
+  rejectReview: (id: string, reason: string) => Promise<void>;
+  deleteReview: (id: string) => Promise<void>;
+}
+
+export interface ReviewDraft {
+  build_id?: string;
+  product_id?: string;
+  rating: number;
+  content: string;
+  categories: string[];
+  image_urls?: string[];
+}
