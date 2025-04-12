@@ -1,7 +1,7 @@
 
 import React, { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/shared/utils/cn";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 interface FeatureCardProps {

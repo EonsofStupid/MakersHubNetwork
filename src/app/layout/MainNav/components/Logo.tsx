@@ -2,7 +2,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/shared/utils/cn";
-import { useThemeStore } from "@/stores/theme/store"; 
+import { useThemeStore } from "@/shared/stores/theme/store"; 
 
 export const Logo = () => {
   const variables = useThemeStore(state => state.variables);
