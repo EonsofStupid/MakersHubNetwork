@@ -1,3 +1,2 @@
-
 // Re-export button component from shadcn
-export { Button, buttonVariants } from '@/components/ui/button';
+export { Button, buttonVariants } from '@/shared/ui/button/button.component';

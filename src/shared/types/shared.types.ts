@@ -1,4 +1,3 @@
-
 // String literal types as enums
 export enum AuthStatus {
   AUTHENTICATED = 'AUTHENTICATED',
@@ -52,17 +51,7 @@ export enum ThemeContext {
   APP = 'APP'
 }
 
-export enum LogLevel {
-  TRACE = 'trace',
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  FATAL = 'fatal',
-  SUCCESS = 'success',
-  CRITICAL = 'critical',
-  SILENT = 'silent'
-}
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export enum LogCategory {
   AUTH = 'AUTH',
@@ -76,20 +65,17 @@ export enum LogCategory {
   CHAT = 'CHAT',
   NETWORK = 'NETWORK',
   DEFAULT = 'DEFAULT',
-  APP = 'APP'
+  APP = 'APP',
+  PERFORMANCE = 'PERFORMANCE',
+  USER = 'USER'
 }
 
 // Log level values for numeric comparison
 export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  [LogLevel.TRACE]: 0,
-  [LogLevel.DEBUG]: 1, 
-  [LogLevel.INFO]: 2,
-  [LogLevel.WARN]: 3,
-  [LogLevel.ERROR]: 4,
-  [LogLevel.FATAL]: 5,
-  [LogLevel.SUCCESS]: 2, // Same level as info but used for successful operations
-  [LogLevel.CRITICAL]: 5, // Same level as fatal but used for critical issues
-  [LogLevel.SILENT]: 999 // Highest level, will disable all logging
+  'debug': 1,
+  'info': 2,
+  'warn': 3,
+  'error': 4
 };
 
 // Log details interface
@@ -129,18 +115,12 @@ export interface UserProfile {
 // Create an explicit User interface
 export interface User {
   id: string;
-  email?: string;
-  created_at?: string;
-  updated_at?: string;
-  user_metadata?: {
-    full_name?: string;
-    avatar_url?: string;
-    [key: string]: any;
-  };
-  app_metadata?: {
-    roles?: string[];
-    [key: string]: any;
-  };
+  email: string;
+  user_metadata: Record<string, any>;
+  app_metadata: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  confirmed_at?: string | null;
 }
 
 // Build interfaces
@@ -232,10 +212,10 @@ export interface LogEntry {
   id: string;
   level: LogLevel;
   message: string;
+  timestamp: number;
+  source: string;
   category: LogCategory;
-  timestamp: string;
-  source?: string;
-  details?: LogDetails;
+  details?: Record<string, unknown>;
 }
 
 // Log Event type

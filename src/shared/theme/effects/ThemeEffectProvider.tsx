@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { ThemeEffect } from '@/theme/types/effects';
+import { ThemeEffect, ThemeEffectProps } from '@/shared/types/theme/effects';
 
 interface ThemeEffectContextType {
   effects: Record<string, ThemeEffect>;
@@ -31,7 +30,8 @@ export function ThemeEffectProvider({
 
   const addEffect = useCallback((elementId: string, effect: ThemeEffect) => {
     setEffects(prev => {
-      const newEffects = { ...prev, [effect.id]: effect };
+      const effectWithId = effect as ThemeEffect & { id: string };
+      const newEffects = { ...prev, [effectWithId.id]: effectWithId };
       
       // Limit the number of active effects
       const effectIds = Object.keys(newEffects);

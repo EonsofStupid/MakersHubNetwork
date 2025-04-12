@@ -1,13 +1,6 @@
-
 import React, { useMemo, memo } from 'react';
-import { ThemeEffect } from '@/theme/types/effects';
+import { ThemeEffect, EffectRendererProps } from '@/shared/types/theme/effects';
 import { cn } from '@/shared/utils/cn';
-
-interface EffectRendererProps {
-  effect?: ThemeEffect;
-  className?: string;
-  children: React.ReactNode;
-}
 
 export const EffectRenderer = memo(function EffectRenderer({ 
   effect, 
