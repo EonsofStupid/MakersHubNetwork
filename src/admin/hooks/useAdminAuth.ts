@@ -1,45 +1,54 @@
 
-import { useCallback, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory, UserRole } from '@/shared/types/shared.types';
-import { authBridge } from '@/bridges/AuthBridge';
+import { useEffect } from 'react';
 import { useAdminStore } from '../store/admin.store';
+import { authBridge } from '@/auth/bridge';
+import { AuthStatus, LogDetails, UserProfile } from '@/shared/types/shared.types';
+import { useLogger } from '@/hooks/use-logger';
 
-/**
- * Hook for handling admin-specific auth functionality
- */
 export function useAdminAuth() {
-  const auth = useAuth();
-  const { setAdminUser } = useAdminStore();
-  const logger = useLogger('useAdminAuth', LogCategory.AUTH);
+  const {
+    user,
+    status,
+    setAdminUser,
+    isAuthenticated,
+    error
+  } = useAdminStore();
   
-  // Check if user has admin access
-  const hasAdminAccess = useCallback(() => {
-    return auth.hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-  }, [auth]);
+  const logger = useLogger('AdminAuth', 'ADMIN');
 
-  // Subscribe to auth events
   useEffect(() => {
-    logger.debug('Setting up admin auth listeners');
+    const currentUser = authBridge.getCurrentUser();
     
-    const unsubscribe = authBridge.subscribeToAuthEvents((event) => {
-      logger.debug('Auth event received in admin context', { eventType: event.type });
+    if (currentUser) {
+      setAdminUser(currentUser);
+    }
+    
+    const unsubscribe = authBridge.subscribeToAuthEvents((event, user) => {
+      const details: LogDetails = {
+        eventType: event,
+        hasUser: !!user
+      };
       
-      if (event.user) {
-        setAdminUser(event.user);
-      } else {
+      logger.info(`Auth event: ${event}`, { details });
+      
+      if (event === 'SIGNED_IN' && user) {
+        setAdminUser(user as UserProfile);
+      } else if (event === 'SIGNED_OUT') {
         setAdminUser(null);
       }
     });
     
     return () => {
-      unsubscribe();
+      if (unsubscribe) unsubscribe();
     };
-  }, [logger, setAdminUser]);
-
+  }, []);
+  
   return {
-    ...auth,
-    hasAdminAccess,
+    user,
+    isAuthenticated,
+    isLoading: status === 'LOADING',
+    error
   };
 }
+
+export default useAdminAuth;

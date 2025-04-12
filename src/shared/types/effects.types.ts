@@ -1,44 +1,31 @@
 
 import { ReactNode } from 'react';
 
-export interface ThemeEffect {
-  id?: string;
-  name: string;
-  type: ThemeEffectType;
-  settings: ThemeEffectSettings;
-  animation?: ThemeEffectAnimation;
-}
-
 export type ThemeEffectType = 
-  | 'glow' 
-  | 'noise' 
-  | 'shimmer' 
-  | 'pulse' 
-  | 'wave' 
-  | 'matrix' 
-  | 'scan' 
-  | 'glitch';
+  | 'glow'
+  | 'flicker'
+  | 'pulse'
+  | 'shimmer'
+  | 'neon'
+  | 'cyber'
+  | 'noise'
+  | 'distortion';
 
-export interface ThemeEffectSettings {
+export interface ThemeEffect {
+  id: string;
+  type: ThemeEffectType;
+  intensity: number;
   color?: string;
-  intensity?: number;
-  speed?: number;
-  opacity?: number;
-  size?: number;
-  blur?: number;
-  [key: string]: any;
+  duration?: number;
+  delay?: number;
+  options?: Record<string, any>;
 }
 
-export interface ThemeEffectAnimation {
-  duration: number;
-  delay?: number;
-  easing?: string;
-  iteration?: number;
-  direction?: 'normal' | 'reverse' | 'alternate' | 'alternate-reverse';
+export interface ThemeEffectProps {
+  effect: ThemeEffect;
+  children: ReactNode;
 }
 
 export interface ThemeEffectProviderProps {
   children: ReactNode;
-  effect?: ThemeEffect;
-  className?: string;
 }

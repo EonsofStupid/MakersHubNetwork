@@ -1,75 +1,112 @@
 
 import { create } from 'zustand';
-import { ThemeState, Theme, ThemeToken, ComponentTokens } from '../../types/theme.types';
+import { ComponentTokens, DesignTokens, Theme, ThemeState, ThemeVariables } from '@/shared/types/theme.types';
 
+// Default theme state
 const initialState: ThemeState = {
-  theme: 'default',
-  tokens: [],
-  componentTokens: [],
-  adminComponents: [],
-  variables: {
-    background: '#ffffff',
-    foreground: '#000000',
-    card: '#ffffff',
-    cardForeground: '#000000',
-    primary: '#0c4a6e',
-    primaryForeground: '#ffffff',
-    secondary: '#f1f5f9',
-    secondaryForeground: '#0f172a',
-    muted: '#f1f5f9',
-    mutedForeground: '#64748b',
-    accent: '#f1f5f9',
-    accentForeground: '#0f172a',
-    destructive: '#ef4444',
-    destructiveForeground: '#ffffff',
-    border: '#e2e8f0',
-    input: '#e2e8f0',
-    ring: '#0c4a6e',
-    effectColor: '#00F0FF',
-    effectSecondary: '#FF2D6E',
-    effectTertiary: '#FFFF00',
-    transitionFast: '0.15s',
-    transitionNormal: '0.3s',
-    transitionSlow: '0.5s',
-    animationFast: '0.5s',
-    animationNormal: '1s',
-    animationSlow: '2s',
-    radiusSm: '0.25rem',
-    radiusMd: '0.5rem',
-    radiusLg: '0.75rem',
-    radiusFull: '9999px',
-  },
-  componentStyles: {},
-  isLoaded: false,
-  currentTheme: null,
+  themes: [],
+  activeTheme: 'cyberpunk',
+  componentTokens: {} as ComponentTokens,
+  designTokens: {} as DesignTokens,
+  isLoading: true
 };
 
-export const useThemeStore = create<ThemeState>()((set) => ({
+// Create theme store
+export const useThemeStore = create<
+  ThemeState & {
+    setActiveTheme: (themeId: string) => void;
+    loadTheme: (themeId: string) => Promise<void>;
+    updateComponentToken: (component: string, token: string, value: string) => void;
+    updateDesignToken: (category: string, token: string, value: string) => void;
+    resetTheme: () => void;
+  }
+>((set, get) => ({
   ...initialState,
-  
-  setTheme: (theme: string) => set({ theme }),
-  setCurrentTheme: (theme: Theme) => set({ currentTheme: theme }),
-  setTokens: (tokens: ThemeToken[]) => set({ tokens }),
-  setComponentTokens: (componentTokens: ComponentTokens[]) => set({ componentTokens }),
-  setVariables: (variables: Partial<ThemeState['variables']>) => 
-    set((state) => ({ 
-      variables: { ...state.variables, ...variables } 
-    })),
-  setLoaded: (isLoaded: boolean) => set({ isLoaded }),
-  setComponentStyles: (componentStyles: ThemeState['componentStyles']) => set({ componentStyles }),
-  setAdminComponentTokens: (adminComponents: ComponentTokens[]) => set({ adminComponents }),
-  
-  // Theme initialization
-  initializeTheme: (theme: Theme) => set({
-    currentTheme: theme,
-    isLoaded: true,
-  }),
-  
-  // Theme reset
-  resetTheme: () => set(initialState),
-}));
 
-// Selector functions
-export const selectCurrentTheme = (state: ThemeState) => state.currentTheme;
-export const selectThemeTokens = (state: ThemeState) => state.tokens;
-export const selectThemeComponents = (state: ThemeState) => state.componentStyles;
+  setActiveTheme: (themeId: string) => {
+    set({ activeTheme: themeId });
+    // This would typically trigger a theme load
+  },
+
+  loadTheme: async (themeId: string) => {
+    set({ isLoading: true });
+    
+    try {
+      // Mock theme loading
+      const mockTheme: Theme = {
+        id: themeId,
+        name: 'Cyberpunk',
+        description: 'A futuristic cyberpunk theme',
+        is_system: true,
+        is_default: true
+      };
+      
+      const mockDesignTokens: DesignTokens = {
+        colors: {
+          primary: '#00ffcc',
+          secondary: '#ff00cc',
+          background: '#111122',
+          text: '#ffffff'
+        },
+        spacing: {
+          small: '0.5rem',
+          medium: '1rem',
+          large: '2rem'
+        }
+      };
+      
+      const mockComponentTokens: ComponentTokens = {
+        button: {
+          backgroundColor: 'var(--colors-primary)',
+          textColor: 'var(--colors-text)',
+          borderRadius: '4px'
+        },
+        card: {
+          backgroundColor: 'var(--colors-background)',
+          boxShadow: '0 0 10px rgba(0,255,204,0.5)'
+        }
+      };
+      
+      set({
+        themes: [mockTheme],
+        activeTheme: themeId,
+        designTokens: mockDesignTokens,
+        componentTokens: mockComponentTokens,
+        isLoading: false
+      });
+    } catch (error) {
+      console.error('Failed to load theme:', error);
+      set({ isLoading: false });
+    }
+  },
+
+  updateComponentToken: (component: string, token: string, value: string) => {
+    set((state) => {
+      const updatedTokens = { ...state.componentTokens };
+      if (!updatedTokens[component]) {
+        updatedTokens[component] = {};
+      }
+      
+      updatedTokens[component][token] = value;
+      
+      return { componentTokens: updatedTokens };
+    });
+  },
+
+  updateDesignToken: (category: string, token: string, value: string) => {
+    set((state) => {
+      const updatedTokens = { ...state.designTokens };
+      if (!updatedTokens[category]) {
+        updatedTokens[category] = {};
+      }
+      
+      updatedTokens[category][token] = value;
+      
+      return { designTokens: updatedTokens };
+    });
+  },
+
+  resetTheme: () => {
+    set(initialState);
+  }
+}));

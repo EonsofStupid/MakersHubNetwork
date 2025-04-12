@@ -1,67 +1,116 @@
 
-import React from "react";
-import { useAdminSidebar } from "../hooks/useAdminSidebar";
-import { cn } from "@/shared/utils/cn";
-import { adminNavigation } from "../config/navigation.config";
-import { Link, useLocation } from "react-router-dom";
-import { useAdminStore } from "../store/admin.store";
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { 
+  LayoutDashboard, Settings, Users, FileText, 
+  PieChart, Palette, Layers, AlertCircle, LogOut 
+} from 'lucide-react';
+import { useAdminStore } from '../store/admin.store';
+import { useAdminPermissions } from '../hooks/useAdminPermissions';
 
-interface AdminSidebarProps {
-  className?: string;
-}
+const AdminSidebar: React.FC = () => {
+  const { user, logout } = useAdminStore();
+  const { hasRole } = useAdminPermissions();
 
-export function AdminSidebar({ className }: AdminSidebarProps) {
-  const { isOpen } = useAdminSidebar();
-  const location = useLocation();
-  const hasRole = useAdminStore((state) => state.hasRole);
+  const navItems = [
+    {
+      label: 'Dashboard',
+      icon: <LayoutDashboard size={18} />,
+      path: '/admin/dashboard',
+      requiredRoles: ['ADMIN', 'MODERATOR', 'SUPERADMIN']
+    },
+    {
+      label: 'Users',
+      icon: <Users size={18} />,
+      path: '/admin/users',
+      requiredRoles: ['ADMIN', 'SUPERADMIN']
+    },
+    {
+      label: 'Content',
+      icon: <FileText size={18} />,
+      path: '/admin/content',
+      requiredRoles: ['ADMIN', 'MODERATOR', 'SUPERADMIN']
+    },
+    {
+      label: 'Analytics',
+      icon: <PieChart size={18} />,
+      path: '/admin/analytics',
+      requiredRoles: ['ADMIN', 'SUPERADMIN']
+    },
+    {
+      label: 'Layouts',
+      icon: <Layers size={18} />,
+      path: '/admin/layouts',
+      requiredRoles: ['ADMIN', 'SUPERADMIN']
+    },
+    {
+      label: 'Themes',
+      icon: <Palette size={18} />,
+      path: '/admin/themes',
+      requiredRoles: ['ADMIN', 'SUPERADMIN']
+    },
+    {
+      label: 'Settings',
+      icon: <Settings size={18} />,
+      path: '/admin/settings',
+      requiredRoles: ['ADMIN', 'SUPERADMIN']
+    },
+    {
+      label: 'Logs',
+      icon: <AlertCircle size={18} />,
+      path: '/admin/logs',
+      requiredRoles: ['SUPERADMIN']
+    }
+  ];
 
-  // Filter navigation items based on user roles
-  const filteredNavigation = adminNavigation.filter(item => {
-    if (!item.requiredRole) return true;
-    return hasRole(item.requiredRole);
-  });
+  const filteredNavItems = navItems.filter(item => 
+    hasRole(item.requiredRoles)
+  );
 
   return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 z-20 h-full w-64 transform border-r border-border/40 bg-background transition-transform duration-200 ease-in-out",
-        isOpen ? "translate-x-0" : "-translate-x-full",
-        "lg:relative lg:translate-x-0",
-        className
-      )}
-    >
-      <div className="flex h-16 items-center border-b border-border/40 px-4">
-        <Link to="/admin" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-primary/20 flex items-center justify-center">
-            <span className="text-primary font-bold">A</span>
+    <aside className="w-64 bg-background border-r border-border h-screen">
+      <div className="p-4 border-b border-border">
+        <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+        {user && (
+          <div className="text-sm text-muted-foreground mt-1">
+            {user.display_name || user.email}
           </div>
-          <span className="text-lg font-semibold">Admin</span>
-        </Link>
+        )}
       </div>
-
-      <nav className="space-y-1 p-2">
-        {filteredNavigation.map((item) => {
-          const isActive = location.pathname === item.href || 
-                          location.pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-foreground/70 hover:bg-muted hover:text-foreground"
-              )}
-            >
-              {Icon && <Icon className="h-5 w-5" />}
-              <span>{item.name}</span>
-            </Link>
-          );
-        })}
+      
+      <nav className="p-2">
+        <ul className="space-y-1">
+          {filteredNavItems.map((item) => (
+            <li key={item.path}>
+              <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-accent hover:text-accent-foreground'
+                  }`
+                }
+              >
+                {item.icon}
+                {item.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
       </nav>
+      
+      <div className="mt-auto p-4 border-t border-border">
+        <button
+          onClick={() => logout()}
+          className="flex items-center gap-3 w-full px-3 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+        >
+          <LogOut size={18} />
+          Logout
+        </button>
+      </div>
     </aside>
   );
-}
+};
+
+export default AdminSidebar;

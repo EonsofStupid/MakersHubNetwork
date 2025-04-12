@@ -1,200 +1,179 @@
-import { createStore } from 'zustand/vanilla';
-import { Review, ReviewStats } from '@/shared/types/shared.types';
 
-export interface ReviewFilters {
-  status?: string;
-  rating?: number;
-  dateRange?: {
-    from: Date | null;
-    to: Date | null;
-  };
-  sortBy?: string;
-  search?: string;
+import { create } from 'zustand';
+
+interface Review {
+  id: string;
+  title: string;
+  body: string;
+  rating: number;
+  user_id: string;
+  build_id?: string;
+  part_id?: string;
+  approved: boolean;
+  created_at: string;
 }
 
-export interface ReviewAdminStore {
+interface ReviewFilters {
+  status: 'all' | 'pending' | 'approved' | 'rejected';
+  type: 'all' | 'build' | 'part';
+  search: string;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+}
+
+interface ReviewAdminState {
   reviews: Review[];
-  pendingReviews: Review[];
   selectedReview: Review | null;
-  filters: ReviewFilters;
-  loading: boolean;
+  isLoading: boolean;
   error: string | null;
-  stats: ReviewStats;
-  
-  fetchReviews: () => Promise<void>;
-  fetchReviewById: (id: string) => Promise<void>;
-  approveReview: (id: string) => Promise<void>;
-  rejectReview: (id: string, reason: string) => Promise<void>;
-  deleteReview: (id: string) => Promise<void>;
-  fetchPendingReviews: () => Promise<void>;
-  fetchReviewStats: () => Promise<void>;
-  updateFilters: (filters: Partial<ReviewFilters>) => void;
-  calculateStats: () => void;
+  filters: ReviewFilters;
+  totalCount: number;
+  page: number;
+  pageSize: number;
 }
 
-const defaultStats: ReviewStats = {
-  totalReviews: 0,
-  avgRating: 0,
-  ratingCounts: {
-    1: 0,
-    2: 0,
-    3: 0,
-    4: 0,
-    5: 0,
-  }
-};
-
-const reviewAdminStore = createStore<ReviewAdminStore>()((set, get) => ({
+export const useReviewAdminStore = create<ReviewAdminState & {
+  fetchReviews: () => Promise<void>;
+  fetchPendingReviews: () => Promise<void>;
+  approveReview: (id: string) => Promise<void>;
+  rejectReview: (id: string, reason?: string) => Promise<void>;
+  deleteReview: (id: string) => Promise<void>;
+  setFilters: (filters: Partial<ReviewFilters>) => void;
+  setPage: (page: number) => void;
+}>((set) => ({
   reviews: [],
-  pendingReviews: [],
   selectedReview: null,
+  isLoading: false,
+  error: null,
   filters: {
     status: 'all',
-    rating: 0,
-    dateRange: {
-      from: null,
-      to: null
-    },
-    sortBy: 'newest',
-    search: ''
+    type: 'all',
+    search: '',
+    sortBy: 'created_at',
+    sortOrder: 'desc'
   },
-  loading: false,
-  error: null,
-  stats: defaultStats,
-  
+  totalCount: 0,
+  page: 1,
+  pageSize: 10,
+
   fetchReviews: async () => {
+    set({ isLoading: true });
     try {
-      set({ loading: true, error: null });
-      // Implement actual fetch logic here
-      // const reviews = await fetchReviewsFromApi();
-      // set({ reviews });
+      // Mock data
+      const mockReviews: Review[] = [
+        {
+          id: '1',
+          title: 'Great build',
+          body: 'This was a really helpful build guide',
+          rating: 5,
+          user_id: 'user1',
+          build_id: 'build1',
+          approved: false,
+          created_at: new Date().toISOString()
+        },
+        // More mock data would go here
+      ];
+      set({ 
+        reviews: mockReviews, 
+        isLoading: false,
+        totalCount: mockReviews.length
+      });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch reviews' });
-    } finally {
-      set({ loading: false });
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch reviews',
+        isLoading: false
+      });
     }
   },
-  
-  fetchReviewById: async (id: string) => {
-    try {
-      set({ loading: true, error: null });
-      // Implement actual fetch logic here
-      // const review = await fetchReviewByIdFromApi(id);
-      // set({ selectedReview: review });
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch review' });
-    } finally {
-      set({ loading: false });
-    }
-  },
-  
-  approveReview: async (id: string) => {
-    try {
-      set({ loading: true, error: null });
-      // Implement actual approve logic here
-      // await approveReviewApi(id);
-      // Update the reviews list after approval
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to approve review' });
-    } finally {
-      set({ loading: false });
-    }
-  },
-  
-  rejectReview: async (id: string, reason: string) => {
-    try {
-      set({ loading: true, error: null });
-      // Implement actual reject logic here
-      // await rejectReviewApi(id, reason);
-      // Update the reviews list after rejection
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to reject review' });
-    } finally {
-      set({ loading: false });
-    }
-  },
-  
-  deleteReview: async (id: string) => {
-    try {
-      set({ loading: true, error: null });
-      // Implement actual delete logic here
-      // await deleteReviewApi(id);
-      // Update the reviews list after deletion
-    } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to delete review' });
-    } finally {
-      set({ loading: false });
-    }
-  },
-  
+
   fetchPendingReviews: async () => {
+    set({ isLoading: true });
     try {
-      set({ loading: true, error: null });
-      // Implement actual fetch logic here
-      // const pendingReviews = await fetchPendingReviewsFromApi();
-      // set({ pendingReviews });
+      // Mock data
+      const pendingReviews: Review[] = [
+        {
+          id: '1',
+          title: 'Pending Review',
+          body: 'This review is awaiting approval',
+          rating: 4,
+          user_id: 'user1',
+          build_id: 'build1',
+          approved: false,
+          created_at: new Date().toISOString()
+        },
+        // More mock data would go here
+      ];
+      set({ 
+        reviews: pendingReviews, 
+        isLoading: false,
+        totalCount: pendingReviews.length
+      });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch pending reviews' });
-    } finally {
-      set({ loading: false });
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch pending reviews',
+        isLoading: false
+      });
     }
   },
-  
-  fetchReviewStats: async () => {
+
+  approveReview: async (id: string) => {
+    set({ isLoading: true });
     try {
-      set({ loading: true, error: null });
-      // Implement actual fetch logic here
-      // const stats = await fetchReviewStatsFromApi();
-      // set({ stats });
+      // Mock approval logic
+      set(state => ({
+        reviews: state.reviews.map(review =>
+          review.id === id ? { ...review, approved: true } : review
+        ),
+        isLoading: false
+      }));
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Failed to fetch review stats' });
-    } finally {
-      set({ loading: false });
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to approve review',
+        isLoading: false
+      });
     }
   },
-  
-  updateFilters: (filters: Partial<ReviewFilters>) => {
-    set((state) => ({
+
+  rejectReview: async (id: string, reason?: string) => {
+    set({ isLoading: true });
+    try {
+      // Mock rejection logic
+      set(state => ({
+        reviews: state.reviews.filter(review => review.id !== id),
+        isLoading: false
+      }));
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to reject review',
+        isLoading: false
+      });
+    }
+  },
+
+  deleteReview: async (id: string) => {
+    set({ isLoading: true });
+    try {
+      // Mock deletion logic
+      set(state => ({
+        reviews: state.reviews.filter(review => review.id !== id),
+        isLoading: false
+      }));
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to delete review',
+        isLoading: false
+      });
+    }
+  },
+
+  setFilters: (filters: Partial<ReviewFilters>) => {
+    set(state => ({
       filters: { ...state.filters, ...filters },
+      page: 1 // Reset to first page on filter change
     }));
   },
-  
-  calculateStats: () => {
-    const { reviews } = get();
-    
-    if (reviews.length === 0) {
-      set({ stats: defaultStats });
-      return;
-    }
-    
-    const ratingCounts = {
-      1: 0,
-      2: 0,
-      3: 0,
-      4: 0,
-      5: 0,
-    };
-    
-    let totalRating = 0;
-    
-    reviews.forEach(review => {
-      const rating = review.rating || 0;
-      if (rating >= 1 && rating <= 5) {
-        ratingCounts[rating as 1|2|3|4|5]++;
-        totalRating += rating;
-      }
-    });
-    
-    const avgRating = totalRating / reviews.length;
-    
-    set({
-      stats: {
-        totalReviews: reviews.length,
-        avgRating,
-        ratingCounts
-      }
-    });
+
+  setPage: (page: number) => {
+    set({ page });
   }
 }));
-
-export const useReviewAdminStore = reviewAdminStore;

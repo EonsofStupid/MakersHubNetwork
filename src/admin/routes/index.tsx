@@ -1,37 +1,35 @@
 
-import React from 'react';
-import { Route, Routes } from 'react-router-dom';
-import { AdminLayout } from '../components/layout/AdminLayout';
-
-// Import components correctly
+import { Route, Routes, Navigate } from 'react-router-dom';
 import DashboardPage from './dashboard/DashboardPage';
-import UserManagementPage from './users/UserManagementPage';
-import SettingsPage from './settings/SettingsPage';
-import ContentManagementPage from './content/ContentManagementPage';
 import BuildsPage from './builds/BuildsPage';
-import DataMaestroPage from './data/DataMaestroPage';
-import PermissionsPage from './permissions/PermissionsPage';
-import ThemeEditorPage from './themes/ThemeEditorPage';
-import RolesPage from './roles/RolesPage';
-import { NotFoundPage } from './NotFoundPage';
-import { UnauthorizedPage } from './UnauthorizedPage';
+import AdminLayout from '../components/layouts/AdminLayout';
+import AnalyticsPage from './analytics/AnalyticsPage';
+import SettingsPage from './settings/SettingsPage';
+import LayoutsPage from './layouts/LayoutsPage';
+import LogsPage from '../pages/LogsPage';
+import NotFoundPage from './NotFoundPage';
+import UnauthorizedPage from './UnauthorizedPage';
+import { Navigate } from 'react-router-dom';
 
-// Make sure each component can accept children
-export interface AdminRouteProps {
-  children?: React.ReactNode;
-}
+// These would be imported when implemented
+const UserManagementPage = () => <div>User Management Page</div>;
+const ContentManagementPage = () => <div>Content Management Page</div>;
+const ThemeEditorPage = () => <div>Theme Editor Page</div>;
+const RolesPage = () => <div>Roles Page</div>;
 
-export function AdminRoutes() {
+export const AdminRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<AdminLayout />}>
-        <Route index element={<DashboardPage />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="builds/*" element={<BuildsPage />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="users" element={<UserManagementPage />} />
-        <Route path="settings" element={<SettingsPage />} />
+        <Route path="logs" element={<LogsPage />} />
         <Route path="content" element={<ContentManagementPage />} />
-        <Route path="builds" element={<BuildsPage />} />
-        <Route path="data" element={<DataMaestroPage />} />
-        <Route path="permissions" element={<PermissionsPage />} />
+        <Route path="layouts" element={<LayoutsPage />} />
+        <Route path="settings" element={<SettingsPage />} />
         <Route path="themes" element={<ThemeEditorPage />} />
         <Route path="roles" element={<RolesPage />} />
         <Route path="unauthorized" element={<UnauthorizedPage />} />
@@ -39,4 +37,6 @@ export function AdminRoutes() {
       </Route>
     </Routes>
   );
-}
+};
+
+export default AdminRoutes;
