@@ -8,7 +8,6 @@ import { Separator } from "@/shared/ui/separator"
 import { Badge } from "@/shared/ui/badge"
 import { cn } from "@/shared/utils/cn"
 import { UserRole } from "@/shared/types/shared.types"
-import { authBridge } from "@/auth/bridge"
 import { useAdminNavigation } from "@/admin/hooks/useAdminNavigation"
 
 interface UserMenuSheetProps {
