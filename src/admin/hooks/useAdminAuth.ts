@@ -1,35 +1,45 @@
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory, UserRole } from '@/shared/types/shared.types';
 import { authBridge } from '@/bridges/AuthBridge';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useAdminStore } from '../store/admin.store';
 
-export const useAdminAuth = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const { roles } = useAuthStore();
+/**
+ * Hook for handling admin-specific auth functionality
+ */
+export function useAdminAuth() {
+  const auth = useAuth();
+  const { setAdminUser } = useAdminStore();
+  const logger = useLogger('useAdminAuth', LogCategory.AUTH);
+  
+  // Check if user has admin access
+  const hasAdminAccess = useCallback(() => {
+    return auth.hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  }, [auth]);
 
+  // Subscribe to auth events
   useEffect(() => {
-    // Check if user has admin role
-    const checkAdminRole = () => {
-      if (roles.includes('admin') || roles.includes('superadmin')) {
-        setIsAdmin(true);
+    logger.debug('Setting up admin auth listeners');
+    
+    const unsubscribe = authBridge.subscribeToAuthEvents((event) => {
+      logger.debug('Auth event received in admin context', { eventType: event.type });
+      
+      if (event.user) {
+        setAdminUser(event.user);
       } else {
-        setIsAdmin(false);
+        setAdminUser(null);
       }
-    };
-
-    checkAdminRole();
-
-    // Subscribe to auth events
-    const unsubscribe = authBridge.subscribeToEvent('AUTH_STATE_CHANGE', () => {
-      checkAdminRole();
     });
-
+    
     return () => {
       unsubscribe();
     };
-  }, [roles]);
+  }, [logger, setAdminUser]);
 
   return {
-    isAdmin
+    ...auth,
+    hasAdminAccess,
   };
-};
+}

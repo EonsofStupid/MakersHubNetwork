@@ -1,37 +1,27 @@
 
-import { AuthEvent, AuthStatus, User, UserProfile, UserRole } from '@/shared/types/shared.types';
+import { User, UserRole, UserProfile, AuthStatus, AuthEvent, AuthEventType } from "@/shared/types/shared.types";
 
-// Auth Bridge Interface
-export interface AuthBridgeImpl {
-  getSession(): Promise<any>;
-  getUser(): User | null;
-  getStatus(): AuthStatus;
-  isAuthenticated(): boolean;
-  signInWithEmail(email: string, password: string): Promise<void>;
-  signInWithGoogle(): Promise<void>;
-  linkSocialAccount(provider: string): Promise<void>;
-  logout(): Promise<void>;
-  hasRole(role: UserRole | UserRole[]): boolean;
-  isAdmin(): boolean;
-  isSuperAdmin(): boolean;
-  updateUserProfile(profile: Partial<UserProfile>): Promise<void>;
-  subscribeToEvent(subscriber: (event: AuthEvent) => void): () => void;
-  onAuthEvent(event: AuthEvent): void;
-}
-
-// Auth Store Interface
 export interface AuthState {
-  user: User | null;
-  profile: UserProfile | null;
   status: AuthStatus;
+  user: User | null;
+  session: any | null;
+  profile: UserProfile | null;
   roles: UserRole[];
-  error: Error | null;
+  isLoading: boolean;
   isAuthenticated: boolean;
-  init: () => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  updateUserProfile: (profile: Partial<UserProfile>) => Promise<void>;
-  hasRole: (role: UserRole | UserRole[]) => boolean;
-  isAdmin: () => boolean;
-  isSuperAdmin: () => boolean;
+  error: Error | null;
 }
+
+export interface AuthBridge {
+  subscribeToAuthEvents(callback: (event: AuthEvent) => void): () => void;
+  getCurrentSession(): Promise<any | null>;
+  getUserProfile(userId: string): Promise<UserProfile | null>;
+  signInWithEmail(email: string, password: string): Promise<{ user: User | null; session: any | null; error: Error | null }>;
+  signUp(email: string, password: string): Promise<{ user: User | null; session: any | null; error: Error | null }>;
+  signOut(): Promise<void>;
+  updateUserProfile(userId: string, profile: Partial<UserProfile>): Promise<UserProfile | null>;
+  hasRole(role: UserRole | UserRole[]): boolean;
+}
+
+// Re-export for compatibility
+export { AuthStatus, AuthEvent, AuthEventType, User, UserProfile, UserRole };

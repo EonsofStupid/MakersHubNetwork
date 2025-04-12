@@ -1,24 +1,4 @@
 
-// Types for build related data
-export type BuildStatus = "pending" | "approved" | "rejected" | "needs_revision";
-
-export interface BuildPart {
-  id: string;
-  name: string;
-  quantity: number;
-  type: string;
-  notes?: string;
-}
-
-export interface BuildMod {
-  id: string;
-  name: string;
-  description: string;
-  build_id: string;
-  complexity: number | null;
-  created_at: string;
-}
-
 export interface Build {
   id: string;
   title: string;
@@ -30,34 +10,46 @@ export interface Build {
   complexity_score: number;
   parts_count: number;
   mods_count: number;
+  display_name: string;
   avatar_url?: string;
-  display_name?: string;
   created_at: string;
   createdAt: string;
   updatedAt: string;
-  images?: string[];
-  parts?: BuildPart[];
-  mods?: BuildMod[];
-  reviews?: any[];
 }
 
-export interface BuildFilter {
-  status?: BuildStatus | 'all';
-  complexity?: 'low' | 'medium' | 'high' | 'all';
+export type BuildStatus = 'pending' | 'approved' | 'rejected' | 'needs_revision';
+
+export interface BuildPart {
+  id: string;
+  name: string;
+  quantity: number;
+  notes?: string;
+}
+
+export interface BuildMod {
+  id: string;
+  name: string;
+  description?: string;
+  complexity?: number;
+}
+
+export interface BuildFilters {
+  status?: BuildStatus;
+  complexity?: [number, number];
   search?: string;
-  sortBy?: 'newest' | 'oldest' | 'complexity' | 'title';
-  creatorId?: string;
 }
 
-export interface BuildsState {
+export interface BuildAdminStore {
   builds: Build[];
   selectedBuild: Build | null;
+  filters: BuildFilters;
+  pagination: BuildPagination;
   isLoading: boolean;
   error: string | null;
-  filters: BuildFilter;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-  };
+}
+
+export interface BuildPagination {
+  page: number;
+  pageSize: number;
+  total: number;
 }

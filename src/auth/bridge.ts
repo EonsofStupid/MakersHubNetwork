@@ -1,123 +1,57 @@
+import { AuthBridge, AuthState } from "./types/auth.types";
+import { User, UserProfile, UserRole, AuthStatus, AuthEvent, AuthEventType } from "@/shared/types/shared.types";
 
-import { EventEmitter } from 'events';
-import { AuthEvent, AuthStatus, User, UserProfile } from '@/shared/types/shared.types';
-import { UserRole } from '@/shared/types/shared.types';
-
-// Type for auth event subscribers
-type AuthEventSubscriber = (event: AuthEvent) => void;
-
-// Auth bridge implementation
-class AuthBridgeImpl {
-  private subscribers: AuthEventSubscriber[] = [];
-  private emitter: EventEmitter;
+class AuthBridgeImpl implements AuthBridge {
+  private listeners: ((event: AuthEvent) => void)[] = [];
   
-  constructor() {
-    this.emitter = new EventEmitter();
-    this.emitter.setMaxListeners(20); // Increase max listeners to avoid warnings
-  }
-  
-  // Event handling
-  subscribeToAuthEvents(subscriber: AuthEventSubscriber): () => void {
-    this.subscribers.push(subscriber);
-    
-    // Return unsubscribe function
+  // Subscribe to auth events
+  subscribeToAuthEvents(callback: (event: AuthEvent) => void): () => void {
+    this.listeners.push(callback);
     return () => {
-      this.subscribers = this.subscribers.filter(sub => sub !== subscriber);
+      this.listeners = this.listeners.filter(listener => listener !== callback);
     };
   }
-  
-  onAuthEvent(event: AuthEvent): void {
-    // Notify all subscribers
-    this.subscribers.forEach(subscriber => {
-      try {
-        subscriber(event);
-      } catch (error) {
-        console.error('Error in auth event subscriber:', error);
-      }
-    });
-    
-    // Also emit through EventEmitter for legacy code
-    this.emitter.emit('auth-event', event);
-    this.emitter.emit(`auth-event:${event.type}`, event);
-  }
-  
-  // Auth methods
-  async getSession() {
-    // Implementation will be added later with Supabase integration
+
+  // Get current session
+  async getCurrentSession(): Promise<any | null> {
+    // Placeholder implementation
     return null;
-  }
-  
-  getUser(): User | null {
-    // Implementation will be added later with Supabase integration
-    return null;
-  }
-  
-  getStatus(): AuthStatus {
-    // Implementation will be added later with Supabase integration
-    return AuthStatus.UNAUTHENTICATED;
   }
 
-  isAuthenticated(): boolean {
-    return this.getStatus() === AuthStatus.AUTHENTICATED;
+  // Get user profile
+  async getUserProfile(userId: string): Promise<UserProfile | null> {
+    // Placeholder implementation
+    return null;
   }
-  
-  async signIn(email: string, password: string): Promise<void> {
-    // Implementation will be added later with Supabase integration
-    console.log('Sign in with email:', email);
+
+  // Sign in with email
+  async signInWithEmail(email: string, password: string): Promise<{ user: User | null; session: any | null; error: Error | null }> {
+    // Placeholder implementation
+    return { user: null, session: null, error: null };
   }
-  
-  async signInWithGoogle(): Promise<void> {
-    // Implementation will be added later with Supabase integration
-    console.log('Sign in with Google');
+
+  // Sign up
+  async signUp(email: string, password: string): Promise<{ user: User | null; session: any | null; error: Error | null }> {
+    // Placeholder implementation
+    return { user: null, session: null, error: null };
   }
-  
-  async linkSocialAccount(provider: string): Promise<void> {
-    // Implementation will be added later with Supabase integration
-    console.log('Link social account:', provider);
+
+  // Sign out
+  async signOut(): Promise<void> {
+    // Placeholder implementation
   }
-  
-  async logout(): Promise<void> {
-    // Implementation will be added later with Supabase integration
-    console.log('Logout');
-    
-    this.onAuthEvent({
-      type: 'AUTH_SIGNED_OUT'
-    });
+
+  // Update user profile
+  async updateUserProfile(userId: string, profile: Partial<UserProfile>): Promise<UserProfile | null> {
+    // Placeholder implementation
+    return null;
   }
-  
-  // User roles and permissions
+
+  // Has role
   hasRole(role: UserRole | UserRole[]): boolean {
-    // Implementation will be added later with Supabase integration
-    return Array.isArray(role) ? role.includes(UserRole.USER) : role === UserRole.USER;
-  }
-  
-  isAdmin(): boolean {
-    return this.hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-  }
-  
-  isSuperAdmin(): boolean {
-    return this.hasRole(UserRole.SUPER_ADMIN);
-  }
-  
-  // Profile management
-  async updateUserProfile(profileData: Partial<UserProfile>): Promise<void> {
-    // Implementation will be added later with Supabase integration
-    console.log('Update user profile:', profileData);
-    
-    this.onAuthEvent({
-      type: 'AUTH_PROFILE_UPDATED',
-      payload: { profile: profileData }
-    });
+    // Placeholder implementation
+    return false;
   }
 }
 
-// Export singleton instance
 export const authBridge = new AuthBridgeImpl();
-
-// Helper function to subscribe to auth events
-export function subscribeToAuthEvents(subscriber: AuthEventSubscriber): () => void {
-  return authBridge.subscribeToAuthEvents(subscriber);
-}
-
-// Re-export for legacy code
-export { authBridge as AuthBridge };
