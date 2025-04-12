@@ -5,7 +5,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Package, AlertCircle, CheckCircle, XCircle, Clock } from "lucide-react";
-import { BuildStatus } from "@/admin/types/build.types";
+import { BuildStatus } from "@/shared/types/shared.types";
 
 interface BuildItem {
   id: string;
@@ -23,21 +23,21 @@ export function BuildApprovalWidget() {
     {
       id: "build-1",
       title: "Voron 2.4 with custom hotend",
-      status: "pending",
+      status: BuildStatus.PENDING,
       submittedBy: "maker42",
       submittedAt: "2023-10-15T10:30:00Z"
     },
     {
       id: "build-2",
       title: "Ender 3 V2 linear rail mod",
-      status: "pending",
+      status: BuildStatus.PENDING,
       submittedBy: "printmaster",
       submittedAt: "2023-10-14T15:45:00Z"
     },
     {
       id: "build-3",
       title: "Custom CoreXY with carbon frame",
-      status: "needs_revision",
+      status: BuildStatus.NEEDS_REVISION,
       submittedBy: "innovator3d",
       submittedAt: "2023-10-13T09:15:00Z"
     }
@@ -45,13 +45,13 @@ export function BuildApprovalWidget() {
   
   const getStatusIcon = (status: BuildStatus) => {
     switch(status) {
-      case "pending":
+      case BuildStatus.PENDING:
         return <Clock className="h-4 w-4 text-amber-500" />;
-      case "approved":
+      case BuildStatus.APPROVED:
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "rejected":
+      case BuildStatus.REJECTED:
         return <XCircle className="h-4 w-4 text-red-500" />;
-      case "needs_revision":
+      case BuildStatus.NEEDS_REVISION:
         return <AlertCircle className="h-4 w-4 text-blue-500" />;
       default:
         return <Clock className="h-4 w-4" />;
@@ -63,19 +63,19 @@ export function BuildApprovalWidget() {
     let label = "";
     
     switch(status) {
-      case "pending":
+      case BuildStatus.PENDING:
         className = "bg-amber-500/10 text-amber-500 border-amber-500/20";
         label = "Pending";
         break;
-      case "approved":
+      case BuildStatus.APPROVED:
         className = "bg-green-500/10 text-green-500 border-green-500/20";
         label = "Approved";
         break;
-      case "rejected":
+      case BuildStatus.REJECTED:
         className = "bg-red-500/10 text-red-500 border-red-500/20";
         label = "Rejected";
         break;
-      case "needs_revision":
+      case BuildStatus.NEEDS_REVISION:
         className = "bg-blue-500/10 text-blue-500 border-blue-500/20";
         label = "Needs Revision";
         break;

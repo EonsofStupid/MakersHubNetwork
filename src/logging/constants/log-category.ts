@@ -12,5 +12,9 @@ export enum LogCategory {
   CHAT = 'chat',
   NETWORK = 'network',
   DEFAULT = 'default',
-  EDITOR = 'editor'
+  EDITOR = 'editor',
+  DATABASE = 'database',
+  PERFORMANCE = 'performance',
+  ERROR = 'error',
+  SECURITY = 'security'
 }

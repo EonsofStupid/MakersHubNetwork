@@ -6,16 +6,16 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import { 
   Popover, 
   PopoverContent, 
   PopoverTrigger 
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+} from "@/shared/ui/popover";
+import { Button } from "@/shared/ui/button";
+import { Calendar } from "@/shared/ui/calendar";
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
-import { BuildStatus } from "@/admin/types/build.types";
+import { BuildStatus } from "@/shared/types/shared.types";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Filter, SortDesc, RotateCcw } from "lucide-react";
 
@@ -26,7 +26,10 @@ export function BuildsFilters() {
   const resetFilters = () => {
     updateFilters({
       status: 'all',
-      dateRange: [null, null],
+      dateRange: {
+        from: null,
+        to: null
+      },
       sortBy: 'newest'
     });
   };
@@ -40,7 +43,7 @@ export function BuildsFilters() {
       
       {/* Status filter */}
       <Select 
-        value={status} 
+        value={status?.toString() || 'all'} 
         onValueChange={(value) => updateFilters({ status: value as BuildStatus | 'all' })}
       >
         <SelectTrigger className="w-[140px] h-9">
@@ -64,8 +67,8 @@ export function BuildsFilters() {
             className="h-9 flex items-center gap-2"
           >
             <CalendarIcon className="w-4 h-4" />
-            {dateRange[0] && dateRange[1] ? (
-              `${format(dateRange[0], 'MMM d')} - ${format(dateRange[1], 'MMM d')}`
+            {dateRange && dateRange.from && dateRange.to ? (
+              `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')}`
             ) : (
               "Date Range"
             )}
@@ -75,17 +78,17 @@ export function BuildsFilters() {
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={dateRange[0] || undefined}
+            defaultMonth={dateRange?.from || undefined}
             selected={{
-              from: dateRange[0] || undefined,
-              to: dateRange[1] || undefined,
+              from: dateRange?.from || undefined,
+              to: dateRange?.to || undefined,
             }}
             onSelect={(range) => {
               updateFilters({
-                dateRange: [
-                  range?.from || null,
-                  range?.to || null
-                ]
+                dateRange: {
+                  from: range?.from || null,
+                  to: range?.to || null
+                }
               });
             }}
             numberOfMonths={2}
@@ -95,7 +98,7 @@ export function BuildsFilters() {
       
       {/* Sort filter */}
       <Select 
-        value={sortBy} 
+        value={sortBy || 'newest'} 
         onValueChange={(value) => updateFilters({ sortBy: value as any })}
       >
         <SelectTrigger className="w-[140px] h-9">

@@ -1,9 +1,9 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
 import { Wrench } from "lucide-react";
-import { BuildMod } from "@/admin/types/build.types";
+import { BuildMod } from "@/shared/types/shared.types";
 
 interface BuildModsProps {
   mods: BuildMod[];
