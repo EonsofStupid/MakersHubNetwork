@@ -1,3 +1,3 @@
 
-// Re-export from components/ui/data-table
-export { DataTable } from "@/components/ui/data-table";
+// Re-export data-table component from shadcn
+export { DataTable } from '@/components/ui/data-table';

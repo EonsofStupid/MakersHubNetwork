@@ -1,3 +1,3 @@
 
-// Re-export from components/ui/textarea
-export { Textarea } from "@/components/ui/textarea";
+// Re-export textarea component from shadcn
+export { Textarea } from '@/components/ui/textarea';

@@ -1,3 +1,3 @@
 
-// Re-export from components/ui/skeleton
-export { Skeleton } from "@/components/ui/skeleton";
+// Re-export skeleton component from shadcn
+export { Skeleton } from '@/components/ui/skeleton';

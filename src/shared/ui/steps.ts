@@ -1,6 +1,10 @@
 
-// Re-export from components/ui/steps
-export { 
-  Steps,
-  Step
-} from "@/components/ui/steps";
+// Re-export steps component from shadcn
+export {
+  Step,
+  StepCircle,
+  StepDescription,
+  StepItem,
+  StepList,
+  StepTitle
+} from '@/components/ui/steps';

@@ -1,8 +1,8 @@
 
-// Re-export from components/ui/accordion
+// Re-export accordion component from shadcn
 export { 
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger
-} from "@/components/ui/accordion";
+} from '@/components/ui/accordion';

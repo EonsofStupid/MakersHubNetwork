@@ -1,7 +1,7 @@
 
-// Re-export from components/ui/hover-card
-export { 
+// Re-export hover-card component from shadcn
+export {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger
-} from "@/components/ui/hover-card";
+} from '@/components/ui/hover-card';

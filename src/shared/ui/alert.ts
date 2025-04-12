@@ -1,7 +1,7 @@
 
-// Re-export from components/ui/alert
-export { 
+// Re-export alert component from shadcn
+export {
   Alert,
   AlertDescription,
   AlertTitle
-} from "@/components/ui/alert";
+} from '@/components/ui/alert';

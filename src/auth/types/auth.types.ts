@@ -1,14 +1,7 @@
 
-import { User, UserRole, UserProfile } from '@/shared/types/shared.types';
+// Import from shared types
+import { User, UserRole, UserProfile, AuthStatus } from '@/shared/types/shared.types';
 import { Session } from '@supabase/supabase-js';
-
-// Authentication status
-export type AuthStatus = 
-  | 'INITIAL'
-  | 'LOADING'
-  | 'AUTHENTICATED'
-  | 'UNAUTHENTICATED'
-  | 'ERROR';
 
 // Authentication event types
 export type AuthEvent = 

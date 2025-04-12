@@ -1,3 +1,3 @@
 
-// Re-export from components/ui/spinner
-export { Spinner } from "@/components/ui/spinner";
+// Re-export spinner component from shadcn
+export { Spinner } from '@/components/ui/spinner';

@@ -1,6 +1,6 @@
 
-// Re-export from components/ui/form
-export { 
+// Re-export form component from shadcn
+export {
   Form,
   FormControl,
   FormDescription,
@@ -9,4 +9,4 @@ export {
   FormLabel,
   FormMessage,
   useFormField
-} from "@/components/ui/form";
+} from '@/components/ui/form';

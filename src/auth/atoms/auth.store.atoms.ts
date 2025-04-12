@@ -7,7 +7,7 @@
  */
 
 import { atom } from 'jotai';
-import { UserRole } from '@/types/shared';
+import { UserRole } from '@/shared/types/shared.types';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '@/auth/store/auth.store';

@@ -1,3 +1,3 @@
 
-// Re-export from components/ui/calendar
-export { Calendar } from "@/components/ui/calendar";
+// Re-export calendar component from shadcn
+export { Calendar } from '@/components/ui/calendar';
