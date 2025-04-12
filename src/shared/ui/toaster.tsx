@@ -12,6 +12,7 @@ import {
 import { useToast } from "@/shared/hooks/use-toast"
 import { CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react"
 import { cn } from "@/shared/utils/cn"
+import React from "react"
 
 export function Toaster() {
   const { toasts } = useToast()
@@ -38,7 +39,7 @@ export function Toaster() {
         }
         
         return (
-          <Toast key={id} {...props} variant={variant === "default" ? "default" : "destructive"}>
+          <Toast key={id} {...props} variant={variant}>
             <div className="flex gap-3">
               {IconComponent && (
                 <div className={cn("mt-0.5", variantStyle)}>

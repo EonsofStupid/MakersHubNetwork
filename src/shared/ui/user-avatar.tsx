@@ -7,6 +7,7 @@ interface UserAvatarProps {
   user: User | null;
   className?: string;
   fallbackClassName?: string;
+  fallbackText?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
@@ -18,10 +19,12 @@ export function UserAvatar({
   user, 
   className = '', 
   fallbackClassName = '',
+  fallbackText,
   size = 'md'
 }: UserAvatarProps) {
   // Get initials from name
   const getInitials = (): string => {
+    if (fallbackText) return fallbackText;
     if (!user) return '?';
     
     const name = user.profile?.display_name || 
