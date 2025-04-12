@@ -1,6 +1,6 @@
 
 import { EventEmitter } from 'events';
-import { LogEntry, LogEvent } from './types';
+import { LogEntry, LogEvent } from '@/shared/types/shared.types';
 
 class LoggingBridgeImpl {
   private emitter: EventEmitter;

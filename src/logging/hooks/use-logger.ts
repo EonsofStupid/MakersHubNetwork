@@ -1,22 +1,19 @@
 
-import { useRef } from 'react';
-import { Logger, createLogger } from '../logger.service';
-import { LogCategory } from '../types';
+import { useCallback, useMemo } from 'react';
+import { getLogger } from '../logger.service';
+import { LogCategory } from '@/shared/types/shared.types';
 
 /**
- * React hook for accessing logger functionality
+ * Hook to create and use a logger with a specific source and category
  * 
- * @param source The source/component name
- * @param category The log category
- * @returns Logger instance
+ * @param source The source component/module using the logger
+ * @param category The log category (defaults to APP)
+ * @returns A logger instance
  */
-export function useLogger(source: string, category: LogCategory = LogCategory.APP): Logger {
-  // Use ref to ensure the same logger instance is used across renders
-  const loggerRef = useRef<Logger | null>(null);
-  
-  if (loggerRef.current === null) {
-    loggerRef.current = createLogger(source, category);
-  }
-  
-  return loggerRef.current;
+export function useLogger(source: string, category: LogCategory = LogCategory.APP) {
+  const logger = useMemo(() => {
+    return getLogger(source, category);
+  }, [source, category]);
+
+  return logger;
 }

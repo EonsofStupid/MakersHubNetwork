@@ -1,30 +1,25 @@
 
-import { LogLevel, LOG_LEVEL_VALUES } from '../constants/log-level';
+import { LogLevel } from '@/shared/types/shared.types';
+import { LOG_LEVEL_VALUES } from '../constants/log-level';
 
-/**
- * Maps LogLevel enum values to their string representation
- */
+// Map log level to string representation for UI
 export const LOG_LEVEL_MAP: Record<LogLevel, string> = {
-  [LogLevel.DEBUG]: "DEBUG",
-  [LogLevel.TRACE]: "TRACE",
-  [LogLevel.INFO]: "INFO",
-  [LogLevel.SUCCESS]: "SUCCESS",
-  [LogLevel.WARN]: "WARN", 
-  [LogLevel.ERROR]: "ERROR",
-  [LogLevel.CRITICAL]: "CRITICAL"
+  [LogLevel.TRACE]: 'trace',
+  [LogLevel.DEBUG]: 'debug',
+  [LogLevel.INFO]: 'info',
+  [LogLevel.SUCCESS]: 'success',
+  [LogLevel.WARN]: 'warn',
+  [LogLevel.ERROR]: 'error',
+  [LogLevel.CRITICAL]: 'critical',
+  [LogLevel.SILENT]: 'silent'
 };
 
 /**
- * Safely compares log levels
- * Uses the LOG_LEVEL_VALUES from constants
- * 
+ * Checks if a log level is at least as severe as another log level
  * @param level The level to check
  * @param minLevel The minimum level required
- * @returns True if level is at least minLevel
+ * @returns boolean indicating if level meets or exceeds minLevel
  */
 export function isLogLevelAtLeast(level: LogLevel, minLevel: LogLevel): boolean {
-  const levelValue = LOG_LEVEL_VALUES[level] !== undefined ? LOG_LEVEL_VALUES[level] : 0;
-  const minLevelValue = LOG_LEVEL_VALUES[minLevel] !== undefined ? LOG_LEVEL_VALUES[minLevel] : 0;
-  
-  return levelValue >= minLevelValue;
+  return LOG_LEVEL_VALUES[level] >= LOG_LEVEL_VALUES[minLevel];
 }

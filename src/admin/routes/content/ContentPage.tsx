@@ -5,7 +5,7 @@ import { PlaceholderPage } from "@/admin/routes/PlaceholderPage";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging/types";
+import { LogCategory } from "@/shared/types/shared.types";
 
 export default function ContentPage() {
   const logger = useLogger('ContentPage', LogCategory.CONTENT);
@@ -82,7 +82,7 @@ export default function ContentPage() {
           <button 
             className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-md text-sm"
             onClick={() => logger.info("Create article button clicked", {
-              category: LogCategory.ADMIN
+              details: { action: "create_article" }
             })}
           >
             <FilePlus className="h-4 w-4" />
@@ -91,7 +91,7 @@ export default function ContentPage() {
           <button 
             className="flex items-center gap-2 bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded-md text-sm"
             onClick={() => logger.info("Upload media button clicked", {
-              category: LogCategory.ADMIN
+              details: { action: "upload_media" }
             })}
           >
             <Image className="h-4 w-4" />
@@ -100,8 +100,7 @@ export default function ContentPage() {
           <button 
             className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded-md text-sm"
             onClick={() => logger.warn("Viewing trash content", {
-              category: LogCategory.ADMIN,
-              details: { source: "ContentPage" }
+              details: { action: "view_trash", source: "ContentPage" }
             })}
           >
             <FileX className="h-4 w-4" />

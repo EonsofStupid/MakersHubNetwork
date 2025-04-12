@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, UserPlus, Filter, MoreHorizontal, Trash2, UserCog, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { UserRole } from "@/types/auth.types";
+import { UserRole } from "@/shared/types/auth.types";
 
 interface UserData {
   id: string;
@@ -98,11 +97,9 @@ export default function UsersManagement() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Load users with React Query
   const { data: users, isLoading } = useQuery({
     queryKey: ["adminUsers"],
     queryFn: async () => {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1200));
       return mockUsers;
     }

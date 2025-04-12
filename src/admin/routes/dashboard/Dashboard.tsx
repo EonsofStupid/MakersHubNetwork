@@ -2,15 +2,15 @@
 import React, { useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
-import { AdminLayout } from '@/admin/components/AdminLayout';
+import { AdminLayout } from '@/admin/components/layouts/AdminLayout';
 import { motion } from "framer-motion";
 import { useAtom } from "jotai";
 import { adminEditModeAtom } from "@/admin/atoms/tools.atoms";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/cn";
 import { BarChart3, Users, Activity, Zap } from "lucide-react";
 import { ActiveUsersList } from "@/admin/components/dashboard/ActiveUsersList";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/logging/types";
+import { LogCategory } from "@/shared/types/shared.types";
 import { InlineLogIndicator } from "@/logging/components/InlineLogIndicator";
 
 export default function Dashboard() {
@@ -26,7 +26,7 @@ export default function Dashboard() {
   }, [logger, isEditMode]);
   
   return (
-    <AdminLayout title="Admin Dashboard">
+    <AdminLayout>
       <motion.div 
         className="space-y-6"
         initial={{ opacity: 0, y: 20 }}

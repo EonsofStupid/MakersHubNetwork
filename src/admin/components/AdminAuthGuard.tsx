@@ -1,9 +1,9 @@
+
 import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import { LogCategory, AuthStatus, UserRole } from '@/shared/types/shared.types';
 import { AccessDenied } from './auth/AccessDenied';
-import { UserRole } from '@/shared/types/shared.types';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useHasRole, useHasAdminAccess } from '@/auth/hooks/useHasRole';
@@ -76,7 +76,7 @@ export function AdminAuthGuard({
   }, [isAuthenticated, hasAdminAccess, logger, roles, requiredRole, toast, user]);
   
   // Show nothing while authenticating
-  if (status === 'loading' || status === 'idle') {
+  if (status === AuthStatus.LOADING || status === AuthStatus.INITIAL) {
     return (
       <div className="flex items-center justify-center h-screen w-full">
         <div className="relative">
