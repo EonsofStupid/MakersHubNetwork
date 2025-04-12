@@ -1,124 +1,50 @@
 
-import { LogEntry, LogLevel, LogCategory } from '@/shared/types/shared.types';
-import { LOG_LEVEL_VALUES } from '../constants/log-level';
+import { LogEntry, LogLevel, Transport } from '../types';
+import { LOG_LEVEL_VALUES } from '@/shared/types/shared.types';
 
-type NotificationType = 'toast' | 'banner' | 'console';
+type LogCallback = (entry: LogEntry) => void;
 
-interface UITransportOptions {
-  minLevel: LogLevel;
-  showInConsole?: boolean;
-  showToasts?: boolean;
-  categories?: LogCategory[];
-}
+export class UiTransport implements Transport {
+  private listeners: LogCallback[] = [];
+  private minLevel: LogLevel = LogLevel.INFO;
 
-/**
- * Transport for displaying logs in the UI
- */
-export class UITransport {
-  private options: UITransportOptions;
-  private toastHandler?: (entry: LogEntry) => void;
-  private bannerHandler?: (entry: LogEntry) => void;
+  constructor(options?: { minLevel?: LogLevel }) {
+    if (options?.minLevel) {
+      this.minLevel = options.minLevel;
+    }
+  }
 
-  constructor(options: UITransportOptions) {
-    this.options = {
-      minLevel: LogLevel.INFO,
-      showInConsole: true,
-      showToasts: true,
-      ...options,
-    };
+  setMinLevel(level: LogLevel): void {
+    this.minLevel = level;
+  }
+
+  getMinLevel(): LogLevel {
+    return this.minLevel;
   }
 
   log(entry: LogEntry): void {
-    // Check if we should process this log
-    if (!this.shouldProcess(entry)) {
+    // Skip if below minimum level
+    if (LOG_LEVEL_VALUES[entry.level] < LOG_LEVEL_VALUES[this.minLevel]) {
       return;
     }
 
-    // Handle based on level and configuration
-    if (this.options.showInConsole) {
-      this.logToConsole(entry);
-    }
-
-    // Show UI notifications for important logs
-    if (this.options.showToasts && 
-        LOG_LEVEL_VALUES[entry.level] >= LOG_LEVEL_VALUES[LogLevel.WARN]) {
-      this.showToast(entry);
-    }
-
-    // Show banner for critical errors
-    if (entry.level === LogLevel.CRITICAL) {
-      this.showBanner(entry);
-    }
+    // Notify all listeners
+    this.listeners.forEach(listener => {
+      try {
+        listener(entry);
+      } catch (error) {
+        console.error('Error in UI log listener:', error);
+      }
+    });
   }
 
-  // Required by LogTransport interface
-  clear(): void {
-    // No persistent storage to clear
-  }
+  // Add a listener for log entries
+  subscribe(callback: LogCallback): () => void {
+    this.listeners.push(callback);
 
-  private shouldProcess(entry: LogEntry): boolean {
-    // Check if level is high enough to process
-    if (LOG_LEVEL_VALUES[entry.level] < LOG_LEVEL_VALUES[this.options.minLevel]) {
-      return false;
-    }
-
-    // Check if category is included
-    if (this.options.categories && 
-        !this.options.categories.includes(entry.category)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  private logToConsole(entry: LogEntry): void {
-    const prefix = `[${entry.level.toUpperCase()}] [${entry.category}] ${entry.source ? `[${entry.source}]` : ''}`;
-    const message = typeof entry.message === 'string' ? entry.message : entry.message;
-    const details = entry.details ? entry.details : undefined;
-
-    switch (entry.level) {
-      case LogLevel.DEBUG:
-      case LogLevel.TRACE:
-        console.debug(prefix, message, details);
-        break;
-      case LogLevel.INFO:
-      case LogLevel.SUCCESS:
-        console.info(prefix, message, details);
-        break;
-      case LogLevel.WARN:
-        console.warn(prefix, message, details);
-        break;
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        console.error(prefix, message, details);
-        break;
-    }
-  }
-
-  setToastHandler(handler: (entry: LogEntry) => void): void {
-    this.toastHandler = handler;
-  }
-
-  setBannerHandler(handler: (entry: LogEntry) => void): void {
-    this.bannerHandler = handler;
-  }
-
-  private showToast(entry: LogEntry): void {
-    if (this.toastHandler) {
-      this.toastHandler(entry);
-    }
-  }
-
-  private showBanner(entry: LogEntry): void {
-    if (this.bannerHandler) {
-      this.bannerHandler(entry);
-    }
+    // Return unsubscribe function
+    return () => {
+      this.listeners = this.listeners.filter(listener => listener !== callback);
+    };
   }
 }
-
-// Default UI transport with typical settings
-export const uiTransport = new UITransport({
-  minLevel: LogLevel.INFO,
-  showInConsole: true,
-  showToasts: true,
-});

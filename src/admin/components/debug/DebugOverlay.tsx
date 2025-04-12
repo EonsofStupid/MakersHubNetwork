@@ -7,10 +7,12 @@ import { cn } from '@/lib/utils';
 import { ComponentWrapper } from '@/admin/components/debug/ComponentWrapper';
 import { useDebugStore } from '@/shared/store/debug.store';
 import { useHasRole } from '@/auth/hooks/useHasRole';
+import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 
 export function DebugOverlay() {
   // Use our new role checking hook
-  const { hasAdminAccess, isSuperAdmin } = useHasRole();
+  const { hasAdminAccess } = useHasRole();
+  const { isSuperAdmin } = useAdminPermissions();
   
   // Use the debug store
   const { 
