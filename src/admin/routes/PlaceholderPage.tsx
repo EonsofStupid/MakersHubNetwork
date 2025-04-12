@@ -5,12 +5,14 @@ interface PlaceholderPageProps {
   title?: string;
   description?: string;
   icon?: React.ReactNode;
+  requiredPermission?: string;
 }
 
 export function PlaceholderPage({ 
   title = "Coming Soon",
   description = "This page is under construction.",
-  icon
+  icon,
+  requiredPermission
 }: PlaceholderPageProps) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -18,6 +20,11 @@ export function PlaceholderPage({
         {icon && <div className="flex justify-center mb-4">{icon}</div>}
         <h1 className="text-2xl font-bold">{title}</h1>
         <p className="text-muted-foreground max-w-md">{description}</p>
+        {requiredPermission && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Required permission: {requiredPermission}
+          </p>
+        )}
       </div>
     </div>
   );

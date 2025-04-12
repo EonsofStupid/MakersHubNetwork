@@ -1,5 +1,4 @@
 
-// This file might not exist yet, so creating it with placeholder content that doesn't have syntax errors
 import { ReactNode } from 'react';
 
 /**
@@ -25,4 +24,49 @@ export function renderWhen<T>(
   renderFn: (value: T) => ReactNode
 ): ReactNode | null {
   return value ? renderFn(value) : null;
+}
+
+// Function to convert object to string in a safe way
+export function renderUnknownAsNode(value: unknown): ReactNode {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value.toString();
+  }
+  
+  if (Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+  
+  return JSON.stringify(value);
+}
+
+// Converts an error object to a plain object
+export function errorToObject(error: unknown): Record<string, unknown> {
+  if (!error) return { message: 'Unknown error' };
+  
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      ...(error as any),
+    };
+  }
+  
+  if (typeof error === 'object') {
+    return { ...error as object };
+  }
+  
+  return { message: String(error) };
+}
+
+// Converts a string to a URL-friendly slug
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w ]+/g, '')
+    .replace(/ +/g, '-');
 }

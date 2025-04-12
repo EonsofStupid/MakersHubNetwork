@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Routes } from "./router/Routes";
+import Routes from "./router/Routes";
 import { useLogger } from "./hooks/use-logger";
 import { LogCategory } from "./shared/types/shared.types";
 import { AppInitializer } from "./app/initializer/AppInitializer";

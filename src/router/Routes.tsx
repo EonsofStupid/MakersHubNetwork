@@ -1,25 +1,22 @@
 
-import { createBrowserRouter } from 'react-router-dom';
-import { PlaceholderPage } from '@/admin/components/PlaceholderPage';
+import React from 'react';
+import { Route, Routes as RouterRoutes } from 'react-router-dom';
+import { PlaceholderPage } from '@/admin/routes/PlaceholderPage';
 
-// Main routes
-const router = createBrowserRouter([
-  {
-    path: '/',
-    // This is a placeholder for the real HomePage component
-    // This will be replaced when migrating Home components
-    element: <div>Home Page</div>,
-  },
-  {
-    path: '/admin',
-    // This is a placeholder for the real AdminPage component
-    // This will be replaced when migrating admin routes
-    element: <PlaceholderPage 
-      title="Admin Dashboard" 
-      description="Welcome to the admin dashboard, where you can manage your application." 
-      requiredPermission="admin.access"
-    />,
-  }
-]);
+// Main component that holds all routes
+const Routes = () => {
+  return (
+    <RouterRoutes>
+      <Route path="/" element={<div>Home Page</div>} />
+      <Route path="/admin" element={
+        <PlaceholderPage 
+          title="Admin Dashboard" 
+          description="Welcome to the admin dashboard, where you can manage your application." 
+          requiredPermission="admin.access"
+        />
+      } />
+    </RouterRoutes>
+  );
+};
 
-export default router;
+export default Routes;

@@ -1,5 +1,7 @@
+
 import { EventEmitter } from 'events';
-import { AuthEvent, AuthStatus, User, UserProfile, UserRole } from '@/shared/types/shared.types';
+import { AuthEvent, AuthStatus, User, UserProfile } from '@/shared/types/shared.types';
+import { UserRole } from '@/shared/types/shared.types';
 
 // Type for auth event subscribers
 type AuthEventSubscriber = (event: AuthEvent) => void;
@@ -79,22 +81,22 @@ class AuthBridgeImpl {
     console.log('Logout');
     
     this.onAuthEvent({
-      type: 'AUTH_SESSION_EXPIRED'
+      type: 'AUTH_SIGNED_OUT'
     });
   }
   
   // User roles and permissions
   hasRole(role: UserRole | UserRole[]): boolean {
     // Implementation will be added later with Supabase integration
-    return Array.isArray(role) ? role.includes('user' as UserRole) : role === 'user';
+    return Array.isArray(role) ? role.includes(UserRole.USER) : role === UserRole.USER;
   }
   
   isAdmin(): boolean {
-    return this.hasRole(['admin', 'super_admin']);
+    return this.hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
   }
   
   isSuperAdmin(): boolean {
-    return this.hasRole('super_admin');
+    return this.hasRole(UserRole.SUPER_ADMIN);
   }
   
   // Profile management
@@ -103,7 +105,7 @@ class AuthBridgeImpl {
     console.log('Update user profile:', profileData);
     
     this.onAuthEvent({
-      type: 'AUTH_STATE_CHANGE',
+      type: 'AUTH_PROFILE_UPDATED',
       payload: { profile: profileData }
     });
   }
