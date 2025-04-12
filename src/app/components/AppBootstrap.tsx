@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging/constants/log-category';
+import { LogCategory } from '@/shared/types/shared.types';
 import { CircuitBreaker } from '@/utils/CircuitBreaker';
 
 // Create a circuit breaker specifically for bootstrap operations
@@ -43,7 +43,7 @@ export function AppBootstrap() {
         } catch (error) {
           logger.error('Auth initialization failed', { 
             details: error instanceof Error 
-              ? { message: error.message }
+              ? { message: error.message } // Fix: Properly format error as Record<string, unknown>
               : { message: String(error) }
           });
           throw error;

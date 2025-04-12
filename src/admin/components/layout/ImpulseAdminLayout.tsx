@@ -6,6 +6,7 @@ interface ImpulseAdminLayoutProps {
   children: ReactNode;
   fullWidth?: boolean;
   className?: string;
+  title?: string;
 }
 
 /**
@@ -14,10 +15,11 @@ interface ImpulseAdminLayoutProps {
 export function ImpulseAdminLayout({
   children,
   fullWidth = false,
-  className = ''
+  className = '',
+  title
 }: ImpulseAdminLayoutProps) {
   return (
-    <AdminLayout fullWidth={fullWidth} className={className}>
+    <AdminLayout fullWidth={fullWidth} className={className} title={title}>
       {children}
     </AdminLayout>
   );

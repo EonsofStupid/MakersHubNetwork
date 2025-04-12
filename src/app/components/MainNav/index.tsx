@@ -10,7 +10,8 @@ import { SearchButton } from './components/SearchButton';
 
 export function MainNav() {
   const navigate = useNavigate();
-  const { status, isAuthenticated, isLoading } = useAuthStore();
+  const { status, isAuthenticated } = useAuthStore();
+  const isLoading = status === 'loading';
 
   return (
     <div className="flex justify-between items-center py-3">
