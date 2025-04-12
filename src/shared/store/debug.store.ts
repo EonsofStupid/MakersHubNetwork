@@ -1,61 +1,68 @@
 
 import { create } from 'zustand';
-import { LogCategory } from '@/shared/types/shared.types';
-import { loggingBridge } from '@/logging/bridge';
+import { LogLevel, LogCategory } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
 
-export interface DebugState {
-  // Debug mode flags
+interface DebugStore {
+  // Debug mode
   isDebugMode: boolean;
-  isInspectorVisible: boolean;
-  hoveredElement: HTMLElement | null;
-  isAltPressed: boolean;
-  
-  // Actions
-  setDebugMode: (value: boolean) => void;
   toggleDebugMode: () => void;
-  setInspectorVisible: (value: boolean) => void;
+  setDebugMode: (isEnabled: boolean) => void;
+  
+  // Alt key state for inspection
+  isAltPressed: boolean;
+  setAltPressed: (isPressed: boolean) => void;
+  
+  // Inspector visibility
+  isInspectorVisible: boolean;
+  setInspectorVisible: (isVisible: boolean) => void;
+  
+  // Currently hovered/selected element
+  hoveredElement: HTMLElement | null;
   setHoveredElement: (element: HTMLElement | null) => void;
-  setAltPressed: (value: boolean) => void;
+  
+  // Selected component for inspection
+  selectedComponentId: string | null;
+  setSelectedComponentId: (id: string | null) => void;
 }
 
-export const useDebugStore = create<DebugState>((set, get) => ({
-  // State
+export const useDebugStore = create<DebugStore>((set, get) => ({
   isDebugMode: false,
-  isInspectorVisible: false,
-  hoveredElement: null,
-  isAltPressed: false,
-  
-  // Actions
-  setDebugMode: (value) => {
-    set({ isDebugMode: value });
-    // Log debug mode state change
-    loggingBridge.log({
-      id: crypto.randomUUID(),
-      level: 'info',
-      message: `Debug mode ${value ? 'enabled' : 'disabled'}`,
-      timestamp: Date.now(),
-      source: 'DebugStore',
-      category: LogCategory.ADMIN,
-      details: { newState: value }
-    });
-  },
-  
   toggleDebugMode: () => {
     const newState = !get().isDebugMode;
+    logger.log(
+      LogLevel.INFO,
+      `Debug mode ${newState ? 'enabled' : 'disabled'}`,
+      LogCategory.SYSTEM,
+      { 
+        timestamp: new Date().toISOString(),
+        details: { mode: 'debug' } 
+      }
+    );
     set({ isDebugMode: newState });
-    // Log debug mode toggle
-    loggingBridge.log({
-      id: crypto.randomUUID(),
-      level: 'info',
-      message: `Debug mode toggled to ${newState ? 'enabled' : 'disabled'}`,
-      timestamp: Date.now(),
-      source: 'DebugStore',
-      category: LogCategory.ADMIN,
-      details: { newState }
-    });
+  },
+  setDebugMode: (isEnabled) => {
+    logger.log(
+      LogLevel.INFO,
+      `Debug mode ${isEnabled ? 'enabled' : 'disabled'}`,
+      LogCategory.SYSTEM,
+      { 
+        timestamp: new Date().toISOString(),
+        details: { mode: 'debug', explicit: true } 
+      }
+    );
+    set({ isDebugMode: isEnabled });
   },
   
-  setInspectorVisible: (value) => set({ isInspectorVisible: value }),
+  isAltPressed: false,
+  setAltPressed: (isPressed) => set({ isAltPressed: isPressed }),
+  
+  isInspectorVisible: false,
+  setInspectorVisible: (isVisible) => set({ isInspectorVisible: isVisible }),
+  
+  hoveredElement: null,
   setHoveredElement: (element) => set({ hoveredElement: element }),
-  setAltPressed: (value) => set({ isAltPressed: value }),
+  
+  selectedComponentId: null,
+  setSelectedComponentId: (id) => set({ selectedComponentId: id })
 }));
