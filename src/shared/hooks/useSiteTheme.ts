@@ -1,38 +1,19 @@
 
-import { useContext } from 'react';
-import { SiteThemeContext } from '@/app/theme/SiteThemeProvider';
-import { useStore } from 'zustand';
-import { useThemeStore } from '@/stores/theme/store';
+import { useThemeStore } from '@/shared/stores/theme/store';
 
-/**
- * Custom hook to access the site theme context
- * Returns theme variables, component styles, and animations
- */
 export function useSiteTheme() {
-  const context = useContext(SiteThemeContext);
-  
-  if (!context) {
-    throw new Error('useSiteTheme must be used within a SiteThemeProvider');
-  }
-  
-  const store = useThemeStore();
-  
-  // Extract needed data from both context and store
-  const {
-    theme,
-    isLoaded,
-    componentStyles,
-    animations,
-    variables
-  } = context;
-  
-  // Provide all theme-related data through a single hook
+  const theme = useThemeStore(state => state.theme);
+  const variables = useThemeStore(state => state.variables);
+  const componentStyles = useThemeStore(state => state.componentStyles);
+  const isLoaded = useThemeStore(state => state.isLoaded);
+  const animations = useThemeStore(state => state.componentTokens)
+    .find(component => component.component_name === 'animations')?.styles || {};
+
   return {
     theme,
-    isLoaded,
+    variables,
     componentStyles,
     animations,
-    variables,
-    // Add any additional theme-related functionality here
+    isLoaded
   };
 }

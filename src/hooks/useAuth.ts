@@ -1,58 +1,123 @@
 
-import { useCallback } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { UserRole } from '@/shared/types/shared.types';
+import { useMemo, useEffect, useState, useCallback } from 'react';
+import { authBridge } from '@/auth/bridge';
+import { AuthStatus, UserRole } from '@/shared/types/shared.types';
 
-/**
- * Hook for accessing auth functionality throughout the application
- */
 export function useAuth() {
-  // Use selectors from the auth store for better performance
-  const user = useAuthStore(state => state.user);
-  const profile = useAuthStore(state => state.profile);
-  const status = useAuthStore(state => state.status);
-  const roles = useAuthStore(state => state.roles);
-  const error = useAuthStore(state => state.error);
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const isLoading = status === 'LOADING';
+  // Use state to track auth status
+  const [status, setStatus] = useState<AuthStatus>(AuthStatus.INITIAL);
+  const [user, setUser] = useState(null);
+  const [roles, setRoles] = useState<UserRole[]>([]);
+  const [profile, setProfile] = useState(null);
 
-  // Authentication methods from store
-  const initialize = useAuthStore(state => state.initialize);
-  const signInWithEmail = useAuthStore(state => state.signInWithEmail);
-  const signInWithGoogle = useAuthStore(state => state.signInWithGoogle);
-  const signOut = useAuthStore(state => state.signOut);
-  const updateProfile = useAuthStore(state => state.updateProfile);
+  // Calculate other derived states
+  const isLoading = useMemo(() => {
+    return status === AuthStatus.LOADING || status === AuthStatus.INITIAL;
+  }, [status]);
 
-  // Role checking methods
-  const hasRole = useCallback((role: UserRole | UserRole[]) => {
-    return useAuthStore.getState().hasRole(role);
+  const isAuthenticated = useMemo(() => {
+    return status === AuthStatus.AUTHENTICATED;
+  }, [status]);
+
+  // Initialize auth state
+  useEffect(() => {
+    setStatus(AuthStatus.LOADING);
+    
+    // Check initial auth state
+    const checkAuth = async () => {
+      try {
+        const session = await authBridge.getSession();
+        if (session) {
+          setStatus(AuthStatus.AUTHENTICATED);
+          const user = authBridge.getUser();
+          setUser(user);
+          // TODO: Get roles and profile
+        } else {
+          setStatus(AuthStatus.UNAUTHENTICATED);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setStatus(AuthStatus.ERROR);
+      }
+    };
+    
+    checkAuth();
+    
+    // Subscribe to auth state changes
+    const unsubscribe = authBridge.subscribeToEvent((event) => {
+      if (event.type === 'AUTH_SIGNED_IN') {
+        setStatus(AuthStatus.AUTHENTICATED);
+        const user = authBridge.getUser();
+        setUser(user);
+        // TODO: Get roles and profile
+      } else if (event.type === 'AUTH_SIGNED_OUT') {
+        setStatus(AuthStatus.UNAUTHENTICATED);
+        setUser(null);
+        setRoles([]);
+        setProfile(null);
+      } else if (event.type === 'AUTH_ERROR') {
+        setStatus(AuthStatus.ERROR);
+      } else if (event.type === 'AUTH_USER_UPDATED') {
+        const user = authBridge.getUser();
+        setUser(user);
+      } else if (event.type === 'AUTH_PROFILE_UPDATED') {
+        setProfile(event.payload?.profile || null);
+      }
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+  
+  // Auth methods
+  const login = useCallback(async (email: string, password: string) => {
+    try {
+      setStatus(AuthStatus.LOADING);
+      await authBridge.signInWithEmail(email, password);
+      // Auth state update will be handled by the event subscription
+    } catch (error) {
+      setStatus(AuthStatus.ERROR);
+      throw error;
+    }
+  }, []);
+  
+  const logout = useCallback(async () => {
+    try {
+      await authBridge.logout();
+      // Auth state update will be handled by the event subscription
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
   }, []);
 
-  // Check if user is admin
+  // Role checks
+  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+    return authBridge.hasRole(role);
+  }, []);
+  
   const isAdmin = useCallback(() => {
-    return hasRole(['admin', 'super_admin']);
-  }, [hasRole]);
+    return authBridge.isAdmin();
+  }, []);
+  
+  const isSuperAdmin = useCallback(() => {
+    return authBridge.isSuperAdmin();
+  }, []);
 
+  // Return the auth context
   return {
-    // Auth state
-    user,
-    profile,
     status,
+    user,
     roles,
-    error,
-    isAuthenticated,
+    profile,
     isLoading,
-    
-    // Auth methods
-    initialize,
-    signInWithEmail,
-    signInWithGoogle,
-    signOut,
-    updateProfile,
-    
-    // Role utilities
+    isAuthenticated,
+    login,
+    logout,
     hasRole,
     isAdmin,
+    isSuperAdmin,
   };
 }
 

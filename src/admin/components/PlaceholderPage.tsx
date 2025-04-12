@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LucideIcon, Construction } from 'lucide-react';
+import { Construction } from 'lucide-react';
 
 export interface PlaceholderPageProps {
   title: string;
@@ -12,7 +12,8 @@ export interface PlaceholderPageProps {
 export function PlaceholderPage({ 
   title, 
   description, 
-  icon 
+  icon,
+  requiredPermission 
 }: PlaceholderPageProps) {
   const Icon = icon || <Construction className="h-12 w-12" />;
   
@@ -24,6 +25,11 @@ export function PlaceholderPage({
         </div>
         <h1 className="text-3xl font-bold mb-3">{title}</h1>
         <p className="text-muted-foreground">{description}</p>
+        {requiredPermission && (
+          <div className="mt-4 text-xs text-muted-foreground">
+            Required permission: <code className="bg-muted p-1 rounded">{requiredPermission}</code>
+          </div>
+        )}
       </div>
     </div>
   );

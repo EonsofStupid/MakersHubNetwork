@@ -1,212 +1,121 @@
+import { EventEmitter } from 'events';
+import { AuthEvent, AuthStatus, User, UserProfile, UserRole } from '@/shared/types/shared.types';
 
-// This file is a bridge that handles authentication operations
-// It abstracts away the implementation details of the auth provider
+// Type for auth event subscribers
+type AuthEventSubscriber = (event: AuthEvent) => void;
 
-import { createClient, User, Session } from '@supabase/supabase-js';
-import { 
-  AuthEvent, 
-  AuthEventType, 
-  UserProfile, 
-  UserRole, 
-  AuthStatus 
-} from '@/shared/types/shared.types';
-
-// Define event types
-export type AuthEventHandler = (event: AuthEvent) => void;
-export type AuthEventUnsubscribe = () => void;
-
-export class AuthBridgeImpl {
-  private client: ReturnType<typeof createClient>;
-  private eventHandlers: AuthEventHandler[] = [];
-  private session: Session | null = null;
+// Auth bridge implementation
+class AuthBridgeImpl {
+  private subscribers: AuthEventSubscriber[] = [];
+  private emitter: EventEmitter;
   
-  // Initialize with your Supabase client
-  constructor(supabaseClient: ReturnType<typeof createClient>) {
-    this.client = supabaseClient;
-    
-    // Set up auth state change listener
-    this.client.auth.onAuthStateChange((event, session) => {
-      this.session = session;
-      
-      this.dispatchEvent({
-        type: 'AUTH_STATE_CHANGE',
-        payload: { event, session }
-      });
-    });
+  constructor() {
+    this.emitter = new EventEmitter();
+    this.emitter.setMaxListeners(20); // Increase max listeners to avoid warnings
   }
   
-  /**
-   * Dispatches an authentication event to all registered handlers
-   */
-  private dispatchEvent(event: AuthEvent): void {
-    this.eventHandlers.forEach(handler => handler(event));
-  }
-  
-  /**
-   * Register an event handler for auth events
-   * Returns a function to unsubscribe the handler
-   */
-  public onAuthEvent(handler: AuthEventHandler): AuthEventUnsubscribe {
-    this.eventHandlers.push(handler);
+  // Event handling
+  subscribeToAuthEvents(subscriber: AuthEventSubscriber): () => void {
+    this.subscribers.push(subscriber);
     
+    // Return unsubscribe function
     return () => {
-      this.eventHandlers = this.eventHandlers.filter(h => h !== handler);
+      this.subscribers = this.subscribers.filter(sub => sub !== subscriber);
     };
   }
   
-  /**
-   * Sign in with email and password
-   */
-  public async signIn(email: string, password: string): Promise<void> {
-    const { error } = await this.client.auth.signInWithPassword({
-      email,
-      password
+  onAuthEvent(event: AuthEvent): void {
+    // Notify all subscribers
+    this.subscribers.forEach(subscriber => {
+      try {
+        subscriber(event);
+      } catch (error) {
+        console.error('Error in auth event subscriber:', error);
+      }
     });
     
-    if (error) throw error;
+    // Also emit through EventEmitter for legacy code
+    this.emitter.emit('auth-event', event);
+    this.emitter.emit(`auth-event:${event.type}`, event);
   }
   
-  /**
-   * Sign in with Google OAuth
-   */
-  public async signInWithGoogle(): Promise<void> {
-    const { error } = await this.client.auth.signInWithOAuth({
-      provider: 'google'
+  // Auth methods
+  async getSession() {
+    // Implementation will be added later with Supabase integration
+    return null;
+  }
+  
+  getUser(): User | null {
+    // Implementation will be added later with Supabase integration
+    return null;
+  }
+  
+  getStatus(): AuthStatus {
+    // Implementation will be added later with Supabase integration
+    return AuthStatus.UNAUTHENTICATED;
+  }
+
+  isAuthenticated(): boolean {
+    return this.getStatus() === AuthStatus.AUTHENTICATED;
+  }
+  
+  async signIn(email: string, password: string): Promise<void> {
+    // Implementation will be added later with Supabase integration
+    console.log('Sign in with email:', email);
+  }
+  
+  async signInWithGoogle(): Promise<void> {
+    // Implementation will be added later with Supabase integration
+    console.log('Sign in with Google');
+  }
+  
+  async linkSocialAccount(provider: string): Promise<void> {
+    // Implementation will be added later with Supabase integration
+    console.log('Link social account:', provider);
+  }
+  
+  async logout(): Promise<void> {
+    // Implementation will be added later with Supabase integration
+    console.log('Logout');
+    
+    this.onAuthEvent({
+      type: 'AUTH_SESSION_EXPIRED'
     });
-    
-    if (error) throw error;
   }
   
-  /**
-   * Sign up with email and password
-   */
-  public async signUp(email: string, password: string): Promise<void> {
-    const { error } = await this.client.auth.signUp({
-      email,
-      password
+  // User roles and permissions
+  hasRole(role: UserRole | UserRole[]): boolean {
+    // Implementation will be added later with Supabase integration
+    return Array.isArray(role) ? role.includes('user' as UserRole) : role === 'user';
+  }
+  
+  isAdmin(): boolean {
+    return this.hasRole(['admin', 'super_admin']);
+  }
+  
+  isSuperAdmin(): boolean {
+    return this.hasRole('super_admin');
+  }
+  
+  // Profile management
+  async updateUserProfile(profileData: Partial<UserProfile>): Promise<void> {
+    // Implementation will be added later with Supabase integration
+    console.log('Update user profile:', profileData);
+    
+    this.onAuthEvent({
+      type: 'AUTH_STATE_CHANGE',
+      payload: { profile: profileData }
     });
-    
-    if (error) throw error;
-  }
-  
-  /**
-   * Sign out the current user
-   */
-  public async signOut(): Promise<void> {
-    const { error } = await this.client.auth.signOut();
-    if (error) throw error;
-  }
-  
-  /**
-   * Get the current session
-   */
-  public async getSession(): Promise<Session | null> {
-    if (this.session) return this.session;
-    
-    const { data, error } = await this.client.auth.getSession();
-    if (error) throw error;
-    
-    return data.session;
-  }
-
-  /**
-   * Get the current session
-   * Alias for getSession for compatibility
-   */
-  public async getCurrentSession(): Promise<Session | null> {
-    return this.getSession();
-  }
-  
-  /**
-   * Get the current user
-   */
-  public async getUser(): Promise<User | null> {
-    const { data, error } = await this.client.auth.getUser();
-    if (error && error.name !== 'AuthSessionMissingError') throw error;
-    return data?.user || null;
-  }
-
-  /**
-   * Get a user's profile
-   */
-  public async getUserProfile(userId: string): Promise<UserProfile | null> {
-    // This would typically query a profiles table in your database
-    // For now we return a placeholder profile
-    return {
-      id: userId,
-      user_id: userId,
-      display_name: null,
-      avatar_url: null,
-    };
-  }
-  
-  /**
-   * Check if user has a specific role
-   */
-  public hasRole(roles: UserRole | UserRole[]): boolean {
-    // Implementation depends on how roles are stored
-    // This is a placeholder implementation
-    return Array.isArray(roles) ? roles.includes('user') : roles === 'user';
-  }
-  
-  /**
-   * Link a social account to the current user
-   */
-  public async linkAccount(provider: string): Promise<void> {
-    // Placeholder implementation
-    console.log(`Linking account with provider: ${provider}`);
-    // In a real implementation, you would call the appropriate Supabase method
-  }
-  
-  /**
-   * Check if the user is an admin
-   */
-  public isAdmin(): boolean {
-    // Implementation would check if the user has admin role
-    return false;
-  }
-  
-  /**
-   * Reset password
-   */
-  public async resetPassword(email: string): Promise<void> {
-    const { error } = await this.client.auth.resetPasswordForEmail(email);
-    if (error) throw error;
-  }
-  
-  /**
-   * Update a user's profile information
-   */
-  public async updateUserProfile(profileData: Partial<UserProfile>): Promise<UserProfile> {
-    // This would typically update a profile in your database
-    // For now we return the input as a placeholder
-    return {
-      id: profileData.id || '',
-      user_id: profileData.user_id || '',
-      display_name: profileData.display_name || null,
-      avatar_url: profileData.avatar_url || null,
-    };
-  }
-
-  /**
-   * Update profile - alias for updateUserProfile for compatibility
-   */
-  public async updateProfile(profileData: Partial<UserProfile>): Promise<UserProfile> {
-    return this.updateUserProfile(profileData);
   }
 }
 
-// Create and export a singleton instance
-export const authBridge = new AuthBridgeImpl(
-  createClient(
-    import.meta.env.VITE_SUPABASE_URL || '',
-    import.meta.env.VITE_SUPABASE_KEY || '',
-    {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        storage: localStorage
-      }
-    }
-  )
-);
+// Export singleton instance
+export const authBridge = new AuthBridgeImpl();
+
+// Helper function to subscribe to auth events
+export function subscribeToAuthEvents(subscriber: AuthEventSubscriber): () => void {
+  return authBridge.subscribeToAuthEvents(subscriber);
+}
+
+// Re-export for legacy code
+export { authBridge as AuthBridge };

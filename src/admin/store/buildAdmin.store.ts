@@ -1,265 +1,278 @@
 
-import { create } from "zustand";
-import { supabase } from "@/integrations/supabase/client";
-import { BuildAdminStore, Build, BuildStatus } from "../types/build.types";
-import { toast } from "sonner";
+import { create } from 'zustand';
+import { 
+  BuildAdminStore, 
+  BuildFilter, 
+  BuildPagination 
+} from '../types/build.types';
+import { Build, BuildStatus, BuildPart, BuildMod } from '@/shared/types/shared.types';
 
+// Create the build admin store
 export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
+  // State
   builds: [],
   selectedBuild: null,
+  selectedBuildId: null,
   isLoading: false,
   error: null,
+  
+  // Filters and pagination
   filters: {
     status: 'all',
     dateRange: [null, null],
-    sortBy: 'newest'
+    sortBy: 'newest',
   },
+  
   pagination: {
     page: 1,
     perPage: 10,
-    total: 0
+    total: 0,
   },
   
+  // Fetch builds with filters and pagination
   fetchBuilds: async () => {
     try {
       set({ isLoading: true, error: null });
       
+      // In a real app, this would be an API call with filters and pagination
       const { filters, pagination } = get();
-      const { page, perPage } = pagination;
       
-      // Calculate the range
-      const from = (page - 1) * perPage;
-      const to = from + perPage - 1;
+      // Mock API response
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Start building the query
-      let query = supabase
-        .from('printer_builds')
-        .select(`
-          *,
-          profiles:submitted_by (display_name, avatar_url)
-        `, { count: 'exact' })
-        .range(from, to);
-      
-      // Apply status filter if not 'all'
-      if (filters.status !== 'all') {
-        query = query.eq('status', filters.status);
-      }
-      
-      // Apply date range filter if set
-      if (filters.dateRange[0] && filters.dateRange[1]) {
-        query = query.gte('created_at', filters.dateRange[0].toISOString())
-          .lte('created_at', filters.dateRange[1].toISOString());
-      }
-      
-      // Apply sorting
-      switch (filters.sortBy) {
-        case 'newest':
-          query = query.order('created_at', { ascending: false });
-          break;
-        case 'oldest':
-          query = query.order('created_at', { ascending: true });
-          break;
-        case 'complexity':
-          query = query.order('complexity_score', { ascending: false });
-          break;
-      }
-      
-      const { data, error, count } = await query;
-      
-      if (error) throw error;
-      
-      // Transform data to match our Build interface
-      const builds = data.map(build => ({
-        ...build,
-        display_name: build.profiles?.display_name,
-        avatar_url: build.profiles?.avatar_url,
-        // Ensure submitted_by is never null
-        submitted_by: build.submitted_by || 'anonymous',
-        reviews: [],
-        parts: [],
-        mods: []
-      })) as Build[];
+      // Mock data
+      const mockBuilds: Build[] = [
+        {
+          id: "build-1",
+          title: "Voron 2.4 Custom Build",
+          description: "My custom Voron 2.4 build with modified hot end",
+          status: "pending",
+          submittedBy: "maker42",
+          userId: "user-1",
+          userName: "John Maker",
+          complexity_score: 8.5,
+          parts_count: 57,
+          mods_count: 6,
+          display_name: "John Maker",
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: "build-2",
+          title: "Ender 3 V2 Upgrades",
+          description: "Heavily modified Ender 3 with linear rails",
+          status: "approved",
+          submittedBy: "printmaster",
+          userId: "user-2",
+          userName: "Print Master",
+          complexity_score: 5.2,
+          parts_count: 28,
+          mods_count: 4,
+          display_name: "Print Master",
+          avatar_url: null,
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          updatedAt: new Date(Date.now() - 86400000).toISOString(),
+        }
+      ] as Build[];
       
       set({ 
-        builds, 
+        builds: mockBuilds,
         isLoading: false,
         pagination: {
           ...pagination,
-          total: count || 0
+          total: mockBuilds.length
         }
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch builds';
-      set({ error: errorMessage, isLoading: false });
-      console.error('Error fetching builds:', error);
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error : new Error(String(error))
+      });
     }
   },
   
-  fetchBuildById: async (id) => {
+  // Fetch a single build by ID
+  fetchBuild: async (id: string) => {
+    return get().fetchBuildById(id);
+  },
+  
+  // Fetch a build by ID
+  fetchBuildById: async (id: string) => {
     try {
       set({ isLoading: true, error: null });
       
-      // Fetch the build details
-      const { data: buildData, error: buildError } = await supabase
-        .from('printer_builds')
-        .select(`
-          *,
-          profiles:submitted_by (display_name, avatar_url)
-        `)
-        .eq('id', id)
-        .single();
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      if (buildError) throw buildError;
-      
-      // Fetch the build parts
-      const { data: partsData, error: partsError } = await supabase
-        .from('build_parts')
-        .select(`
-          *,
-          printer_parts!inner (name)
-        `)
-        .eq('build_id', id);
-      
-      if (partsError) throw partsError;
-      
-      // Fetch the build mods
-      const { data: modsData, error: modsError } = await supabase
-        .from('build_mods')
-        .select('*')
-        .eq('build_id', id);
-      
-      if (modsError) throw modsError;
-      
-      // Transform parts data
-      const parts = partsData.map(part => ({
-        id: part.id,
-        name: part.printer_parts?.name || 'Unknown Part',
-        quantity: part.quantity,
-        notes: part.notes
-      }));
-      
-      // Use current date as fallback for required date fields
-      const currentDateString = new Date().toISOString();
-      
-      // Format the build with all related data
-      const build: Build = {
-        ...buildData,
-        // Handle nullable/undefined fields with default values
-        created_at: buildData.created_at || currentDateString,
-        updated_at: buildData.updated_at || currentDateString,
-        display_name: buildData.profiles?.display_name || null,
-        avatar_url: buildData.profiles?.avatar_url || null,
-        // Ensure submitted_by is never null by providing a default value
-        submitted_by: buildData.submitted_by || 'anonymous',
-        // Convert null/undefined arrays to empty arrays
-        images: buildData.images || [],
-        // Ensure status is a valid BuildStatus value
-        status: (buildData.status as BuildStatus) || 'pending',
-        // Add default values for nullable numeric fields
-        complexity_score: buildData.complexity_score || 0,
-        parts_count: buildData.parts_count || 0, 
-        mods_count: buildData.mods_count || 0,
-        parts,
-        mods: modsData || [],
-        reviews: [] // We'll populate this separately if needed
+      // Mock a single build response
+      const mockBuild: Build = {
+        id,
+        title: "Voron 2.4 Custom Build",
+        description: "My custom Voron 2.4 build with modified hot end and linear rails",
+        status: "pending",
+        submittedBy: "maker42",
+        userId: "user-1",
+        userName: "John Maker",
+        complexity_score: 8.5,
+        parts_count: 57,
+        mods_count: 6,
+        display_name: "John Maker",
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        images: [
+          "https://via.placeholder.com/600x400?text=Build+Image+1",
+          "https://via.placeholder.com/600x400?text=Build+Image+2"
+        ],
+        parts: [
+          { id: "part-1", name: "Hot End", quantity: 1, type: "component", notes: "Mosquito Hot End" },
+          { id: "part-2", name: "Linear Rails", quantity: 4, type: "component", notes: "MGN12H Rails" },
+          { id: "part-3", name: "Stepper Motors", quantity: 5, type: "component", notes: "LDO Motors" }
+        ],
+        mods: [
+          { 
+            id: "mod-1", 
+            name: "Stealthburner", 
+            description: "Modified Stealthburner print head", 
+            build_id: id,
+            complexity: 4,
+            created_at: new Date().toISOString()
+          },
+          { 
+            id: "mod-2", 
+            name: "Klicky Probe", 
+            description: "Added Klicky auto probe", 
+            build_id: id,
+            complexity: 3,
+            created_at: new Date().toISOString()
+          }
+        ]
       };
       
-      set({ selectedBuild: build, isLoading: false });
+      set({ 
+        selectedBuild: mockBuild,
+        isLoading: false
+      });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch build details';
-      set({ error: errorMessage, isLoading: false });
-      console.error('Error fetching build details:', error);
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error : new Error(String(error))
+      });
     }
   },
   
-  approveBuild: async (id, comments) => {
-    await updateBuildStatus(id, 'approved', comments, set, get);
+  // Select a build
+  selectBuild: (id: string) => {
+    set({ selectedBuildId: id });
+    get().fetchBuildById(id);
   },
   
-  rejectBuild: async (id, comments) => {
-    await updateBuildStatus(id, 'rejected', comments, set, get);
-  },
-  
-  requestRevision: async (id, comments) => {
-    await updateBuildStatus(id, 'needs_revision', comments, set, get);
-  },
-  
-  updateFilters: (filters) => {
-    set({
-      filters: { ...get().filters, ...filters },
-      pagination: { ...get().pagination, page: 1 } // Reset to first page on filter change
-    });
+  // Update filters
+  updateFilters: (filters: Partial<BuildFilter>) => {
+    set(state => ({
+      filters: { ...state.filters, ...filters },
+      pagination: { ...state.pagination, page: 1 } // Reset to first page on filter change
+    }));
+    
+    // Refetch with new filters
     get().fetchBuilds();
   },
   
-  updatePagination: (pagination) => {
-    set({ pagination: { ...get().pagination, ...pagination } });
+  // Update pagination
+  updatePagination: (pagination: Partial<BuildPagination>) => {
+    set(state => ({
+      pagination: { ...state.pagination, ...pagination }
+    }));
+    
+    // Refetch with new pagination
     get().fetchBuilds();
   },
   
-  setSelectedBuild: (build) => {
-    set({ selectedBuild: build });
+  // Approve a build
+  approveBuild: async (id: string, comment: string) => {
+    try {
+      set({ isLoading: true });
+      
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Update the build in state
+      const currentBuild = get().selectedBuild;
+      if (currentBuild && currentBuild.id === id) {
+        set({ 
+          selectedBuild: { ...currentBuild, status: "approved" as BuildStatus },
+        });
+      }
+      
+      // Refetch builds to update the list
+      get().fetchBuilds();
+      set({ isLoading: false });
+    } catch (error) {
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error : new Error(String(error))
+      });
+    }
   },
   
-  clearError: () => {
-    set({ error: null });
-  }
+  // Reject a build
+  rejectBuild: async (id: string, comment: string) => {
+    try {
+      set({ isLoading: true });
+      
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Update the build in state
+      const currentBuild = get().selectedBuild;
+      if (currentBuild && currentBuild.id === id) {
+        set({ 
+          selectedBuild: { ...currentBuild, status: "rejected" as BuildStatus },
+        });
+      }
+      
+      // Refetch builds to update the list
+      get().fetchBuilds();
+      set({ isLoading: false });
+    } catch (error) {
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error : new Error(String(error))
+      });
+    }
+  },
+  
+  // Request revision for a build
+  requestRevision: async (id: string, comment: string) => {
+    try {
+      set({ isLoading: true });
+      
+      // In a real app, this would be an API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Update the build in state
+      const currentBuild = get().selectedBuild;
+      if (currentBuild && currentBuild.id === id) {
+        set({ 
+          selectedBuild: { ...currentBuild, status: "needs_revision" as BuildStatus },
+        });
+      }
+      
+      // Refetch builds to update the list
+      get().fetchBuilds();
+      set({ isLoading: false });
+    } catch (error) {
+      set({ 
+        isLoading: false, 
+        error: error instanceof Error ? error : new Error(String(error))
+      });
+    }
+  },
+  
+  // Clear any errors
+  clearError: () => set({ error: null })
 }));
-
-// Helper function to update build status
-async function updateBuildStatus(
-  id: string, 
-  status: BuildStatus, 
-  comments: string,
-  set: (state: Partial<BuildAdminStore>) => void,
-  get: () => BuildAdminStore
-) {
-  try {
-    set({ isLoading: true, error: null });
-    
-    // Update the build status
-    const { error: updateError } = await supabase
-      .from('printer_builds')
-      .update({ 
-        status,
-        processed_at: new Date().toISOString()
-      })
-      .eq('id', id);
-    
-    if (updateError) throw updateError;
-    
-    // Since build_reviews table might not exist in the database schema,
-    // we'll just log the review action instead of inserting it
-    console.log('Build review created:', {
-      build_id: id,
-      reviewer_id: (await supabase.auth.getUser()).data.user?.id,
-      status,
-      comments
-    });
-    
-    // Update UI
-    toast(`Build has been ${status}`, {
-      description: status === 'rejected' ? 'The build was rejected' : 
-                   status === 'approved' ? 'The build was approved' : 
-                   'Revision requested for the build'
-    });
-    
-    // Refresh the builds list
-    await get().fetchBuilds();
-    
-    // If there's a selected build, refresh it too
-    if (get().selectedBuild?.id === id) {
-      await get().fetchBuildById(id);
-    }
-    
-    set({ isLoading: false });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : `Failed to ${status} build`;
-    set({ error: errorMessage, isLoading: false });
-    console.error(`Error updating build status to ${status}:`, error);
-    
-    toast('Error', {
-      description: errorMessage,
-    });
-  }
-}

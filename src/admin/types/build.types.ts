@@ -1,61 +1,40 @@
 
-// Types for the build system in admin
+import { Build, BuildStatus, BuildPart, BuildMod } from '@/shared/types/shared.types';
 
-export type BuildStatus = 'pending' | 'approved' | 'rejected' | 'needs_revision';
+// Build filter types
+export interface BuildFilter {
+  status: string;
+  dateRange: [Date | null, Date | null];
+  sortBy: string;
+}
 
-export type Build = {
-  id: string;
-  title: string;
-  description: string;
-  status: BuildStatus;
-  submittedBy: string;
-  userId: string;
-  userName: string;
-  imageUrl?: string;
-  complexity?: number;
-  parts: BuildPart[];
-  mods: BuildMod[];
-  reviews: BuildReview[];
-  createdAt: string;
-  updatedAt: string;
-};
+// Pagination types
+export interface BuildPagination {
+  page: number;
+  perPage: number;
+  total: number;
+}
 
-export type BuildPart = {
-  id: string;
-  name: string;
-  type: string;
-  quantity: number;
-  price?: number;
-  link?: string;
-};
-
-export type BuildMod = {
-  id: string;
-  name: string;
-  description: string;
-  complexity: number;
-  imageUrl?: string;
-};
-
-export type BuildReview = {
-  id: string;
-  userId: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  date: string;
-};
-
+// Admin store interface for build management
 export interface BuildAdminStore {
+  // State
   builds: Build[];
+  selectedBuild: Build | null;
   selectedBuildId: string | null;
   isLoading: boolean;
   error: Error | null;
+  filters: BuildFilter;
+  pagination: BuildPagination;
   
+  // Actions
   fetchBuilds: () => Promise<void>;
   fetchBuild: (id: string) => Promise<void>;
-  approveBuild: (id: string, comment?: string) => Promise<void>;
-  rejectBuild: (id: string, reason: string) => Promise<void>;
-  requestRevision: (id: string, feedback: string) => Promise<void>;
-  selectBuild: (id: string | null) => void;
+  fetchBuildById: (id: string) => Promise<void>;
+  selectBuild: (id: string) => void;
+  approveBuild: (id: string, comment: string) => Promise<void>;
+  rejectBuild: (id: string, comment: string) => Promise<void>;
+  requestRevision: (id: string, comment: string) => Promise<void>;
+  updateFilters: (filters: Partial<BuildFilter>) => void;
+  updatePagination: (pagination: Partial<BuildPagination>) => void;
+  clearError: () => void;
 }
