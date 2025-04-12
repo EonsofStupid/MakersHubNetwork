@@ -49,7 +49,9 @@ const initialState: ThemeState = {
   componentTokens: [],
   variables: defaultVariables,
   componentStyles: {},
-  isLoaded: false
+  isLoaded: false,
+  currentTheme: null,
+  adminComponents: []
 };
 
 // Create theme store
@@ -87,3 +89,14 @@ export const initializeTheme = () => {
   // Set default theme
   setThemeLoaded(true);
 };
+
+// Additional theme state functions
+export const loadAdminComponents = async () => {
+  // Mock function for now
+  return [];
+};
+
+// Theme selectors
+export const selectCurrentTheme = (state: ThemeState) => state.currentTheme;
+export const selectThemeTokens = (state: ThemeState) => state.tokens;
+export const selectThemeComponents = (state: ThemeState) => state.componentTokens;

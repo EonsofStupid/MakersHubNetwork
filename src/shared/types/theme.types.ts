@@ -1,5 +1,46 @@
 
-import { LogCategory } from "./shared.types";
+// Theme Types
+export interface ThemeState {
+  theme: string;
+  tokens: ThemeToken[];
+  componentTokens: ComponentTokens[];
+  variables: ThemeVariables;
+  componentStyles: ComponentStyles;
+  isLoaded: boolean;
+  currentTheme: Theme | null;
+  adminComponents: ComponentTokens[];
+}
+
+export interface Theme {
+  id: string;
+  name: string;
+  description?: string;
+  tokens?: Record<string, ThemeToken>;
+  components?: Record<string, ComponentTokens>;
+  design_tokens?: Record<string, any>;
+}
+
+export interface ThemeToken {
+  id: string;
+  token_name: string;
+  token_value: string;
+  type: string;
+  value: string;
+  category: string;
+  description?: string;
+  keyframes?: string;
+}
+
+export interface ComponentTokens {
+  component_name: string;
+  styles: Record<string, string>;
+  context?: string;
+  variants?: Record<string, Record<string, string>>;
+}
+
+export interface ComponentStyles {
+  [component: string]: Record<string, string>;
+}
 
 export interface ThemeVariables {
   background: string;
@@ -19,57 +60,25 @@ export interface ThemeVariables {
   border: string;
   input: string;
   ring: string;
-  
-  // Special effects
   effectColor: string;
   effectSecondary: string;
   effectTertiary: string;
-  
-  // Animation timing
   transitionFast: string;
   transitionNormal: string;
   transitionSlow: string;
   animationFast: string;
   animationNormal: string;
   animationSlow: string;
-  
-  // Radii
   radiusSm: string;
   radiusMd: string;
   radiusLg: string;
   radiusFull: string;
 }
 
-export interface ThemeToken {
-  id: string;
-  token_name: string;
-  token_value: string;
-  fallback_value: string;
-  category: string;
-}
-
-export interface ComponentStyles {
-  [key: string]: Record<string, string>;
-}
-
-export interface ComponentTokens {
-  id: string;
-  component_name: string;
-  styles: Record<string, string>;
-}
-
-export interface ThemeState {
-  theme: string;
-  tokens: ThemeToken[];
-  componentTokens: ComponentTokens[];
-  variables: ThemeVariables;
-  componentStyles: ComponentStyles;
-  isLoaded: boolean;
-}
-
+// Theme log details type
 export interface ThemeLogDetails {
-  category: LogCategory;
+  themeName?: string;
   theme?: string;
-  event: string;
-  variables?: Partial<ThemeVariables>;
+  cssVarsCount?: number;
+  error?: string;
 }

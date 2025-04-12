@@ -1,39 +1,45 @@
 
-import React, { ReactNode } from 'react';
-import { cn } from "@/lib/utils";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/shared/types/shared.types";
+import React, { useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
+import AdminOverlay from '../debug/AdminOverlay';
+import { AdminOverlayToggleButton } from '../debug/AdminOverlayToggleButton';
+import { useHasRole } from '@/auth/hooks/useHasRole';
+import { useNavigate } from 'react-router-dom';
 
-interface AdminLayoutProps {
-  children: ReactNode;
-  fullWidth?: boolean;
-  className?: string;
-  title?: string;
-}
-
-/**
- * Base Admin Layout
- * 
- * Provides consistent structure for admin pages
- */
-export function AdminLayout({
-  children,
-  fullWidth = false,
-  className = '',
-  title
-}: AdminLayoutProps) {
-  const logger = useLogger("AdminLayout", LogCategory.ADMIN);
+export function AdminLayout() {
+  const { hasAdminAccess } = useHasRole();
+  const navigate = useNavigate();
+  
+  // Check if user has admin access
+  useEffect(() => {
+    const checkAccess = async () => {
+      const hasAccess = await hasAdminAccess();
+      if (!hasAccess) {
+        navigate('/unauthorized');
+      }
+    };
+    
+    checkAccess();
+  }, [hasAdminAccess, navigate]);
   
   return (
-    <div className={cn(
-      "min-h-screen bg-background/30 backdrop-blur-sm",
-      fullWidth ? "px-4" : "container px-4 py-4",
-      className
-    )}>
-      {title && (
-        <h1 className="text-2xl font-bold mb-4">{title}</h1>
-      )}
-      {children}
+    <div className="min-h-screen bg-background">
+      {/* Admin Header */}
+      <header className="h-14 border-b border-border/40 flex items-center justify-between px-4">
+        <h1 className="text-lg font-semibold">Admin Dashboard</h1>
+        
+        <div className="flex items-center gap-2">
+          <AdminOverlayToggleButton />
+        </div>
+      </header>
+      
+      {/* Admin Content */}
+      <main className="p-4">
+        <Outlet />
+      </main>
+      
+      {/* Debug Overlay */}
+      <AdminOverlay />
     </div>
   );
 }

@@ -1,48 +1,46 @@
 
-import { useCallback } from 'react';
-import { useAuthStore } from '../store/auth.store';
+import { useAuthStore } from '@/auth/store/auth.store';
 import { UserRole } from '@/shared/types/shared.types';
 
+interface UseHasRoleResult {
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  hasAdminAccess: () => boolean;
+  hasSuperAdminAccess: () => boolean;
+}
+
 /**
- * Hook to check if the current user has a specific role or roles
+ * Hook to check if the current user has specific roles
  */
-export function useHasRole() {
+export function useHasRole(): UseHasRoleResult {
   const { roles } = useAuthStore();
 
   /**
-   * Checks if the user has the required role(s)
-   * @param requiredRole - A single role or array of roles to check
-   * @returns boolean indicating if user has any of the required roles
+   * Check if the user has at least one of the specified roles
    */
-  const hasRole = useCallback((requiredRole: UserRole | UserRole[]): boolean => {
-    if (!roles || roles.length === 0) {
-      return false;
-    }
-
-    if (Array.isArray(requiredRole)) {
-      // Check if user has any of the required roles
-      return requiredRole.some(role => roles.includes(role));
-    }
-
-    // Check for a single role
-    return roles.includes(requiredRole);
-  }, [roles]);
+  const hasRole = (roleOrRoles: UserRole | UserRole[]) => {
+    if (!roles || roles.length === 0) return false;
+    
+    const rolesToCheck = Array.isArray(roleOrRoles) ? roleOrRoles : [roleOrRoles];
+    return roles.some(role => rolesToCheck.includes(role));
+  };
 
   /**
-   * Checks if the user has admin access (ADMIN or SUPER_ADMIN roles)
-   * @returns boolean indicating if user has admin access
+   * Check if the user has admin or superadmin access
    */
-  const hasAdminAccess = useCallback((): boolean => {
+  const hasAdminAccess = () => {
     return hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-  }, [hasRole]);
+  };
 
   /**
-   * Checks if the user is a super admin
-   * @returns boolean indicating if user is a super admin
+   * Check if the user has superadmin access
    */
-  const isSuperAdmin = useCallback((): boolean => {
+  const hasSuperAdminAccess = () => {
     return hasRole(UserRole.SUPER_ADMIN);
-  }, [hasRole]);
+  };
 
-  return { hasRole, hasAdminAccess, isSuperAdmin };
+  return {
+    hasRole,
+    hasAdminAccess,
+    hasSuperAdminAccess
+  };
 }
