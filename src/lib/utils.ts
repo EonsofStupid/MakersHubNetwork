@@ -1,4 +1,3 @@
 
-// Re-export the cn utility from shared
-export { cn } from '@/shared/utils/cn';
-export { slugify, generateId } from '@/shared/utils/slugify';
+// Re-export utilities from the shared utils directory
+export * from '@/shared/utils/cn';

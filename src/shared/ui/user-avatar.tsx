@@ -1,65 +1,69 @@
 
 import React from 'react';
-import { User } from '@/shared/types/shared.types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
-import { cn } from '@/shared/utils/cn';
+import { User } from '@/shared/types/shared.types';
 
 interface UserAvatarProps {
-  user?: User | null;
-  fallbackText?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  user: User | null;
   className?: string;
   fallbackClassName?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
+/**
+ * UserAvatar component that displays a user's avatar
+ * Shows initials as fallback if no image is available
+ */
 export function UserAvatar({ 
   user, 
-  fallbackText,
-  size = 'md',
-  className,
-  fallbackClassName
+  className = '', 
+  fallbackClassName = '',
+  size = 'md'
 }: UserAvatarProps) {
-  // Get avatar URL from user
-  const avatarUrl = user?.user_metadata?.avatar_url;
-  
-  // Determine fallback text (initials)
-  const initials = React.useMemo(() => {
-    if (fallbackText) return fallbackText;
+  // Get initials from name
+  const getInitials = (): string => {
+    if (!user) return '?';
     
-    // Use name from user_metadata
-    const name = user?.user_metadata?.name || 
-                user?.user_metadata?.full_name ||
-                user?.user_metadata?.display_name ||
-                user?.email?.charAt(0);
-                
-    if (!name) return '?';
+    const name = user.profile?.display_name || 
+                user.user_metadata?.full_name || 
+                user.user_metadata?.name ||
+                user.email || '';
     
-    // If it's an email, use the first character
-    if (name.includes('@')) return name.charAt(0).toUpperCase();
-    
-    // Get initials from name
     return name
-      .split(' ')
+      .split(/\s+/)
       .map(part => part.charAt(0))
-      .slice(0, 2)
       .join('')
-      .toUpperCase();
-  }, [fallbackText, user]);
-  
-  // Size classes
-  const sizeClasses = {
-    xs: 'h-6 w-6 text-xs',
-    sm: 'h-8 w-8 text-sm',
-    md: 'h-10 w-10 text-base',
-    lg: 'h-12 w-12 text-lg',
-    xl: 'h-16 w-16 text-xl',
+      .toUpperCase()
+      .substring(0, 2);
   };
   
+  // Determine avatar size
+  const avatarSize = {
+    sm: 'h-8 w-8',
+    md: 'h-10 w-10',
+    lg: 'h-12 w-12',
+    xl: 'h-16 w-16',
+  }[size];
+  
+  // Determine fallback text size
+  const textSize = {
+    sm: 'text-xs',
+    md: 'text-sm',
+    lg: 'text-base',
+    xl: 'text-lg',
+  }[size];
+  
+  // Get avatar URL
+  const avatarUrl = user?.profile?.avatar_url || 
+                   user?.user_metadata?.avatar_url ||
+                   user?.user_metadata?.picture ||
+                   '';
+  
   return (
-    <Avatar className={cn(sizeClasses[size], className)}>
-      {avatarUrl && <AvatarImage src={avatarUrl} alt="User avatar" />}
-      <AvatarFallback className={fallbackClassName}>
-        {initials}
+    <Avatar className={`${avatarSize} ${className}`}>
+      <AvatarImage src={avatarUrl} alt={getInitials()} />
+      <AvatarFallback className={`${textSize} ${fallbackClassName}`}>
+        {getInitials()}
       </AvatarFallback>
     </Avatar>
   );

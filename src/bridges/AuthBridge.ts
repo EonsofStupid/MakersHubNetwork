@@ -1,3 +1,5 @@
 
-// Re-export from auth/bridge.ts
-export { authBridge, subscribeToAuthEvents } from '@/auth/bridge';
+// Re-export the authBridge instance from the auth domain
+import { authBridge } from '@/auth/bridge';
+
+export { authBridge };

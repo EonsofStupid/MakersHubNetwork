@@ -1,121 +1,168 @@
 
-import { createClient } from '@supabase/supabase-js';
-import { UserRole } from '@/shared/types/shared.types';
+// This file is a bridge that handles authentication operations
+// It abstracts away the implementation details of the auth provider
 
-// Type for authentication status
-export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+import { createClient, User, Session } from '@supabase/supabase-js';
+import { AuthEvent, AuthEventType, UserProfile, UserRole } from '@/shared/types/shared.types';
 
-// Type for user profile
-export interface UserProfile {
-  id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  bio: string | null;
-  theme_preference: string | null;
-  motion_enabled: boolean | null;
-}
+// Define event types
+export type AuthEventHandler = (event: AuthEvent) => void;
+export type AuthEventUnsubscribe = () => void;
 
-// Supabase authentication client
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL || '',
-  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-);
-
-// Auth event types
-export type AuthEventType = 'AUTH_SIGNED_IN' | 'AUTH_SIGNED_OUT' | 'AUTH_USER_UPDATED' | 'AUTH_SESSION_DELETED';
-
-// Auth Bridge implementation
 export class AuthBridgeImpl {
-  // Methods for authentication
-  async signInWithEmail(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  private client: ReturnType<typeof createClient>;
+  private eventHandlers: AuthEventHandler[] = [];
+  private session: Session | null = null;
+  
+  // Initialize with your Supabase client
+  constructor(supabaseClient: ReturnType<typeof createClient>) {
+    this.client = supabaseClient;
     
-    if (error) throw error;
-    return data;
-  }
-  
-  async signInWithGoogle() {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
-    
-    if (error) throw error;
-    return data;
-  }
-  
-  async signUp(email: string, password: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    
-    if (error) throw error;
-    return data;
-  }
-  
-  async signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  }
-  
-  async getCurrentSession() {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    return data.session;
-  }
-  
-  async getUserProfile(userId: string) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    // Set up auth state change listener
+    this.client.auth.onAuthStateChange((event, session) => {
+      this.session = session;
       
-    if (error) throw error;
-    return data as UserProfile;
+      this.dispatchEvent({
+        type: 'AUTH_STATE_CHANGE',
+        payload: { event, session }
+      });
+    });
   }
   
-  async updateProfile(profile: Partial<UserProfile>) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(profile)
-      .eq('id', profile.id!)
-      .select()
-      .single();
-      
-    if (error) throw error;
-    return data as UserProfile;
+  /**
+   * Dispatches an authentication event to all registered handlers
+   */
+  private dispatchEvent(event: AuthEvent): void {
+    this.eventHandlers.forEach(handler => handler(event));
   }
   
-  getStatus(): { status: 'AUTHENTICATED' | 'UNAUTHENTICATED' } {
-    const session = supabase.auth.getSession();
-    return {
-      status: session ? 'AUTHENTICATED' : 'UNAUTHENTICATED'
+  /**
+   * Register an event handler for auth events
+   * Returns a function to unsubscribe the handler
+   */
+  public onAuthEvent(handler: AuthEventHandler): AuthEventUnsubscribe {
+    this.eventHandlers.push(handler);
+    
+    return () => {
+      this.eventHandlers = this.eventHandlers.filter(h => h !== handler);
     };
   }
   
-  isAuthenticated() {
-    return Boolean(supabase.auth.getSession());
+  /**
+   * Sign in with email and password
+   */
+  public async signIn(email: string, password: string): Promise<void> {
+    const { error } = await this.client.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    if (error) throw error;
   }
   
-  isAdmin() {
-    // This would need to check roles from the auth store or supabase session
+  /**
+   * Sign in with Google OAuth
+   */
+  public async signInWithGoogle(): Promise<void> {
+    const { error } = await this.client.auth.signInWithOAuth({
+      provider: 'google'
+    });
+    
+    if (error) throw error;
+  }
+  
+  /**
+   * Sign up with email and password
+   */
+  public async signUp(email: string, password: string): Promise<void> {
+    const { error } = await this.client.auth.signUp({
+      email,
+      password
+    });
+    
+    if (error) throw error;
+  }
+  
+  /**
+   * Sign out the current user
+   */
+  public async signOut(): Promise<void> {
+    const { error } = await this.client.auth.signOut();
+    if (error) throw error;
+  }
+  
+  /**
+   * Get the current session
+   */
+  public async getSession(): Promise<Session | null> {
+    if (this.session) return this.session;
+    
+    const { data, error } = await this.client.auth.getSession();
+    if (error) throw error;
+    
+    return data.session;
+  }
+  
+  /**
+   * Get the current user
+   */
+  public async getUser(): Promise<User | null> {
+    const { data, error } = await this.client.auth.getUser();
+    if (error && error.name !== 'AuthSessionMissingError') throw error;
+    return data?.user || null;
+  }
+  
+  /**
+   * Check if user has a specific role
+   */
+  public hasRole(roles: UserRole | UserRole[]): boolean {
+    // Implementation depends on how roles are stored
+    // For now, we'll just return false
     return false;
   }
   
-  isSuperAdmin() {
-    // This would need to check roles from the auth store or supabase session
+  /**
+   * Link a social account to the current user
+   */
+  public async linkAccount(provider: string): Promise<void> {
+    throw new Error('Not implemented');
+  }
+  
+  /**
+   * Check if the user is an admin
+   */
+  public isAdmin(): boolean {
+    // Implementation would check if the user has admin role
     return false;
   }
   
-  subscribeToEvent(event: AuthEventType, callback: () => void) {
-    // Implementation would use supabase.auth.onAuthStateChange
-    return { unsubscribe: () => {} };
+  /**
+   * Reset password
+   */
+  public async resetPassword(email: string): Promise<void> {
+    const { error } = await this.client.auth.resetPasswordForEmail(email);
+    if (error) throw error;
+  }
+  
+  /**
+   * Update a user's profile information
+   */
+  public async updateUserProfile(profileData: Partial<UserProfile>): Promise<void> {
+    throw new Error('Not implemented');
   }
 }
 
-// Export a singleton instance of AuthBridge
-export const authBridge = new AuthBridgeImpl();
+// Create and export a singleton instance
+export const authBridge = new AuthBridgeImpl(
+  createClient(
+    import.meta.env.VITE_SUPABASE_URL || '',
+    import.meta.env.VITE_SUPABASE_KEY || '',
+    {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        storage: localStorage
+      }
+    }
+  )
+);

@@ -1,17 +1,24 @@
 
-// Export auth components
+// Re-export all auth components and utilities
+import { authBridge } from './bridge';
+import { useAuthStore } from './store/auth.store';
+
+// Export components
 export { GoogleLoginButton } from './components/GoogleLoginButton';
 export { LinkedAccountAlert } from './components/LinkedAccountAlert';
-export { RequireAuth } from './components/RequireAuth';
 export { AccountLinkingModal } from './components/AccountLinkingModal';
-export { UserAvatar } from './components/UserAvatar';
 export { UserMenu } from './components/UserMenu';
-
-// Export hooks
-export { useHasRole, useHasAdminAccess, useIsSuperAdmin } from './hooks/useHasRole';
-
-// Export store
-export { useAuthStore } from './store/auth.store';
+export { UserMenuSheet } from './components/UserMenuSheet';
+export { AdminOnly } from './components/AdminOnly';
+export { RequireAuth } from './components/RequireAuth';
+export { RequirePermission } from './components/RequirePermission';
 
 // Export bridge
-export { authBridge, subscribeToAuthEvents } from './bridge';
+export { authBridge };
+
+// Export hooks
+export { useAuthStore };
+
+// Export utilities
+export * from './utils/hasRole';
+export * from './utils/redirect';
