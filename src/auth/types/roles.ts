@@ -28,12 +28,12 @@ export type Permission =
 
 // Role definitions map roles to permissions
 export const rolePermissions: Record<UserRole, Permission[]> = {
-  [UserRole.USER]: [
+  'user': [
     'content:read',
     'build:read',
     'build:create'
   ],
-  [UserRole.MODERATOR]: [
+  'moderator': [
     'content:read',
     'content:edit',
     'build:read',
@@ -41,7 +41,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'build:approve',
     'user:read'
   ],
-  [UserRole.EDITOR]: [
+  'editor': [
     'content:read',
     'content:create',
     'content:edit',
@@ -50,7 +50,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'build:edit',
     'user:read'
   ],
-  [UserRole.ADMIN]: [
+  'admin': [
     'content:read',
     'content:create',
     'content:edit',
@@ -66,7 +66,13 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'build:approve',
     'system:settings'
   ],
-  [UserRole.SUPER_ADMIN]: [
+  'builder': [
+    'content:read',
+    'build:read',
+    'build:create',
+    'build:edit'
+  ],
+  'super_admin': [
     'content:read',
     'content:create',
     'content:edit',

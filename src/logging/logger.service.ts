@@ -1,22 +1,8 @@
 
 import { nanoid } from "nanoid";
-import { LogCategory, LogLevel } from "@/shared/types/shared.types";
+import { LogCategory, LogLevel, LogEntry, LogEvent, LOG_LEVEL_VALUES } from "@/shared/types/shared.types";
 import { ConsoleTransport } from "./transports/console-transport";
 import { LogTransport } from "./types";
-import type { LogEvent } from "./types";
-
-// Create the level values mapping
-const levelValues: Record<string, number> = {
-  [LogLevel.TRACE]: 0,
-  [LogLevel.DEBUG]: 1,
-  [LogLevel.INFO]: 2,
-  [LogLevel.SUCCESS]: 3,
-  [LogLevel.WARN]: 4,
-  [LogLevel.ERROR]: 5,
-  [LogLevel.FATAL]: 6,
-  [LogLevel.CRITICAL]: 7,
-  [LogLevel.SILENT]: 8
-};
 
 // Default transports
 const defaultTransports: LogTransport[] = [
@@ -122,7 +108,7 @@ export class Logger {
    * Core logging method
    */
   private log(level: LogLevel, message: string, meta?: { details?: Record<string, unknown> }): void {
-    const logEvent = {
+    const logEntry: LogEntry = {
       id: nanoid(),
       level,
       message,
@@ -132,11 +118,13 @@ export class Logger {
       details: meta?.details || {}
     };
 
+    const logEvent: LogEvent = { entry: logEntry };
+
     // Send to all transports
     Logger.transports.forEach(transport => {
       // Check if this transport should handle this log based on level
-      const minLevelValue = levelValues[transport.minLevel] || 0;
-      const currentLevelValue = levelValues[level] || 0;
+      const minLevelValue = LOG_LEVEL_VALUES[transport.minLevel as LogLevel] || 0;
+      const currentLevelValue = LOG_LEVEL_VALUES[level] || 0;
       
       if (currentLevelValue >= minLevelValue) {
         try {
@@ -144,7 +132,7 @@ export class Logger {
             return; // Skip this transport if the category is excluded
           }
           
-          transport.log(logEvent);
+          transport.log(logEntry);
         } catch (error) {
           console.error(`Transport error:`, error);
         }

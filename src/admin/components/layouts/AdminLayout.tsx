@@ -6,7 +6,7 @@ import { AdminSidebar } from "../AdminSidebar";
 import { useAdminStore } from "../../store/admin.store";
 import { useAtom } from "jotai";
 import { adminEditModeAtom } from "../../atoms/tools.atoms";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/shared/hooks/use-toast";
 import { FrozenZones } from "../overlay/FrozenZones";
 import { LogToggleButton } from "@/logging/components/LogToggleButton";
 import { useLoggingContext } from "@/logging/context/LoggingContext";

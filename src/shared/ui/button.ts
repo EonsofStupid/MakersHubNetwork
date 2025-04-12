@@ -1,3 +1,3 @@
 
-// Re-export from components/ui/button
-export { Button, buttonVariants } from "@/components/ui/button";
+// Re-export button component from shadcn
+export * from '@/components/ui/button';
