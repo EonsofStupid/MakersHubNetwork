@@ -24,12 +24,16 @@ class AdminModuleRegistry {
   // Register a module
   register(module: AdminModule): void {
     if (this.modules.has(module.id)) {
-      this.logger.warn(`Module with ID ${module.id} is already registered`, { module: module.name });
+      this.logger.warn(`Module with ID ${module.id} is already registered`, {
+        moduleName: module.name
+      });
       return;
     }
 
     this.modules.set(module.id, module);
-    this.logger.debug(`Registered module: ${module.name}`, { moduleId: module.id });
+    this.logger.debug(`Registered module: ${module.name}`, {
+      moduleId: module.id
+    });
   }
 
   // Initialize all modules
@@ -46,8 +50,11 @@ class AdminModuleRegistry {
         await module.initialize();
         this.initializedModules.add(id);
         this.logger.info(`Initialized module: ${module.name}`);
-      } catch (error) {
-        this.logger.error(`Failed to initialize module: ${module.name}`, { error });
+      } catch (err) {
+        const error = err instanceof Error ? err.message : String(err);
+        this.logger.error(`Failed to initialize module: ${module.name}`, {
+          errorMessage: error
+        });
       }
     }
   }
@@ -63,8 +70,11 @@ class AdminModuleRegistry {
         await module.cleanup();
         this.initializedModules.delete(id);
         this.logger.info(`Cleaned up module: ${module.name}`);
-      } catch (error) {
-        this.logger.error(`Failed to cleanup module: ${module.name}`, { error });
+      } catch (err) {
+        const error = err instanceof Error ? err.message : String(err);
+        this.logger.error(`Failed to cleanup module: ${module.name}`, {
+          errorMessage: error
+        });
       }
     }
   }
@@ -96,8 +106,11 @@ export function useAdminModuleRegistry() {
       try {
         await adminRegistry.initializeAll();
         setInitialized(true);
-      } catch (error) {
-        logger.error('Failed to initialize admin module registry', { error });
+      } catch (err) {
+        const error = err instanceof Error ? err.message : String(err);
+        logger.error('Failed to initialize admin module registry', {
+          errorMessage: error
+        });
       }
     };
     

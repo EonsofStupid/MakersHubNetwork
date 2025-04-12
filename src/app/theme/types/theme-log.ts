@@ -1,5 +1,5 @@
 
-export interface ThemeLogDetails {
+export interface ThemeLogDetails extends Record<string, unknown> {
   success?: boolean;
   error?: boolean;
   theme?: string;
