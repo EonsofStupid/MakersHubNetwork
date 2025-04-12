@@ -1,32 +1,42 @@
 
-import { User as SupabaseUser } from '@supabase/supabase-js';
+// User and Auth related types
+export enum UserRole {
+  USER = "user",
+  ADMIN = "admin",
+  SUPER_ADMIN = "super_admin",
+  EDITOR = "editor",
+  MODERATOR = "moderator",
+  BUILDER = "builder"
+}
 
-// Auth Types
-export type User = SupabaseUser & {
-  profile?: UserProfile;
-};
+export enum AuthStatus {
+  INITIAL = "INITIAL",
+  LOADING = "LOADING",
+  AUTHENTICATED = "AUTHENTICATED",
+  UNAUTHENTICATED = "UNAUTHENTICATED",
+  ERROR = "ERROR"
+}
 
-export type UserProfile = {
+export interface User {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
+  app_metadata?: Record<string, any>;
+}
+
+export interface UserProfile {
   id: string;
   user_id: string;
   display_name: string | null;
   avatar_url: string | null;
-  bio?: string | null;
-  website?: string | null;
-  location?: string | null;
-  roles?: UserRole[];
-  settings?: Record<string, any>;
-  created_at?: string;
-  updated_at?: string;
-};
-
-// Convert AuthStatus from type to enum so it can be used as a value
-export enum AuthStatus {
-  LOADING = 'LOADING',
-  AUTHENTICATED = 'AUTHENTICATED',
-  UNAUTHENTICATED = 'UNAUTHENTICATED',
-  ERROR = 'ERROR',
-  INITIAL = 'INITIAL'
+  bio: string | null;
+  theme_preference: string | null;
+  motion_enabled: boolean;
+  website?: string;
+  location?: string;
 }
 
 export type AuthEvent = {
@@ -35,110 +45,114 @@ export type AuthEvent = {
 };
 
 export type AuthEventType = 
-  | 'AUTH_STATE_CHANGE'
-  | 'AUTH_LINKING_REQUIRED'
-  | 'AUTH_SESSION_EXPIRED'
-  | 'AUTH_SIGN_OUT';
+  | "AUTH_SIGNED_IN"
+  | "AUTH_SIGNED_OUT"
+  | "AUTH_USER_UPDATED"
+  | "AUTH_SESSION_UPDATED"
+  | "AUTH_PROFILE_UPDATED"
+  | "AUTH_ERROR"
+  | "AUTH_LINKING_REQUIRED";
 
-// RBAC Types
-export type UserRole = 
-  | 'user'
-  | 'admin'
-  | 'super_admin'
-  | 'editor'
-  | 'moderator'
-  | 'guest';
-
-export type Permission = {
-  id: string;
-  name: string;
-  description: string;
-};
-
-// Logging Types - Convert from type to enum
+// Logging related types
 export enum LogLevel {
-  TRACE = 'TRACE',
-  DEBUG = 'DEBUG',
-  INFO = 'INFO',
-  WARN = 'WARN',
-  ERROR = 'ERROR',
-  FATAL = 'FATAL',
-  SILENT = 'SILENT',
-  SUCCESS = 'SUCCESS',
-  CRITICAL = 'CRITICAL'
+  TRACE = "trace",
+  DEBUG = "debug",
+  INFO = "info",
+  SUCCESS = "success",
+  WARN = "warn",
+  ERROR = "error", 
+  FATAL = "fatal",
+  CRITICAL = "critical",
+  SILENT = "silent"
 }
 
 export enum LogCategory {
-  SYSTEM = 'SYSTEM',
-  AUTH = 'AUTH',
-  UI = 'UI',
-  API = 'API',
-  DATABASE = 'DATABASE',
-  SECURITY = 'SECURITY',
-  PERFORMANCE = 'PERFORMANCE',
-  ANALYTICS = 'ANALYTICS',
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-  CHAT = 'CHAT'
+  ADMIN = "admin",
+  AUTH = "auth",
+  API = "api",
+  USER = "user",
+  UI = "ui",
+  APP = "app",
+  CHAT = "chat",
+  SYSTEM = "system",
+  THEME = "theme",
+  PERF = "perf",
+  DEFAULT = "default",
+  DATA = "data",
+  BRIDGE = "bridge",
+  CONTENT = "content",
+  NETWORK = "network",
+  DATABASE = "database",
+  SECURITY = "security",
+  PERFORMANCE = "performance", 
+  ANALYTICS = "analytics"
 }
 
-export type LogEvent = {
-  entry: LogEntry;
-};
-
-export type LogEntry = {
+export interface LogEntry {
   id: string;
   level: LogLevel;
   message: string;
+  timestamp: number;
   source: string;
   category: LogCategory;
-  timestamp: Date;
   details?: Record<string, unknown>;
-};
+}
 
-export type LogFilter = {
+export interface LogEvent {
+  entry: LogEntry;
+}
+
+export interface LogFilter {
   level?: LogLevel;
   source?: string;
   category?: LogCategory;
   search?: string;
-  from?: Date;
-  to?: Date;
-};
+  userId?: string;
+  startTime?: number;
+  endTime?: number;
+}
 
-// Map LogLevel to numeric values for comparison
-export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  [LogLevel.TRACE]: 0,
-  [LogLevel.DEBUG]: 1,
-  [LogLevel.INFO]: 2,
-  [LogLevel.WARN]: 3,
-  [LogLevel.ERROR]: 4,
-  [LogLevel.FATAL]: 5,
-  [LogLevel.SILENT]: 6,
-  [LogLevel.SUCCESS]: 7,
-  [LogLevel.CRITICAL]: 8
-};
+// Build types
+export interface Build {
+  id: string;
+  title: string;
+  description: string;
+  status: BuildStatus;
+  submittedBy: string;
+  userId: string;
+  userName: string;
+  complexity_score: number;
+  parts_count: number;
+  mods_count: number;
+  avatar_url?: string;
+  display_name?: string;
+  created_at: string;
+  createdAt: string;
+  updatedAt: string;
+  images?: string[];
+  parts?: BuildPart[];
+  mods?: BuildMod[];
+  reviews?: any[];
+}
 
-// Theme Types
-export type Theme = {
+export interface BuildPart {
+  id: string;
+  name: string;
+  quantity: number;
+  type: string;
+  notes?: string;
+}
+
+export interface BuildMod {
   id: string;
   name: string;
   description: string;
-  author: string;
-  version: string;
-  tokens: Record<string, ThemeToken>;
-  components?: Record<string, ComponentTokens>;
-  variables?: Record<string, string>;
-};
+  build_id: string;
+  complexity: number | null;
+  created_at: string;
+}
 
-export type ThemeToken = {
-  value: string;
-  type: string;
-};
+export type BuildStatus = "pending" | "approved" | "rejected" | "needs_revision";
 
-export type ComponentTokens = {
-  component_name: string;
-  styles: Record<string, string>;
-};
-
-// Content Types for Admin
-export type ContentStatus = 'published' | 'draft' | 'archived' | 'scheduled';
+// Content types
+export type ContentStatus = "published" | "draft" | "archived" | "scheduled";

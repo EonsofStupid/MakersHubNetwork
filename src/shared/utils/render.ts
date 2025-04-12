@@ -1,6 +1,45 @@
 
+import React from 'react';
+
 /**
- * Utility to convert an error to a plain object for logging or serializing
+ * Safely render unknown values as React nodes
+ */
+export function renderUnknownAsNode(value: unknown): React.ReactNode {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (value instanceof Error) {
+    return value.message + (value.cause ? ` (${String(value.cause)})` : '');
+  }
+
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (React.isValidElement(value)) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item, index) => (
+      <span key={index}>{renderUnknownAsNode(item)}</span>
+    ));
+  }
+
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch (e) {
+      return '[Object]';
+    }
+  }
+
+  return String(value);
+}
+
+/**
+ * Convert an error to a plain object for logging
  */
 export function errorToObject(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
@@ -8,75 +47,31 @@ export function errorToObject(error: unknown): Record<string, unknown> {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      cause: error.cause ? errorToObject(error.cause) : undefined,
     };
-  } else if (typeof error === 'string') {
+  }
+
+  if (typeof error === 'string') {
     return { message: error };
-  } else if (error && typeof error === 'object') {
+  }
+
+  if (typeof error === 'object' && error !== null) {
     return { ...error };
-  } else {
-    return { message: String(error) };
   }
+
+  return { unknown: String(error) };
 }
 
 /**
- * Safely stringifies data for debugging or logging
- * Handles circular references and complex objects
+ * Slugify a string for use in URLs or IDs
  */
-export function safeStringify(obj: unknown, indent = 2): string {
-  const cache = new Set();
-  return JSON.stringify(
-    obj,
-    (key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        if (cache.has(value)) {
-          return '[Circular Reference]';
-        }
-        cache.add(value);
-      }
-      return value;
-    },
-    indent
-  );
-}
-
-/**
- * Truncates text to a specified length, adding ellipsis if needed
- */
-export function truncateText(text: string, maxLength: number): string {
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength)}...`;
-}
-
-/**
- * Format a date nicely for display
- */
-export function formatDate(date: Date | string, options?: Intl.DateTimeFormatOptions): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  };
-  
-  return new Intl.DateTimeFormat(
-    'en-US', 
-    options || defaultOptions
-  ).format(dateObj);
-}
-
-/**
- * Check if a string is a valid URL
- */
-export function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch (error) {
-    return false;
-  }
+export function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
 }

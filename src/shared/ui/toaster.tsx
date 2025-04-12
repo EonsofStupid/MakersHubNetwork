@@ -1,65 +1,59 @@
 
+import * as React from "react"
 import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
-  type ToastProps,
-  ToastAction,
-} from "@/shared/ui/toast"
-import { useToast } from "@/shared/hooks/use-toast"
-import { CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react"
-import { cn } from "@/shared/utils/cn"
-import React from "react"
+  AlertCircle,
+  CheckCircle,
+  Info,
+  X,
+  XCircle,
+} from "lucide-react"
+
+import { ToastProps, ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription, ToastClose, ToastAction } from "@/shared/ui/toast"
+import { useToast, ToastVariant } from "@/hooks/use-toast"
 
 export function Toaster() {
   const { toasts } = useToast()
 
+  // Map variant to icon
+  const getIconForVariant = (variant?: ToastVariant) => {
+    switch (variant) {
+      case "success":
+        return <CheckCircle className="h-4 w-4" />;
+      case "destructive":
+        return <XCircle className="h-4 w-4" />;
+      case "warning":
+        return <AlertCircle className="h-4 w-4" />;
+      case "info":
+        return <Info className="h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, variant, icon, ...props }) {
-        // Determine icon based on variant
-        let IconComponent = null
-        let variantStyle = ""
-        
-        if (variant === "destructive") {
-          IconComponent = AlertCircle
-          variantStyle = "text-destructive"
-        } else if (variant === "success") {
-          IconComponent = CheckCircle
-          variantStyle = "text-green-500 dark:text-green-400"
-        } else if (variant === "info") {
-          IconComponent = Info
-          variantStyle = "text-blue-500 dark:text-blue-400"
-        } else if (variant === "warning") {
-          IconComponent = AlertTriangle
-          variantStyle = "text-amber-500 dark:text-amber-400"
-        }
+      {toasts.map(function ({ id, title, description, action, ...props }) {
+        const IconComponent = getIconForVariant(props.variant as ToastVariant);
         
         return (
-          <Toast key={id} {...props} variant={variant}>
-            <div className="flex gap-3">
-              {IconComponent && (
-                <div className={cn("mt-0.5", variantStyle)}>
-                  <IconComponent className="h-5 w-5" />
-                </div>
+          <Toast key={id} {...props}>
+            <div className="grid gap-1">
+              {title && (
+                <ToastTitle className="flex items-center gap-2">
+                  {IconComponent && <span className="mr-2">{IconComponent}</span>}
+                  {title}
+                </ToastTitle>
               )}
-              <div className="flex-1 gap-1">
-                {title && <ToastTitle>{title}</ToastTitle>}
-                {description && (
-                  <ToastDescription>{description}</ToastDescription>
-                )}
-              </div>
+              {description && (
+                <ToastDescription>{description}</ToastDescription>
+              )}
             </div>
-            
-            {action && <ToastAction altText="Action">{action}</ToastAction>}
+            {action}
             <ToastClose />
           </Toast>
-        )
+        );
       })}
       <ToastViewport />
     </ToastProvider>
-  )
+  );
 }

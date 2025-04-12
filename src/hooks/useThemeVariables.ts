@@ -1,56 +1,44 @@
 
-import { useEffect, useMemo } from 'react';
-import { useThemeStore } from '@/stores/theme/store';
-import { Theme } from '@/types/theme';
+import { useMemo } from 'react';
+import { useThemeStore } from '@/shared/stores/theme/store';
 
 /**
- * Hook to access and apply theme variables
+ * Hook for accessing theme variables
+ * @returns {Object} Theme variables and component-specific tokens
  */
 export function useThemeVariables() {
-  const currentTheme = useThemeStore(state => state.currentTheme);
+  const variables = useThemeStore(state => state.variables);
+  const componentTokens = useThemeStore(state => state.componentTokens);
+  const theme = useThemeStore(state => state.theme);
+  const tokens = useThemeStore(state => state.tokens);
 
-  // Convert theme tokens to CSS variables
   const cssVariables = useMemo(() => {
-    if (!currentTheme) return {};
-
-    const variables: Record<string, string> = {};
-
-    // Process design tokens
-    Object.entries(currentTheme.design_tokens).forEach(([key, token]) => {
-      variables[`--${key}`] = token.value;
-    });
-
-    // Process component tokens (if needed)
-    Object.entries(currentTheme.component_tokens).forEach(([componentName, component]) => {
-      Object.entries(component.tokens).forEach(([tokenName, value]) => {
-        variables[`--${componentName}-${tokenName}`] = value;
+    // Create a dictionary of CSS variables from theme tokens
+    const cssVars: Record<string, string> = {};
+    if (tokens && Array.isArray(tokens)) {
+      tokens.forEach((token: any) => {
+        if (token && typeof token.token_name === 'string') {
+          cssVars[token.token_name] = token.token_value as string;
+        }
       });
-    });
-
-    return variables;
-  }, [currentTheme]);
-
-  // Apply CSS variables to document root
-  useEffect(() => {
-    if (Object.keys(cssVariables).length === 0) return;
-
-    // Apply variables to :root
-    const root = document.documentElement;
+    }
     
-    Object.entries(cssVariables).forEach(([property, value]) => {
-      root.style.setProperty(property, value);
-    });
-
-    return () => {
-      // Cleanup
-      Object.keys(cssVariables).forEach(property => {
-        root.style.removeProperty(property);
+    // Add component-specific styles
+    if (componentTokens && Array.isArray(componentTokens)) {
+      componentTokens.forEach((component: any) => {
+        if (component && typeof component.component_name === 'string') {
+          // Component-specific variables would be prefixed with component name
+          Object.entries(component.styles || {}).forEach(([key, value]) => {
+            cssVars[`${component.component_name}-${key}`] = value as string;
+          });
+        }
       });
-    };
-  }, [cssVariables]);
+    }
+    
+    return cssVars;
+  }, [tokens, componentTokens]);
 
-  return {
-    theme: currentTheme,
-    cssVariables
-  };
+  return { theme, variables, cssVariables };
 }
+
+export default useThemeVariables;

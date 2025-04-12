@@ -15,36 +15,36 @@ export const adminNavigation: NavigationItemType[] = [
     name: "Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
-    requiredRole: ["admin", "super_admin"]
+    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
   },
   {
     name: "Users",
     href: "/admin/users",
     icon: User,
-    requiredRole: ["admin", "super_admin"]
+    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
   },
   {
     name: "Content",
     href: "/admin/content",
     icon: FileText,
-    requiredRole: ["admin", "super_admin", "editor"]
+    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.EDITOR]
   },
   {
     name: "Editor",
     href: "/admin/editor",
     icon: Edit,
-    requiredRole: ["admin", "super_admin", "editor"]
+    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.EDITOR]
   },
   {
     name: "Products",
     href: "/admin/products",
     icon: Box,
-    requiredRole: ["admin", "super_admin"]
+    requiredRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
   },
   {
     name: "Settings",
     href: "/admin/settings",
     icon: Settings,
-    requiredRole: ["super_admin"]
+    requiredRole: [UserRole.SUPER_ADMIN]
   }
 ];
