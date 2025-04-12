@@ -1,3 +1,3 @@
 
-// Re-export from components/ui/slider
-export { Slider } from "@/components/ui/slider";
+// Re-export slider component from shadcn
+export { Slider } from '@/components/ui/slider';

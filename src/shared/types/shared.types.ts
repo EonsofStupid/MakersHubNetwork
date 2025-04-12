@@ -353,3 +353,55 @@ export interface ReviewDraft {
   categories: string[];
   image_urls?: string[];
 }
+
+// Theme types as string literals
+export type ThemeStatus = 'draft' | 'published' | 'archived';
+
+export const ThemeStatus = {
+  DRAFT: 'draft' as ThemeStatus,
+  PUBLISHED: 'published' as ThemeStatus,
+  ARCHIVED: 'archived' as ThemeStatus
+} as const;
+
+// Theme context as string literals
+export type ThemeContext = 'site' | 'admin' | 'app' | 'editor';
+
+export const ThemeContext = {
+  SITE: 'site' as ThemeContext,
+  ADMIN: 'admin' as ThemeContext,
+  APP: 'app' as ThemeContext,
+  EDITOR: 'editor' as ThemeContext
+} as const;
+
+// API key type as string literal
+export type ApiKeyType = 'openai' | 'stability' | 'replicate' | 'custom';
+
+export const ApiKeyType = {
+  OPENAI: 'openai' as ApiKeyType,
+  STABILITY: 'stability' as ApiKeyType,
+  REPLICATE: 'replicate' as ApiKeyType,
+  CUSTOM: 'custom' as ApiKeyType
+} as const;
+
+// Part status as string literal
+export type PartStatus = 'draft' | 'published' | 'archived' | 'pending_review';
+
+export const PartStatus = {
+  DRAFT: 'draft' as PartStatus,
+  PUBLISHED: 'published' as PartStatus,
+  ARCHIVED: 'archived' as PartStatus,
+  PENDING_REVIEW: 'pending_review' as PartStatus
+} as const;
+
+// Workflow field type as string literal
+export type WorkflowFieldType = 'text' | 'number' | 'boolean' | 'select' | 'multi-select' | 'date' | 'file';
+
+export const WorkflowFieldType = {
+  TEXT: 'text' as WorkflowFieldType,
+  NUMBER: 'number' as WorkflowFieldType,
+  BOOLEAN: 'boolean' as WorkflowFieldType,
+  SELECT: 'select' as WorkflowFieldType,
+  MULTI_SELECT: 'multi-select' as WorkflowFieldType,
+  DATE: 'date' as WorkflowFieldType,
+  FILE: 'file' as WorkflowFieldType
+} as const;

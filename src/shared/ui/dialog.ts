@@ -1,6 +1,6 @@
 
-// Re-export from components/ui/dialog
-export { 
+// Re-export dialog component from shadcn
+export {
   Dialog,
   DialogClose,
   DialogContent,
@@ -9,4 +9,4 @@ export {
   DialogHeader,
   DialogTitle,
   DialogTrigger
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';

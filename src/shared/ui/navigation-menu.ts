@@ -1,11 +1,13 @@
 
-// Re-export from components/ui/navigation-menu
-export { 
+// Re-export navigation-menu component from shadcn
+export {
   NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
   NavigationMenuContent,
-  NavigationMenuTrigger,
+  NavigationMenuIndicator,
+  NavigationMenuItem,
   NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuViewport,
   navigationMenuTriggerStyle
-} from "@/components/ui/navigation-menu";
+} from '@/components/ui/navigation-menu';

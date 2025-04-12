@@ -1,6 +1,6 @@
 
-// Re-export from components/ui/sheet
-export { 
+// Re-export sheet component from shadcn
+export {
   Sheet,
   SheetClose,
   SheetContent,
@@ -9,4 +9,4 @@ export {
   SheetHeader,
   SheetTitle,
   SheetTrigger
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet';

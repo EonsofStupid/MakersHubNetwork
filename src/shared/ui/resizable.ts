@@ -1,7 +1,7 @@
 
-// Re-export from components/ui/resizable
-export { 
+// Re-export resizable component from shadcn
+export {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup
-} from "@/components/ui/resizable";
+} from '@/components/ui/resizable';

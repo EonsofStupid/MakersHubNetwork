@@ -1,6 +1,6 @@
 
-// Re-export from components/ui/radio-group
-export { 
+// Re-export radio-group component from shadcn
+export {
   RadioGroup,
   RadioGroupItem
-} from "@/components/ui/radio-group";
+} from '@/components/ui/radio-group';

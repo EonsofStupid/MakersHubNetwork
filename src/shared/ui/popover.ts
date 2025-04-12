@@ -1,8 +1,8 @@
 
-// Re-export from components/ui/popover
-export { 
+// Re-export popover component from shadcn
+export {
   Popover,
   PopoverClose,
   PopoverContent,
   PopoverTrigger
-} from "@/components/ui/popover";
+} from '@/components/ui/popover';

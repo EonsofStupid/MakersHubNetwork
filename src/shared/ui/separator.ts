@@ -1,3 +1,3 @@
 
-// Re-export from components/ui/separator
-export { Separator } from "@/components/ui/separator";
+// Re-export separator component from shadcn
+export { Separator } from '@/components/ui/separator';

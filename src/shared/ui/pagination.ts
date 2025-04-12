@@ -1,6 +1,6 @@
 
-// Re-export from components/ui/pagination
-export { 
+// Re-export pagination component from shadcn
+export {
   Pagination,
   PaginationContent,
   PaginationEllipsis,
@@ -8,4 +8,4 @@ export {
   PaginationLink,
   PaginationNext,
   PaginationPrevious
-} from "@/components/ui/pagination";
+} from '@/components/ui/pagination';

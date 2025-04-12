@@ -1,21 +1,19 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { authBridge } from '@/bridges/AuthBridge';
-import { User, UserProfile, AuthStatus, UserRole } from '@/shared/types';
+import { User, UserProfile, AuthStatus, UserRole } from '@/shared/types/shared.types';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
-  const [status, setStatus] = useState<AuthStatus>({
-    isAuthenticated: false,
-    isLoading: true
-  });
+  const [status, setStatus] = useState<AuthStatus>(AuthStatus.IDLE);
 
   // Initialize auth data and subscribe to changes
   useEffect(() => {
     const init = async () => {
       try {
+        setStatus(AuthStatus.LOADING);
         const session = await authBridge.getCurrentSession();
         
         if (session?.user) {
@@ -31,33 +29,21 @@ export function useAuth() {
             setRoles(Array.isArray(userRoles) ? userRoles as UserRole[] : []);
           }
           
-          setStatus({
-            isAuthenticated: true,
-            isLoading: false
-          });
+          setStatus(AuthStatus.AUTHENTICATED);
         } else {
-          setStatus({
-            isAuthenticated: false,
-            isLoading: false
-          });
+          setStatus(AuthStatus.UNAUTHENTICATED);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        setStatus({
-          isAuthenticated: false,
-          isLoading: false
-        });
+        setStatus(AuthStatus.ERROR);
       }
     };
 
     // Subscribe to auth state changes
-    const unsubscribe = authBridge.subscribeToEvent('AUTH_STATE_CHANGE', (event) => {
+    const unsubscribe = authBridge.subscribeToAuthEvents((event) => {
       if (event?.type === 'SIGNED_IN' && event.data?.user) {
         setUser(event.data.user);
-        setStatus({
-          isAuthenticated: true,
-          isLoading: false
-        });
+        setStatus(AuthStatus.AUTHENTICATED);
         
         // Fetch profile when user signs in
         if (event.data.user.id) {
@@ -75,10 +61,7 @@ export function useAuth() {
         setUser(null);
         setProfile(null);
         setRoles([]);
-        setStatus({
-          isAuthenticated: false,
-          isLoading: false
-        });
+        setStatus(AuthStatus.UNAUTHENTICATED);
       }
     });
 
@@ -95,7 +78,7 @@ export function useAuth() {
     if (!roles.length) return false;
     
     // Superadmin has all roles
-    if (roles.includes('superadmin')) return true;
+    if (roles.includes(UserRole.SUPER_ADMIN)) return true;
     
     if (Array.isArray(role)) {
       return role.some(r => roles.includes(r));
@@ -106,12 +89,12 @@ export function useAuth() {
 
   // Check if user is admin
   const isAdmin = useCallback((): boolean => {
-    return hasRole(['admin', 'superadmin']);
+    return hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
   }, [hasRole]);
 
   // Check if user is super admin
   const isSuperAdmin = useCallback((): boolean => {
-    return hasRole('superadmin');
+    return hasRole(UserRole.SUPER_ADMIN);
   }, [hasRole]);
 
   return {
