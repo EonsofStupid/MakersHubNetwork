@@ -8,14 +8,14 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@/shared/ui/table";
+import { Card } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
 import { formatDistance } from "date-fns";
 import { Eye, AlertCircle, CheckCircle, XCircle, RotateCcw } from "lucide-react";
-import { BuildStatus } from "@/admin/types/build.types";
+import { BuildStatus } from "@/shared/types/build.types";
 
 export function BuildsDataTable() {
   const navigate = useNavigate();
@@ -78,32 +78,32 @@ export function BuildsDataTable() {
                 <TableCell className="font-medium">
                   {build.title}
                   <div className="flex items-center text-xs text-muted-foreground mt-1">
-                    <span>{build.parts_count} parts</span>
+                    <span>{(build.parts || []).length} parts</span>
                     <span className="mx-2">•</span>
-                    <span>{build.mods_count} mods</span>
+                    <span>{(build.mods || []).length} mods</span>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {build.avatar_url ? (
+                    {build.user?.avatarUrl ? (
                       <img 
-                        src={build.avatar_url} 
-                        alt={build.display_name || "User"} 
+                        src={build.user.avatarUrl} 
+                        alt={build.user?.displayName || "User"} 
                         className="w-6 h-6 rounded-full"
                       />
                     ) : (
                       <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center text-xs">
-                        {(build.display_name || "U")[0]}
+                        {(build.user?.displayName || "U")[0]}
                       </div>
                     )}
-                    <span>{build.display_name || "Unknown User"}</span>
+                    <span>{build.user?.displayName || "Unknown User"}</span>
                   </div>
                 </TableCell>
                 <TableCell>
                   <BuildStatusBadge status={build.status} />
                 </TableCell>
                 <TableCell>
-                  <ComplexityIndicator score={build.complexity_score} />
+                  <ComplexityIndicator score={build.complexity || 0} />
                 </TableCell>
                 <TableCell>
                   {build.created_at ? (
@@ -137,13 +137,13 @@ export function BuildsDataTable() {
 function BuildStatusBadge({ status }: { status: BuildStatus }) {
   const getStatusDetails = (status: BuildStatus) => {
     switch (status) {
-      case 'pending':
+      case BuildStatus.PENDING:
         return { label: 'Pending Review', variant: 'outline', icon: <AlertCircle className="w-3 h-3 mr-1" /> };
-      case 'approved':
+      case BuildStatus.APPROVED:
         return { label: 'Approved', variant: 'default', icon: <CheckCircle className="w-3 h-3 mr-1" /> };
-      case 'rejected':
+      case BuildStatus.REJECTED:
         return { label: 'Rejected', variant: 'destructive', icon: <XCircle className="w-3 h-3 mr-1" /> };
-      case 'needs_revision':
+      case BuildStatus.NEEDS_REVISION:
         return { label: 'Needs Revision', variant: 'warning', icon: <RotateCcw className="w-3 h-3 mr-1" /> };
       default:
         return { label: status, variant: 'outline', icon: null };

@@ -6,9 +6,12 @@
 import fs from 'fs';
 import path from 'path';
 import glob from 'glob';
+import { UI_PATHS, TYPE_PATHS } from '../src/lib/paths';
 
 // Run through all TypeScript files
 const files = glob.sync('src/**/*.{ts,tsx}');
+
+let updatedCount = 0;
 
 files.forEach(file => {
   const content = fs.readFileSync(file, 'utf8');
@@ -19,6 +22,7 @@ files.forEach(file => {
     .replace(
       /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/components\/ui\/([^'"]+)['"]/g,
       (match, importClause, componentPath) => {
+        updatedCount++;
         return `import ${importClause} from '@/shared/ui/${componentPath}'`;
       }
     )
@@ -26,6 +30,7 @@ files.forEach(file => {
     .replace(
       /import\s+?([A-Za-z0-9_]+)\s+?from\s+?['"]@\/components\/ui\/([^'"]+)['"]/g,
       (match, importName, componentPath) => {
+        updatedCount++;
         return `import ${importName} from '@/shared/ui/${componentPath}'`;
       }
     )
@@ -33,13 +38,31 @@ files.forEach(file => {
     .replace(
       /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/types\/([^'"]+)['"]/g,
       (match, importClause, typesPath) => {
+        updatedCount++;
         return `import ${importClause} from '@/shared/types/${typesPath}'`;
+      }
+    )
+    // Fix shared.types imports
+    .replace(
+      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/types\/shared['"]/g,
+      (match, importClause) => {
+        updatedCount++;
+        return `import ${importClause} from '@/shared/types/shared.types'`;
+      }
+    )
+    // Fix build.types imports
+    .replace(
+      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/types\/build['"]/g,
+      (match, importClause) => {
+        updatedCount++;
+        return `import ${importClause} from '@/shared/types/build.types'`;
       }
     )
     // Fix store imports (theme)
     .replace(
       /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/stores\/theme\/([^'"]+)['"]/g,
       (match, importClause, storePath) => {
+        updatedCount++;
         return `import ${importClause} from '@/shared/stores/theme/${storePath}'`;
       }
     )
@@ -47,14 +70,8 @@ files.forEach(file => {
     .replace(
       /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/theme\/store\/([^'"]+)['"]/g,
       (match, importClause, storePath) => {
+        updatedCount++;
         return `import ${importClause} from '@/shared/stores/theme/${storePath}'`;
-      }
-    )
-    // Fix auth related imports
-    .replace(
-      /import\s+?(\{[^}]+\})\s+?from\s+?['"]@\/types\/shared['"]/g,
-      (match, importClause) => {
-        return `import ${importClause} from '@/shared/types/shared.types'`;
       }
     );
   
@@ -64,4 +81,4 @@ files.forEach(file => {
   }
 });
 
-console.log('Import update complete');
+console.log(`Import update complete. Updated ${updatedCount} imports.`);

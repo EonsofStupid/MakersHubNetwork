@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
 import { RatingStars } from './RatingStars';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/shared/ui/badge';
 import { ThumbsUp, ThumbsDown, Flag, Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ReviewCategory, BuildReview } from '@/admin/types/review.types';
+import { BuildReview } from '@/shared/types/shared.types';
+import { ReviewCategory } from '@/admin/types/review.types';
 import { ReviewImageUpload } from './ReviewImageUpload';
 
 interface ReviewCardProps {
@@ -61,9 +62,9 @@ export function ReviewCard({
   // If review object is provided, use its properties instead of individual props
   const reviewId = review?.id || id || '';
   const reviewTitle = review?.title || title || '';
-  const reviewContent = review?.body || content || '';
+  const reviewContent = review?.content || content || '';
   const reviewRating = review?.rating || rating || 0;
-  const reviewCategories = review?.category || categories || [];
+  const reviewCategories = review?.categories || categories || [];
   const reviewUserName = review?.reviewer_name || userName || 'Anonymous';
   const reviewDate = review?.created_at ? new Date(review.created_at).toLocaleDateString() : date || '';
   const reviewImages = review?.image_urls || images || [];

@@ -91,50 +91,7 @@ export interface LogFilter {
   endTime?: number;
 }
 
-// Build related types
-export enum BuildStatus {
-  PENDING = "pending",
-  APPROVED = "approved",
-  REJECTED = "rejected",
-  NEEDS_REVISION = "needs_revision",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  CANCELED = "canceled"
-}
-
-export interface BuildPart {
-  id: string;
-  name: string;
-  quantity: number;
-  notes?: string;
-}
-
-export interface BuildMod {
-  id: string;
-  name: string;
-  description?: string;
-  complexity?: number;
-}
-
-export interface Build {
-  id: string;
-  title: string;
-  description?: string;
-  status: BuildStatus;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  display_name?: string;
-  avatar_url?: string;
-  parts_count: number;
-  mods_count: number;
-  complexity_score: number;
-  parts?: BuildPart[];
-  mods?: BuildMod[];
-  images?: string[];
-}
-
-// Review related types
+// Content related types
 export enum ContentStatus {
   DRAFT = "draft",
   PENDING = "pending",
@@ -144,6 +101,7 @@ export enum ContentStatus {
   REJECTED = "rejected"
 }
 
+// Review related types
 export enum ReviewRating {
   AWFUL = 1,
   BAD = 2,
@@ -178,12 +136,12 @@ export interface BuildReview {
   status: ContentStatus;
   reviewer_name?: string; 
   category?: string[];
+  image_urls?: string[];
 }
 
 export interface ReviewStats {
   totalReviews: number;
   avgRating: number;
-  averageRating?: number; // Added for backward compatibility
   totalApproved: number;
   totalPending: number;
   totalRejected: number;
@@ -249,44 +207,6 @@ export interface AuthEvent {
   payload?: any;
 }
 
-// BuildAdmin store interface
-export interface BuildFilters {
-  status?: BuildStatus | 'all' | null;
-  dateRange?: {
-    from?: Date | null;
-    to?: Date | null;
-  } | null[];
-  search?: string;
-  sortBy?: 'newest' | 'oldest' | 'complexity';
-}
-
-export interface BuildPagination {
-  page: number;
-  perPage: number;
-  total: number;
-}
-
-export interface BuildAdminStore {
-  builds: Build[];
-  selectedBuild: Build | null;
-  filters: BuildFilters;
-  pagination: BuildPagination;
-  isLoading: boolean;
-  error: string | null;
-  
-  // Actions
-  fetchBuilds: () => Promise<void>;
-  fetchBuild: (id: string) => Promise<Build | null>;
-  fetchBuildById: (id: string) => Promise<void>;
-  approveBuild: (id: string, comment?: string) => Promise<void>;
-  rejectBuild: (id: string, reason: string) => Promise<void>;
-  requestRevision: (id: string, feedback: string) => Promise<void>;
-  updateFilters: (filters: Partial<BuildFilters>) => void;
-  updatePagination: (pagination: Partial<BuildPagination>) => void;
-  searchBuilds: (term: string) => Promise<void>;
-  clearError: () => void;
-}
-
 // ReviewAdmin store interface
 export interface ReviewAdminStore {
   reviews: Review[];
@@ -300,13 +220,15 @@ export interface ReviewAdminStore {
     approved?: boolean | 'all';
     rating?: ReviewRating | 'all';
     sort?: 'newest' | 'oldest' | 'highest' | 'lowest';
+    approvedOnly?: boolean;
+    sortBy?: string;
   };
   
   // Actions
-  fetchReviews: () => Promise<void>;
+  fetchReviews: (buildId?: string) => Promise<void>;
   fetchReviewsByBuildId: (buildId: string) => Promise<void>;
   fetchPendingReviews: () => Promise<void>;
-  fetchReviewStats: () => Promise<void>;
+  fetchReviewStats: (buildId?: string) => Promise<void>;
   approveReview: (reviewId: string, message?: string) => Promise<void>;
   rejectReview: (reviewId: string, reason: string) => Promise<void>;
   updateFilters: (filters: any) => void;

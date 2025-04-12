@@ -2,31 +2,37 @@
 import { create } from 'zustand';
 import { 
   BuildAdminStore, 
-  BuildFilter, 
-  BuildPagination 
-} from '../types/build.types';
-import { Build, BuildStatus, BuildPart, BuildMod } from '@/shared/types/shared.types';
+  BuildFilters, 
+  BuildPagination,
+  Build,
+  BuildStatus,
+  BuildPart,
+  BuildMod 
+} from '@/shared/types/build.types';
 
 // Create the build admin store
 export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
   // State
   builds: [],
   selectedBuild: null,
-  selectedBuildId: null,
   isLoading: false,
   error: null,
   
   // Filters and pagination
   filters: {
-    status: 'all',
-    dateRange: [null, null],
+    status: null,
+    dateRange: {
+      from: undefined,
+      to: undefined
+    },
     sortBy: 'newest',
   },
   
   pagination: {
     page: 1,
-    perPage: 10,
+    pageSize: 10,
     total: 0,
+    totalPages: 1
   },
   
   // Fetch builds with filters and pagination
@@ -46,37 +52,31 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
           id: "build-1",
           title: "Voron 2.4 Custom Build",
           description: "My custom Voron 2.4 build with modified hot end",
-          status: "pending",
-          submittedBy: "maker42",
-          userId: "user-1",
-          userName: "John Maker",
-          complexity_score: 8.5,
-          parts_count: 57,
-          mods_count: 6,
-          display_name: "John Maker",
-          avatar_url: null,
+          status: BuildStatus.PENDING,
+          creator_id: "user-1",
           created_at: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          complexity: 8.5,
+          user: {
+            displayName: "John Maker",
+            avatarUrl: null
+          }
         },
         {
           id: "build-2",
           title: "Ender 3 V2 Upgrades",
           description: "Heavily modified Ender 3 with linear rails",
-          status: "approved",
-          submittedBy: "printmaster",
-          userId: "user-2",
-          userName: "Print Master",
-          complexity_score: 5.2,
-          parts_count: 28,
-          mods_count: 4,
-          display_name: "Print Master",
-          avatar_url: null,
+          status: BuildStatus.APPROVED,
+          creator_id: "user-2",
           created_at: new Date(Date.now() - 86400000).toISOString(),
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          updatedAt: new Date(Date.now() - 86400000).toISOString(),
+          updated_at: new Date(Date.now() - 86400000).toISOString(),
+          complexity: 5.2,
+          user: {
+            displayName: "Print Master",
+            avatarUrl: null
+          }
         }
-      ] as Build[];
+      ];
       
       set({ 
         builds: mockBuilds,
@@ -86,21 +86,16 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
           total: mockBuilds.length
         }
       });
-    } catch (error) {
+    } catch (err) {
       set({ 
         isLoading: false, 
-        error: error instanceof Error ? error : new Error(String(error))
+        error: err instanceof Error ? err.message : String(err)
       });
     }
   },
   
   // Fetch a single build by ID
   fetchBuild: async (id: string) => {
-    return get().fetchBuildById(id);
-  },
-  
-  // Fetch a build by ID
-  fetchBuildById: async (id: string) => {
     try {
       set({ isLoading: true, error: null });
       
@@ -112,43 +107,42 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
         id,
         title: "Voron 2.4 Custom Build",
         description: "My custom Voron 2.4 build with modified hot end and linear rails",
-        status: "pending",
-        submittedBy: "maker42",
-        userId: "user-1",
-        userName: "John Maker",
-        complexity_score: 8.5,
-        parts_count: 57,
-        mods_count: 6,
-        display_name: "John Maker",
-        avatar_url: null,
+        status: BuildStatus.PENDING,
+        creator_id: "user-1",
         created_at: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        images: [
+        updated_at: new Date().toISOString(),
+        complexity: 8.5,
+        user: {
+          displayName: "John Maker",
+          avatarUrl: null
+        },
+        image_urls: [
           "https://via.placeholder.com/600x400?text=Build+Image+1",
           "https://via.placeholder.com/600x400?text=Build+Image+2"
         ],
         parts: [
-          { id: "part-1", name: "Hot End", quantity: 1, type: "component", notes: "Mosquito Hot End" },
-          { id: "part-2", name: "Linear Rails", quantity: 4, type: "component", notes: "MGN12H Rails" },
-          { id: "part-3", name: "Stepper Motors", quantity: 5, type: "component", notes: "LDO Motors" }
+          { id: "part-1", name: "Hot End", quantity: 1, notes: "Mosquito Hot End", build_id: id, created_at: new Date().toISOString() },
+          { id: "part-2", name: "Linear Rails", quantity: 4, notes: "MGN12H Rails", build_id: id, created_at: new Date().toISOString() },
+          { id: "part-3", name: "Stepper Motors", quantity: 5, notes: "LDO Motors", build_id: id, created_at: new Date().toISOString() }
         ],
         mods: [
           { 
             id: "mod-1", 
             name: "Stealthburner", 
-            description: "Modified Stealthburner print head", 
+            description: "Modified Stealthburner print head",
             build_id: id,
-            complexity: 4,
-            created_at: new Date().toISOString()
+            status: BuildStatus.APPROVED,
+            created_at: new Date().toISOString(),
+            complexity: 4
           },
           { 
             id: "mod-2", 
             name: "Klicky Probe", 
             description: "Added Klicky auto probe", 
             build_id: id,
-            complexity: 3,
-            created_at: new Date().toISOString()
+            status: BuildStatus.APPROVED,
+            created_at: new Date().toISOString(),
+            complexity: 3
           }
         ]
       };
@@ -157,22 +151,19 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
         selectedBuild: mockBuild,
         isLoading: false
       });
-    } catch (error) {
+      
+      return mockBuild;
+    } catch (err) {
       set({ 
         isLoading: false, 
-        error: error instanceof Error ? error : new Error(String(error))
+        error: err instanceof Error ? err.message : String(err)
       });
+      return null;
     }
   },
   
-  // Select a build
-  selectBuild: (id: string) => {
-    set({ selectedBuildId: id });
-    get().fetchBuildById(id);
-  },
-  
   // Update filters
-  updateFilters: (filters: Partial<BuildFilter>) => {
+  updateFilters: (filters: Partial<BuildFilters>) => {
     set(state => ({
       filters: { ...state.filters, ...filters },
       pagination: { ...state.pagination, page: 1 } // Reset to first page on filter change
@@ -183,9 +174,19 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
   },
   
   // Update pagination
-  updatePagination: (pagination: Partial<BuildPagination>) => {
+  changePage: (page: number) => {
     set(state => ({
-      pagination: { ...state.pagination, ...pagination }
+      pagination: { ...state.pagination, page }
+    }));
+    
+    // Refetch with new pagination
+    get().fetchBuilds();
+  },
+  
+  // Change page size
+  changePageSize: (size: number) => {
+    set(state => ({
+      pagination: { ...state.pagination, pageSize: size, page: 1 }
     }));
     
     // Refetch with new pagination
@@ -193,7 +194,7 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
   },
   
   // Approve a build
-  approveBuild: async (id: string, comment: string) => {
+  approveBuild: async (id: string, comment?: string) => {
     try {
       set({ isLoading: true });
       
@@ -204,23 +205,23 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
       const currentBuild = get().selectedBuild;
       if (currentBuild && currentBuild.id === id) {
         set({ 
-          selectedBuild: { ...currentBuild, status: "approved" as BuildStatus },
+          selectedBuild: { ...currentBuild, status: BuildStatus.APPROVED },
         });
       }
       
       // Refetch builds to update the list
       get().fetchBuilds();
       set({ isLoading: false });
-    } catch (error) {
+    } catch (err) {
       set({ 
         isLoading: false, 
-        error: error instanceof Error ? error : new Error(String(error))
+        error: err instanceof Error ? err.message : String(err)
       });
     }
   },
   
   // Reject a build
-  rejectBuild: async (id: string, comment: string) => {
+  rejectBuild: async (id: string, reason: string) => {
     try {
       set({ isLoading: true });
       
@@ -231,23 +232,23 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
       const currentBuild = get().selectedBuild;
       if (currentBuild && currentBuild.id === id) {
         set({ 
-          selectedBuild: { ...currentBuild, status: "rejected" as BuildStatus },
+          selectedBuild: { ...currentBuild, status: BuildStatus.REJECTED },
         });
       }
       
       // Refetch builds to update the list
       get().fetchBuilds();
       set({ isLoading: false });
-    } catch (error) {
+    } catch (err) {
       set({ 
         isLoading: false, 
-        error: error instanceof Error ? error : new Error(String(error))
+        error: err instanceof Error ? err.message : String(err)
       });
     }
   },
   
   // Request revision for a build
-  requestRevision: async (id: string, comment: string) => {
+  requestRevision: async (id: string, feedback: string) => {
     try {
       set({ isLoading: true });
       
@@ -258,17 +259,17 @@ export const useBuildAdminStore = create<BuildAdminStore>((set, get) => ({
       const currentBuild = get().selectedBuild;
       if (currentBuild && currentBuild.id === id) {
         set({ 
-          selectedBuild: { ...currentBuild, status: "needs_revision" as BuildStatus },
+          selectedBuild: { ...currentBuild, status: BuildStatus.NEEDS_REVISION },
         });
       }
       
       // Refetch builds to update the list
       get().fetchBuilds();
       set({ isLoading: false });
-    } catch (error) {
+    } catch (err) {
       set({ 
         isLoading: false, 
-        error: error instanceof Error ? error : new Error(String(error))
+        error: err instanceof Error ? err.message : String(err)
       });
     }
   },

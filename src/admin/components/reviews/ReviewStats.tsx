@@ -1,67 +1,65 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ReviewStats } from "@/admin/types/review.types";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Star } from 'lucide-react';
+import { Progress } from '@/shared/ui/progress';
+import { ReviewStats } from '@/shared/types/shared.types';
 
 interface ReviewStatsDisplayProps {
   stats: ReviewStats;
-  className?: string;
 }
 
-export function ReviewStatsDisplay({ stats, className }: ReviewStatsDisplayProps) {
-  // Calculate the percentage for each star rating
-  const calculatePercentage = (rating: number) => {
-    if (stats.totalReviews === 0) return 0;
-    return (stats.ratingDistribution[rating] / stats.totalReviews) * 100;
+export function ReviewStatsDisplay({ stats }: ReviewStatsDisplayProps) {
+  if (!stats) {
+    return null;
+  }
+  
+  const {
+    totalReviews,
+    avgRating,
+    ratingCounts
+  } = stats;
+  
+  // Calculate the percentage for each rating level
+  const getRatingPercentage = (count: number) => {
+    if (totalReviews === 0) return 0;
+    return (count / totalReviews) * 100;
   };
   
   return (
-    <Card className={cn("border-primary/20", className)}>
+    <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center justify-between">
-          <span>Reviews Summary</span>
-          <span className="text-2xl font-bold">{stats.averageRating.toFixed(1)}</span>
+        <CardTitle className="flex items-center gap-1 text-lg">
+          Rating Summary
         </CardTitle>
       </CardHeader>
+      
       <CardContent>
-        <div className="text-sm mb-1">{stats.totalReviews} total reviews</div>
+        <div className="mb-4 text-center">
+          <div className="flex items-center justify-center text-3xl font-bold mb-1">
+            {avgRating.toFixed(1)}
+            <Star className="h-5 w-5 ml-1 text-amber-500 fill-amber-500" />
+          </div>
+          <p className="text-sm text-muted-foreground">Based on {totalReviews} reviews</p>
+        </div>
         
-        <div className="space-y-2 mt-3">
-          {[5, 4, 3, 2, 1].map(rating => (
+        <div className="space-y-3">
+          {[5, 4, 3, 2, 1].map((rating) => (
             <div key={rating} className="flex items-center gap-2">
-              <div className="flex items-center w-8">
-                <span className="text-sm font-medium">{rating}</span>
-                <span className="text-amber-500 ml-1">★</span>
+              <div className="flex items-center gap-1 w-10">
+                <span>{rating}</span>
+                <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
               </div>
-              <Progress value={calculatePercentage(rating)} className="h-2" />
-              <span className="text-xs text-muted-foreground w-9">
-                {stats.ratingDistribution[rating] || 0}
-              </span>
+              <Progress 
+                value={getRatingPercentage(ratingCounts[rating as keyof typeof ratingCounts] || 0)} 
+                className="h-2"
+              />
+              <div className="text-xs w-8 text-right">
+                {ratingCounts[rating as keyof typeof ratingCounts] || 0}
+              </div>
             </div>
           ))}
         </div>
-        
-        {stats.totalReviews > 0 && (
-          <div className="mt-4 border-t pt-4 border-border/60">
-            <h4 className="text-sm font-medium mb-2">Top Categories</h4>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(stats.categoryBreakdown)
-                .sort(([, a], [, b]) => b - a)
-                .slice(0, 3)
-                .map(([category, count]) => (
-                  <div 
-                    key={category} 
-                    className="text-xs px-2 py-1 bg-primary/10 rounded-full"
-                  >
-                    {category} ({count})
-                  </div>
-                ))
-              }
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

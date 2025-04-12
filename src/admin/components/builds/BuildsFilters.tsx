@@ -15,7 +15,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Calendar } from "@/shared/ui/calendar";
 import { useBuildAdminStore } from "@/admin/store/buildAdmin.store";
-import { BuildStatus } from "@/shared/types/shared.types";
+import { BuildStatus } from "@/shared/types/build.types";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Filter, SortDesc, RotateCcw } from "lucide-react";
 
@@ -25,10 +25,10 @@ export function BuildsFilters() {
   
   const resetFilters = () => {
     updateFilters({
-      status: 'all',
+      status: null,
       dateRange: {
-        from: null,
-        to: null
+        from: undefined,
+        to: undefined
       },
       sortBy: 'newest'
     });
@@ -43,8 +43,14 @@ export function BuildsFilters() {
       
       {/* Status filter */}
       <Select 
-        value={status?.toString() || 'all'} 
-        onValueChange={(value) => updateFilters({ status: value as BuildStatus | 'all' })}
+        value={status || 'all'} 
+        onValueChange={(value) => {
+          if (value === 'all') {
+            updateFilters({ status: null });
+          } else {
+            updateFilters({ status: value as BuildStatus });
+          }
+        }}
       >
         <SelectTrigger className="w-[140px] h-9">
           <SelectValue placeholder="Status" />
@@ -78,16 +84,16 @@ export function BuildsFilters() {
           <Calendar
             initialFocus
             mode="range"
-            defaultMonth={dateRange?.from || undefined}
+            defaultMonth={dateRange?.from}
             selected={{
-              from: dateRange?.from || undefined,
-              to: dateRange?.to || undefined,
+              from: dateRange?.from,
+              to: dateRange?.to,
             }}
             onSelect={(range) => {
               updateFilters({
                 dateRange: {
-                  from: range?.from || null,
-                  to: range?.to || null
+                  from: range?.from,
+                  to: range?.to
                 }
               });
             }}
