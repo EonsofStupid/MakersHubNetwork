@@ -1,10 +1,11 @@
+
 import { useState } from "react";
-import { useAuthStore } from "@/stores/auth/store";
+import { useAuthStore } from "@/auth/store/auth.store";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/shared/utils/cn";
+import { Button } from "@/shared/ui/button";
 import { ProfileEditor } from "./ProfileEditor";
-import { ThemeDataStream } from "@/components/theme/ThemeDataStream";
+import { ThemeDataStream } from "@/app/theme/ThemeDataStream";
 import { User, Edit2, Link, Github, Twitter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
