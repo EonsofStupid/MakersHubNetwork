@@ -1,13 +1,12 @@
-
 import React, { ReactNode } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 import { AccessDenied } from './AccessDenied';
-import { AUTH_STATUS } from '@/shared/types/shared.types';
+import { AUTH_STATUS, UserRole } from '@/shared/types/shared.types';
 
 interface AdminAuthGuardProps {
   children: ReactNode;
-  requiredRole?: string | string[];
+  requiredRole?: UserRole | UserRole[];
 }
 
 /**
@@ -16,7 +15,7 @@ interface AdminAuthGuardProps {
  */
 export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({ 
   children, 
-  requiredRole = ['admin', 'superadmin'] 
+  requiredRole = ['admin', 'superadmin'] as UserRole[]
 }) => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const status = useAuthStore(state => state.status);
