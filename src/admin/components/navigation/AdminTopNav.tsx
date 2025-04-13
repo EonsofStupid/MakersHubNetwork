@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserMenu } from '@/auth/components/UserMenu';
+import { UserMenu } from '@/app/components/auth/UserMenu';
 import { TopNavItem } from './TopNavItem';
 import { RBACBridge } from '@/rbac/bridge';
 import { Button } from '@/shared/ui/button';

@@ -1,4 +1,3 @@
-
 // Import styles first to ensure proper cascade
 import '@/admin/styles/admin-core.css';
 import '@/admin/styles/impulse-admin.css';

@@ -1,30 +1,19 @@
+
 // Re-export all auth components and utilities
-import { authBridge } from './lib/AuthBridgeImpl';
-import { useAuthStore } from '@/stores/auth/auth.store';
+import { authBridge } from './bridge';
+import { useAuthStore } from './store/auth.store';
 
 // Export components
-export { GoogleLoginButton } from './components/GoogleLoginButton';
-export { LinkedAccountAlert } from './components/LinkedAccountAlert';
-export { AccountLinkingModal } from './components/AccountLinkingModal';
-export { UserMenu } from './components/UserMenu';
-export { UserMenuSheet } from './components/UserMenuSheet';
-export { RoleGate } from './components/RoleGate';
-export { 
-  withRoleProtection,
-  withAdminProtection,
-  withSuperAdminProtection,
-  withModeratorProtection,
-  withBuilderProtection,
-  withAuthProtection
-} from './components/WithRoleProtection';
-export { AuthGuard } from './components/AuthGuard';
-
-// Export bridge
 export { authBridge };
-
-// Export hooks
 export { useAuthStore };
 
-// Export utilities
-export * from './utils/hasRole';
-export * from './utils/redirect';
+// Export types
+export type { AuthBridge } from './bridge';
+
+// Export components from app/components/auth that should be accessible
+export { UserMenu } from '../app/components/auth/UserMenu';
+export { UserMenuSheet } from '../app/components/auth/UserMenuSheet';
+export { AuthSheet } from '../app/components/auth/AuthSheet';
+
+// Re-export UserAvatar for convenience
+export { UserAvatar } from '../shared/ui/UserAvatar';

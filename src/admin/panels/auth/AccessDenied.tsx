@@ -1,70 +1,47 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Shield, AlertTriangle, ArrowLeft } from 'lucide-react';
-import { UserRole } from '@/shared/types/shared.types';
+import { Button } from '@/shared/ui/button';
+import { Shield, Home } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { LOG_CATEGORY } from '@/shared/types/shared.types';
+import { useLogger } from '@/hooks/use-logger';
 
-interface AccessDeniedProps {
-  requiredRole?: UserRole | UserRole[];
-  message?: string;
-}
-
-export function AccessDenied({ 
-  requiredRole, 
-  message 
-}: AccessDeniedProps) {
-  const navigate = useNavigate();
+export const AccessDenied: React.FC = () => {
+  const logger = useLogger('AccessDenied', LOG_CATEGORY.AUTH);
   
-  // Format required role(s) for display
-  const formatRoles = () => {
-    if (!requiredRole) return '';
-    
-    if (Array.isArray(requiredRole)) {
-      return requiredRole.join(' or ');
-    }
-    
-    return requiredRole;
-  };
+  // Log access denied
+  React.useEffect(() => {
+    logger.warn('Access denied to protected route');
+  }, [logger]);
   
-  const displayMessage = message || `You need ${formatRoles()} permissions to access this area.`;
-
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="max-w-md border-destructive/50">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="h-6 w-6 text-destructive" />
-            <CardTitle className="text-2xl">Access Denied</CardTitle>
-          </div>
-          <CardDescription>
-            {displayMessage}
+    <div className="flex items-center justify-center min-h-screen bg-muted/10 p-4">
+      <Card className="mx-auto w-full max-w-md">
+        <CardHeader className="bg-destructive/10 text-destructive">
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Access Denied
+          </CardTitle>
+          <CardDescription className="text-destructive/80">
+            You don't have permission to access this resource
           </CardDescription>
         </CardHeader>
-        <CardContent className="pb-6 pt-2">
-          <div className="space-y-4">
-            <div className="flex flex-col space-y-2 text-center p-4 border rounded-md bg-destructive/5">
-              <Shield className="h-10 w-10 text-destructive mx-auto" />
-              <p className="text-sm text-muted-foreground">
-                The requested page requires elevated permissions that your account doesn't have.
-              </p>
-            </div>
-            <div className="flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/')}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
+        <CardContent className="pt-6">
+          <p className="mb-6 text-muted-foreground">
+            If you believe this is an error, please contact your administrator
+            or try logging in with an account that has the necessary permissions.
+          </p>
+          <div className="flex justify-center">
+            <Button asChild variant="outline">
+              <Link to="/" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
                 Return to Home
-              </Button>
-              <Button onClick={() => navigate(-1)}>
-                Go Back
-              </Button>
-            </div>
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
     </div>
   );
-}
+};
