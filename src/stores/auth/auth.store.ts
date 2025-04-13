@@ -11,6 +11,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   error: string | null;
   isLoading: boolean;
+  initialized: boolean;
   
   // Session management
   initialize: () => Promise<void>;
@@ -19,6 +20,7 @@ export interface AuthState {
   // Authentication methods
   signIn: (provider?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  logout: () => Promise<void>; // Alias for signOut for backward compatibility
   
   // User profile methods
   updateUserProfile: (profile: Partial<UserProfile>) => Promise<void>;
@@ -53,6 +55,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   error: null,
   isLoading: false,
+  initialized: false,
 
   // Initialize auth state
   initialize: async () => {
@@ -67,7 +70,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: true,
           status: AuthStatus.AUTHENTICATED,
           roles: user?.roles || [],
-          isLoading: false
+          isLoading: false,
+          initialized: true
         });
         
         logger.info('User authenticated', LogCategory.AUTH, { details: { userId: user?.id } });
@@ -77,7 +81,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: false,
           status: AuthStatus.UNAUTHENTICATED,
           roles: [],
-          isLoading: false
+          isLoading: false,
+          initialized: true
         });
         
         logger.info('No authenticated user', LogCategory.AUTH);
@@ -92,7 +97,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         status: AuthStatus.ERROR,
         roles: [],
         error: error instanceof Error ? error.message : 'Authentication error',
-        isLoading: false
+        isLoading: false,
+        initialized: true
       });
     }
   },
@@ -195,6 +201,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false
       });
     }
+  },
+
+  // Alias for signOut for backward compatibility
+  logout: async () => {
+    return get().signOut();
   },
 
   // Update user profile

@@ -212,6 +212,7 @@ export interface UserProfile {
   social_links?: Record<string, string>;
   preferences?: Record<string, unknown>;
   last_login?: string;
+  user_metadata?: Record<string, unknown>;
 }
 
 // Theme related interfaces
