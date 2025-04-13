@@ -2,18 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '/shared/ui/label';
+import { Textarea } from '/shared/ui/textarea';
+import { Switch } from '/shared/ui/switch';
 import { LayoutRenderer } from './LayoutRenderer';
 import { useLayoutSkeleton } from '@/admin/hooks/useLayoutSkeleton';
 import { toast } from 'sonner';
 import { Save, Eye, Code, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner } from /shared/ui/spinner';
 import { useAtom } from 'jotai';
 import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
 
