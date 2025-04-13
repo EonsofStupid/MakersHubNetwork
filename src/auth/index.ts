@@ -3,16 +3,10 @@
 export * from './bridge';
 
 // Export hooks
-export * from './hooks/useAuth';
-
-// Export components
-export * from './components';
-
-// Export store
 export { useAuthStore } from './store/auth.store';
 
-// Re-export auth types
-export * from './auth-types';
+// Export components
+export { RoleGate, AdminGate, SuperAdminGate } from './components/RoleGate';
 
-// Export RBACBridge
+// Export RBAC Bridge
 export { RBACBridge } from '@/rbac/bridge';

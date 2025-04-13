@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 import { Button } from '@/shared/ui/button';
+import { AuthStatus } from '@/shared/types/shared.types';
 
 export default function MainNav() {
-  const { isAuthenticated, logout } = useAuthStore();
-  const user = useAuthStore(state => state.user);
+  const { isAuthenticated, logout, status, user } = useAuthStore();
   
   const handleLogout = async () => {
     await logout();

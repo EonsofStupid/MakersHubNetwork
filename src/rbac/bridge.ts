@@ -1,6 +1,5 @@
 
-import { UserRole } from '@/shared/types/shared.types';
-import * as rbac from '@/auth/rbac/rbac';
+import { UserRole, ROLES, Permission } from '@/shared/types/shared.types';
 
 /**
  * RBAC Bridge Implementation
@@ -41,26 +40,26 @@ class RBACBridgeImpl {
     const rolesToCheck = Array.isArray(role) ? role : [role];
     
     // Super admin has all roles
-    if (this.roles.includes('superadmin')) return true;
+    if (this.roles.includes(ROLES.SUPER_ADMIN)) return true;
     
     // Check for specific roles
     return rolesToCheck.some(r => this.roles.includes(r));
   }
 
   public hasAdminAccess(): boolean {
-    return this.hasRole(['admin', 'superadmin']);
+    return this.hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }
 
   public isSuperAdmin(): boolean {
-    return this.hasRole('superadmin');
+    return this.hasRole(ROLES.SUPER_ADMIN);
   }
 
   public isModerator(): boolean {
-    return this.hasRole(['moderator', 'admin', 'superadmin']);
+    return this.hasRole([ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }
 
   public isBuilder(): boolean {
-    return this.hasRole(['builder', 'admin', 'superadmin']);
+    return this.hasRole([ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }
 
   // Route and section access
@@ -70,10 +69,10 @@ class RBACBridgeImpl {
     
     // Define section permissions
     const sectionPermissions: Record<string, UserRole[]> = {
-      dashboard: ['admin', 'superadmin'],
-      users: ['admin', 'superadmin'],
-      content: ['admin', 'superadmin', 'moderator'],
-      settings: ['superadmin']
+      dashboard: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      users: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      content: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MODERATOR],
+      settings: [ROLES.SUPER_ADMIN]
     };
     
     const allowedRoles = sectionPermissions[section];
@@ -92,11 +91,11 @@ class RBACBridgeImpl {
 
   // Helper methods
   public getHighestRole(): UserRole {
-    if (this.hasRole('superadmin')) return 'superadmin';
-    if (this.hasRole('admin')) return 'admin';
-    if (this.hasRole('moderator')) return 'moderator';
-    if (this.hasRole('builder')) return 'builder';
-    return 'user';
+    if (this.hasRole(ROLES.SUPER_ADMIN)) return ROLES.SUPER_ADMIN;
+    if (this.hasRole(ROLES.ADMIN)) return ROLES.ADMIN;
+    if (this.hasRole(ROLES.MODERATOR)) return ROLES.MODERATOR;
+    if (this.hasRole(ROLES.BUILDER)) return ROLES.BUILDER;
+    return ROLES.USER;
   }
 
   public can(permission: string): boolean {

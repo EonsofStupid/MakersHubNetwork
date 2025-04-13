@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { UserProfile, AuthStatus, LogCategory, LogLevel, UserRole } from '@/shared/types/shared.types';
+import { UserProfile, AuthStatus, LogCategory, LogLevel, UserRole, ROLES } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 import { RBACBridge } from '@/rbac/bridge';
 
@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (storedUser) {
         const user = JSON.parse(storedUser) as UserProfile;
         const rolesStr = localStorage.getItem('user_roles');
-        const roles = rolesStr ? JSON.parse(rolesStr) as UserRole[] : ['user'];
+        const roles = rolesStr ? JSON.parse(rolesStr) as UserRole[] : [ROLES.USER];
         
         // Set roles in RBAC bridge
         RBACBridge.setRoles(roles);
@@ -114,13 +114,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ status: AuthStatus.LOADING, isLoading: true });
       
       // Mock admin authentication for testing
-      let roles: UserRole[] = ['user'];
+      let roles: UserRole[] = [ROLES.USER];
       
       // Admin testing credentials
       if (email === 'admin@example.com' && password === 'admin123') {
-        roles = ['admin'];
+        roles = [ROLES.ADMIN];
       } else if (email === 'superadmin@example.com' && password === 'super123') {
-        roles = ['superadmin'];
+        roles = [ROLES.SUPER_ADMIN];
       }
       
       // Demo implementation - in a real app, call an API
@@ -236,6 +236,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         user: demoUser,
         profile: demoUser,
+        roles: [ROLES.USER],
         isAuthenticated: true,
         status: AuthStatus.AUTHENTICATED,
         sessionToken: 'demo_token',

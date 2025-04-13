@@ -102,4 +102,4 @@ class AuthBridgeImpl {
   }
 }
 
-export const authBridge = new AuthBridgeImpl();
+export const AuthBridge = new AuthBridgeImpl();
