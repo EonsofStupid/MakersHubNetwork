@@ -1,19 +1,30 @@
-import { UserRole, ROLES, RBAC as SharedRBAC } from '@/shared/types/SharedTypes';
+
+import { UserRole, ROLES } from '@/shared/types/shared.types';
 
 // Re-export shared types
-export { UserRole, ROLES };
+export type { UserRole };
+export { ROLES };
 
 // Admin section type
 export type AdminSection = 'dashboard' | 'users' | 'content' | 'settings' | 'system';
 
 // Role labels for UI display
 export const ROLE_LABELS: Record<UserRole, string> = {
-  [ROLES.SUPERADMIN]: 'Super Admin',
+  [ROLES.SUPER_ADMIN]: 'Super Admin',
   [ROLES.ADMIN]: 'Admin',
   [ROLES.MODERATOR]: 'Moderator',
   [ROLES.BUILDER]: 'Builder',
   [ROLES.USER]: 'User',
   [ROLES.GUEST]: 'Guest',
+};
+
+// Section permissions
+export const SECTION_PERMISSIONS: Record<AdminSection, UserRole[]> = {
+  dashboard: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  users: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  content: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MODERATOR],
+  settings: [ROLES.SUPER_ADMIN],
+  system: [ROLES.SUPER_ADMIN]
 };
 
 // RBAC Hook return type
@@ -28,4 +39,4 @@ export interface RBACHook {
   canAccessAdminSection: (section: AdminSection) => boolean;
   getRoleLabels: () => Record<UserRole, string>;
   roles: UserRole[];
-} 
+}

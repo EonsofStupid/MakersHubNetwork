@@ -1,54 +1,63 @@
+
 import { useCallback } from 'react';
-import { UserRole } from '@/shared/types/SharedTypes';
-import { useAuthStore } from '@/stores/auth/auth.store';
+import { UserRole } from '@/shared/types/shared.types';
+import { useAuthStore } from '@/auth/store/auth.store';
 import * as rbac from './rbac';
-import { AdminSection, RBACHook } from './types/RBACTypes';
+import { RBACBridge } from '@/rbac/bridge';
 
 /**
  * Hook for role-based access control
  * This hook provides a clean interface to RBAC functionality
- * while maintaining separation from authentication implementation
  */
-export function useRbac(): RBACHook {
-  // Get roles from auth store - this is the only coupling point
-  const roles = useAuthStore(state => state.roles);
-  
-  // Wrap RBAC functions to use current user's roles
+export function useRbac() {
+  // Get the hasRole function from RBACBridge
   const hasRole = useCallback((role: UserRole | UserRole[]) => {
-    return rbac.hasRole(roles, role);
-  }, [roles]);
+    return RBACBridge.hasRole(role);
+  }, []);
   
+  // Get the hasAdminAccess function from RBACBridge
   const hasAdminAccess = useCallback(() => {
-    return rbac.hasAdminAccess(roles);
-  }, [roles]);
+    return RBACBridge.hasAdminAccess();
+  }, []);
   
+  // Get the isSuperAdmin function from RBACBridge
   const isSuperAdmin = useCallback(() => {
-    return rbac.isSuperAdmin(roles);
-  }, [roles]);
+    return RBACBridge.isSuperAdmin();
+  }, []);
   
+  // Get the isModerator function from RBACBridge
   const isModerator = useCallback(() => {
-    return rbac.isModerator(roles);
-  }, [roles]);
+    return RBACBridge.isModerator();
+  }, []);
   
+  // Get the isBuilder function from RBACBridge
   const isBuilder = useCallback(() => {
-    return rbac.isBuilder(roles);
-  }, [roles]);
+    return RBACBridge.isBuilder();
+  }, []);
   
+  // Get the getHighestRole function
   const getHighestRole = useCallback(() => {
+    const roles = RBACBridge.getRoles();
     return rbac.getHighestRole(roles);
-  }, [roles]);
+  }, []);
   
+  // Get the hasElevatedPrivileges function
   const hasElevatedPrivileges = useCallback(() => {
-    return rbac.hasElevatedPrivileges(roles);
-  }, [roles]);
+    return hasAdminAccess();
+  }, [hasAdminAccess]);
   
-  const canAccessAdminSection = useCallback((section: AdminSection) => {
-    return rbac.canAccessAdminSection(roles, section);
-  }, [roles]);
+  // Get the canAccessAdminSection function
+  const canAccessAdminSection = useCallback((section: string) => {
+    return RBACBridge.canAccessAdminSection(section);
+  }, []);
   
+  // Get the getRoleLabels function
   const getRoleLabels = useCallback(() => {
     return rbac.getRoleLabels();
   }, []);
+  
+  // Get the roles from the RBAC bridge
+  const roles = RBACBridge.getRoles();
   
   return {
     hasRole,
@@ -62,4 +71,4 @@ export function useRbac(): RBACHook {
     getRoleLabels,
     roles
   };
-} 
+}

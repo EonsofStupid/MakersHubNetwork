@@ -5,6 +5,7 @@ import { cn } from '@/shared/utils/cn';
 import { RBACBridge } from '@/rbac/bridge';
 import { Button } from '@/shared/ui/button';
 import { LayoutDashboard, Users, Settings, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { UserRole, ROLES } from '@/shared/types/shared.types';
 
 /**
  * AdminSidebar component
@@ -20,25 +21,25 @@ export const AdminSidebar: React.FC = () => {
       label: 'Dashboard',
       path: '/admin',
       icon: LayoutDashboard,
-      requiredRole: ['admin', 'superadmin'] as const
+      requiredRole: [ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[]
     },
     {
       label: 'Users',
       path: '/admin/users',
       icon: Users,
-      requiredRole: ['admin', 'superadmin'] as const
+      requiredRole: [ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[]
     },
     {
       label: 'Content',
       path: '/admin/content',
       icon: FileText,
-      requiredRole: ['admin', 'superadmin'] as const
+      requiredRole: [ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[]
     },
     {
       label: 'Settings',
       path: '/admin/settings',
       icon: Settings,
-      requiredRole: ['superadmin'] as const
+      requiredRole: [ROLES.SUPER_ADMIN] as UserRole[]
     }
   ];
   

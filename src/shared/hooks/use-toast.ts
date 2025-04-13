@@ -1,11 +1,16 @@
 
-// Import from the Shadcn UI components
-import { useToast as useShadcnToast, toast as shadcnToast } from '@/shared/ui/use-toast';
-import { type ToastProps } from '@/shared/ui/toast';
+// Import from the Shadcn UI components via shared/ui to maintain boundary layers
+import { useToast, toast, ToastProps, ToastActionElement, ToastVariant } from '@/shared/ui/use-toast';
 
-// Re-export with the same interface
-export const useToast = useShadcnToast;
-export const toast = shadcnToast;
+// Export everything
+export { 
+  useToast, 
+  toast 
+};
 
 // Re-export types
-export type { ToastProps };
+export type { 
+  ToastProps, 
+  ToastActionElement,
+  ToastVariant
+};

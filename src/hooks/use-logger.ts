@@ -1,45 +1,72 @@
 
 import { useCallback } from 'react';
-import { LogLevel, LogCategory } from '@/shared/types/shared.types';
-import { LogDetails } from '@/shared/types/logging.types';
+import { LOG_LEVEL, LOG_CATEGORY, type LogLevel, type LogCategory } from '@/shared/types/shared.types';
 
-// Logger instance type
-interface Logger {
-  trace: (message: string, options?: { details?: LogDetails }) => void;
-  debug: (message: string, options?: { details?: LogDetails }) => void;
-  info: (message: string, options?: { details?: LogDetails }) => void;
-  success: (message: string, options?: { details?: LogDetails }) => void;
-  warn: (message: string, options?: { details?: LogDetails }) => void;
-  error: (message: string, options?: { details?: LogDetails }) => void;
-  fatal: (message: string, options?: { details?: LogDetails }) => void;
-  critical: (message: string, options?: { details?: LogDetails }) => void;
+interface LoggerOptions {
+  level?: LogLevel;
+  defaultDetails?: Record<string, unknown>;
 }
 
 /**
- * Custom hook for logging that provides a consistent interface
- * across the application and enforces proper typing
+ * Custom hook for structured logging
+ * 
+ * @param source Source of the log (component, service, etc.)
+ * @param category Log category
+ * @param options Additional options
+ * @returns Logger methods for various log levels
  */
-export function useLogger(source: string, category: LogCategory): Logger {
-  // Create a logger instance with a specific source and category
-  const createLogMethod = useCallback(
-    (level: LogLevel) => {
-      return (message: string, options?: { details?: LogDetails }): void => {
-        // In a real implementation, this would call a global logging service
-        console.log(`[${level}][${category}][${source}] ${message}`, options?.details || {});
-      };
-    },
-    [source, category]
-  );
-
-  // Return an object with methods for each log level
+export function useLogger(source: string, category: LogCategory, options: LoggerOptions = {}) {
+  const log = useCallback((level: LogLevel, message: string, details?: Record<string, unknown>) => {
+    const timestamp = new Date().toISOString();
+    const logObject = {
+      level,
+      source,
+      category,
+      message,
+      details: { 
+        ...options.defaultDetails, 
+        ...details 
+      },
+      timestamp,
+    };
+    
+    switch (level) {
+      case LOG_LEVEL.ERROR:
+        console.error(`[${level}] [${source}] ${message}`, logObject);
+        break;
+      case LOG_LEVEL.WARN:
+        console.warn(`[${level}] [${source}] ${message}`, logObject);
+        break;
+      case LOG_LEVEL.INFO:
+        console.info(`[${level}] [${source}] ${message}`, logObject);
+        break;
+      case LOG_LEVEL.SUCCESS:
+        console.info(`[${level}] [${source}] ${message}`, logObject);
+        break;
+      case LOG_LEVEL.DEBUG:
+        console.debug(`[${level}] [${source}] ${message}`, logObject);
+        break;
+      case LOG_LEVEL.TRACE:
+        console.debug(`[${level}] [${source}] ${message}`, logObject);
+        break;
+      default:
+        console.log(`[${level}] [${source}] ${message}`, logObject);
+    }
+    
+    // Here we would typically send logs to a logging service or bridge
+    // For now, we're just using console methods
+    
+    return logObject;
+  }, [source, category, options.defaultDetails]);
+  
   return {
-    trace: createLogMethod(LogLevel.TRACE),
-    debug: createLogMethod(LogLevel.DEBUG),
-    info: createLogMethod(LogLevel.INFO),
-    success: createLogMethod(LogLevel.SUCCESS),
-    warn: createLogMethod(LogLevel.WARN),
-    error: createLogMethod(LogLevel.ERROR),
-    fatal: createLogMethod(LogLevel.FATAL),
-    critical: createLogMethod(LogLevel.CRITICAL),
+    trace: (message: string, details?: Record<string, unknown>) => log(LOG_LEVEL.TRACE, message, details),
+    debug: (message: string, details?: Record<string, unknown>) => log(LOG_LEVEL.DEBUG, message, details),
+    info: (message: string, details?: Record<string, unknown>) => log(LOG_LEVEL.INFO, message, details),
+    success: (message: string, details?: Record<string, unknown>) => log(LOG_LEVEL.SUCCESS, message, details),
+    warn: (message: string, details?: Record<string, unknown>) => log(LOG_LEVEL.WARN, message, details),
+    error: (message: string, details?: Record<string, unknown>) => log(LOG_LEVEL.ERROR, message, details),
+    fatal: (message: string, details?: Record<string, unknown>) => log(LOG_LEVEL.FATAL, message, details),
+    log: (level: LogLevel, message: string, details?: Record<string, unknown>) => log(level, message, details),
   };
 }

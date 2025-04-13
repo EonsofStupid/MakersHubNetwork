@@ -1,7 +1,3 @@
 
-// Re-export avatar component from shadcn
-export {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/components/ui/avatar';
+// Re-export from components/ui/avatar
+export { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
