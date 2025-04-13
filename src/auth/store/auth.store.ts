@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { UserProfile, AuthStatus, LogCategory, LogLevel, UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserProfile, AuthStatus, LogCategory, LogLevel, UserRole } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 import { RBACBridge } from '@/rbac/bridge';
 
@@ -18,6 +18,9 @@ export interface AuthState {
   // Profile information
   profile: UserProfile | null;
 
+  // Role information
+  roles: UserRole[];
+  
   // Status and loading state
   error: Error | null;
   initialized: boolean;
@@ -45,6 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   initialized: false,
   isLoading: false,
+  roles: [],
 
   // Initialize the auth state from storage or server
   initialize: async () => {
@@ -57,7 +61,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (storedUser) {
         const user = JSON.parse(storedUser) as UserProfile;
         const rolesStr = localStorage.getItem('user_roles');
-        const roles = rolesStr ? JSON.parse(rolesStr) as UserRole[] : [ROLES.USER];
+        const roles = rolesStr ? JSON.parse(rolesStr) as UserRole[] : ['user'];
         
         // Set roles in RBAC bridge
         RBACBridge.setRoles(roles);
@@ -65,6 +69,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ 
           user,
           profile: user,
+          roles,
           isAuthenticated: true,
           status: AuthStatus.AUTHENTICATED,
           sessionToken: localStorage.getItem('auth_token'),
@@ -74,7 +79,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         
         logger.log(LogLevel.INFO, LogCategory.AUTH, 'User session restored', { 
           userId: user.id,
-          email: user.email
+          email: user.email,
+          roles
         });
       } else {
         set({
@@ -82,6 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           status: AuthStatus.UNAUTHENTICATED,
           initialized: true,
           isLoading: false,
+          roles: [],
         });
         
         logger.log(LogLevel.INFO, LogCategory.AUTH, 'No user session found');
@@ -91,7 +98,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         status: AuthStatus.ERROR, 
         error: error as Error,
         initialized: true,
-        isLoading: false
+        isLoading: false,
+        roles: [],
       });
       
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to initialize auth', { 
@@ -105,6 +113,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ status: AuthStatus.LOADING, isLoading: true });
       
+      // Mock admin authentication for testing
+      let roles: UserRole[] = ['user'];
+      
+      // Admin testing credentials
+      if (email === 'admin@example.com' && password === 'admin123') {
+        roles = ['admin'];
+      } else if (email === 'superadmin@example.com' && password === 'super123') {
+        roles = ['superadmin'];
+      }
+      
       // Demo implementation - in a real app, call an API
       const demoUser: UserProfile = {
         id: '123',
@@ -117,14 +135,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Store user in local storage for demo
       localStorage.setItem('auth_user', JSON.stringify(demoUser));
       localStorage.setItem('auth_token', 'demo_token');
-      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
+      localStorage.setItem('user_roles', JSON.stringify(roles));
       
       // Set roles in RBAC bridge
-      RBACBridge.setRoles([ROLES.USER]);
+      RBACBridge.setRoles(roles);
       
       set({
         user: demoUser,
         profile: demoUser,
+        roles,
         isAuthenticated: true,
         status: AuthStatus.AUTHENTICATED,
         sessionToken: 'demo_token',
@@ -134,14 +153,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User logged in', { 
         userId: demoUser.id, 
-        email: demoUser.email 
+        email: demoUser.email,
+        roles
       });
     } catch (error) {
       set({ 
         status: AuthStatus.ERROR,
         error: error as Error,
         isAuthenticated: false,
-        isLoading: false
+        isLoading: false,
+        roles: [],
       });
       
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Login failed', { 
@@ -167,6 +188,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         user: null,
         profile: null,
+        roles: [],
         isAuthenticated: false,
         status: AuthStatus.UNAUTHENTICATED,
         sessionToken: null,

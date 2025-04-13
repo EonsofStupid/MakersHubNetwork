@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
-import { useLogger } from '@/hooks/use-logger';
+import { useLogger } from '@/logging/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 
 interface AppInitializerProps {
@@ -10,7 +10,8 @@ interface AppInitializerProps {
 }
 
 export const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
-  const { initialize, isAuthenticated, roles } = useAuthStore();
+  const { initialize, isAuthenticated } = useAuthStore();
+  const { roles } = useAuthStore(state => ({ roles: state.roles }));
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
   
   // Initialize auth on mount

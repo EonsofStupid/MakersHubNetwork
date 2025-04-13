@@ -38,28 +38,48 @@ class RBACBridgeImpl {
 
   // Role checks
   public hasRole(role: UserRole | UserRole[]): boolean {
-    return rbac.hasRole(this.roles, role);
+    const rolesToCheck = Array.isArray(role) ? role : [role];
+    
+    // Super admin has all roles
+    if (this.roles.includes('superadmin')) return true;
+    
+    // Check for specific roles
+    return rolesToCheck.some(r => this.roles.includes(r));
   }
 
   public hasAdminAccess(): boolean {
-    return rbac.hasAdminAccess(this.roles);
+    return this.hasRole(['admin', 'superadmin']);
   }
 
   public isSuperAdmin(): boolean {
-    return rbac.isSuperAdmin(this.roles);
+    return this.hasRole('superadmin');
   }
 
   public isModerator(): boolean {
-    return rbac.isModerator(this.roles);
+    return this.hasRole(['moderator', 'admin', 'superadmin']);
   }
 
   public isBuilder(): boolean {
-    return rbac.isBuilder(this.roles);
+    return this.hasRole(['builder', 'admin', 'superadmin']);
   }
 
   // Route and section access
   public canAccessAdminSection(section: string): boolean {
-    return rbac.canAccessAdminSection(this.roles, section);
+    // Super admin can access all sections
+    if (this.isSuperAdmin()) return true;
+    
+    // Define section permissions
+    const sectionPermissions: Record<string, UserRole[]> = {
+      dashboard: ['admin', 'superadmin'],
+      users: ['admin', 'superadmin'],
+      content: ['admin', 'superadmin', 'moderator'],
+      settings: ['superadmin']
+    };
+    
+    const allowedRoles = sectionPermissions[section];
+    if (!allowedRoles) return false;
+    
+    return this.hasRole(allowedRoles);
   }
 
   public canAccessRoute(route: string): boolean {
@@ -72,7 +92,11 @@ class RBACBridgeImpl {
 
   // Helper methods
   public getHighestRole(): UserRole {
-    return rbac.getHighestRole(this.roles);
+    if (this.hasRole('superadmin')) return 'superadmin';
+    if (this.hasRole('admin')) return 'admin';
+    if (this.hasRole('moderator')) return 'moderator';
+    if (this.hasRole('builder')) return 'builder';
+    return 'user';
   }
 
   public can(permission: string): boolean {

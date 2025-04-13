@@ -11,7 +11,7 @@ export const ROLES = {
   GUEST: 'guest',
 } as const;
 
-export type UserRole = typeof ROLES[keyof typeof ROLES];
+export type UserRole = 'user' | 'admin' | 'superadmin' | 'moderator' | 'builder' | 'guest';
 
 /**
  * Permission definitions
@@ -32,15 +32,15 @@ export type Permission =
  * RBAC route policies
  */
 export const RBAC_POLICIES: Record<string, UserRole[]> = {
-  '/admin': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/admin/users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/admin/roles': [ROLES.SUPER_ADMIN],
-  '/admin/permissions': [ROLES.SUPER_ADMIN],
-  '/admin/keys': [ROLES.SUPER_ADMIN],
-  '/admin/analytics': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/projects/create': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/projects/edit': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  '/admin': ['admin', 'superadmin'],
+  '/admin/users': ['admin', 'superadmin'],
+  '/admin/roles': ['superadmin'],
+  '/admin/permissions': ['superadmin'],
+  '/admin/keys': ['superadmin'],
+  '/admin/analytics': ['admin', 'superadmin'],
+  '/projects/create': ['builder', 'admin', 'superadmin'],
+  '/projects/edit': ['builder', 'admin', 'superadmin'],
+  '/projects/delete': ['admin', 'superadmin'],
 };
 
 /**
@@ -80,13 +80,8 @@ export interface UserProfile {
   bio?: string;
   location?: string;
   website?: string;
-}
-
-// User type for backward compatibility
-export interface User extends UserProfile {
-  displayName?: string;
-  photoURL?: string;
-  emailVerified?: boolean;
+  theme_preference?: string;
+  motion_enabled?: boolean;
 }
 
 /**
@@ -103,18 +98,6 @@ export enum LogCategory {
   ADMIN = 'admin',
 }
 
-// For backward compatibility
-export const LOG_CATEGORY = {
-  AUTH: LogCategory.AUTH,
-  RBAC: LogCategory.RBAC,
-  API: LogCategory.API,
-  UI: LogCategory.UI,
-  SYSTEM: LogCategory.SYSTEM,
-  APP: LogCategory.APP,
-  CHAT: LogCategory.CHAT,
-  ADMIN: LogCategory.ADMIN,
-} as const;
-
 /**
  * Log levels
  */
@@ -129,32 +112,6 @@ export enum LogLevel {
   CRITICAL = 'critical',
   SILENT = 'silent',
 }
-
-// For backward compatibility
-export const LOG_LEVEL = {
-  DEBUG: LogLevel.DEBUG,
-  INFO: LogLevel.INFO,
-  WARN: LogLevel.WARN,
-  ERROR: LogLevel.ERROR,
-  SUCCESS: LogLevel.SUCCESS,
-  TRACE: LogLevel.TRACE,
-  FATAL: LogLevel.FATAL,
-  CRITICAL: LogLevel.CRITICAL,
-  SILENT: LogLevel.SILENT,
-} as const;
-
-// For backward compatibility
-export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  [LogLevel.TRACE]: 0,
-  [LogLevel.DEBUG]: 1,
-  [LogLevel.INFO]: 2,
-  [LogLevel.SUCCESS]: 3,
-  [LogLevel.WARN]: 4,
-  [LogLevel.ERROR]: 5,
-  [LogLevel.FATAL]: 6,
-  [LogLevel.CRITICAL]: 7,
-  [LogLevel.SILENT]: 8,
-};
 
 /**
  * Log entry interface
@@ -175,96 +132,6 @@ export interface LogEntry {
  */
 export interface LogEvent {
   entry: LogEntry;
-}
-
-/**
- * Log details interface
- */
-export interface LogDetails {
-  details?: Record<string, any>;
-  tags?: string[];
-  source?: string;
-  userId?: string;
-  email?: string;
-  error?: string | Error;
-  message?: string;
-}
-
-/**
- * Log filter interface
- */
-export interface LogFilter {
-  level?: LogLevel;
-  category?: LogCategory;
-  source?: string;
-  search?: string;
-  from?: Date;
-  to?: Date;
-}
-
-/**
- * Auth event type
- */
-export enum AuthEventType {
-  SIGNED_IN = 'SIGNED_IN',
-  SIGNED_OUT = 'SIGNED_OUT',
-  USER_UPDATED = 'USER_UPDATED',
-  PASSWORD_RESET = 'PASSWORD_RESET',
-  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
-  TOKEN_REFRESHED = 'TOKEN_REFRESHED',
-  SESSION_DELETED = 'SESSION_DELETED',
-}
-
-/**
- * Build status
- */
-export enum BuildStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELED = 'canceled',
-}
-
-/**
- * Build part
- */
-export enum BuildPart {
-  ENGINE = 'engine',
-  CHASSIS = 'chassis',
-  BODY = 'body',
-  ELECTRONICS = 'electronics',
-  INTERIOR = 'interior',
-}
-
-/**
- * Build mod
- */
-export enum BuildMod {
-  STANDARD = 'standard',
-  PERFORMANCE = 'performance',
-  LUXURY = 'luxury',
-  OFFROAD = 'offroad',
-  RACING = 'racing',
-}
-
-/**
- * User info
- */
-export interface UserInfo {
-  id: string;
-  name: string;
-  email: string;
-  roles: UserRole[];
-}
-
-/**
- * Base entity
- */
-export interface BaseEntity {
-  id: string;
-  created_at: string;
-  updated_at: string;
 }
 
 /**
@@ -301,14 +168,14 @@ export interface ThemeLogDetails {
 // RBAC helpers for backward compatibility
 export const RBAC = {
   roles: ROLES,
-  superAdmins: [ROLES.SUPER_ADMIN],
-  admins: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  moderators: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  builders: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  users: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  guests: [ROLES.GUEST],
-  authenticated: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  adminOnly: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  superAdmins: ['superadmin'] as UserRole[],
+  admins: ['admin', 'superadmin'] as UserRole[],
+  moderators: ['moderator', 'admin', 'superadmin'] as UserRole[],
+  builders: ['builder', 'admin', 'superadmin'] as UserRole[],
+  users: ['user', 'builder', 'moderator', 'admin', 'superadmin'] as UserRole[],
+  guests: ['guest'] as UserRole[],
+  authenticated: ['user', 'builder', 'moderator', 'admin', 'superadmin'] as UserRole[],
+  adminOnly: ['admin', 'superadmin'] as UserRole[],
 };
 
 // Path policies for backward compatibility

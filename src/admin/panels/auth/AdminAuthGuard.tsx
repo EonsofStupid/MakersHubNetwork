@@ -3,8 +3,8 @@ import React, { ReactNode } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 import { AccessDenied } from './AccessDenied';
-import { ROLES, LogCategory, UserRole, AuthStatus } from '@/shared/types/shared.types';
-import { useLogger } from '@/hooks/use-logger';
+import { LogCategory, UserRole, AuthStatus } from '@/shared/types/shared.types';
+import { useLogger } from '@/logging/hooks/use-logger';
 
 interface AdminAuthGuardProps {
   children: ReactNode;
@@ -17,7 +17,7 @@ interface AdminAuthGuardProps {
  */
 export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({ 
   children, 
-  requiredRole = [ROLES.ADMIN, ROLES.SUPER_ADMIN]
+  requiredRole = ['admin', 'superadmin']
 }) => {
   const { isAuthenticated, status } = useAuthStore();
   const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
