@@ -1,242 +1,138 @@
 
-import React, { useState, useEffect } from 'react';
-import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
-import { Textarea } from '@/shared/ui/textarea';
-import { Switch } from '@/shared/ui/switch';
-import { LayoutRenderer } from './LayoutRenderer';
-import { useLayoutSkeleton } from '@/admin/hooks/useLayoutSkeleton';
-import { toast } from 'sonner';
-import { Save, Eye, Code, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import { Spinner } from '@/shared/ui/spinner';
-import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
+import React, { useState } from 'react';
+import { Layout, Component } from '@/admin/types/layout.types';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
 
 interface LayoutEditorProps {
-  layout: Layout | null;
+  initialLayout?: Layout;
   onSave?: (layout: Layout) => void;
-  onCancel?: () => void;
-  readOnly?: boolean;
 }
 
-export function LayoutEditor({ layout, onSave, onCancel, readOnly = false }: LayoutEditorProps) {
-  const [currentLayout, setCurrentLayout] = useState<Layout | null>(layout);
-  const [editMode, setEditMode] = useAtom(adminEditModeAtom);
-  const [jsonError, setJsonError] = useState<string | null>(null);
-  const [editingJson, setEditingJson] = useState(JSON.stringify(layout?.components || [], null, 2));
-  const [layoutMeta, setLayoutMeta] = useState({
-    name: layout?.name || '',
-    description: layout?.meta?.description || '',
-    isActive: true,
-    isLocked: false,
+export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
+  const [layout, setLayout] = useState<Layout>(initialLayout || {
+    id: 'new-layout',
+    name: 'New Layout',
+    type: 'page',
+    scope: 'site',
+    components: [],
+    version: 1
   });
-  const [activeTab, setActiveTab] = useState('preview');
   
-  const { useSaveLayout } = useLayoutSkeleton();
-  const { mutate: saveLayout, isPending } = useSaveLayout();
+  const logger = useLogger('LayoutEditor', LogCategory.ADMIN);
   
-  // Update layout when prop changes
-  useEffect(() => {
-    if (layout) {
-      setCurrentLayout(layout);
-      setEditingJson(JSON.stringify(layout.components || [], null, 2));
-      setLayoutMeta({
-        name: layout.name || '',
-        description: layout.meta?.description || '',
-        isActive: true,
-        isLocked: false,
-      });
-    }
-  }, [layout]);
-  
-  // Enable edit mode when opening JSON tab
-  useEffect(() => {
-    if (activeTab === 'json' && !editMode) {
-      setEditMode(true);
-    }
-  }, [activeTab, editMode, setEditMode]);
-  
-  // Handle JSON changes
-  const handleJsonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditingJson(e.target.value);
-    try {
-      const parsed = JSON.parse(e.target.value);
-      setJsonError(null);
-      
-      if (currentLayout) {
-        setCurrentLayout({
-          ...currentLayout,
-          components: parsed
-        });
-      }
-    } catch (err) {
-      setJsonError((err as Error).message || 'Invalid JSON');
-    }
+  // Handle adding a new component
+  const handleAddComponent = (type: string) => {
+    const newComponent: Component = {
+      id: `component-${Date.now()}`,
+      type,
+      props: {},
+      children: []
+    };
+    
+    setLayout(prev => ({
+      ...prev,
+      components: [...prev.components, newComponent]
+    }));
+    
+    logger.info('Added new component', { details: { componentType: type } });
   };
   
   // Handle saving the layout
   const handleSave = () => {
-    if (!currentLayout) return;
-    
-    try {
-      // Validate JSON
-      const components = JSON.parse(editingJson);
-      
-      // Prepare layout for saving
-      const layoutToSave: Partial<LayoutSkeleton> = {
-        id: currentLayout.id,
-        name: layoutMeta.name,
-        type: currentLayout.type,
-        scope: currentLayout.scope,
-        description: layoutMeta.description,
-        is_active: layoutMeta.isActive,
-        is_locked: layoutMeta.isLocked,
-        layout_json: {
-          components,
-          version: currentLayout.version || 1,
-        },
-        version: currentLayout.version || 1,
-      };
-      
-      // Save layout to database
-      saveLayout(layoutToSave, {
-        onSuccess: (response) => {
-          if (response.success && onSave && currentLayout) {
-            onSave({
-              ...currentLayout,
-              components
-            });
-          }
-        }
-      });
-    } catch (err) {
-      toast.error('Invalid JSON', {
-        description: (err as Error).message
-      });
+    if (onSave) {
+      onSave(layout);
     }
+    logger.info('Layout saved');
+  };
+  
+  // Handle layout name change
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setLayout(prev => ({
+      ...prev,
+      name: event.target.value
+    }));
   };
   
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <CardTitle>Layout Editor</CardTitle>
-            <div className="flex items-center gap-2">
-              <Switch
-                id="edit-mode"
-                checked={editMode}
-                onCheckedChange={setEditMode}
-                disabled={readOnly}
-              />
-              <Label htmlFor="edit-mode" className="text-sm cursor-pointer">
-                Edit Mode
-              </Label>
-            </div>
+    <div className="layout-editor p-4 border rounded-md">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-4">Layout Editor</h2>
+        <div className="flex gap-4 items-center mb-4">
+          <div>
+            <label htmlFor="layout-name" className="block text-sm mb-1">Layout Name</label>
+            <input
+              id="layout-name"
+              type="text"
+              value={layout.name}
+              onChange={handleNameChange}
+              className="px-3 py-2 border rounded-md w-full"
+            />
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 mb-4">
-            <div>
-              <Label htmlFor="layout-name">Layout Name</Label>
-              <Input
-                id="layout-name"
-                value={layoutMeta.name}
-                onChange={(e) => setLayoutMeta({ ...layoutMeta, name: e.target.value })}
-                disabled={readOnly}
-              />
-            </div>
-            <div>
-              <Label htmlFor="layout-description">Description</Label>
-              <Textarea
-                id="layout-description"
-                value={layoutMeta.description}
-                onChange={(e) => setLayoutMeta({ ...layoutMeta, description: e.target.value })}
-                disabled={readOnly}
-              />
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is-active"
-                  checked={layoutMeta.isActive}
-                  onCheckedChange={(checked) => setLayoutMeta({ ...layoutMeta, isActive: checked })}
-                  disabled={readOnly}
-                />
-                <Label htmlFor="is-active">Active</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is-locked"
-                  checked={layoutMeta.isLocked}
-                  onCheckedChange={(checked) => setLayoutMeta({ ...layoutMeta, isLocked: checked })}
-                  disabled={readOnly}
-                />
-                <Label htmlFor="is-locked">Locked</Label>
-              </div>
-            </div>
+          <div>
+            <label htmlFor="layout-type" className="block text-sm mb-1">Type</label>
+            <select
+              id="layout-type"
+              value={layout.type}
+              onChange={(e) => setLayout(prev => ({ ...prev, type: e.target.value }))}
+              className="px-3 py-2 border rounded-md w-full"
+            >
+              <option value="page">Page</option>
+              <option value="section">Section</option>
+              <option value="widget">Widget</option>
+            </select>
           </div>
-          
-          <Tabs defaultValue="preview" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="preview" className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
-                Preview
-              </TabsTrigger>
-              <TabsTrigger value="json" className="flex items-center gap-1" disabled={readOnly}>
-                <Code className="h-4 w-4" />
-                JSON
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="preview">
-              <div className={cn(
-                "border rounded-md p-4 min-h-[400px]",
-                editMode && "border-dashed border-primary/50 bg-primary/5"
-              )}>
-                {currentLayout ? (
-                  <LayoutRenderer layout={currentLayout} />
-                ) : (
-                  <div className="flex justify-center items-center h-full">
-                    No layout available
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-            <TabsContent value="json">
-              <div className="space-y-2">
-                <Textarea
-                  className="font-mono text-sm min-h-[400px]"
-                  value={editingJson}
-                  onChange={handleJsonChange}
-                  disabled={readOnly}
-                />
-                {jsonError && (
-                  <div className="text-sm text-destructive">
-                    Error: {jsonError}
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={onCancel} disabled={isPending}>
-            <X className="mr-2 h-4 w-4" /> Cancel
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={readOnly || isPending || !!jsonError}
+        </div>
+      </div>
+      
+      <div className="mb-6">
+        <h3 className="text-lg font-medium mb-2">Components</h3>
+        <div className="flex gap-2 mb-4">
+          <button 
+            className="px-3 py-1 border rounded bg-blue-50 hover:bg-blue-100"
+            onClick={() => handleAddComponent('container')}
           >
-            {isPending ? <Spinner size="sm" className="mr-2" /> : <Save className="mr-2 h-4 w-4" />}
-            Save Layout
-          </Button>
-        </CardFooter>
-      </Card>
+            Add Container
+          </button>
+          <button 
+            className="px-3 py-1 border rounded bg-blue-50 hover:bg-blue-100"
+            onClick={() => handleAddComponent('text')}
+          >
+            Add Text
+          </button>
+          <button 
+            className="px-3 py-1 border rounded bg-blue-50 hover:bg-blue-100"
+            onClick={() => handleAddComponent('image')}
+          >
+            Add Image
+          </button>
+        </div>
+        
+        <div className="border rounded-md p-4 min-h-[200px] bg-gray-50">
+          {layout.components.length === 0 ? (
+            <div className="text-center text-gray-400 py-8">
+              No components added yet. Use the buttons above to add components.
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {layout.components.map((component, index) => (
+                <li key={component.id} className="border rounded p-2 bg-white">
+                  {component.type}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+      
+      <div className="flex justify-end">
+        <button 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={handleSave}
+        >
+          Save Layout
+        </button>
+      </div>
     </div>
   );
 }

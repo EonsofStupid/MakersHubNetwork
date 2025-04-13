@@ -1,9 +1,14 @@
 
-import { UserRole, ROLES, LogCategory, LogLevel, RBAC } from '@/shared/types/shared.types';
+import { UserRole, ROLES, LogCategory, LogLevel } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 
+/**
+ * RBAC Bridge implementation
+ * Provides a clean abstraction layer for role-based access control
+ */
 class RBACBridgeImpl {
   private loggerSource = 'RBACBridge';
+  private roles: UserRole[] = [];
 
   /**
    * Check if user has the specified role(s)
@@ -29,7 +34,7 @@ class RBACBridgeImpl {
   getRoles(): UserRole[] {
     // Get roles from storage, default to empty array
     const storageRoles = this.getRolesFromStorage();
-    return storageRoles;
+    return storageRoles.length > 0 ? storageRoles : this.roles;
   }
 
   /**
@@ -37,6 +42,7 @@ class RBACBridgeImpl {
    */
   setRoles(roles: UserRole[]): void {
     try {
+      this.roles = roles;
       // Store roles in session storage
       sessionStorage.setItem('user_roles', JSON.stringify(roles));
       logger.log(LogLevel.INFO, LogCategory.RBAC, 'User roles set', { 
@@ -56,6 +62,7 @@ class RBACBridgeImpl {
    */
   clearRoles(): void {
     try {
+      this.roles = [];
       sessionStorage.removeItem('user_roles');
       logger.log(LogLevel.INFO, LogCategory.RBAC, 'User roles cleared', {
         source: this.loggerSource
@@ -97,7 +104,7 @@ class RBACBridgeImpl {
    * Check if user has admin access
    */
   hasAdminAccess(): boolean {
-    return this.hasRole(RBAC.adminOnly);
+    return this.hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }
 
   /**
@@ -111,14 +118,14 @@ class RBACBridgeImpl {
    * Check if user is a moderator
    */
   isModerator(): boolean {
-    return this.hasRole(RBAC.moderators);
+    return this.hasRole([ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }
 
   /**
    * Check if user is a builder
    */
   isBuilder(): boolean {
-    return this.hasRole(RBAC.builders);
+    return this.hasRole([ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }
 
   /**
@@ -127,9 +134,9 @@ class RBACBridgeImpl {
   canAccessAdminSection(section: string): boolean {
     // Basic section permission mapping
     const sectionPermissions: Record<string, UserRole[]> = {
-      'dashboard': RBAC.adminOnly,
-      'users': RBAC.adminOnly,
-      'content': [...RBAC.adminOnly, ROLES.MODERATOR],
+      'dashboard': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      'users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      'content': [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MODERATOR],
       'settings': [ROLES.SUPER_ADMIN],
     };
 
@@ -149,13 +156,25 @@ class RBACBridgeImpl {
    * Check if user can access a specific route
    */
   canAccessRoute(path: string): boolean {
+    const PATH_POLICIES: Record<string, UserRole[]> = {
+      '/admin': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      '/admin/users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      '/admin/roles': [ROLES.SUPER_ADMIN],
+      '/admin/permissions': [ROLES.SUPER_ADMIN],
+      '/admin/keys': [ROLES.SUPER_ADMIN],
+      '/admin/analytics': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      '/projects/create': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      '/projects/edit': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    };
+    
     // Get the most specific policy for the path
-    const policyPaths = Object.keys(RBAC_POLICIES).sort((a, b) => b.length - a.length);
+    const policyPaths = Object.keys(PATH_POLICIES).sort((a, b) => b.length - a.length);
     const matchedPath = policyPaths.find(p => path.startsWith(p));
     
     if (!matchedPath) return true; // No policy, allow access
     
-    const allowedRoles = RBAC_POLICIES[matchedPath];
+    const allowedRoles = PATH_POLICIES[matchedPath];
     return this.hasRole(allowedRoles);
   }
 
@@ -163,7 +182,7 @@ class RBACBridgeImpl {
    * Check if user is an admin
    */
   isAdmin(): boolean {
-    return this.hasRole(RBAC.adminOnly);
+    return this.hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }
 
   /**

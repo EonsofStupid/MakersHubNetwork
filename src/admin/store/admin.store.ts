@@ -1,47 +1,58 @@
 
 import { create } from 'zustand';
-import { RBACBridge } from '@/rbac/bridge';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { UserRole } from '@/shared/types/shared.types';
-import { UserProfile } from '@/shared/types/shared.types';
+import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
 
-interface AdminStoreState {
-  // User data
-  user: UserProfile | null;
-  roles: UserRole[];
-  
-  // Admin UI state
-  isDebugMode: boolean;
-  isInspectorOpen: boolean;
-  inspectedComponent: string | null;
+interface AdminState {
+  // UI state
+  sidebarOpen: boolean;
+  currentSection: string;
+  editMode: boolean;
   
   // Actions
-  toggleDebugMode: () => void;
-  setInspectedComponent: (component: string | null) => void;
-  toggleInspector: () => void;
+  toggleSidebar: () => void;
+  setCurrentSection: (section: string) => void;
+  toggleEditMode: () => void;
 }
 
-export const useAdminStore = create<AdminStoreState>((set, get) => ({
-  // Initialize with data from auth store
-  user: useAuthStore.getState().user,
-  roles: RBACBridge.getRoles(),
-  
-  // UI state
-  isDebugMode: false,
-  isInspectorOpen: false,
-  inspectedComponent: null,
+export const useAdminStore = create<AdminState>((set, get) => ({
+  // Initial state
+  sidebarOpen: true,
+  currentSection: 'dashboard',
+  editMode: false,
   
   // Actions
-  toggleDebugMode: () => set((state) => ({ isDebugMode: !state.isDebugMode })),
-  setInspectedComponent: (component) => set({ inspectedComponent: component }),
-  toggleInspector: () => set((state) => ({ isInspectorOpen: !state.isInspectorOpen })),
-}));
-
-// Subscribe to auth store changes
-useAuthStore.subscribe(
-  (state) => state.user,
-  (user) => {
-    useAdminStore.setState({ user });
-    useAdminStore.setState({ roles: RBACBridge.getRoles() });
+  toggleSidebar: () => {
+    set(state => ({
+      sidebarOpen: !state.sidebarOpen
+    }));
+    
+    logger.log(
+      LogLevel.DEBUG, 
+      LogCategory.ADMIN, 
+      `Sidebar ${get().sidebarOpen ? 'opened' : 'closed'}`
+    );
+  },
+  
+  setCurrentSection: (section: string) => {
+    set({ currentSection: section });
+    
+    logger.log(
+      LogLevel.DEBUG, 
+      LogCategory.ADMIN, 
+      `Current section set to ${section}`
+    );
+  },
+  
+  toggleEditMode: () => {
+    set(state => ({ 
+      editMode: !state.editMode 
+    }));
+    
+    logger.log(
+      LogLevel.INFO, 
+      LogCategory.ADMIN, 
+      `Edit mode ${get().editMode ? 'enabled' : 'disabled'}`
+    );
   }
-);
+}));

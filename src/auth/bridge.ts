@@ -1,6 +1,5 @@
 
 import { UserProfile } from '@/shared/types/shared.types';
-import { authBridge as authBridgeInstance } from './lib/AuthBridgeImpl';
 
 /**
  * AuthBridge interface
@@ -27,9 +26,3 @@ export interface AuthBridge {
   // User profile
   getUserProfile: (userId?: string) => Promise<UserProfile | null>;
 }
-
-/**
- * Export the auth bridge as a singleton
- * This provides a consistent interface for components to interact with auth functionality
- */
-export const authBridge: AuthBridge = authBridgeInstance;

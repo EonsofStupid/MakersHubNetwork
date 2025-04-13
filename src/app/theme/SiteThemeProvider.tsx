@@ -1,8 +1,9 @@
+
 // This provider component handles the global theming for the site
 // It applies CSS variables and provides theme context to components
 
 import React, { createContext, useMemo, useEffect, useState } from "react";
-import { Theme, ComponentTokens } from "@/shared/types/theme.types";
+import { Theme, ComponentTokens, ThemeToken } from "@/shared/types/theme.types";
 import { useThemeStore } from "@/shared/stores/theme/store";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/shared/types/shared.types";
@@ -33,8 +34,11 @@ export function SiteThemeProvider({ children, defaultTheme = 'default' }: SiteTh
   const [componentStyles, setComponentStyles] = useState<Record<string, Record<string, string>> | null>(null);
   const [animations, setAnimations] = useState<Record<string, string> | null>(null);
 
-  const state = useThemeStore();
+  const themeState = useThemeStore();
   const logger = useLogger('SiteThemeProvider', LogCategory.UI);
+  
+  // Get current theme 
+  const currentTheme = themeState.themes.find(theme => theme.id === themeState.activeThemeId);
 
   // Apply theme when it changes
   useEffect(() => {
@@ -43,55 +47,59 @@ export function SiteThemeProvider({ children, defaultTheme = 'default' }: SiteTh
         // Log that theme application is starting
         logger.info('Applying site theme', { 
           details: { 
-            themeName: state.theme?.name || defaultTheme 
+            themeName: currentTheme?.name || defaultTheme 
           } as ThemeLogDetails 
         });
         
-        if (!state.theme) {
+        if (!currentTheme) {
           setIsLoaded(true);
           return;
         }
 
         // Store the theme in state
-        setAppliedTheme(state.theme);
+        setAppliedTheme(currentTheme);
 
         // Extract CSS variables from theme tokens
         const variables: Record<string, string> = {};
         
         // Process theme tokens into CSS variables
-        if (state.theme.tokens) {
-          Object.entries(state.theme.tokens).forEach(([key, token]) => {
-            if (token.type === 'color' || token.type === 'gradient') {
-              variables[`--${key}`] = token.value;
-            } 
-            else if (token.type === 'animation') {
-              // For animations, we might need to define keyframes
-              if (token.keyframes) {
-                const keyframesName = `${key}-keyframes`;
-                const cssKeyframes = `@keyframes ${keyframesName} {
-                  ${token.keyframes}
-                }`;
-                
-                // Append the keyframes to a style element
-                appendKeyframesToStylesheet(keyframesName, cssKeyframes);
-                
-                // Store animation name in variables
-                variables[`--${key}`] = keyframesName;
+        if (currentTheme.tokens) {
+          Object.entries(currentTheme.tokens).forEach(([key, token]) => {
+            if (token && typeof token === 'object') {
+              if (token.type === 'color' || token.type === 'gradient') {
+                variables[`--${key}`] = token.value;
+              } 
+              else if (token.type === 'animation') {
+                // For animations, we might need to define keyframes
+                if (token.keyframes) {
+                  const keyframesName = `${key}-keyframes`;
+                  const cssKeyframes = `@keyframes ${keyframesName} {
+                    ${token.keyframes}
+                  }`;
+                  
+                  // Append the keyframes to a style element
+                  appendKeyframesToStylesheet(keyframesName, cssKeyframes);
+                  
+                  // Store animation name in variables
+                  variables[`--${key}`] = keyframesName;
+                }
               }
-            }
-            else {
-              // For other types (spacing, shadow, etc.)
-              variables[`--${key}`] = token.value;
+              else {
+                // For other types (spacing, shadow, etc.)
+                variables[`--${key}`] = token.value;
+              }
             }
           });
         }
         
         // Process component styles
-        if (state.theme.components) {
+        if (currentTheme.components) {
           const styles: Record<string, Record<string, string>> = {};
           
-          Object.entries(state.theme.components).forEach(([componentName, componentTokens]) => {
-            styles[componentName] = componentTokens.styles;
+          Object.entries(currentTheme.components).forEach(([componentName, componentTokens]) => {
+            if (componentTokens && typeof componentTokens === 'object' && componentTokens.styles) {
+              styles[componentName] = componentTokens.styles;
+            }
           });
           
           setComponentStyles(styles);
@@ -101,9 +109,11 @@ export function SiteThemeProvider({ children, defaultTheme = 'default' }: SiteTh
         const extractedAnimations: Record<string, string> = {};
         
         // Extract all animation/transition tokens
-        Object.entries(state.theme.tokens || {}).forEach(([key, token]) => {
-          if (token.type === 'animation' || key.startsWith('animation') || key.startsWith('transition')) {
-            extractedAnimations[key] = token.value;
+        Object.entries(currentTheme.tokens || {}).forEach(([key, token]) => {
+          if (token && typeof token === 'object') {
+            if (token.type === 'animation' || key.startsWith('animation') || key.startsWith('transition')) {
+              extractedAnimations[key] = token.value;
+            }
           }
         });
         
@@ -165,7 +175,7 @@ export function SiteThemeProvider({ children, defaultTheme = 'default' }: SiteTh
         
         logger.info('Theme applied successfully', { 
           details: { 
-            theme: state.theme.name, 
+            theme: currentTheme.name, 
             cssVarsCount: Object.keys(variables).length 
           } as ThemeLogDetails 
         });
@@ -182,7 +192,7 @@ export function SiteThemeProvider({ children, defaultTheme = 'default' }: SiteTh
     };
 
     applyTheme();
-  }, [state.theme, defaultTheme, logger]);
+  }, [currentTheme, defaultTheme, logger]);
 
   // Helper to append keyframes to a stylesheet
   const appendKeyframesToStylesheet = (name: string, css: string) => {
