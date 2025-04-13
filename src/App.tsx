@@ -1,30 +1,32 @@
 
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import AboutPage from './pages/AboutPage';
-import { Toaster } from '@/shared/ui/toaster';
-import { LogCategory } from '@/shared/types/shared.types';
-import { useLogger } from '@/hooks/use-logger';
+import React, { useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import Routes from './router/Routes';
+import { AppInitializer } from './app/initializer/AppInitializer';
+import { useAuthStore } from './auth/store/auth.store';
+import { Toaster } from './shared/ui/toaster';
+import MainNav from './app/components/MainNav';
 
 function App() {
-  const logger = useLogger('App', LogCategory.APP);
+  const { initialize } = useAuthStore();
   
-  React.useEffect(() => {
-    logger.info('App initialized');
-  }, [logger]);
+  // Initialize auth on app load
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
   
   return (
-    <>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          {/* Add more routes as needed */}
-        </Routes>
-      </BrowserRouter>
-      <Toaster />
-    </>
+    <BrowserRouter>
+      <AppInitializer>
+        <div className="min-h-screen flex flex-col">
+          <MainNav />
+          <main className="flex-1">
+            <Routes />
+          </main>
+        </div>
+        <Toaster />
+      </AppInitializer>
+    </BrowserRouter>
   );
 }
 
