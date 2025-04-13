@@ -1,11 +1,11 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
 import { useReviewAdminStore } from "@/admin/store/reviewAdmin.store";
 import { Star, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/shared/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 export function ReviewsOverview() {
   const { error, pendingReviews, isLoading, fetchPendingReviews } = useReviewAdminStore();
