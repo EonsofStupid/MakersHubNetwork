@@ -1,145 +1,130 @@
 
-import { LogCategory, LogLevel, LogDetails, LOG_LEVEL_VALUES } from '@/shared/types/shared.types';
-import { LogEntry, LogEvent, LogOptions, Transport } from './types';
-import { ConsoleTransport } from './transports/console-transport';
-import { MemoryTransport } from './transports/memory-transport';
-import { UiTransport } from './transports/ui-transport';
+import { v4 as uuidv4 } from 'uuid';
+import { 
+  LogLevel, 
+  LogCategory, 
+  LogDetails, 
+  LogEntry 
+} from '@/shared/types/shared.types';
 
-export class LoggerService {
-  private static instance: LoggerService;
-  private transports: Transport[] = [
-    new ConsoleTransport(LogLevel.INFO),
-    new MemoryTransport({ minLevel: LogLevel.INFO, maxEntries: 1000 }),
-    new UiTransport({ minLevel: LogLevel.INFO })
-  ];
-  
-  private listeners: ((event: LogEvent) => void)[] = [];
-  private logCounter = 0;
-  
-  // Private constructor for singleton pattern
-  private constructor() {}
-  
-  // Get the singleton instance
-  public static getInstance(): LoggerService {
-    if (!LoggerService.instance) {
-      LoggerService.instance = new LoggerService();
-    }
-    return LoggerService.instance;
-  }
-  
-  // Add a transport
-  public addTransport(transport: Transport): void {
-    this.transports.push(transport);
-  }
-  
-  // Remove a transport
-  public removeTransport(transport: Transport): void {
-    this.transports = this.transports.filter(t => t !== transport);
-  }
-  
-  // Clear all transports
-  public clearTransports(): void {
-    this.transports = [];
-  }
-  
-  // Get all transports
-  public getTransports(): Transport[] {
-    return this.transports;
-  }
-  
-  // Subscribe to log events
-  public subscribe(callback: (event: LogEvent) => void): () => void {
-    this.listeners.push(callback);
-    return () => {
-      this.listeners = this.listeners.filter(listener => listener !== callback);
-    };
-  }
-  
-  // Main log method
-  public log(
-    level: LogLevel,
-    message: string,
-    category: LogCategory = LogCategory.DEFAULT,
-    options?: LogOptions
-  ): void {
-    // Create log entry
-    const id = `log_${Date.now()}_${this.logCounter++}`;
-    const timestamp = options?.timestamp || new Date().toISOString();
-    const details = options?.details;
-    const source = options?.source;
-    
+class Logger {
+  private listeners: Array<(entry: LogEntry) => void> = [];
+  private config = {
+    minLevel: 'debug' as LogLevel,
+    enabled: true,
+    defaultCategory: 'system' as LogCategory
+  };
+
+  log(
+    level: string,
+    message: string | Record<string, unknown>,
+    category = this.config.defaultCategory,
+    details?: Record<string, unknown>
+  ) {
+    if (!this.config.enabled) return;
+
     const entry: LogEntry = {
-      id,
-      level,
+      id: uuidv4(),
+      level: level as LogLevel,
+      category: category as LogCategory,
       message,
-      category,
-      timestamp,
-      source,
-      details
+      details,
+      timestamp: new Date().toISOString(),
+      source: details?.source as string || 'app'
     };
-    
-    // Send to all transports
-    this.transports.forEach(transport => {
-      if (LOG_LEVEL_VALUES[level] >= LOG_LEVEL_VALUES[transport.getMinLevel()]) {
-        transport.log(entry);
-      }
-    });
-    
+
+    this.emit(entry);
+  }
+
+  private emit(entry: LogEntry) {
     // Notify all listeners
-    const event: LogEvent = {
-      type: 'LOG',
-      entry
-    };
-    
     this.listeners.forEach(listener => {
       try {
-        listener(event);
+        listener(entry);
       } catch (error) {
-        console.error('Error in log listener:', error);
+        console.error('Error in log listener', error);
       }
     });
+    
+    // Also output to console for development
+    this.outputToConsole(entry);
   }
-  
+
+  private outputToConsole(entry: LogEntry) {
+    const timestamp = new Date(entry.timestamp).toLocaleTimeString();
+    const prefix = `${timestamp} [${entry.level}] [${entry.category}] [${entry.source}]:`;
+    const detailsStr = entry.details 
+      ? `\n${JSON.stringify(entry.details, null, 2)}`
+      : '';
+
+    switch (entry.level) {
+      case 'trace':
+        console.trace(`${prefix} ${entry.message}${detailsStr}`);
+        break;
+      case 'debug':
+        console.debug(`${prefix} ${entry.message}${detailsStr}`);
+        break;
+      case 'info':
+        console.info(`${prefix} ${entry.message}${detailsStr}`);
+        break;
+      case 'warn':
+        console.warn(`${prefix} ${entry.message}${detailsStr}`);
+        break;
+      case 'error':
+      case 'fatal':
+        console.error(`${prefix} ${entry.message}${detailsStr}`);
+        break;
+      case 'success':
+        console.log(`%c${prefix} ${entry.message}`, 'color: green', detailsStr);
+        break;
+      default:
+        console.log(`${prefix} ${entry.message}${detailsStr}`);
+    }
+  }
+
+  addListener(listener: (entry: LogEntry) => void) {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  setConfig(config: Partial<typeof this.config>) {
+    this.config = {
+      ...this.config,
+      ...config
+    };
+  }
+
   // Convenience methods for different log levels
-  public trace(message: string, category: LogCategory = LogCategory.DEFAULT, options?: LogOptions): void {
-    this.log(LogLevel.TRACE, message, category, options);
+  trace(message: string, category = 'system', details?: Record<string, unknown>) {
+    this.log('trace', message, category, details);
   }
-  
-  public debug(message: string, category: LogCategory = LogCategory.DEFAULT, options?: LogOptions): void {
-    this.log(LogLevel.DEBUG, message, category, options);
+
+  debug(message: string, category = 'system', details?: Record<string, unknown>) {
+    this.log('debug', message, category, details);
   }
-  
-  public info(message: string, category: LogCategory = LogCategory.DEFAULT, options?: LogOptions): void {
-    this.log(LogLevel.INFO, message, category, options);
+
+  info(message: string, category = 'system', details?: Record<string, unknown>) {
+    this.log('info', message, category, details);
   }
-  
-  public warn(message: string, category: LogCategory = LogCategory.DEFAULT, options?: LogOptions): void {
-    this.log(LogLevel.WARN, message, category, options);
+
+  warn(message: string, category = 'system', details?: Record<string, unknown>) {
+    this.log('warn', message, category, details);
   }
-  
-  public error(message: string, category: LogCategory = LogCategory.DEFAULT, options?: LogOptions): void {
-    this.log(LogLevel.ERROR, message, category, options);
+
+  error(message: string, category = 'system', details?: Record<string, unknown>) {
+    this.log('error', message, category, details);
   }
-  
-  public fatal(message: string, category: LogCategory = LogCategory.DEFAULT, options?: LogOptions): void {
-    this.log(LogLevel.FATAL, message, category, options);
+
+  fatal(message: string, category = 'system', details?: Record<string, unknown>) {
+    this.log('fatal', message, category, details);
   }
-  
-  public success(message: string, category: LogCategory = LogCategory.DEFAULT, options?: LogOptions): void {
-    this.log(LogLevel.SUCCESS, message, category, options);
-  }
-  
-  public critical(message: string, category: LogCategory = LogCategory.DEFAULT, options?: LogOptions): void {
-    this.log(LogLevel.CRITICAL, message, category, options);
-  }
-  
-  // Set log level for all transports
-  public setLogLevel(level: LogLevel): void {
-    this.transports.forEach(transport => {
-      transport.setMinLevel(level);
-    });
+
+  success(message: string, category = 'system', details?: Record<string, unknown>) {
+    this.log('success', message, category, details);
   }
 }
 
-// Create and export a singleton instance
-export const logger = LoggerService.getInstance();
+// Create singleton instance
+export const logger = new Logger();
