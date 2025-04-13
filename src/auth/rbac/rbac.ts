@@ -1,4 +1,5 @@
-import { UserRole, ROLES, RBAC } from '@/shared/types/shared.types';
+import { UserRole, ROLES } from '@/shared/types/SharedTypes';
+import { AdminSection, SECTION_PERMISSIONS, ROLE_LABELS } from './types/RBACTypes';
 
 /**
  * Core RBAC functionality
@@ -91,22 +92,11 @@ export function hasElevatedPrivileges(userRoles: UserRole[]): boolean {
  * @param section Admin section to check access for
  * @returns Boolean indicating if user can access the section
  */
-export function canAccessAdminSection(userRoles: UserRole[], section: string): boolean {
+export function canAccessAdminSection(userRoles: UserRole[], section: AdminSection): boolean {
   // Super admins can access everything
   if (hasRole(userRoles, ROLES.SUPERADMIN)) return true;
 
-  // Section-specific permissions
-  const sectionPermissions: Record<string, UserRole[]> = {
-    'dashboard': [ROLES.ADMIN, ROLES.SUPERADMIN],
-    'users': [ROLES.ADMIN, ROLES.SUPERADMIN],
-    'builds': [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPERADMIN],
-    'settings': [ROLES.SUPERADMIN],
-    'analytics': [ROLES.ADMIN, ROLES.SUPERADMIN],
-    'content': [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPERADMIN],
-    'reviews': [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPERADMIN],
-  };
-
-  const allowedRoles = sectionPermissions[section];
+  const allowedRoles = SECTION_PERMISSIONS[section];
   if (!allowedRoles) return false;
 
   return hasRole(userRoles, allowedRoles);
@@ -117,12 +107,5 @@ export function canAccessAdminSection(userRoles: UserRole[], section: string): b
  * @returns Record of role keys to display labels
  */
 export function getRoleLabels(): Record<UserRole, string> {
-  return {
-    [ROLES.SUPERADMIN]: 'Super Admin',
-    [ROLES.ADMIN]: 'Admin',
-    [ROLES.MODERATOR]: 'Moderator',
-    [ROLES.BUILDER]: 'Builder',
-    [ROLES.USER]: 'User',
-    [ROLES.GUEST]: 'Guest',
-  };
+  return ROLE_LABELS;
 } 

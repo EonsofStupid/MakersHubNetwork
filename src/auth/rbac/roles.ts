@@ -1,4 +1,3 @@
-
 /**
  * auth/rbac/roles.ts
  * 
@@ -6,46 +5,35 @@
  * Maps roles to permissions
  */
 
-import { UserRole, UserRoleEnum } from '@/shared/types/shared.types';
-import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
+import { UserRoleType, UserRoleEnum } from '@/shared/types/SharedTypes';
+import { AuthPermissionValue, AUTH_PERMISSIONS } from '@/auth/constants/permissions';
 
 // Map roles to their allowed permissions
-const rolePermissionsMap: Record<UserRole, PermissionValue[]> = {
-  'super_admin': Object.values(PERMISSIONS),
-  'admin': [
-    PERMISSIONS.ADMIN_ACCESS,
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT, PERMISSIONS.DELETE_CONTENT,
-    PERMISSIONS.VIEW_USERS, PERMISSIONS.EDIT_USERS,
-    PERMISSIONS.SYSTEM_VIEW, 
+const rolePermissionsMap: Record<UserRoleType, AuthPermissionValue[]> = {
+  [UserRoleEnum.SUPERADMIN]: Object.values(AUTH_PERMISSIONS),
+  [UserRoleEnum.ADMIN]: [
+    AUTH_PERMISSIONS.ADMIN_ACCESS,
+    AUTH_PERMISSIONS.VIEW_CONTENT, AUTH_PERMISSIONS.CREATE_CONTENT, AUTH_PERMISSIONS.EDIT_CONTENT, AUTH_PERMISSIONS.DELETE_CONTENT,
+    AUTH_PERMISSIONS.VIEW_USERS, AUTH_PERMISSIONS.EDIT_USERS,
+    AUTH_PERMISSIONS.SYSTEM_VIEW, 
   ],
-  'editor': [
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT,
-    PERMISSIONS.VIEW_USERS,
+  [UserRoleEnum.MODERATOR]: [
+    AUTH_PERMISSIONS.VIEW_CONTENT, AUTH_PERMISSIONS.EDIT_CONTENT,
+    AUTH_PERMISSIONS.VIEW_USERS,
   ],
-  'moderator': [
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.EDIT_CONTENT,
-    PERMISSIONS.VIEW_USERS,
+  [UserRoleEnum.BUILDER]: [
+    AUTH_PERMISSIONS.VIEW_CONTENT, AUTH_PERMISSIONS.CREATE_CONTENT,
   ],
-  'builder': [
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT,
+  [UserRoleEnum.USER]: [
+    AUTH_PERMISSIONS.VIEW_CONTENT,
   ],
-  'maker': [
-    PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT,
-  ],
-  'viewer': [
-    PERMISSIONS.VIEW_CONTENT,
-  ],
-  'user': [
-    PERMISSIONS.VIEW_CONTENT,
-  ],
-  'guest': []
+  [UserRoleEnum.GUEST]: []
 };
 
 // Create an object with role constants
 export const ROLES = {
   SUPER_ADMIN: UserRoleEnum.SUPERADMIN,
   ADMIN: UserRoleEnum.ADMIN,
-  EDITOR: 'editor',
   MODERATOR: UserRoleEnum.MODERATOR,
   BUILDER: UserRoleEnum.BUILDER,
   USER: UserRoleEnum.USER,
@@ -57,12 +45,19 @@ export const ROLES = {
  * @param roles Array of user roles
  * @returns Array of permissions granted to the user
  */
-export function mapRolesToPermissions(roles: UserRole[]): PermissionValue[] {
-  // Get all permissions for the user's roles
-  const permissions = roles.flatMap(role => rolePermissionsMap[role] || []);
+export function mapRolesToPermissions(roles: UserRoleType[]): AuthPermissionValue[] {
+  const permissions: AuthPermissionValue[] = [];
   
-  // Remove duplicates
-  return [...new Set(permissions)];
+  roles.forEach(role => {
+    const rolePerms = rolePermissionsMap[role] || [];
+    rolePerms.forEach(perm => {
+      if (!permissions.includes(perm)) {
+        permissions.push(perm);
+      }
+    });
+  });
+  
+  return permissions;
 }
 
 /**
@@ -70,7 +65,7 @@ export function mapRolesToPermissions(roles: UserRole[]): PermissionValue[] {
  * @param roles User roles to check
  * @returns Boolean indicating if the user has admin access
  */
-export function hasAdminAccess(roles: UserRole[]): boolean {
+export function hasAdminAccess(roles: UserRoleType[]): boolean {
   return roles.some(role => role === ROLES.ADMIN || role === ROLES.SUPER_ADMIN);
 }
 
@@ -79,6 +74,6 @@ export function hasAdminAccess(roles: UserRole[]): boolean {
  * @param roles User roles to check
  * @returns Boolean indicating if the user is a super admin
  */
-export function isSuperAdmin(roles: UserRole[]): boolean {
+export function isSuperAdmin(roles: UserRoleType[]): boolean {
   return roles.includes(ROLES.SUPER_ADMIN);
 }

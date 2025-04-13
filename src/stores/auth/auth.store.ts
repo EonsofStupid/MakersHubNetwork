@@ -1,14 +1,14 @@
 import { create } from 'zustand';
-import { authBridge } from '@/auth/bridge';
-import { UserProfile } from '@/shared/types/shared.types';
+import { authBridge } from '@/auth/lib/AuthBridgeImpl';
+import { UserProfile, UserRole, LogCategory } from '@/shared/types/SharedTypes';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
 
 /**
  * Auth store state interface
  */
 interface AuthState {
   user: UserProfile | null;
+  roles: UserRole[];
   isAuthenticated: boolean;
   isLoading: boolean;
   error: Error | null;
@@ -34,6 +34,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
   
   return {
     user: null,
+    roles: [],
     isAuthenticated: false,
     isLoading: false,
     error: null,
@@ -45,9 +46,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
     signIn: async (email: string, password: string) => {
       try {
         set({ isLoading: true, error: null });
-        await authBridge.signIn();
-        const user = await authBridge.getCurrentUser();
-        set({ user, isAuthenticated: true, isLoading: false });
+        const { user, error } = await authBridge.signInWithEmail(email, password);
+        if (error) throw error;
+        set({ 
+          user, 
+          roles: user?.roles || [], 
+          isAuthenticated: true, 
+          isLoading: false 
+        });
         logger.info('User signed in successfully', { details: { email } });
       } catch (error) {
         set({ error: error as Error, isLoading: false });
@@ -63,7 +69,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       try {
         set({ isLoading: true, error: null });
         await authBridge.signOut();
-        set({ user: null, isAuthenticated: false, isLoading: false });
+        set({ user: null, roles: [], isAuthenticated: false, isLoading: false });
         logger.info('User signed out successfully');
       } catch (error) {
         set({ error: error as Error, isLoading: false });
@@ -78,9 +84,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
     signUp: async (email: string, password: string) => {
       try {
         set({ isLoading: true, error: null });
-        await authBridge.signIn();
-        const user = await authBridge.getCurrentUser();
-        set({ user, isAuthenticated: true, isLoading: false });
+        const { user, error } = await authBridge.signUp(email, password);
+        if (error) throw error;
+        set({ 
+          user, 
+          roles: user?.roles || [], 
+          isAuthenticated: true, 
+          isLoading: false 
+        });
         logger.info('User signed up successfully', { details: { email } });
       } catch (error) {
         set({ error: error as Error, isLoading: false });
@@ -111,10 +122,11 @@ export const useAuthStore = create<AuthState>((set, get) => {
     initialize: async () => {
       try {
         set({ isLoading: true, error: null });
-        await authBridge.refreshSession();
-        const user = await authBridge.getCurrentUser();
+        const session = await authBridge.refreshSession();
+        const user = session ? await authBridge.getUserProfile(session.user_id) : null;
         set({ 
           user, 
+          roles: user?.roles || [], 
           isAuthenticated: !!user, 
           isLoading: false,
           initialized: true 
@@ -136,9 +148,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
     refreshSession: async () => {
       try {
         set({ isLoading: true, error: null });
-        await authBridge.refreshSession();
-        const user = await authBridge.getCurrentUser();
-        set({ user, isAuthenticated: !!user, isLoading: false });
+        const session = await authBridge.refreshSession();
+        const user = session ? await authBridge.getUserProfile(session.user_id) : null;
+        set({ 
+          user, 
+          roles: user?.roles || [], 
+          isAuthenticated: !!user, 
+          isLoading: false 
+        });
         logger.info('Session refreshed', { details: { isAuthenticated: !!user } });
       } catch (error) {
         set({ error: error as Error, isLoading: false });

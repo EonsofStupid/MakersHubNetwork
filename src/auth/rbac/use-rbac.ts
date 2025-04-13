@@ -1,14 +1,15 @@
 import { useCallback } from 'react';
-import { UserRole } from '@/shared/types/shared.types';
+import { UserRole } from '@/shared/types/SharedTypes';
 import { useAuthStore } from '@/stores/auth/auth.store';
 import * as rbac from './rbac';
+import { AdminSection, RBACHook } from './types/RBACTypes';
 
 /**
  * Hook for role-based access control
  * This hook provides a clean interface to RBAC functionality
  * while maintaining separation from authentication implementation
  */
-export function useRbac() {
+export function useRbac(): RBACHook {
   // Get roles from auth store - this is the only coupling point
   const roles = useAuthStore(state => state.roles);
   
@@ -41,7 +42,7 @@ export function useRbac() {
     return rbac.hasElevatedPrivileges(roles);
   }, [roles]);
   
-  const canAccessAdminSection = useCallback((section: string) => {
+  const canAccessAdminSection = useCallback((section: AdminSection) => {
     return rbac.canAccessAdminSection(roles, section);
   }, [roles]);
   

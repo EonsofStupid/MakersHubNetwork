@@ -1,10 +1,15 @@
-import { AuthBridge, AuthSession, AuthState } from '../types/AuthBridge';
-import { User, UserProfile, UserRole, AuthEvent, AuthEventType } from '@/shared/types/SharedTypes';
+import { AuthBridge, AuthSession, User, UserProfile, UserRole, AuthEvent, AuthEventType } from '@/shared/types/SharedTypes';
 
 // Auth Bridge Implementation
 export class AuthBridgeImpl implements AuthBridge {
   private eventCallbacks: ((event: AuthEvent) => void)[] = [];
-  private state: AuthState = {
+  private state: {
+    user: UserProfile | null;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    roles: UserRole[];
+    error: Error | null;
+  } = {
     user: null,
     isAuthenticated: false,
     isLoading: false,
@@ -29,50 +34,40 @@ export class AuthBridgeImpl implements AuthBridge {
   }
   
   // Authentication methods
-  async signInWithEmail(email: string, password: string): Promise<{ 
-    user: User | null; 
-    session: AuthSession | null; 
-    error: Error | null 
-  }> {
+  async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     // Placeholder implementation
-    return { user: null, session: null, error: null };
+    return { user: null, error: null };
   }
   
-  async signInWithOAuth(provider: 'google' | 'github' | 'facebook'): Promise<void> {
+  async signInWithOAuth(provider: string): Promise<void> {
     // Placeholder implementation
   }
   
-  async signUp(email: string, password: string): Promise<{ 
-    user: User | null; 
-    session: AuthSession | null; 
-    error: Error | null 
-  }> {
+  async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     // Placeholder implementation
-    return { user: null, session: null, error: null };
+    return { user: null, error: null };
   }
   
   async signOut(): Promise<void> {
-    this.emitEvent({
-      type: AuthEventType.SIGNED_OUT,
-      user: null
-    });
+    // Placeholder implementation
   }
   
   // User management
-  async updateUserProfile(profile: Partial<UserProfile> & { id: string }): Promise<UserProfile | null> {
+  async updateUserProfile(profile: Partial<UserProfile>): Promise<UserProfile> {
     // Placeholder implementation
-    return null;
+    return {} as UserProfile;
+  }
+  
+  // Password management
+  async resetPassword(email: string): Promise<void> {
+    // Placeholder implementation
   }
   
   async updatePassword(oldPassword: string, newPassword: string): Promise<void> {
     // Placeholder implementation
   }
   
-  async resetPassword(email: string): Promise<void> {
-    // Placeholder implementation
-  }
-  
-  // Auth state
+  // Event subscription
   subscribeToAuthEvents(callback: (event: AuthEvent) => void): () => void {
     this.eventCallbacks.push(callback);
     return () => {
@@ -80,32 +75,15 @@ export class AuthBridgeImpl implements AuthBridge {
     };
   }
   
-  // Role checking
+  // Role checking helpers
+  hasPermission(permission: string): boolean {
+    // Placeholder implementation
+    return false;
+  }
+  
   hasRole(role: UserRole | UserRole[]): boolean {
-    const roles = Array.isArray(role) ? role : [role];
-    return roles.some(r => this.state.roles.includes(r));
-  }
-  
-  isAdmin(): boolean {
-    return this.hasRole([UserRole.ADMIN, UserRole.SUPERADMIN]);
-  }
-  
-  isSuperAdmin(): boolean {
-    return this.hasRole(UserRole.SUPERADMIN);
-  }
-  
-  // Account linking
-  async linkAccount(provider: string): Promise<void> {
     // Placeholder implementation
-  }
-  
-  async unlinkAccount(provider: string): Promise<void> {
-    // Placeholder implementation
-  }
-  
-  async getLinkedAccounts(): Promise<string[]> {
-    // Placeholder implementation
-    return [];
+    return false;
   }
   
   // Helper method to emit events to subscribers

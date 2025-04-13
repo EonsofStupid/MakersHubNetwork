@@ -1,7 +1,6 @@
-
 // Re-export all auth components and utilities
-import { authBridge } from './bridge';
-import { useAuthStore } from './store/auth.store';
+import { authBridge } from './lib/AuthBridgeImpl';
+import { useAuthStore } from '@/stores/auth/auth.store';
 
 // Export components
 export { GoogleLoginButton } from './components/GoogleLoginButton';
@@ -9,9 +8,16 @@ export { LinkedAccountAlert } from './components/LinkedAccountAlert';
 export { AccountLinkingModal } from './components/AccountLinkingModal';
 export { UserMenu } from './components/UserMenu';
 export { UserMenuSheet } from './components/UserMenuSheet';
-export { AdminOnly } from './components/AdminOnly';
-export { RequireAuth } from './components/RequireAuth';
-export { RequirePermission } from './components/RequirePermission';
+export { RoleGate } from './components/RoleGate';
+export { 
+  withRoleProtection,
+  withAdminProtection,
+  withSuperAdminProtection,
+  withModeratorProtection,
+  withBuilderProtection,
+  withAuthProtection
+} from './components/WithRoleProtection';
+export { AuthGuard } from './components/AuthGuard';
 
 // Export bridge
 export { authBridge };
