@@ -1,97 +1,46 @@
 
-import React, { useEffect, useRef } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
-import { AdminHeader } from "../AdminHeader";
-import { AdminSidebar } from "../AdminSidebar";
-import { useAdminStore } from "../../store/admin.store";
-import { useAtom } from "jotai";
-import { adminEditModeAtom } from "../../atoms/tools.atoms";
-import { useToast } from "@/shared/hooks/use-toast";
-import { FrozenZones } from "../overlay/FrozenZones";
-import { LogToggleButton } from "@/logging/components/LogToggleButton";
-import { useLoggingContext } from "@/logging/context/LoggingContext";
-import { LogConsole } from "@/logging/components/LogConsole";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/shared/types/shared.types";
-import { useAdminAccess } from "../../hooks/useAdminAccess";
-import { EditModeToggle } from "../ui/EditModeToggle";
+import React from 'react';
+import AdminSidebar from '../AdminSidebar';
+import { cn } from '@/shared/utils/cn';
 
-interface AdminLayoutProps {
-  children?: React.ReactNode;
-  title?: string;
+export interface AdminLayoutProps {
+  children: React.ReactNode;
   fullWidth?: boolean;
   className?: string;
+  title?: string;
 }
 
-export function AdminLayout({ 
-  children,
-  title = "Admin Dashboard",
-  fullWidth = false,
-  className
-}: AdminLayoutProps) {
-  const { permissions } = useAdminStore();
-  const [isEditMode] = useAtom(adminEditModeAtom);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { showLogConsole } = useLoggingContext();
-  const logger = useLogger("AdminLayout", LogCategory.ADMIN);
-  const { hasAdminAccess, isAuthenticated } = useAdminAccess();
-  const redirectAttemptedRef = useRef<boolean>(false);
-  const loggedInitRef = useRef<boolean>(false);
-
-  useEffect(() => {
-    // Log the admin layout initialization - only once
-    if (!loggedInitRef.current) {
-      loggedInitRef.current = true;
-      logger.info("Admin layout rendered", {
-        details: { 
-          isEditMode, 
-          permissionsCount: permissions.length,
-          hasAdminAccess,
-          isAuthenticated
-        },
-      });
-    }
-
-    // If somehow a non-admin user got here, redirect them - but only once
-    if (!hasAdminAccess && isAuthenticated && !redirectAttemptedRef.current) {
-      redirectAttemptedRef.current = true;
-      
-      logger.warn("Non-admin user attempted to access admin layout", {
-        details: { permissions }
-      });
-      
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to access the admin panel",
-        variant: "destructive"
-      });
-      
-      navigate("/");
-    }
-  }, [isAuthenticated, hasAdminAccess, logger, permissions, isEditMode, toast, navigate]);
-
-  // If user is not authenticated or doesn't have admin access, don't render the layout
-  if (!isAuthenticated || !hasAdminAccess) {
-    return null;
-  }
-
+const AdminLayout: React.FC<AdminLayoutProps> = ({ 
+  children, 
+  fullWidth = false, 
+  className,
+  title
+}) => {
   return (
-    <div className={`flex h-screen w-full overflow-hidden bg-[var(--impulse-bg-main)] ${fullWidth ? 'max-w-full' : ''} ${className || ''}`}>
+    <div className="flex min-h-screen bg-background">
       <AdminSidebar />
       
-      <div className="flex flex-col flex-1 h-screen overflow-hidden">
-        <AdminHeader title={title} />
+      <div className={cn(
+        "flex-1 flex flex-col",
+        fullWidth ? "max-w-full" : "max-w-7xl mx-auto",
+        className
+      )}>
+        {title && (
+          <header className="border-b py-4 px-6">
+            <h1 className="text-2xl font-bold">{title}</h1>
+          </header>
+        )}
         
-        <main className={`flex-1 overflow-auto p-4 sm:p-6 ${fullWidth ? 'max-w-full' : ''}`}>
-          {children || <Outlet />}
+        <main className="flex-1 p-6">
+          {children}
         </main>
+        
+        <footer className="border-t py-4 px-6 text-center text-sm text-muted-foreground">
+          Admin Panel © {new Date().getFullYear()}
+        </footer>
       </div>
-      
-      {isEditMode && <FrozenZones />}
-      {isEditMode && <EditModeToggle />}
-      <LogToggleButton />
-      {showLogConsole && <LogConsole />}
     </div>
   );
-}
+};
+
+export default AdminLayout;

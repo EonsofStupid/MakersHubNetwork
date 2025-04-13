@@ -1,82 +1,64 @@
 import { create } from 'zustand';
-import { LogLevel, LogCategory, LogEntry } from '@/shared/types/shared.types';
-import { loggingBridge } from '@/logging/bridge';
+import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
-export interface DebugState {
-  // Debug mode flags
+interface DebugState {
   isDebugMode: boolean;
-  isInspectorVisible: boolean;
-  hoveredElement: HTMLElement | null;
-  isAltPressed: boolean;
-  showAdminOverlay: boolean;
+  isLoggerEnabled: boolean;
+  minimumLogLevel: LogLevel;
+  debugPanelVisible: boolean;
+  debugEvents: any[];
   
   // Actions
-  setDebugMode: (value: boolean) => void;
   toggleDebugMode: () => void;
-  setInspectorVisible: (value: boolean) => void;
-  setHoveredElement: (element: HTMLElement | null) => void;
-  setAltPressed: (value: boolean) => void;
-  toggleAdminOverlay: () => void;
-  setAdminOverlay: (val: boolean) => void;
+  toggleLogger: () => void;
+  setMinimumLogLevel: (level: LogLevel) => void;
+  toggleDebugPanel: () => void;
+  addDebugEvent: (event: any) => void;
+  clearDebugEvents: () => void;
 }
 
-export const useDebugStore = create<DebugState>((set, get) => ({
-  // State
+export const useDebugStore = create<DebugState>((set) => ({
   isDebugMode: false,
-  isInspectorVisible: false,
-  hoveredElement: null,
-  isAltPressed: false,
-  showAdminOverlay: false,
+  isLoggerEnabled: true,
+  minimumLogLevel: 'debug',
+  debugPanelVisible: false,
+  debugEvents: [],
   
-  // Actions
-  setDebugMode: (value) => {
-    set({ isDebugMode: value });
-    // Log debug mode state change
-    loggingBridge.log({
-      id: crypto.randomUUID(),
-      level: 'info' as LogLevel,
-      message: `Debug mode ${value ? 'enabled' : 'disabled'}`,
-      timestamp: Date.now(),
-      source: 'DebugStore',
-      category: LogCategory.ADMIN,
-      details: { newState: value }
-    });
-  },
+  toggleDebugMode: () => set((state) => ({ isDebugMode: !state.isDebugMode })),
   
-  toggleDebugMode: () => {
-    const newState = !get().isDebugMode;
-    set({ isDebugMode: newState });
-    // Log debug mode toggle
-    loggingBridge.log({
-      id: crypto.randomUUID(),
-      level: 'info' as LogLevel,
-      message: `Debug mode toggled to ${newState ? 'enabled' : 'disabled'}`,
-      timestamp: Date.now(),
-      source: 'DebugStore',
-      category: LogCategory.ADMIN,
-      details: { newState }
-    });
-  },
+  toggleLogger: () => set((state) => ({ isLoggerEnabled: !state.isLoggerEnabled })),
   
-  setInspectorVisible: (value) => set({ isInspectorVisible: value }),
-  setHoveredElement: (element) => set({ hoveredElement: element }),
-  setAltPressed: (value) => set({ isAltPressed: value }),
+  setMinimumLogLevel: (level: LogLevel) => set(() => ({ minimumLogLevel: level })),
   
-  toggleAdminOverlay: () => {
-    const newState = !get().showAdminOverlay;
-    set({ showAdminOverlay: newState });
+  toggleDebugPanel: () => set((state) => ({ debugPanelVisible: !state.debugPanelVisible })),
+  
+  addDebugEvent: (event: any) => set((state) => {
+    const timestamp = Date.now();
+    const newEvent = {
+      id: `event-${timestamp}`,
+      timestamp: timestamp.toString(),
+      level: "debug" as LogLevel,
+      category: LogCategory.DEFAULT,
+      ...event
+    };
     
-    // Log admin overlay toggle
-    loggingBridge.log({
-      id: crypto.randomUUID(),
-      level: 'info' as LogLevel,
-      message: `Admin overlay toggled to ${newState ? 'visible' : 'hidden'}`,
-      timestamp: Date.now(),
-      source: 'DebugStore',
-      category: LogCategory.ADMIN,
-      details: { newState }
-    });
-  },
+    // Keep max 100 events
+    const events = [newEvent, ...state.debugEvents].slice(0, 100);
+    return { debugEvents: events };
+  }),
   
-  setAdminOverlay: (val) => set({ showAdminOverlay: val })
+  clearDebugEvents: () => set({ debugEvents: [] }),
 }));
+
+// Log event creator helper
+export const createDebugEvent = (category: LogCategory, message: string, details?: Record<string, any>) => ({
+  level: "debug" as LogLevel,
+  message,
+  category,
+  timestamp: Date.now().toString(),
+  details,
+});
+
+// Shortcut for system events
+export const createSystemEvent = (message: string, details?: Record<string, any>) => 
+  createDebugEvent(LogCategory.SYSTEM, message, details);

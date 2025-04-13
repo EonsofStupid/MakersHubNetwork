@@ -1,167 +1,161 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import { LogCategory, LogEntry, memoryTransport } from '@/logging';
-import { LogLevel } from '@/logging/constants/log-level';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { renderUnknownAsNode } from '@/shared/utils/render';
-import { isLogLevelAtLeast } from '@/logging/utils/map-log-level';
+import React, { useEffect, useState } from 'react';
+import { LogEntry, LogLevel, LogCategory } from '@/shared/types/shared.types';
+import { format } from 'date-fns';
+import { logger } from '@/logging';
+import { Badge } from '@/shared/ui/badge';
+import { ScrollArea } from '@/shared/ui/scroll-area';
+import { memoryTransport } from '@/logging/transports/memory-transport';
 
 interface LogActivityStreamProps {
   maxEntries?: number;
-  height?: string;
-  autoScroll?: boolean;
-  level?: LogLevel;
+  minLevel?: LogLevel;
   categories?: LogCategory[];
-  showSource?: boolean;
+  title?: string;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+  showTimestamp?: boolean;
+  showLevel?: boolean;
+  showCategory?: boolean;
+  onEntryClick?: (entry: LogEntry) => void;
   className?: string;
 }
 
-export function LogActivityStream({
-  maxEntries = 50,
-  height = '300px',
-  autoScroll = true,
-  level = LogLevel.INFO,
+const LOG_LEVEL_COLORS = {
+  debug: 'bg-gray-500',
+  info: 'bg-blue-500',
+  warn: 'bg-yellow-500',
+  error: 'bg-red-500'
+};
+
+const LOG_CATEGORY_COLORS = {
+  [LogCategory.AUTH]: 'bg-purple-500',
+  [LogCategory.API]: 'bg-emerald-500',
+  [LogCategory.SYSTEM]: 'bg-gray-700',
+  [LogCategory.STORE]: 'bg-indigo-500',
+  [LogCategory.UI]: 'bg-pink-500',
+  [LogCategory.THEME]: 'bg-amber-500',
+  [LogCategory.NETWORK]: 'bg-cyan-500',
+  [LogCategory.DEFAULT]: 'bg-slate-500',
+};
+
+export const LogActivityStream: React.FC<LogActivityStreamProps> = ({
+  maxEntries = 100,
+  minLevel = 'debug',
   categories,
-  showSource = false,
-  className
-}: LogActivityStreamProps) {
+  title = 'Activity Log',
+  autoRefresh = true,
+  refreshInterval = 2000,
+  showTimestamp = true,
+  showLevel = true,
+  showCategory = true,
+  onEntryClick,
+  className = ''
+}) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Update logs from memory transport
+
+  // Initial load and refresh logs
   useEffect(() => {
-    const updateLogs = () => {
-      // Get all logs and filter them
-      const allLogs = memoryTransport.getLogs();
-      
-      // Filter by level
-      let filteredLogs = allLogs.filter(log => 
-        isLogLevelAtLeast(log.level, level)
-      );
-      
-      // Filter by categories if specified
-      if (categories && categories.length > 0) {
-        filteredLogs = filteredLogs.filter(log => 
-          categories.includes(log.category as LogCategory)
-        );
+    const loadLogs = async () => {
+      try {
+        // Get logs from memory transport
+        const entries = await memoryTransport.query({
+          level: minLevel,
+          category: categories && categories.length === 1 ? categories[0] : undefined,
+        });
+        
+        // Filter by categories if multiple
+        let filteredEntries = entries;
+        if (categories && categories.length > 1) {
+          filteredEntries = entries.filter(entry => 
+            categories.includes(entry.category as LogCategory)
+          );
+        }
+        
+        // Limit entries
+        setLogs(filteredEntries.slice(0, maxEntries));
+      } catch (error) {
+        console.error('Error loading logs:', error);
       }
-      
-      // Apply limit
-      filteredLogs = filteredLogs.slice(0, maxEntries);
-      
-      setLogs(filteredLogs);
     };
-    
-    // Initial update
-    updateLogs();
-    
-    // Set up interval to update logs
-    const interval = setInterval(updateLogs, 2000);
-    
+
+    // Load logs immediately
+    loadLogs();
+
+    // Set up auto-refresh
+    let intervalId: number | undefined;
+    if (autoRefresh) {
+      intervalId = window.setInterval(loadLogs, refreshInterval);
+    }
+
+    // Clean up
     return () => {
-      clearInterval(interval);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
-  }, [level, categories, maxEntries]);
-  
-  // Auto-scroll to bottom
-  useEffect(() => {
-    if (autoScroll && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [logs, autoScroll]);
-  
-  // Get color class for log level
-  const getLevelColorClass = (level: LogLevel): string => {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return 'text-gray-400';
-      case LogLevel.INFO:
-        return 'text-blue-400';
-      case LogLevel.WARN:
-        return 'text-yellow-400';
-      case LogLevel.ERROR:
-        return 'text-red-400';
-      case LogLevel.CRITICAL:
-        return 'text-red-600 font-bold';
-      default:
-        return 'text-gray-400';
-    }
-  };
-  
-  // Get log item class based on level
-  const getLogItemClass = (level: LogLevel): string => {
-    switch (level) {
-      case LogLevel.WARN:
-        return 'border-l-2 border-l-yellow-500';
-      case LogLevel.ERROR:
-        return 'border-l-2 border-l-red-500';
-      case LogLevel.CRITICAL:
-        return 'border-l-2 border-l-red-600 bg-red-950/20';
-      default:
-        return '';
-    }
-  };
-  
+  }, [maxEntries, minLevel, categories, autoRefresh, refreshInterval]);
+
   // Format timestamp
-  const formatTime = (date: Date): string => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const formatTime = (timestamp: number) => {
+    try {
+      return format(new Date(timestamp), 'HH:mm:ss');
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
-  
+
   return (
-    <ScrollArea
-      ref={scrollRef as any}
-      className={cn(
-        "font-mono text-xs bg-[var(--impulse-bg-main)]/50",
-        "border border-[var(--impulse-border-normal)] rounded-md",
-        className
-      )}
-      style={{ height }}
-    >
-      {logs.length === 0 ? (
-        <div className="flex items-center justify-center h-full text-[var(--impulse-text-secondary)] italic p-4">
-          No logs to display
-        </div>
-      ) : (
-        <div className="p-1">
-          {logs.map((log) => (
-            <div 
-              key={log.id}
-              className={cn(
-                "py-1 px-2 border-b border-[var(--impulse-border-normal)]/30",
-                "hover:bg-[var(--impulse-bg-overlay)]/50",
-                "transition-colors duration-150",
-                getLogItemClass(log.level)
-              )}
-            >
-              <div className="flex items-start gap-2 overflow-hidden">
-                <span className={cn("flex-shrink-0", getLevelColorClass(log.level))}>
-                  {log.level}
-                </span>
+    <div className={`border rounded-md overflow-hidden ${className}`}>
+      <div className="bg-muted px-4 py-2 font-medium border-b">
+        {title}
+      </div>
+      
+      <ScrollArea className="h-[300px]">
+        {logs.length === 0 ? (
+          <div className="p-4 text-center text-muted-foreground">
+            No log entries to display.
+          </div>
+        ) : (
+          <ul className="divide-y">
+            {logs.map((entry) => (
+              <li 
+                key={entry.id} 
+                className="px-4 py-2 hover:bg-muted/50 cursor-pointer transition-colors"
+                onClick={() => onEntryClick && onEntryClick(entry)}
+              >
+                <div className="flex items-center gap-2">
+                  {showLevel && (
+                    <Badge 
+                      variant="outline" 
+                      className={`${LOG_LEVEL_COLORS[entry.level]} text-white text-xs`}
+                    >
+                      {entry.level}
+                    </Badge>
+                  )}
+                  
+                  {showCategory && (
+                    <Badge 
+                      variant="outline" 
+                      className={`${LOG_CATEGORY_COLORS[entry.category] || 'bg-gray-500'} text-white text-xs`}
+                    >
+                      {entry.category}
+                    </Badge>
+                  )}
+                  
+                  {showTimestamp && (
+                    <span className="text-xs text-muted-foreground">
+                      {formatTime(entry.timestamp)}
+                    </span>
+                  )}
+                </div>
                 
-                <span className="flex-shrink-0 text-gray-400">
-                  {formatTime(log.timestamp)}
-                </span>
-                
-                <Badge variant="outline" className="flex-shrink-0 py-0 h-5">
-                  {log.category}
-                </Badge>
-                
-                {showSource && log.source && (
-                  <Badge variant="secondary" className="flex-shrink-0 py-0 h-5">
-                    {log.source}
-                  </Badge>
-                )}
-                
-                <span className="flex-grow truncate">
-                  {renderUnknownAsNode(log.message)}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </ScrollArea>
+                <div className="mt-1 text-sm">{entry.message}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </ScrollArea>
+    </div>
   );
-}
+};

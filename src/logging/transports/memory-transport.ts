@@ -1,71 +1,75 @@
-import { LogEntry, LogFilter, LogLevel, TransportOptions, Transport } from '../types';
+
+import { Transport } from './transport.interface';
+import { LogEntry, LogFilter } from '@/shared/types/shared.types';
+import { LOG_LEVEL_VALUES } from '@/shared/types/shared.types';
 
 export class MemoryTransport implements Transport {
-  private logs: LogEntry[] = [];
-  private minLogLevel: LogLevel = LogLevel.INFO;
-  private maxEntries: number;
-
-  constructor(options?: TransportOptions) {
-    this.minLogLevel = options?.minLevel || LogLevel.INFO;
-    this.maxEntries = options?.maxEntries || 1000;
+  private entries: LogEntry[] = [];
+  private maxEntries: number = 1000;
+  
+  constructor(maxEntries?: number) {
+    if (maxEntries) {
+      this.maxEntries = maxEntries;
+    }
   }
-
+  
   log(entry: LogEntry): void {
-    if (this.logs.length >= this.maxEntries) {
-      this.logs.shift(); // Remove the oldest entry
+    this.entries.unshift(entry);
+    
+    // Trim entries if we exceed max size
+    if (this.entries.length > this.maxEntries) {
+      this.entries = this.entries.slice(0, this.maxEntries);
     }
-    this.logs.push(entry);
   }
-
-  // Implement required Transport interface methods
-  setMinLevel(level: LogLevel): void {
-    this.minLogLevel = level;
+  
+  async query(filter?: LogFilter): Promise<LogEntry[]> {
+    if (!filter) return [...this.entries];
+    
+    return this.entries.filter(entry => {
+      // Filter by level
+      if (filter.level && LOG_LEVEL_VALUES[entry.level] < LOG_LEVEL_VALUES[filter.level]) {
+        return false;
+      }
+      
+      // Filter by category
+      if (filter.category && entry.category !== filter.category) {
+        return false;
+      }
+      
+      // Filter by search term
+      if (filter.search) {
+        const searchTerm = filter.search.toLowerCase();
+        if (!entry.message.toLowerCase().includes(searchTerm)) {
+          return false;
+        }
+      }
+      
+      // Filter by time range
+      if (filter.startTime && entry.timestamp < filter.startTime.getTime()) {
+        return false;
+      }
+      
+      if (filter.endTime && entry.timestamp > filter.endTime.getTime()) {
+        return false;
+      }
+      
+      // Filter by source
+      if (filter.source && entry.source !== filter.source) {
+        return false;
+      }
+      
+      return true;
+    });
   }
-
-  getMinLevel(): LogLevel {
-    return this.minLogLevel;
-  }
-
-  getLogs(): LogEntry[] {
-    return this.logs;
-  }
-
-  filterLogs(filter: LogFilter): LogEntry[] {
-    let filteredLogs = this.logs;
-
-    if (filter.level) {
-      filteredLogs = filteredLogs.filter(log => log.level === filter.level);
-    }
-
-    if (filter.category) {
-      filteredLogs = filteredLogs.filter(log => log.category === filter.category);
-    }
-
-    if (filter.search) {
-      const searchTerm = filter.search.toLowerCase();
-      filteredLogs = filteredLogs.filter(log =>
-        log.message.toLowerCase().includes(searchTerm) ||
-        (log.details && JSON.stringify(log.details).toLowerCase().includes(searchTerm)) ||
-        (log.source && log.source.toLowerCase().includes(searchTerm))
-      );
-    }
-
-    if (filter.startTime) {
-      filteredLogs = filteredLogs.filter(log => new Date(log.timestamp) >= filter.startTime!);
-    }
-
-    if (filter.endTime) {
-      filteredLogs = filteredLogs.filter(log => new Date(log.timestamp) <= filter.endTime!);
-    }
-
-    if (filter.source) {
-      filteredLogs = filteredLogs.filter(log => log.source === filter.source);
-    }
-
-    return filteredLogs;
-  }
-
+  
   clear(): void {
-    this.logs = [];
+    this.entries = [];
+  }
+  
+  getEntries(): LogEntry[] {
+    return [...this.entries];
   }
 }
+
+// Export a singleton instance
+export const memoryTransport = new MemoryTransport();

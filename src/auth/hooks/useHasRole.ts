@@ -1,46 +1,36 @@
 
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useCallback } from 'react';
+import { useAuth } from './useAuth';
 import { UserRole } from '@/shared/types/shared.types';
 
-interface UseHasRoleResult {
-  hasRole: (role: UserRole | UserRole[]) => boolean;
-  hasAdminAccess: () => boolean;
-  hasSuperAdminAccess: () => boolean;
+interface UseHasRoleProps {
+  role?: UserRole | UserRole[];
+  defaultValue?: boolean;
 }
 
 /**
- * Hook to check if the current user has specific roles
+ * Hook to check if the current user has a specific role or roles
+ * @param options Options for the hook
+ * @returns Whether the user has the specified role(s)
  */
-export function useHasRole(): UseHasRoleResult {
-  const { roles } = useAuthStore();
-
-  /**
-   * Check if the user has at least one of the specified roles
-   */
-  const hasRole = (roleOrRoles: UserRole | UserRole[]) => {
-    if (!roles || roles.length === 0) return false;
+export function useHasRole(options?: UseHasRoleProps): boolean {
+  const { hasRole, isAuthenticated, isSuperAdmin } = useAuth();
+  const { role, defaultValue = false } = options || {};
+  
+  const checkRole = useCallback((): boolean => {
+    // No role specified or not authenticated
+    if (!role || !isAuthenticated) {
+      return defaultValue;
+    }
     
-    const rolesToCheck = Array.isArray(roleOrRoles) ? roleOrRoles : [roleOrRoles];
-    return roles.some(role => rolesToCheck.includes(role));
-  };
+    // Super admins have all roles
+    if (isSuperAdmin) {
+      return true;
+    }
+    
+    // Check specific role(s)
+    return hasRole(role);
+  }, [role, hasRole, isAuthenticated, isSuperAdmin, defaultValue]);
 
-  /**
-   * Check if the user has admin or superadmin access
-   */
-  const hasAdminAccess = () => {
-    return hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
-  };
-
-  /**
-   * Check if the user has superadmin access
-   */
-  const hasSuperAdminAccess = () => {
-    return hasRole(UserRole.SUPER_ADMIN);
-  };
-
-  return {
-    hasRole,
-    hasAdminAccess,
-    hasSuperAdminAccess
-  };
+  return checkRole();
 }

@@ -1,59 +1,52 @@
 
-// Export all UI components from /shared/ui folder
+// Central export file for all UI components
+// This allows importing components from '@/shared/ui' instead of individual files
 
-// Button
-export * from './button';
-
-// Layout components
-export * from './card';
-export * from './separator';
-export * from './sheet';
-export * from './resizable';
-
-// Navigation components
-export * from './navigation-menu';
+// Layout Components
+export * from './accordion';
+export * from './alert';
+export * from './alert-dialog';
+export * from './avatar';
+export * from './badge';
 export * from './breadcrumb';
-
-// Form components
-export * from './input';
-export * from './textarea';
-export * from './checkbox';
-export * from './label';
-export * from './select';
-export * from './switch';
-export * from './slider';
-export * from './radio-group';
-
-// Overlay components
+export * from './button';
+export * from './card';
 export * from './dialog';
 export * from './popover';
-export * from './tooltip';
-export * from './hover-card';
-export * from './alert-dialog';
+export * from './separator';
+export * from './sheet';
+export * from './tabs';
+export * from './resizable';
 
-// Feedback components
-export * from './alert';
+// Form Components
+export * from './checkbox';
+export * from './form';
+export * from './input';
+export * from './label';
+export * from './radio-group';
+export * from './select';
+export * from './slider';
+export * from './switch';
+export * from './textarea';
+
+// Data Display
+export * from './calendar';
+export * from './hover-card';
 export * from './progress';
+export * from './skeleton';
+export * from './table';
+export * from './tooltip';
+
+// Navigation
+export * from './navigation-menu';
+export * from './pagination';
+export * from './scroll-area';
+export * from './steps';
+
+// Feedback
+export * from './spinner';
 export * from './toast';
 export * from './toaster';
 export * from './use-toast';
+export * from './sonner';
 
-// Data display components
-export * from './avatar';
-export * from './badge';
-export * from './table';
-export * from './tabs';
-export * from './accordion';
-
-// Layout helpers
-export * from './scroll-area';
-export * from './skeleton';
-export * from './spinner';
-
-// UI components
-export * from './calendar';
-export * from './steps';
-export * from './data-table';
-export * from './pagination';
-export * from './aspect-ratio';
-export * from './collapsible';

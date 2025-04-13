@@ -1,116 +1,49 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, Settings, Users, FileText, 
-  PieChart, Palette, Layers, AlertCircle, LogOut 
-} from 'lucide-react';
-import { useAdminStore } from '../store/admin.store';
-import { useAdminPermissions } from '../hooks/useAdminPermissions';
-import { UserRole } from '@/shared/types/shared.types';
+import { cn } from '@/shared/utils/cn';
 
-const AdminSidebar: React.FC = () => {
-  const { user, logout } = useAdminStore();
-  const { hasRole } = useAdminPermissions();
+export interface AdminSidebarProps {
+  className?: string;
+}
 
-  const navItems = [
-    {
-      label: 'Dashboard',
-      icon: <LayoutDashboard size={18} />,
-      path: '/admin/dashboard',
-      requiredRoles: [UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPERADMIN]
-    },
-    {
-      label: 'Users',
-      icon: <Users size={18} />,
-      path: '/admin/users',
-      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
-    },
-    {
-      label: 'Content',
-      icon: <FileText size={18} />,
-      path: '/admin/content',
-      requiredRoles: [UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPERADMIN]
-    },
-    {
-      label: 'Analytics',
-      icon: <PieChart size={18} />,
-      path: '/admin/analytics',
-      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
-    },
-    {
-      label: 'Layouts',
-      icon: <Layers size={18} />,
-      path: '/admin/layouts',
-      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
-    },
-    {
-      label: 'Themes',
-      icon: <Palette size={18} />,
-      path: '/admin/themes',
-      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
-    },
-    {
-      label: 'Settings',
-      icon: <Settings size={18} />,
-      path: '/admin/settings',
-      requiredRoles: [UserRole.ADMIN, UserRole.SUPERADMIN]
-    },
-    {
-      label: 'Logs',
-      icon: <AlertCircle size={18} />,
-      path: '/admin/logs',
-      requiredRoles: [UserRole.SUPERADMIN]
-    }
-  ];
-
-  const filteredNavItems = navItems.filter(item => 
-    hasRole(item.requiredRoles)
-  );
-
+const AdminSidebar = ({ className }: AdminSidebarProps) => {
   return (
-    <aside className="w-64 bg-background border-r border-border h-screen">
-      <div className="p-4 border-b border-border">
-        <h1 className="text-lg font-semibold">Admin Dashboard</h1>
-        {user && (
-          <div className="text-sm text-muted-foreground mt-1">
-            {user.display_name || user.email}
-          </div>
-        )}
-      </div>
-      
-      <nav className="p-2">
-        <ul className="space-y-1">
-          {filteredNavItems.map((item) => (
-            <li key={item.path}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-accent hover:text-accent-foreground'
-                  }`
-                }
-              >
-                {item.icon}
-                {item.label}
-              </NavLink>
+    <div className={cn("w-64 h-screen bg-background border-r", className)}>
+      <div className="flex flex-col h-full">
+        <div className="p-4 border-b">
+          <h2 className="font-bold text-xl">Admin</h2>
+        </div>
+        
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            <li>
+              <a href="/admin/dashboard" className="flex items-center p-2 rounded-md hover:bg-muted">
+                Dashboard
+              </a>
             </li>
-          ))}
-        </ul>
-      </nav>
-      
-      <div className="mt-auto p-4 border-t border-border">
-        <button
-          onClick={() => logout()}
-          className="flex items-center gap-3 w-full px-3 py-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-        >
-          <LogOut size={18} />
-          Logout
-        </button>
+            <li>
+              <a href="/admin/users" className="flex items-center p-2 rounded-md hover:bg-muted">
+                Users
+              </a>
+            </li>
+            <li>
+              <a href="/admin/content" className="flex items-center p-2 rounded-md hover:bg-muted">
+                Content
+              </a>
+            </li>
+            <li>
+              <a href="/admin/settings" className="flex items-center p-2 rounded-md hover:bg-muted">
+                Settings
+              </a>
+            </li>
+          </ul>
+        </nav>
+        
+        <div className="p-4 border-t mt-auto">
+          <span className="text-sm text-muted-foreground">Admin v1.0</span>
+        </div>
       </div>
-    </aside>
+    </div>
   );
 };
 

@@ -5,7 +5,7 @@ import { AdminGrid } from '@/admin/components/layout/AdminGrid';
 import { BuildApprovalWidget } from '@/admin/components/dashboard/BuildApprovalWidget';
 import { StatsCards } from '@/admin/components/dashboard/StatsCards';
 import { AdminFeatureSection } from '@/admin/components/dashboard/AdminFeatureSection';
-import { AdminSidebar } from '@/admin/components/AdminSidebar';
+import AdminSidebar from '@/admin/components/AdminSidebar';
 import { AdminTopNav } from '@/admin/components/navigation/AdminTopNav';
 import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
 import { ActiveUsersList } from '@/admin/components/dashboard/ActiveUsersList';
