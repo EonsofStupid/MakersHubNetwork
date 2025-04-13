@@ -1,5 +1,4 @@
 
-import { UserRole, ROLES } from '@/shared/types/shared.types';
-import { RBACBridge as OriginalRBACBridge } from '@/rbac/bridge';
+import { RBACBridge } from '@/rbac/bridge';
 
-export { OriginalRBACBridge as RBACBridge };
+export { RBACBridge };

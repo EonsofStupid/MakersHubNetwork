@@ -1,229 +1,294 @@
-import { AuthBridge } from '../bridge';
-import { UserProfile, UserRole, ROLES, LogCategory, LogLevel } from '@/shared/types/shared.types';
-import { RBACBridge } from '@/rbac/bridge';
-import { useAuthStore } from '@/auth/store/auth.store';
+
+import { UserProfile, LogCategory, LogLevel, AuthStatus, UserRole, ROLES } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
+import { RBACBridge } from '@/rbac/bridge';
 
 /**
  * Implementation of the AuthBridge interface
+ * Provides authentication functionality
  */
-export class AuthBridgeImpl implements AuthBridge {
+class AuthBridgeImpl {
+  private loggerSource = 'AuthBridge';
+
   /**
-   * Get current session
+   * Get the current authenticated session
    */
-  public async getCurrentSession(): Promise<{ user: UserProfile } | null> {
-    // This would normally come from an actual auth provider
-    // For now, return a mock implementation or use the store state
-    const user = useAuthStore.getState().user;
-    return user ? { user } : null;
+  async getCurrentSession(): Promise<{ user: UserProfile } | null> {
+    try {
+      // Check local storage for demo user
+      const storedUser = localStorage.getItem('auth_user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser) as UserProfile;
+        return { user };
+      }
+      return null;
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get current session', { 
+        details: { error },
+        source: this.loggerSource
+      });
+      return null;
+    }
   }
-  
+
+  /**
+   * Refresh the current session
+   */
+  async refreshSession(): Promise<{ user_id: string } | null> {
+    try {
+      const session = await this.getCurrentSession();
+      if (session?.user) {
+        return { user_id: session.user.id };
+      }
+      return null;
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to refresh session', { 
+        details: { error },
+        source: this.loggerSource
+      });
+      return null;
+    }
+  }
+
   /**
    * Sign in with email and password
    */
-  public async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
+  async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      // Simple mock implementation for demonstration
-      if (email && password) {
-        // For testing: make any email with "admin" be an admin
-        const isAdmin = email.includes('admin');
-        const isSuperAdmin = email.includes('super');
-        
-        const roles: UserRole[] = [ROLES.USER];
-        if (isAdmin) roles.push(ROLES.ADMIN);
-        if (isSuperAdmin) roles.push(ROLES.SUPER_ADMIN);
-        
-        logger.log(LogLevel.INFO, LogCategory.AUTH, 'Attempting sign in', { 
-          details: { email, roles } 
-        });
-        
-        const mockUser: UserProfile = {
-          id: '123',
-          email,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_metadata: {
-            full_name: email.split('@')[0],
-          }
-        };
-
-        // Update auth store with user
-        const authStore = useAuthStore.getState();
-        authStore.login(email, password);
-        
-        // Update RBAC store with roles
-        RBACBridge.setRoles(roles);
-        
-        logger.log(LogLevel.INFO, LogCategory.AUTH, 'Login successful', { 
-          details: { email, roles } 
-        });
-        
-        return { user: mockUser, error: null };
-      }
+      // Demo implementation - in a real app, call an API
+      const demoUser: UserProfile = {
+        id: '123',
+        email,
+        name: 'Demo User',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        roles: [ROLES.USER]
+      };
       
-      return { user: null, error: new Error('Invalid credentials') };
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Login failed', { 
-        details: { error } 
+      // Store user in local storage for demo
+      localStorage.setItem('auth_user', JSON.stringify(demoUser));
+      localStorage.setItem('auth_token', 'demo_token');
+      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
+      
+      // Set roles in RBAC store
+      RBACBridge.setRoles([ROLES.USER]);
+      
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed in', { 
+        details: { email },
+        source: this.loggerSource
       });
-      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
+      
+      return { user: demoUser, error: null };
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Sign in failed', { 
+        details: { error },
+        source: this.loggerSource
+      });
+      return { user: null, error: error as Error };
     }
   }
 
   /**
    * Sign up with email and password
    */
-  public async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
+  async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      // For demo, implementation is similar to sign in
-      if (email && password) {
-        const mockUser: UserProfile = {
-          id: '123',
-          email,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_metadata: {
-            full_name: email.split('@')[0],
-          }
-        };
-        
-        // Update auth store with user
-        const authStore = useAuthStore.getState();
-        authStore.signup(email, password);
-        
-        // Set default role as 'user'
-        RBACBridge.setRoles([ROLES.USER]);
-        
-        logger.log(LogLevel.INFO, LogCategory.AUTH, 'Signup successful', { 
-          details: { email } 
-        });
-        
-        return { user: mockUser, error: null };
-      }
+      // Demo implementation - in a real app, call an API
+      const demoUser: UserProfile = {
+        id: '123',
+        email,
+        name: 'New User',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        roles: [ROLES.USER]
+      };
       
-      return { user: null, error: new Error('Invalid credentials') };
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Signup failed', { 
-          details: { error } 
+      // Store user in local storage for demo
+      localStorage.setItem('auth_user', JSON.stringify(demoUser));
+      localStorage.setItem('auth_token', 'demo_token');
+      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
+      
+      // Set roles in RBAC store
+      RBACBridge.setRoles([ROLES.USER]);
+      
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed up', { 
+        details: { email },
+        source: this.loggerSource
       });
-      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
+      
+      return { user: demoUser, error: null };
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Sign up failed', { 
+        details: { error },
+        source: this.loggerSource
+      });
+      return { user: null, error: error as Error };
     }
   }
 
   /**
    * Sign out the current user
    */
-  public async signOut(): Promise<void> {
+  async signOut(): Promise<void> {
     try {
-      // Clear auth store
-      const authStore = useAuthStore.getState();
-      authStore.logout();
+      // Clear local storage
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user_roles');
       
-      // Clear RBAC store on sign out
+      // Clear roles in RBAC store
       RBACBridge.clearRoles();
       
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed out');
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed out', {
+        source: this.loggerSource
+      });
     } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Error signing out', { 
-        details: { error } 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Sign out failed', { 
+        details: { error },
+        source: this.loggerSource
       });
     }
-  }
-
-  /**
-   * Reset password for a user
-   */
-  public async resetPassword(email: string): Promise<void> {
-    // Placeholder implementation
-    logger.log(LogLevel.INFO, LogCategory.AUTH, `Reset password email sent to ${email}`);
-  }
-
-  /**
-   * Refresh the current session
-   */
-  public async refreshSession(): Promise<{ user_id: string } | null> {
-    // Placeholder implementation
-    const user = useAuthStore.getState().user;
-    return user ? { user_id: user.id } : null;
-  }
-
-  /**
-   * Get a user profile by ID
-   */
-  public async getUserProfile(userId?: string): Promise<UserProfile | null> {
-    // Return the current user from the store if no ID is provided
-    if (!userId) {
-      return useAuthStore.getState().user;
-    }
-    
-    // Otherwise, placeholder implementation
-    return useAuthStore.getState().user;
   }
 
   /**
    * Sign in with OAuth provider
-   * Implementation for GoogleLoginButton
    */
-  public async signInWithOAuth(provider: string): Promise<{ user: UserProfile | null; error: Error | null }> {
+  async signInWithOAuth(provider: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      // Mock implementation
-      if (provider === 'google') {
-        const mockUser: UserProfile = {
-          id: '456',
-          email: 'google.user@example.com',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user_metadata: {
-            full_name: 'Google User',
-            avatar_url: 'https://api.dicebear.com/6.x/avataaars/svg?seed=google'
-          }
-        };
-        
-        const authStore = useAuthStore.getState();
-        authStore.login('google.user@example.com', 'oauth-login');
-        RBACBridge.setRoles([ROLES.USER]);
-        
-        logger.log(LogLevel.INFO, LogCategory.AUTH, 'OAuth sign in successful', { 
-          details: { provider } 
-        });
-        
-        return { user: mockUser, error: null };
-      }
+      // Demo implementation - in a real app, call an API
+      const demoUser: UserProfile = {
+        id: '123',
+        email: `user@${provider}.com`,
+        name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        roles: [ROLES.USER]
+      };
       
-      return { user: null, error: new Error(`OAuth provider ${provider} not supported`) };
+      // Store user in local storage for demo
+      localStorage.setItem('auth_user', JSON.stringify(demoUser));
+      localStorage.setItem('auth_token', 'demo_token');
+      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
+      
+      // Set roles in RBAC store
+      RBACBridge.setRoles([ROLES.USER]);
+      
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed in with OAuth', { 
+        details: { provider },
+        source: this.loggerSource
+      });
+      
+      return { user: demoUser, error: null };
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'OAuth sign in failed', { 
-          details: { provider, error } 
+        details: { error },
+        source: this.loggerSource
       });
-      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
+      return { user: null, error: error as Error };
     }
   }
 
   /**
-   * Link account with OAuth provider
-   * Implementation for AccountLinkingModal
+   * Link an OAuth provider to the current account
    */
-  public async linkAccount(provider: string): Promise<boolean> {
-    // Mock implementation
-    logger.log(LogLevel.INFO, LogCategory.AUTH, `Linking account with ${provider}`);
-    return true;
+  async linkAccount(provider: string): Promise<boolean> {
+    try {
+      // Demo implementation - in a real app, call an API
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Account linked', { 
+        details: { provider },
+        source: this.loggerSource
+      });
+      
+      return true;
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Account linking failed', { 
+        details: { error },
+        source: this.loggerSource
+      });
+      return false;
+    }
   }
 
   /**
    * Subscribe to auth events
-   * Implementation for AccountLinkingModal
    */
-  public onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
-    // Mock implementation
-    const mockUnsubscribe = () => {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Unsubscribed from auth events');
-    };
-    
-    return {
-      unsubscribe: mockUnsubscribe
-    };
+  onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
+    // Demo implementation - in a real app, set up real event listeners
+    const unsubscribe = () => {};
+    return { unsubscribe };
+  }
+
+  /**
+   * Reset password for an email
+   */
+  async resetPassword(email: string): Promise<void> {
+    try {
+      // Demo implementation - in a real app, call an API
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Password reset requested', { 
+        details: { email },
+        source: this.loggerSource
+      });
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Password reset failed', { 
+        details: { error },
+        source: this.loggerSource
+      });
+    }
+  }
+
+  /**
+   * Get a user's profile
+   */
+  async getUserProfile(userId?: string): Promise<UserProfile | null> {
+    try {
+      // If no userId provided, get the current user
+      if (!userId) {
+        const session = await this.getCurrentSession();
+        return session?.user || null;
+      }
+      
+      // Demo implementation - in a real app, call an API
+      const storedUser = localStorage.getItem('auth_user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser) as UserProfile;
+        if (user.id === userId) {
+          return user;
+        }
+      }
+      
+      logger.log(LogLevel.WARN, LogCategory.AUTH, 'User profile not found', { 
+        details: { userId },
+        source: this.loggerSource
+      });
+      
+      return null;
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get user profile', { 
+        details: { error },
+        source: this.loggerSource
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Check if the current user is authenticated
+   */
+  isAuthenticated(): boolean {
+    const token = localStorage.getItem('auth_token');
+    return !!token;
+  }
+
+  /**
+   * Get the current authentication status
+   */
+  getAuthStatus(): AuthStatus {
+    if (this.isAuthenticated()) {
+      return AuthStatus.AUTHENTICATED;
+    }
+    return AuthStatus.UNAUTHENTICATED;
   }
 }
 
-// Create singleton instance and export
+// Export a singleton instance
 export const authBridge = new AuthBridgeImpl();

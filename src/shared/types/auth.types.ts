@@ -54,7 +54,7 @@ export interface AuthCredential {
 export interface AuthState {
   user: UserProfile | null;
   isAuthenticated: boolean;
-  status: AUTH_STATUS;
+  status: typeof AUTH_STATUS[keyof typeof AUTH_STATUS];
   error: Error | null;
   roles: UserRole[];
   isLoading: boolean;
@@ -103,7 +103,7 @@ export interface UseAuthReturn {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: Error | null;
-  status: AUTH_STATUS;
+  status: typeof AUTH_STATUS[keyof typeof AUTH_STATUS];
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;

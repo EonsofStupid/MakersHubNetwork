@@ -1,5 +1,5 @@
 
-import { UserRole, ROLES, LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { UserRole, ROLES, LogCategory, LogLevel, RBAC } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 
 class RBACBridgeImpl {
@@ -97,7 +97,7 @@ class RBACBridgeImpl {
    * Check if user has admin access
    */
   hasAdminAccess(): boolean {
-    return this.hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+    return this.hasRole(RBAC.adminOnly);
   }
 
   /**
@@ -111,14 +111,14 @@ class RBACBridgeImpl {
    * Check if user is a moderator
    */
   isModerator(): boolean {
-    return this.hasRole([ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+    return this.hasRole(RBAC.moderators);
   }
 
   /**
    * Check if user is a builder
    */
   isBuilder(): boolean {
-    return this.hasRole([ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+    return this.hasRole(RBAC.builders);
   }
 
   /**
@@ -127,9 +127,9 @@ class RBACBridgeImpl {
   canAccessAdminSection(section: string): boolean {
     // Basic section permission mapping
     const sectionPermissions: Record<string, UserRole[]> = {
-      'dashboard': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-      'users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-      'content': [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MODERATOR],
+      'dashboard': RBAC.adminOnly,
+      'users': RBAC.adminOnly,
+      'content': [...RBAC.adminOnly, ROLES.MODERATOR],
       'settings': [ROLES.SUPER_ADMIN],
     };
 
@@ -143,6 +143,34 @@ class RBACBridgeImpl {
   hasPermission(permission: string): boolean {
     // For now, we'll just check if the user is a super_admin
     return this.isSuperAdmin();
+  }
+
+  /**
+   * Check if user can access a specific route
+   */
+  canAccessRoute(path: string): boolean {
+    // Get the most specific policy for the path
+    const policyPaths = Object.keys(RBAC_POLICIES).sort((a, b) => b.length - a.length);
+    const matchedPath = policyPaths.find(p => path.startsWith(p));
+    
+    if (!matchedPath) return true; // No policy, allow access
+    
+    const allowedRoles = RBAC_POLICIES[matchedPath];
+    return this.hasRole(allowedRoles);
+  }
+
+  /**
+   * Check if user is an admin
+   */
+  isAdmin(): boolean {
+    return this.hasRole(RBAC.adminOnly);
+  }
+
+  /**
+   * Check if user can perform an action
+   */
+  can(permission: string): boolean {
+    return this.hasPermission(permission);
   }
 }
 

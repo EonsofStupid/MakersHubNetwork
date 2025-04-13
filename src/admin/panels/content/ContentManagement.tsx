@@ -1,142 +1,228 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { Badge } from "@/shared/ui/badge";
-import { PlusCircle, FileText, Search, Filter } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
-export default function ContentManagement() {
-  const { toast } = useToast();
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Tabs, TabsContent, Tabslist, TabsTrigger } from '@/shared/ui/tabs';
+import { AuthPermissionValue } from '@/auth/permissions';
+import { RBACBridge } from '@/rbac/bridge';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
+
+// Mock content fetching function
+const fetchContent = async (): Promise<any[]> => {
+  // Simulate API call
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([
+        { id: '1', title: 'Getting Started Guide', type: 'article', status: 'published' },
+        { id: '2', title: 'Advanced Features', type: 'article', status: 'draft' },
+        { id: '3', title: 'API Reference', type: 'documentation', status: 'published' },
+        { id: '4', title: 'Video Tutorial', type: 'video', status: 'review' },
+      ]);
+    }, 500);
+  });
+};
+
+/**
+ * Content Management Panel for Administrators
+ */
+export const ContentManagement: React.FC = () => {
+  const logger = useLogger('ContentManagement', LogCategory.ADMIN);
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
   
-  const handleCreateContent = () => {
-    toast({
-      title: "Coming Soon",
-      description: "Content creation feature is not yet implemented"
+  // Fetch content using React Query
+  const { data: content, isLoading, error } = useQuery({
+    queryKey: ['admin', 'content'],
+    queryFn: fetchContent,
+  });
+  
+  // Check permissions
+  const canCreate = RBACBridge.hasPermission('content:create');
+  const canEdit = RBACBridge.hasPermission('content:edit');
+  const canDelete = RBACBridge.hasPermission('content:delete');
+  
+  // Filter content based on active tab and search term
+  const filteredContent = React.useMemo(() => {
+    if (!content) return [];
+    
+    let filtered = content;
+    
+    // Filter by status tab
+    if (activeTab !== 'all') {
+      filtered = filtered.filter(item => item.status === activeTab);
+    }
+    
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(item => 
+        item.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  }, [content, activeTab, searchTerm]);
+  
+  // Log content access
+  React.useEffect(() => {
+    logger.info('Content management panel accessed', {
+      details: { contentCount: content?.length || 0 }
     });
+  }, [content, logger]);
+  
+  // Handle create new content
+  const handleCreateNew = () => {
+    logger.info('Create new content button clicked');
+    // Implementation here
+  };
+  
+  // Handle edit content
+  const handleEdit = (id: string) => {
+    logger.info('Edit content', { details: { id } });
+    // Implementation here
+  };
+  
+  // Handle delete content
+  const handleDelete = (id: string) => {
+    logger.info('Delete content', { details: { id } });
+    // Implementation here
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-2xl font-bold">Content Management</CardTitle>
+          {canCreate && (
+            <Button onClick={handleCreateNew}>
+              Create New
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <Input
+              placeholder="Search content..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="border-b">
+              <Tabslist>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="published">Published</TabsTrigger>
+                <TabsTrigger value="draft">Drafts</TabsTrigger>
+                <TabsTrigger value="review">Review</TabsTrigger>
+              </Tabslist>
+            </div>
+            
+            <TabsContent value="all" className="mt-4">
+              {renderContentTable()}
+            </TabsContent>
+            <TabsContent value="published" className="mt-4">
+              {renderContentTable()}
+            </TabsContent>
+            <TabsContent value="draft" className="mt-4">
+              {renderContentTable()}
+            </TabsContent>
+            <TabsContent value="review" className="mt-4">
+              {renderContentTable()}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
+  
+  function renderContentTable() {
+    if (isLoading) {
+      return <div className="text-center py-4">Loading content...</div>;
+    }
+    
+    if (error) {
+      return <div className="text-center py-4 text-red-500">Error loading content</div>;
+    }
+    
+    if (!filteredContent || filteredContent.length === 0) {
+      return <div className="text-center py-4">No content found</div>;
+    }
+    
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-4">Title</th>
+              <th className="text-left py-2 px-4">Type</th>
+              <th className="text-left py-2 px-4">Status</th>
+              <th className="text-right py-2 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredContent.map((item) => (
+              <tr key={item.id} className="border-b hover:bg-muted transition-colors">
+                <td className="py-2 px-4">{item.title}</td>
+                <td className="py-2 px-4">{item.type}</td>
+                <td className="py-2 px-4">
+                  <StatusBadge status={item.status} />
+                </td>
+                <td className="py-2 px-4 text-right">
+                  <div className="space-x-2">
+                    {canEdit && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(item.id)}
+                      >
+                        Edit
+                      </Button>
+                    )}
+                    {canDelete && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+};
+
+// Status Badge component
+const StatusBadge = ({ status }: { status: string }) => {
+  const getStatusColor = () => {
+    switch (status) {
+      case 'published':
+        return 'bg-green-100 text-green-800';
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      case 'review':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-blue-100 text-blue-800';
+    }
   };
   
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Content Management</h1>
-          <p className="text-muted-foreground">Manage all your content in one place</p>
-        </div>
-        
-        <Button onClick={handleCreateContent}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Content
-        </Button>
-      </div>
-      
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <CardTitle>Content Library</CardTitle>
-              
-              <div className="flex gap-2">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search content..."
-                    className="pl-8 w-[200px] lg:w-[300px]"
-                  />
-                </div>
-                <Button variant="outline" size="icon">
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            <Tabs defaultValue="all">
-              <TabsList>
-                <TabsTrigger value="all">All Content</TabsTrigger>
-                <TabsTrigger value="published">Published</TabsTrigger>
-                <TabsTrigger value="drafts">Drafts</TabsTrigger>
-                <TabsTrigger value="archived">Archived</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="rounded-md border">
-              <div className="relative w-full overflow-auto">
-                <table className="w-full caption-bottom text-sm">
-                  <thead>
-                    <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                      <th className="h-12 px-4 text-left align-middle font-medium">Title</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Type</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Status</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Author</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">Date</th>
-                      <th className="h-12 px-4 text-right align-middle font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: 4 }).map((_, index) => (
-                      <tr key={index} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded bg-primary/10 flex items-center justify-center">
-                              <FileText className="h-5 w-5 text-primary" />
-                            </div>
-                            <div>
-                              <div className="font-medium">Example Content {index + 1}</div>
-                              <div className="text-xs text-muted-foreground">/example-content-{index + 1}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <Badge variant="outline" className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20">
-                            {index % 2 === 0 ? "Post" : "Page"}
-                          </Badge>
-                        </td>
-                        <td className="p-4">
-                          <Badge variant="outline" className={
-                            index % 3 === 0 
-                              ? "bg-green-500/10 text-green-500" 
-                              : index % 3 === 1 
-                                ? "bg-orange-500/10 text-orange-500"
-                                : "bg-gray-500/10 text-gray-500"
-                          }>
-                            {index % 3 === 0 ? "Published" : index % 3 === 1 ? "Draft" : "Archived"}
-                          </Badge>
-                        </td>
-                        <td className="p-4">Admin User</td>
-                        <td className="p-4 text-muted-foreground text-xs">
-                          {new Date().toLocaleDateString()}
-                        </td>
-                        <td className="p-4 text-right">
-                          <Button variant="ghost" size="sm">Edit</Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            
-            {/* Empty state */}
-            {!isLoading && content?.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No content yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Get started by creating your first content piece
-                </p>
-                <Button onClick={handleCreateContent}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  New Content
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor()}`}>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
   );
-}
+};
+
+export default ContentManagement;

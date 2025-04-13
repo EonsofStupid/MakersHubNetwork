@@ -1,4 +1,4 @@
 
-import { authBridge } from '@/auth/bridge';
+import { authBridge } from '@/auth/lib/AuthBridgeImpl';
 
 export { authBridge };

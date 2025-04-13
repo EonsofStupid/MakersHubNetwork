@@ -1,57 +1,88 @@
 
-import React, { useEffect } from 'react';
-import { useDebugStore } from '@/shared/stores/debug/debug.store';
-import { useHasRole } from '@/auth/hooks/useHasRole';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import React, { useEffect, useState } from 'react';
+import { RBACBridge } from '@/rbac/bridge';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { ROLES } from '@/shared/types/shared.types';
 
-export default function AdminOverlay() {
-  const { showAdminOverlay, toggleAdminOverlay } = useDebugStore(state => ({
-    showAdminOverlay: state.showAdminOverlay,
-    toggleAdminOverlay: state.toggleAdminOverlay
-  }));
-  const { hasRole } = useHasRole();
-  const logger = useLogger('AdminOverlay', LogCategory.ADMIN);
+interface AdminOverlayProps {
+  enabled?: boolean;
+}
+
+/**
+ * Debug overlay for admin users
+ * Displays useful debugging information
+ */
+export const AdminOverlay: React.FC<AdminOverlayProps> = ({ enabled = false }) => {
+  const [visible, setVisible] = useState(false);
+  const [inspectMode, setInspectMode] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<Record<string, any>>({});
+  const { user } = useAuthStore();
   
-  // Listen for keyboard shortcut Ctrl+Shift+A to toggle the overlay
+  // Only show for admin users
+  const isAllowed = RBACBridge.hasRole(ROLES.ADMIN);
+  
   useEffect(() => {
+    if (!enabled || !isAllowed) return;
+    
+    // Collect debug info
+    const info = {
+      roles: RBACBridge.getRoles(),
+      userId: user?.id,
+      email: user?.email,
+      isAdmin: RBACBridge.hasRole(ROLES.ADMIN),
+      isSuperAdmin: RBACBridge.isSuperAdmin(),
+      authStatus: useAuthStore.getState().status,
+    };
+    
+    setDebugInfo(info);
+    
+    // Listen for keyboard shortcut (Ctrl+Shift+D)
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.shiftKey &&
-        e.key.toLowerCase() === 'a'
-      ) {
-        e.preventDefault();
-        toggleAdminOverlay();
-        logger.info('Admin overlay toggled via keyboard shortcut');
+      if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
+        setVisible(v => !v);
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [logger, toggleAdminOverlay]);
+  }, [enabled, isAllowed, user]);
   
-  // Don't render anything if overlay is disabled or user doesn't have admin access
-  if (!showAdminOverlay || !hasRole('admin')) return null;
+  if (!enabled || !isAllowed || !visible) return null;
   
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999]">
-      {/* Debug Styling Layer */}
-      <div className="absolute inset-0 border-4 border-pink-500 border-dashed opacity-30" />
-
-      {/* Info Panel */}
-      <div className="absolute top-4 right-4 bg-black/80 text-white p-4 rounded-lg shadow-lg pointer-events-auto">
-        <h2 className="font-bold mb-2">Admin Debug Mode</h2>
-        <ul className="text-sm space-y-1">
-          <li>👤 Role: Admin</li>
-          <li>🧠 State: Active</li>
-          <li>📝 Page: {window.location.pathname}</li>
-          <li>⏱️ Time: {new Date().toLocaleTimeString()}</li>
-        </ul>
-        <div className="mt-3 border-t border-white/20 pt-2">
-          <p className="text-xs text-white/60">Press Ctrl+Shift+A to toggle</p>
-        </div>
+    <div className="fixed bottom-0 right-0 p-4 bg-black/80 text-white text-xs font-mono z-50 max-w-xs">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-bold">Admin Debug</h3>
+        <button 
+          onClick={() => setVisible(false)}
+          className="text-white hover:text-red-400"
+        >
+          ×
+        </button>
+      </div>
+      
+      <div className="space-y-1">
+        {Object.entries(debugInfo).map(([key, value]) => (
+          <div key={key}>
+            <span className="text-gray-400">{key}:</span>{' '}
+            <span className="text-green-400">
+              {Array.isArray(value) 
+                ? value.join(', ')
+                : String(value)
+              }
+            </span>
+          </div>
+        ))}
+      </div>
+      
+      <div className="mt-3 flex space-x-2">
+        <button
+          onClick={() => setInspectMode(!inspectMode)}
+          className={`px-2 py-1 text-xs rounded ${inspectMode ? 'bg-red-500' : 'bg-blue-500'}`}
+        >
+          {inspectMode ? 'Exit Inspect' : 'Inspect'}
+        </button>
       </div>
     </div>
   );
-}
+};

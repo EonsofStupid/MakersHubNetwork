@@ -1,55 +1,110 @@
 
 import React from 'react';
-import { Button } from '@/shared/ui/button';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
-import { useLogger } from '@/hooks/use-logger';
+import { UserAvatar } from '@/shared/ui/UserAvatar';
+import { Button } from '@/shared/ui/button';
 import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
 
-const AdminTopNav = () => {
-  const logger = useLogger('AdminTopNav', LogCategory.ADMIN);
-  const user = useAuthStore(state => state.user);
+interface AdminTopNavProps {
+  onToggleSidebar?: () => void;
+  className?: string;
+}
 
-  React.useEffect(() => {
-    logger.debug('AdminTopNav mounted', {
-      details: { 
-        isAdmin: RBACBridge.hasAdminAccess(),
-        roles: RBACBridge.getRoles()
-      }
-    });
-  }, [logger]);
-
+/**
+ * Admin top navigation bar
+ */
+const AdminTopNav: React.FC<AdminTopNavProps> = ({ 
+  onToggleSidebar,
+  className = ''
+}) => {
+  const { user, logout } = useAuthStore();
+  const roles = RBACBridge.getRoles();
+  
   const handleLogout = async () => {
     try {
-      await useAuthStore.getState().logout();
-      logger.info('Admin logged out successfully');
+      await logout();
     } catch (error) {
-      logger.error('Error logging out', { details: { error } });
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Logout failed', { error });
     }
   };
 
   return (
-    <div className="flex items-center justify-between p-4 bg-background border-b">
-      <div className="flex items-center gap-4">
+    <header className={`bg-card p-4 flex items-center justify-between border-b ${className}`}>
+      <div className="flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleSidebar}
+          className="lg:hidden mr-2"
+          aria-label="Toggle sidebar"
+        >
+          <MenuIcon />
+        </Button>
         <h1 className="text-xl font-bold">Admin Dashboard</h1>
-        <nav className="hidden md:flex items-center space-x-4">
-          <a href="/admin" className="text-sm hover:text-primary">Dashboard</a>
-          <a href="/admin/users" className="text-sm hover:text-primary">Users</a>
-          <a href="/admin/content" className="text-sm hover:text-primary">Content</a>
-          <a href="/admin/settings" className="text-sm hover:text-primary">Settings</a>
-        </nav>
       </div>
       
-      <div className="flex items-center gap-2">
-        {user && (
-          <span className="text-sm">{user.email}</span>
+      <div className="flex items-center gap-4">
+        {RBACBridge.isSuperAdmin() && (
+          <span className="text-sm bg-yellow-500 text-black px-2 py-1 rounded">
+            Super Admin
+          </span>
         )}
-        <Button variant="outline" size="sm" onClick={handleLogout}>
-          Logout
+        
+        <div className="flex items-center gap-2">
+          <UserAvatar user={user} size="sm" />
+          <div className="hidden md:block">
+            <div className="text-sm font-medium">{user?.name || user?.email}</div>
+            <div className="text-xs text-gray-500">{roles.join(', ')}</div>
+          </div>
+        </div>
+        
+        <Button variant="ghost" size="sm" onClick={handleLogout}>
+          <LogOutIcon className="w-4 h-4 mr-2" />
+          <span>Logout</span>
         </Button>
       </div>
-    </div>
+    </header>
   );
 };
+
+// Icons
+const MenuIcon = () => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <line x1="4" x2="20" y1="12" y2="12" />
+    <line x1="4" x2="20" y1="6" y2="6" />
+    <line x1="4" x2="20" y1="18" y2="18" />
+  </svg>
+);
+
+const LogOutIcon = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
+);
 
 export default AdminTopNav;

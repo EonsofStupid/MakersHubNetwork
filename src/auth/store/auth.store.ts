@@ -1,7 +1,8 @@
 
 import { create } from 'zustand';
-import { UserProfile, AUTH_STATUS, LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { UserProfile, AUTH_STATUS, LogCategory, LogLevel, UserRole, ROLES } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
+import { RBACBridge } from '@/rbac/bridge';
 
 // Define the auth state interface
 export interface AuthState {
@@ -9,7 +10,6 @@ export interface AuthState {
   user: UserProfile | null;
   isAuthenticated: boolean;
   status: string; // Using string instead of enum for comparison
-  roles: string[]; // User roles for RBAC
   
   // Session state
   sessionToken: string | null;
@@ -25,6 +25,8 @@ export interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
 }
 
 // Create the auth store
@@ -38,7 +40,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   initialized: false,
   isLoading: false,
-  roles: [],
 
   // Initialize the auth state from storage or server
   initialize: async () => {
@@ -50,7 +51,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       if (storedUser) {
         const user = JSON.parse(storedUser) as UserProfile;
-        const roles = JSON.parse(localStorage.getItem('user_roles') || '[]');
+        const rolesStr = localStorage.getItem('user_roles');
+        const roles = rolesStr ? JSON.parse(rolesStr) as UserRole[] : [ROLES.USER];
+        
+        // Set roles in RBAC bridge
+        RBACBridge.setRoles(roles);
         
         set({ 
           user,
@@ -58,8 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           status: AUTH_STATUS.AUTHENTICATED,
           sessionToken: localStorage.getItem('auth_token'),
           initialized: true,
-          isLoading: false,
-          roles
+          isLoading: false
         });
         
         logger.log(LogLevel.INFO, LogCategory.AUTH, 'User session restored', { 
@@ -72,7 +76,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           status: AUTH_STATUS.UNAUTHENTICATED,
           initialized: true,
           isLoading: false,
-          roles: []
         });
         
         logger.log(LogLevel.INFO, LogCategory.AUTH, 'No user session found');
@@ -103,13 +106,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         name: 'Demo User',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        roles: ['user']
+        roles: [ROLES.USER]
       };
       
       // Store user in local storage for demo
       localStorage.setItem('auth_user', JSON.stringify(demoUser));
       localStorage.setItem('auth_token', 'demo_token');
-      localStorage.setItem('user_roles', JSON.stringify(['user']));
+      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
+      
+      // Set roles in RBAC bridge
+      RBACBridge.setRoles([ROLES.USER]);
       
       set({
         user: demoUser,
@@ -118,7 +124,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         sessionToken: 'demo_token',
         error: null,
         isLoading: false,
-        roles: ['user']
       });
       
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User logged in', { 
@@ -150,6 +155,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_roles');
       
+      // Clear roles in RBAC bridge
+      RBACBridge.clearRoles();
+      
       set({
         user: null,
         isAuthenticated: false,
@@ -158,7 +166,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         refreshToken: null,
         error: null,
         isLoading: false,
-        roles: []
       });
       
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User logged out');
@@ -187,13 +194,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         name: 'New User',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        roles: ['user']
+        roles: [ROLES.USER]
       };
       
       // Store user in local storage for demo
       localStorage.setItem('auth_user', JSON.stringify(demoUser));
       localStorage.setItem('auth_token', 'demo_token');
-      localStorage.setItem('user_roles', JSON.stringify(['user']));
+      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
+      
+      // Set roles in RBAC bridge
+      RBACBridge.setRoles([ROLES.USER]);
       
       set({
         user: demoUser,
@@ -202,7 +212,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         sessionToken: 'demo_token',
         error: null,
         isLoading: false,
-        roles: ['user']
       });
       
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed up', { 
@@ -218,6 +227,71 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Signup failed', { 
         email, 
+        error 
+      });
+    }
+  },
+  
+  // Reset password
+  resetPassword: async (email: string) => {
+    try {
+      set({ isLoading: true });
+      
+      // Demo implementation - in a real app, call an API
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Password reset email sent', { 
+        email 
+      });
+      
+      set({ isLoading: false });
+    } catch (error) {
+      set({
+        error: error as Error,
+        isLoading: false
+      });
+      
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Password reset failed', { 
+        email, 
+        error 
+      });
+    }
+  },
+  
+  // Update user profile
+  updateProfile: async (profile: Partial<UserProfile>) => {
+    try {
+      set({ isLoading: true });
+      
+      // Get current user
+      const { user } = get();
+      
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+      
+      // Update user in storage
+      const updatedUser = {
+        ...user,
+        ...profile,
+        updated_at: new Date().toISOString()
+      };
+      
+      localStorage.setItem('auth_user', JSON.stringify(updatedUser));
+      
+      set({
+        user: updatedUser,
+        isLoading: false
+      });
+      
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User profile updated', { 
+        userId: user.id
+      });
+    } catch (error) {
+      set({
+        error: error as Error,
+        isLoading: false
+      });
+      
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Profile update failed', { 
         error 
       });
     }

@@ -85,11 +85,11 @@ export interface BorderToken {
  * Design tokens interface
  */
 export interface DesignTokens {
-  colors: Record<string, ColorToken>;
-  spacing: Record<string, SpacingToken>;
-  typography: Record<string, TypographyToken>;
-  effects: Record<string, EffectToken>;
-  borders: Record<string, BorderToken>;
+  colors?: Record<string, ColorToken>;
+  spacing?: Record<string, SpacingToken>;
+  typography?: Record<string, TypographyToken>;
+  effects?: Record<string, EffectToken>;
+  borders?: Record<string, BorderToken>;
   [key: string]: any;
 }
 
@@ -110,7 +110,7 @@ export interface Theme {
   description?: string;
   status: ThemeStatus;
   context: ThemeContext;
-  tokens?: DesignTokens;
+  designTokens?: DesignTokens;
   componentTokens?: ComponentTokens;
   createdBy?: string;
   createdAt: string;
@@ -149,4 +149,15 @@ export interface ThemeEffectProps {
 export interface ThemeEffectProviderProps {
   children: React.ReactNode;
   className?: string;
+  effect?: ThemeEffect;
+}
+
+/**
+ * Effect renderer props
+ */
+export interface EffectRendererProps {
+  effect: ThemeEffect;
+  intensity?: number;
+  className?: string;
+  style?: React.CSSProperties;
 }
