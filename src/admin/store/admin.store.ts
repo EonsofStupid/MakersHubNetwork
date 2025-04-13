@@ -1,58 +1,62 @@
-
 import { create } from 'zustand';
 import { AuthStatus, UserProfile, UserRole } from '@/shared/types/shared.types';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
 
 export interface AdminState {
   user: UserProfile | null;
-  isReady: boolean;
   isAuthenticated: boolean;
   status: AuthStatus;
+  isReady: boolean;
   error: string | null;
   permissions: string[];
+  roles: UserRole[];
   
   setAdminUser: (user: UserProfile | null) => void;
   logout: () => void;
-  hasRole: (role: UserRole | UserRole[]) => boolean;
+  hasRole: (roleOrRoles: UserRole | UserRole[]) => boolean;
 }
 
 // Create the store
-const useAdminStore = create<AdminState>((set, get) => ({
-  user: null,
-  isReady: false,
-  isAuthenticated: false,
-  status: AuthStatus.UNAUTHENTICATED,
-  error: null,
-  permissions: [],
-  
-  setAdminUser: (user: UserProfile | null) => {
-    set({ 
-      user,
-      isAuthenticated: !!user,
-      status: user ? AuthStatus.AUTHENTICATED : AuthStatus.UNAUTHENTICATED,
-    });
-  },
+const useAdminStore = create<AdminState>((set, get) => {
+  const logger = useLogger('AdminStore', LogCategory.ADMIN);
 
-  logout: () => {
-    set({
-      user: null,
-      isAuthenticated: false,
-      status: AuthStatus.UNAUTHENTICATED,
-    });
-  },
+  return {
+    user: null,
+    isReady: false,
+    isAuthenticated: false,
+    status: AuthStatus.UNAUTHENTICATED,
+    error: null,
+    permissions: [],
+    roles: [],
+    
+    setAdminUser: (user: UserProfile | null) => {
+      logger.debug('Setting admin user', { details: { userId: user?.id } });
+      set({ 
+        user,
+        isAuthenticated: !!user,
+        status: user ? AuthStatus.AUTHENTICATED : AuthStatus.UNAUTHENTICATED,
+        roles: user?.roles || []
+      });
+    },
 
-  hasRole: (roleOrRoles: UserRole | UserRole[]) => {
-    const { user } = get();
-    
-    if (!user || !user.roles || user.roles.length === 0) {
-      return false;
+    logout: () => {
+      set({
+        user: null,
+        isAuthenticated: false,
+        status: AuthStatus.UNAUTHENTICATED,
+      });
+    },
+
+    hasRole: (roleOrRoles: UserRole | UserRole[]) => {
+      const { user } = get();
+      const userRoles = user?.roles || [];
+      if (userRoles.length === 0) return false;
+      
+      const roles = Array.isArray(roleOrRoles) ? roleOrRoles : [roleOrRoles];
+      return roles.some(role => userRoles.includes(role as UserRole));
     }
-    
-    if (Array.isArray(roleOrRoles)) {
-      return roleOrRoles.some(role => user.roles.includes(role));
-    }
-    
-    return user.roles.includes(roleOrRoles);
-  }
-}));
+  };
+});
 
 export { useAdminStore };
