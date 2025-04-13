@@ -11,7 +11,7 @@ import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 
 export function DebugOverlay() {
   // Use role checking hook
-  const { hasAdminAccess } = useHasRole();
+  const { hasRole } = useHasRole();
   const { isSuperAdmin } = useAdminPermissions();
   
   // Use the debug store
@@ -30,7 +30,7 @@ export function DebugOverlay() {
 
   // Add keyboard listener for Alt key to toggle component inspection
   useEffect(() => {
-    if (!hasAdminAccess() && !isDebugMode) return;
+    if (!hasRole('admin') && !isDebugMode) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Alt key for inspection mode
@@ -92,7 +92,7 @@ export function DebugOverlay() {
       window.removeEventListener('click', handleClick, true);
     };
   }, [
-    hasAdminAccess, 
+    hasRole, 
     isDebugMode, 
     isAltPressed, 
     logger, 
@@ -103,7 +103,7 @@ export function DebugOverlay() {
   ]);
 
   // Don't render anything if user doesn't have admin access and debug mode is not enabled
-  if (!hasAdminAccess() && !isDebugMode) {
+  if (!hasRole('admin') && !isDebugMode) {
     return null;
   }
 

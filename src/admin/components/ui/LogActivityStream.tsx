@@ -1,169 +1,149 @@
 
-import React, { useEffect, useState } from 'react';
-import { LogEntry, memoryTransport } from '@/logging';
-import { LogLevel } from '@/logging/constants/log-level';
-import { LogCategory } from '@/shared/types/shared.types';
-import { formatDistanceToNow } from 'date-fns';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect } from 'react';
+import { LogLevel, LogEntry } from '@/shared/types/shared.types';
+import { memoryTransport } from '@/logging/transports/memory-transport';
+import { Check, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 
-export interface LogActivityStreamProps {
-  level?: LogLevel;
-  categories?: LogCategory[];
+interface LogActivityStreamProps {
   maxEntries?: number;
+  height?: string;
+  showTimestamp?: boolean;
   showSource?: boolean;
-  height?: string; // Added height prop
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+  filter?: {
+    level?: LogLevel;
+    category?: string;
+    search?: string;
+  }
 }
 
 export function LogActivityStream({
-  level,
-  categories,
-  maxEntries = 100,
+  maxEntries = 50,
+  height = "300px",
+  showTimestamp = true,
   showSource = false,
-  height = '300px' // Default height
+  autoRefresh = true,
+  refreshInterval = 5000,
+  filter
 }: LogActivityStreamProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   
   useEffect(() => {
-    // Get initial logs
-    const updateLogs = () => {
-      let filteredLogs = memoryTransport.getLogs();
-      
-      // Filter by level if specified
-      if (level) {
-        filteredLogs = filteredLogs.filter(log => log.level === level);
-      }
-      
-      // Filter by categories if specified
-      if (categories && categories.length > 0) {
-        filteredLogs = filteredLogs.filter(log => {
-          if (!log.category) return false;
-          return categories.includes(log.category);
-        });
-      }
-      
-      // Limit the number of entries
-      filteredLogs = filteredLogs.slice(0, maxEntries);
-      
-      setLogs(filteredLogs);
-    };
-    
+    // Initial load
     updateLogs();
     
-    // Update every 2 seconds
-    const interval = setInterval(updateLogs, 2000);
+    // Set up auto-refresh if enabled
+    let interval: NodeJS.Timeout | null = null;
+    if (autoRefresh) {
+      interval = setInterval(updateLogs, refreshInterval);
+    }
     
     return () => {
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
-  }, [level, categories, maxEntries]);
+  }, [autoRefresh, refreshInterval, filter]);
   
-  const getLevelColor = (logLevel: LogLevel): string => {
-    switch (logLevel) {
-      case LogLevel.DEBUG:
-        return 'text-gray-500 dark:text-gray-400';
-      case LogLevel.INFO:
-        return 'text-blue-500 dark:text-blue-400';
-      case LogLevel.WARN:
-        return 'text-yellow-500 dark:text-yellow-300';
-      case LogLevel.ERROR:
-        return 'text-red-500 dark:text-red-400';
-      case LogLevel.CRITICAL:
-        return 'text-red-700 dark:text-red-300';
-      case LogLevel.SUCCESS:
-        return 'text-green-500 dark:text-green-400';
-      case LogLevel.TRACE:
-        return 'text-purple-500 dark:text-purple-400';
-      case LogLevel.FATAL:
-        return 'text-white bg-red-600 dark:bg-red-800 px-1 rounded';
-      default:
-        return 'text-gray-700 dark:text-gray-300';
-    }
-  };
-  
-  const getCategoryColor = (category: LogCategory | undefined): string => {
-    if (!category) return 'text-gray-500';
+  const updateLogs = () => {
+    // Get filtered logs
+    let filteredLogs = filter 
+      ? memoryTransport.getFilteredLogs(filter)
+      : memoryTransport.getLogs();
     
-    switch (category) {
-      case LogCategory.SYSTEM:
-        return 'text-violet-500 dark:text-violet-400';
-      case LogCategory.AUTH:
-        return 'text-blue-500 dark:text-blue-400';
-      case LogCategory.ADMIN:
-        return 'text-amber-500 dark:text-amber-400';
-      case LogCategory.UI:
-        return 'text-green-500 dark:text-green-400';
-      case LogCategory.NETWORK:
-        return 'text-cyan-500 dark:text-cyan-400';
-      case LogCategory.STORE:
-        return 'text-purple-500 dark:text-purple-400';
-      case LogCategory.CHAT:
-        return 'text-pink-500 dark:text-pink-400';
-      case LogCategory.DEFAULT:
+    // Apply max entries limit
+    filteredLogs = filteredLogs.slice(0, maxEntries);
+    
+    setLogs(filteredLogs);
+  };
+  
+  // Function to get icon for log level
+  const getLevelIcon = (level: LogLevel) => {
+    switch (level) {
+      case LogLevel.INFO:
+        return <Info className="h-4 w-4 text-blue-500" />;
+      case LogLevel.WARN:
+        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+      case LogLevel.ERROR:
+        return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case LogLevel.CRITICAL:
+        return <X className="h-4 w-4 text-red-700" />;
+      case LogLevel.DEBUG:
       default:
-        return 'text-gray-500 dark:text-gray-400';
+        return <Check className="h-4 w-4 text-gray-500" />;
     }
   };
   
-  const formatTime = (timestamp: string) => {
-    try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-    } catch (e) {
-      return 'unknown time';
-    }
+  // Function to format timestamp
+  const formatTimestamp = (timestamp: number | string) => {
+    const date = typeof timestamp === 'number' 
+      ? new Date(timestamp)
+      : new Date(timestamp);
+    
+    return date.toLocaleTimeString();
   };
   
   return (
     <div 
-      className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md overflow-auto"
-      style={{ height }}
+      className="bg-background border border-border/30 rounded-md overflow-auto" 
+      style={{ height, maxHeight: height }}
     >
-      {logs.length > 0 ? (
-        <div className="divide-y divide-gray-200 dark:divide-gray-800">
-          {logs.map((log, index) => (
-            <div 
-              key={index} 
-              className={cn(
-                "p-2 text-sm font-mono",
-                log.level === LogLevel.ERROR || log.level === LogLevel.CRITICAL || log.level === LogLevel.FATAL
-                  ? "bg-red-50 dark:bg-red-900/20" 
-                  : log.level === LogLevel.WARN
-                    ? "bg-yellow-50 dark:bg-yellow-900/20"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-800/50"
-              )}
-            >
-              <div className="flex items-start gap-2">
-                <span className={getLevelColor(log.level)}>
-                  [{log.level.toUpperCase()}]
-                </span>
-                
-                {showSource && (
-                  <>
-                    <span className={getCategoryColor(log.category)}>
-                      {log.category || 'default'}
-                    </span>
-                    <span className="text-gray-500">
-                      {log.source ? `[${log.source}]` : ''}
-                    </span>
-                  </>
-                )}
-                
-                <span className="flex-1">{log.message}</span>
-                <span className="text-xs text-gray-500 whitespace-nowrap">
-                  {formatTime(log.timestamp)}
-                </span>
-              </div>
-              
-              {log.details && Object.keys(log.details).length > 0 && (
-                <div className="ml-4 mt-1 text-xs text-gray-600 dark:text-gray-400">
-                  {JSON.stringify(log.details, null, 2)}
-                </div>
-              )}
-            </div>
-          ))}
+      {logs.length === 0 ? (
+        <div className="flex items-center justify-center h-full text-muted-foreground p-4">
+          No logs available
         </div>
       ) : (
-        <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-          No logs to display
+        <div className="divide-y divide-border/20">
+          {logs.map((log) => (
+            <div 
+              key={log.id} 
+              className={`p-2 text-sm hover:bg-muted/30 transition-colors ${
+                log.level === LogLevel.ERROR || log.level === LogLevel.CRITICAL
+                  ? 'bg-red-500/5'
+                  : log.level === LogLevel.WARN
+                  ? 'bg-amber-500/5'
+                  : ''
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex-shrink-0">
+                  {getLevelIcon(log.level)}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    {showTimestamp && (
+                      <span className="text-xs text-muted-foreground">
+                        {formatTimestamp(log.timestamp)}
+                      </span>
+                    )}
+                    
+                    <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                      {log.category}
+                    </span>
+                    
+                    {showSource && log.source && (
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-secondary/10 text-secondary">
+                        {log.source}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="mt-1 break-words">
+                    {log.message}
+                  </div>
+                  
+                  {log.details && Object.keys(log.details).length > 0 && (
+                    <details className="mt-1">
+                      <summary className="text-xs text-muted-foreground cursor-pointer">Details</summary>
+                      <pre className="mt-1 p-2 bg-muted/30 rounded text-xs overflow-auto max-h-32">
+                        {JSON.stringify(log.details, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

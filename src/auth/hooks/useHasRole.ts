@@ -1,36 +1,48 @@
 
 import { useCallback } from 'react';
-import { useAuth } from './useAuth';
 import { UserRole } from '@/shared/types/shared.types';
-
-interface UseHasRoleProps {
-  role?: UserRole | UserRole[];
-  defaultValue?: boolean;
-}
+import { useAuthStore } from '@/auth/store/auth.store';
 
 /**
- * Hook to check if the current user has a specific role or roles
- * @param options Options for the hook
- * @returns Whether the user has the specified role(s)
+ * Hook to check if user has specific roles
  */
-export function useHasRole(options?: UseHasRoleProps): boolean {
-  const { hasRole, isAuthenticated, isSuperAdmin } = useAuth();
-  const { role, defaultValue = false } = options || {};
+export const useHasRole = () => {
+  const roles = useAuthStore(state => state.roles);
   
-  const checkRole = useCallback((): boolean => {
-    // No role specified or not authenticated
-    if (!role || !isAuthenticated) {
-      return defaultValue;
+  /**
+   * Check if user has the specified role(s)
+   */
+  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+    if (!roles || roles.length === 0) return false;
+    
+    // Superadmin has all roles
+    if (roles.includes('superadmin')) return true;
+    
+    // Check for specific roles
+    if (Array.isArray(role)) {
+      return role.some(r => roles.includes(r));
     }
     
-    // Super admins have all roles
-    if (isSuperAdmin()) {
-      return true;
-    }
-    
-    // Check specific role(s)
-    return hasRole(role);
-  }, [role, hasRole, isAuthenticated, isSuperAdmin, defaultValue]);
+    return roles.includes(role);
+  }, [roles]);
 
-  return checkRole();
-}
+  /**
+   * Check if user has admin access (admin or superadmin)
+   */
+  const hasAdminAccess = useCallback(() => {
+    return hasRole(['admin', 'superadmin']);
+  }, [hasRole]);
+
+  /**
+   * Check if user is superadmin
+   */
+  const isSuperAdmin = useCallback(() => {
+    return hasRole('superadmin');
+  }, [hasRole]);
+  
+  return {
+    hasRole,
+    hasAdminAccess,
+    isSuperAdmin
+  };
+};

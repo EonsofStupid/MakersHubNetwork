@@ -19,8 +19,9 @@ export function ImpulseAdminLayout({
   title
 }: ImpulseAdminLayoutProps) {
   return (
-    <AdminLayout fullWidth={fullWidth} className={className} title={title}>
+    <div className={`admin-impulse-layout ${fullWidth ? 'w-full' : 'max-w-screen-xl mx-auto'} ${className}`}>
+      <h1 className="text-2xl font-bold mb-6">{title || 'Admin Panel'}</h1>
       {children}
-    </AdminLayout>
+    </div>
   );
 }

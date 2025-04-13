@@ -9,7 +9,7 @@ import { LogCategory } from '@/shared/types/shared.types';
 import { useToast } from '@/shared/hooks/use-toast';
 
 export function AdminLayout() {
-  const { hasAdminAccess } = useHasRole();
+  const { hasRole } = useHasRole();
   const navigate = useNavigate();
   const { toast } = useToast();
   const logger = useLogger('AdminLayout', LogCategory.ADMIN);
@@ -17,7 +17,7 @@ export function AdminLayout() {
   // Check if user has admin access
   useEffect(() => {
     const checkAccess = async () => {
-      if (!hasAdminAccess()) {
+      if (!hasRole('admin')) {
         logger.warn('Unauthorized access attempt to admin area');
         toast({
           title: 'Access Denied',
@@ -31,7 +31,7 @@ export function AdminLayout() {
     };
     
     checkAccess();
-  }, [hasAdminAccess, navigate, toast, logger]);
+  }, [hasRole, navigate, toast, logger]);
   
   return (
     <div className="min-h-screen bg-background">
