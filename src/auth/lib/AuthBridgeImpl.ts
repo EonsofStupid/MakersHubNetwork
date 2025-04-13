@@ -8,15 +8,6 @@ import { RBACBridge } from '@/rbac/bridge';
  */
 export class AuthBridgeImpl implements AuthBridge {
   /**
-   * Check if the current user has the specified role(s)
-   * @param role - A single role or array of roles to check
-   * @returns boolean indicating if the user has any of the specified roles
-   */
-  public hasRole(role: UserRole | UserRole[]): boolean {
-    return RBACBridge.hasRole(role);
-  }
-  
-  /**
    * Get current session
    */
   public async getCurrentSession(): Promise<{ user: UserProfile } | null> {
@@ -46,14 +37,11 @@ export class AuthBridgeImpl implements AuthBridge {
         updated_at: new Date().toISOString(),
         user_metadata: {
           full_name: email.split('@')[0],
-          roles
         }
       };
       
       // Update RBAC store with roles
-      import('@/rbac/store').then(module => {
-        module.useRbacStore.getState().setRoles(roles);
-      });
+      RBACBridge.setRoles(roles);
       
       return { user: mockUser, error: null };
     }
@@ -65,8 +53,25 @@ export class AuthBridgeImpl implements AuthBridge {
    * Sign up with email and password
    */
   public async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    // Placeholder implementation
-    return { user: null, error: null };
+    // For demo, implementation is similar to sign in
+    if (email && password) {
+      const mockUser: UserProfile = {
+        id: '123',
+        email,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_metadata: {
+          full_name: email.split('@')[0],
+        }
+      };
+      
+      // Set default role as 'user'
+      RBACBridge.setRoles(['user']);
+      
+      return { user: mockUser, error: null };
+    }
+    
+    return { user: null, error: new Error('Invalid credentials') };
   }
 
   /**
@@ -74,9 +79,7 @@ export class AuthBridgeImpl implements AuthBridge {
    */
   public async signOut(): Promise<void> {
     // Clear RBAC store on sign out
-    import('@/rbac/store').then(module => {
-      module.useRbacStore.getState().clear();
-    });
+    RBACBridge.clearRoles();
   }
 
   /**
@@ -84,6 +87,7 @@ export class AuthBridgeImpl implements AuthBridge {
    */
   public async resetPassword(email: string): Promise<void> {
     // Placeholder implementation
+    console.log(`Reset password email sent to ${email}`);
   }
 
   /**

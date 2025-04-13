@@ -1,5 +1,5 @@
 
-import { UserProfile, UserRole } from '@/shared/types/SharedTypes';
+import { UserProfile } from '@/shared/types/SharedTypes';
 import { AuthBridgeImpl } from './lib/AuthBridgeImpl';
 
 // Export the bridge interface type
