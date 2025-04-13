@@ -158,6 +158,7 @@ export interface User {
   created_at: string;
   updated_at: string;
   user_metadata: Record<string, unknown>;
+  roles?: UserRole[];
 }
 
 // RBAC Constants
@@ -231,13 +232,60 @@ export enum AuthEventType {
   USER_DELETED = 'USER_DELETED',
   PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
   PROFILE_UPDATED = 'PROFILE_UPDATED',
-  AUTH_STATE_CHANGE = 'AUTH_STATE_CHANGE'
+  AUTH_STATE_CHANGE = 'AUTH_STATE_CHANGE',
+  PASSWORD_RESET = 'PASSWORD_RESET',
+  MFA_CHALLENGE = 'MFA_CHALLENGE',
+  MFA_VERIFIED = 'MFA_VERIFIED',
+  TOKEN_REFRESHED = 'TOKEN_REFRESHED',
+  SESSION_DELETED = 'SESSION_DELETED',
+  ACCOUNT_LINKED = 'ACCOUNT_LINKED',
+  ACCOUNT_UNLINKED = 'ACCOUNT_UNLINKED',
+  MFA_ENABLED = 'MFA_ENABLED',
+  MFA_DISABLED = 'MFA_DISABLED'
 }
 
 export interface AuthEvent {
   type: AuthEventType;
   user: UserProfile | null;
   metadata?: Record<string, unknown>;
+  timestamp?: number;
+}
+
+// Auth Session interface
+export interface AuthSession {
+  id: string;
+  user_id: string;
+  created_at: string;
+  expires_at?: string;
+  last_active_at?: string;
+}
+
+// Auth Bridge interface
+export interface AuthBridge {
+  // Session management
+  getCurrentSession: () => Promise<AuthSession | null>;
+  refreshSession: () => Promise<AuthSession | null>;
+  
+  // Authentication methods
+  signInWithEmail: (email: string, password: string) => Promise<{ user: UserProfile | null; error: Error | null }>;
+  signInWithOAuth: (provider: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<{ user: UserProfile | null; error: Error | null }>;
+  signOut: () => Promise<void>;
+  
+  // User management
+  getUserProfile: (userId: string) => Promise<UserProfile | null>;
+  updateUserProfile: (profile: Partial<UserProfile>) => Promise<UserProfile>;
+  
+  // Password management
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (oldPassword: string, newPassword: string) => Promise<void>;
+  
+  // Event subscription
+  subscribeToAuthEvents: (callback: (event: AuthEvent) => void) => () => void;
+  
+  // Role checking helpers
+  hasPermission: (permission: string) => boolean;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
 }
 
 // Build related interfaces
