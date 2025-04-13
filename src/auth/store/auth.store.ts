@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { UserProfile, AUTH_STATUS, LogCategory, LogLevel, UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserProfile, AuthStatus, LogCategory, LogLevel, UserRole, ROLES } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 import { RBACBridge } from '@/rbac/bridge';
 
@@ -9,12 +9,15 @@ export interface AuthState {
   // User state
   user: UserProfile | null;
   isAuthenticated: boolean;
-  status: string; // Using string instead of enum for comparison
+  status: AuthStatus;
   
   // Session state
   sessionToken: string | null;
   refreshToken: string | null;
   
+  // Profile information
+  profile: UserProfile | null;
+
   // Status and loading state
   error: Error | null;
   initialized: boolean;
@@ -25,6 +28,7 @@ export interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
 }
@@ -33,8 +37,9 @@ export interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   // Initial state
   user: null,
+  profile: null,
   isAuthenticated: false,
-  status: AUTH_STATUS.IDLE,
+  status: AuthStatus.IDLE,
   sessionToken: null,
   refreshToken: null,
   error: null,
@@ -44,7 +49,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Initialize the auth state from storage or server
   initialize: async () => {
     try {
-      set({ status: AUTH_STATUS.LOADING, isLoading: true });
+      set({ status: AuthStatus.LOADING, isLoading: true });
       
       // Demo implementation - in a real app, verify the stored session
       const storedUser = localStorage.getItem('auth_user');
@@ -59,8 +64,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         
         set({ 
           user,
+          profile: user,
           isAuthenticated: true,
-          status: AUTH_STATUS.AUTHENTICATED,
+          status: AuthStatus.AUTHENTICATED,
           sessionToken: localStorage.getItem('auth_token'),
           initialized: true,
           isLoading: false
@@ -73,7 +79,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         set({
           isAuthenticated: false,
-          status: AUTH_STATUS.UNAUTHENTICATED,
+          status: AuthStatus.UNAUTHENTICATED,
           initialized: true,
           isLoading: false,
         });
@@ -82,7 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (error) {
       set({ 
-        status: AUTH_STATUS.ERROR, 
+        status: AuthStatus.ERROR, 
         error: error as Error,
         initialized: true,
         isLoading: false
@@ -97,7 +103,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Login the user
   login: async (email: string, password: string) => {
     try {
-      set({ status: AUTH_STATUS.LOADING, isLoading: true });
+      set({ status: AuthStatus.LOADING, isLoading: true });
       
       // Demo implementation - in a real app, call an API
       const demoUser: UserProfile = {
@@ -106,7 +112,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         name: 'Demo User',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        roles: [ROLES.USER]
       };
       
       // Store user in local storage for demo
@@ -119,8 +124,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       set({
         user: demoUser,
+        profile: demoUser,
         isAuthenticated: true,
-        status: AUTH_STATUS.AUTHENTICATED,
+        status: AuthStatus.AUTHENTICATED,
         sessionToken: 'demo_token',
         error: null,
         isLoading: false,
@@ -132,7 +138,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
     } catch (error) {
       set({ 
-        status: AUTH_STATUS.ERROR,
+        status: AuthStatus.ERROR,
         error: error as Error,
         isAuthenticated: false,
         isLoading: false
@@ -148,7 +154,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Logout the user
   logout: async () => {
     try {
-      set({ status: AUTH_STATUS.LOADING, isLoading: true });
+      set({ status: AuthStatus.LOADING, isLoading: true });
       
       // Clear local storage
       localStorage.removeItem('auth_user');
@@ -160,8 +166,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       set({
         user: null,
+        profile: null,
         isAuthenticated: false,
-        status: AUTH_STATUS.UNAUTHENTICATED,
+        status: AuthStatus.UNAUTHENTICATED,
         sessionToken: null,
         refreshToken: null,
         error: null,
@@ -171,7 +178,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User logged out');
     } catch (error) {
       set({
-        status: AUTH_STATUS.ERROR,
+        status: AuthStatus.ERROR,
         error: error as Error,
         isLoading: false
       });
@@ -185,7 +192,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Sign up a new user
   signup: async (email: string, password: string) => {
     try {
-      set({ status: AUTH_STATUS.LOADING, isLoading: true });
+      set({ status: AuthStatus.LOADING, isLoading: true });
       
       // Demo implementation - in a real app, call an API
       const demoUser: UserProfile = {
@@ -194,7 +201,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         name: 'New User',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        roles: [ROLES.USER]
       };
       
       // Store user in local storage for demo
@@ -207,8 +213,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       set({
         user: demoUser,
+        profile: demoUser,
         isAuthenticated: true,
-        status: AUTH_STATUS.AUTHENTICATED,
+        status: AuthStatus.AUTHENTICATED,
         sessionToken: 'demo_token',
         error: null,
         isLoading: false,
@@ -220,7 +227,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
     } catch (error) {
       set({
-        status: AUTH_STATUS.ERROR,
+        status: AuthStatus.ERROR,
         error: error as Error,
         isLoading: false
       });
@@ -230,6 +237,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error 
       });
     }
+  },
+  
+  // Register alias for signup
+  register: async (email: string, password: string) => {
+    return get().signup(email, password);
   },
   
   // Reset password
@@ -279,6 +291,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       set({
         user: updatedUser,
+        profile: updatedUser,
         isLoading: false
       });
       

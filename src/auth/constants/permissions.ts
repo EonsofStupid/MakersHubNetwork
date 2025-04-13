@@ -9,7 +9,8 @@ export const AUTH_PERMISSIONS = {
   VIEW_USERS: 'users:view',
   EDIT_USERS: 'users:edit',
   SYSTEM_VIEW: 'system:view',
-  SUPER_ADMIN: 'super:admin'
+  SUPER_ADMIN: 'super:admin',
+  SETTINGS_VIEW: 'settings:view'
 } as const;
 
 // Permission value type
