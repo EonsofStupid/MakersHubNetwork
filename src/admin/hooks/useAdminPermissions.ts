@@ -1,61 +1,55 @@
 
-import { useAdminStore } from '../store/admin.store';
-import { UserRole } from '@/shared/types/shared.types';
+import { useCallback } from 'react';
+import { useHasRole } from '@/auth/hooks/useHasRole'; 
+import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
 
-export type PermissionCheckResult = boolean;
+/**
+ * Hook to check admin permissions
+ */
+export const useAdminPermissions = () => {
+  const { hasRole } = useHasRole();
 
-export interface UseAdminPermissionsResult {
-  hasRole: (roles: UserRole | UserRole[]) => boolean;
-  hasPermission: (permission: string) => boolean;
-  isSuperAdmin: () => boolean;
-}
-
-export function useAdminPermissions(): UseAdminPermissionsResult {
-  const { user } = useAdminStore();
-  
-  const hasRole = (roleOrRoles: UserRole | UserRole[]): boolean => {
-    if (!user || !user.roles || user.roles.length === 0) {
-      return false;
-    }
-    
-    // Super admins have all roles
-    if (user.roles.includes(UserRole.SUPERADMIN)) {
+  /**
+   * Check if user has a specific admin permission
+   */
+  const hasPermission = useCallback((permission: string): boolean => {
+    // Superadmin has all permissions
+    if (hasRole('superadmin')) {
       return true;
     }
-    
-    if (Array.isArray(roleOrRoles)) {
-      return roleOrRoles.some(role => user.roles.includes(role));
-    }
-    
-    return user.roles.includes(roleOrRoles);
-  };
-  
-  const hasPermission = (permission: string): boolean => {
-    // For now, map permissions to roles
-    // In the future, this could be expanded to a more granular permission system
-    
-    // Super admins have all permissions
-    if (hasRole(UserRole.SUPERADMIN)) {
+
+    // Admin has basic admin permissions
+    if (hasRole('admin') && permission === ADMIN_PERMISSIONS.ADMIN_VIEW) {
       return true;
     }
-    
-    // Only admin users can access admin features
-    if (permission.startsWith('admin:')) {
-      return hasRole([UserRole.ADMIN, UserRole.SUPERADMIN]);
+
+    // For specific permissions, need to check the actual permission
+    // In a real app, this would check against a permissions system
+    switch (permission) {
+      case ADMIN_PERMISSIONS.ADMIN_VIEW:
+        return hasRole(['admin', 'superadmin']);
+      case ADMIN_PERMISSIONS.ADMIN_EDIT:
+        return hasRole('superadmin');
+      case ADMIN_PERMISSIONS.CONTENT_PUBLISH:
+        return hasRole(['admin', 'superadmin']);
+      case ADMIN_PERMISSIONS.USER_MANAGE:
+        return hasRole('superadmin');
+      case ADMIN_PERMISSIONS.SYSTEM_SETTINGS:
+        return hasRole('superadmin');
+      default:
+        return false;
     }
-    
-    return false;
-  };
+  }, [hasRole]);
+
+  /**
+   * Check if user is a superadmin
+   */
+  const isSuperAdmin = useCallback((): boolean => {
+    return hasRole('superadmin');
+  }, [hasRole]);
   
-  const isSuperAdmin = (): boolean => {
-    return hasRole(UserRole.SUPERADMIN);
-  };
-  
-  return {
-    hasRole,
+  return { 
     hasPermission,
-    isSuperAdmin
+    isSuperAdmin 
   };
-}
-
-export default useAdminPermissions;
+};

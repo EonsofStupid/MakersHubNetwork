@@ -10,7 +10,7 @@ export default function AdminOverlay() {
     showAdminOverlay: state.showAdminOverlay,
     toggleAdminOverlay: state.toggleAdminOverlay
   }));
-  const { hasAdminAccess } = useHasRole();
+  const { hasRole } = useHasRole();
   const logger = useLogger('AdminOverlay', LogCategory.ADMIN);
   
   // Listen for keyboard shortcut Ctrl+Shift+A to toggle the overlay
@@ -32,7 +32,7 @@ export default function AdminOverlay() {
   }, [logger, toggleAdminOverlay]);
   
   // Don't render anything if overlay is disabled or user doesn't have admin access
-  if (!showAdminOverlay || !hasAdminAccess()) return null;
+  if (!showAdminOverlay || !hasRole('admin')) return null;
   
   return (
     <div className="fixed inset-0 pointer-events-none z-[9999]">
