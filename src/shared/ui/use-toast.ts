@@ -1,11 +1,9 @@
 
-// Re-export from components/ui/use-toast
-import { useToast as useToastInternal, toast as toastInternal } from "@/components/ui/use-toast";
-import { type ToastProps, type ToastActionElement } from "@/components/ui/toast";
+// Re-export from shared/hooks/use-toast
+import { useToast, toast } from "@/shared/hooks/use-toast";
+import type { ToastProps, ToastActionElement, ToastVariant } from "@/shared/hooks/use-toast";
 
-export const useToast = useToastInternal;
-export const toast = toastInternal;
+export { useToast, toast };
 
 // Re-export types for convenience
-export type { ToastProps, ToastActionElement };
-export type ToastVariant = "default" | "destructive" | "success" | "warning" | "info";
+export type { ToastProps, ToastActionElement, ToastVariant };

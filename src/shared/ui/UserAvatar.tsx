@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
-import { UserProfile } from "@/shared/types/SharedTypes";
+import { UserProfile } from "@/shared/types/shared.types";
 
 interface UserAvatarProps {
   user?: UserProfile | null;
@@ -17,10 +17,10 @@ export function UserAvatar({
   className = "" 
 }: UserAvatarProps) {
   // Get avatar URL from user metadata if available
-  const avatarUrl = user?.avatar_url || user?.user_metadata?.avatar_url;
+  const avatarUrl = user?.avatar_url || (user?.user_metadata?.avatar_url as string | undefined);
   
   // Get display name from user metadata if available
-  const displayName = user?.name || user?.user_metadata?.full_name;
+  const displayName = user?.name || (user?.user_metadata?.full_name as string | undefined);
   
   // Generate fallback initials from display name or email
   const generateInitials = (): string => {

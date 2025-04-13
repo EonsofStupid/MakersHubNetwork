@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAdminAccess } from '../hooks/useAdminAccess';
+import { useAdminAccess } from '../../hooks/useAdminAccess';
 import { cn } from '@/shared/utils/cn';
 
 export function TopNavShortcuts() {
@@ -48,7 +49,7 @@ export function TopNavShortcuts() {
         </motion.div>
       ))}
       
-      {hasAdminAccess && (
+      {hasAdminAccess() && (
         <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

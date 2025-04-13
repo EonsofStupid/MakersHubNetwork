@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
-import { UserRole, LOG_CATEGORY } from '@/shared/types/shared.types';
+import { UserRole, LOG_CATEGORY, AUTH_STATUS } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
 
 /**
@@ -43,7 +43,7 @@ export const useAdminAuth = () => {
   return {
     user,
     isAuthenticated,
-    isLoading: status === 'LOADING',
+    isLoading: status === AUTH_STATUS.LOADING,
     status,
     roles,
     hasAdminAccess,
