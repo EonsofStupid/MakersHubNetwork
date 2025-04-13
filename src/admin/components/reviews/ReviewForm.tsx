@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { FormLabel } from '@/components/ui/form';
+import { Button } from "@/shared/ui/button';
+import { Textarea } from "@/shared/ui/textarea';
+import { Input } from '@/shared/ui/input';
+import { FormLabel } from '@/shared/ui/form';
 import { RatingStars, ReviewRating } from './RatingStars';
 import { CategorySelector } from './CategorySelector';
 import { ReviewImageUpload } from './ReviewImageUpload';

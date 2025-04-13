@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { useReviewAdminStore } from "@/admin/store/reviewAdmin.store";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { ReviewCard } from "./ReviewCard";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
