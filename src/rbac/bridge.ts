@@ -1,9 +1,9 @@
 
-import { UserRole, ROLES, LogCategory } from '@/shared/types/shared.types';
-import { useLogger } from '@/hooks/use-logger';
+import { UserRole, ROLES, LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
 
 class RBACBridgeImpl {
-  private logger = useLogger('RBACBridge', LogCategory.RBAC);
+  private loggerSource = 'RBACBridge';
 
   /**
    * Check if user has the specified role(s)
@@ -39,9 +39,15 @@ class RBACBridgeImpl {
     try {
       // Store roles in session storage
       sessionStorage.setItem('user_roles', JSON.stringify(roles));
-      this.logger.info('User roles set', { details: { roles } });
+      logger.log(LogLevel.INFO, LogCategory.RBAC, 'User roles set', { 
+        details: { roles },
+        source: this.loggerSource
+      });
     } catch (error) {
-      this.logger.error('Failed to set roles in storage', { details: { error } });
+      logger.log(LogLevel.ERROR, LogCategory.RBAC, 'Failed to set roles in storage', { 
+        details: { error },
+        source: this.loggerSource
+      });
     }
   }
 
@@ -51,9 +57,14 @@ class RBACBridgeImpl {
   clearRoles(): void {
     try {
       sessionStorage.removeItem('user_roles');
-      this.logger.info('User roles cleared');
+      logger.log(LogLevel.INFO, LogCategory.RBAC, 'User roles cleared', {
+        source: this.loggerSource
+      });
     } catch (error) {
-      this.logger.error('Failed to clear roles from storage', { details: { error } });
+      logger.log(LogLevel.ERROR, LogCategory.RBAC, 'Failed to clear roles from storage', { 
+        details: { error },
+        source: this.loggerSource
+      });
     }
   }
 
@@ -74,7 +85,10 @@ class RBACBridgeImpl {
       // Default role if no roles found
       return [];
     } catch (error) {
-      this.logger.error('Failed to parse roles from storage', { details: { error } });
+      logger.log(LogLevel.ERROR, LogCategory.RBAC, 'Failed to parse roles from storage', { 
+        details: { error },
+        source: this.loggerSource
+      });
       return [];
     }
   }

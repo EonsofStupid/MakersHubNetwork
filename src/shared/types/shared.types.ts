@@ -1,17 +1,36 @@
 
 /**
- * Role definitions
+ * Core shared types used across the application
  */
+
+/**
+ * Role definitions - using enum for strong typing and const object for runtime use
+ */
+export enum UserRoleEnum {
+  USER = 'user',
+  ADMIN = 'admin',
+  SUPER_ADMIN = 'super_admin',
+  MODERATOR = 'moderator',
+  BUILDER = 'builder',
+  GUEST = 'guest',
+}
+
+// Export as const for runtime access
 export const ROLES = {
-  USER: 'user',
-  ADMIN: 'admin',
-  SUPER_ADMIN: 'super_admin',
-  MODERATOR: 'moderator',
-  BUILDER: 'builder',
-  GUEST: 'guest',
+  USER: 'user' as UserRoleEnum.USER,
+  ADMIN: 'admin' as UserRoleEnum.ADMIN,
+  SUPER_ADMIN: 'super_admin' as UserRoleEnum.SUPER_ADMIN,
+  MODERATOR: 'moderator' as UserRoleEnum.MODERATOR,
+  BUILDER: 'builder' as UserRoleEnum.BUILDER,
+  GUEST: 'guest' as UserRoleEnum.GUEST,
 } as const;
 
-export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+// Type alias for UserRole
+export type UserRole = typeof ROLES[keyof typeof ROLES];
+
+// Backward compatibility
+export { ROLES as UserRoleEnum };
+export type UserRoleType = UserRole;
 
 /**
  * Permission definitions
@@ -43,6 +62,9 @@ export const RBAC_POLICIES: Record<string, UserRole[]> = {
   '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
 };
 
+// Export for use in RBAC system
+export const PATH_POLICIES = RBAC_POLICIES;
+
 /**
  * Auth status enum
  */
@@ -51,7 +73,7 @@ export enum AUTH_STATUS {
   LOADING = 'loading',
   AUTHENTICATED = 'authenticated',
   UNAUTHENTICATED = 'unauthenticated',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 export type AuthStatus = AUTH_STATUS;
@@ -68,6 +90,7 @@ export interface UserProfile {
   updated_at: string;
   last_sign_in_at?: string;
   user_metadata?: Record<string, unknown>;
+  roles?: UserRole[]; // Include roles in the profile for convenience
 }
 
 /**
@@ -83,7 +106,7 @@ export enum AuthEventType {
 }
 
 /**
- * Log categories
+ * Log categories - using enum for strong typing
  */
 export enum LogCategory {
   APP = 'app',
@@ -164,10 +187,6 @@ export interface ThemeLogDetails extends LogDetails {
   [key: string]: any;
 }
 
-// Re-export for backward compatibility
-export { ROLES as UserRoleEnum };
-export type UserRoleType = UserRole;
-
 /**
  * Build status, types for build system
  */
@@ -217,6 +236,16 @@ export interface User {
   updated_at: string;
 }
 
+// RBAC helper
+export const RBAC = {
+  superAdmins: [ROLES.SUPER_ADMIN],
+  admins: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  moderators: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  builders: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  normalUsers: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  guests: [ROLES.GUEST],
+};
+
 // Theme related types
 export enum ThemeContext {
   SITE = 'site',
@@ -228,4 +257,8 @@ export enum ThemeStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
   ARCHIVED = 'archived',
+  ACTIVE = 'active',
 }
+
+// Make TS aware this is a module
+export const __SHARED_TYPES__ = true;

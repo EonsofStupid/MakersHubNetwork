@@ -1,62 +1,51 @@
 
-// Main export file for all UI components
-// This provides a single import point for components
+// Re-export all UI components for convenient imports
 
-// Layout components
-export * from './accordion';
-export * from './alert-dialog';
-export * from './avatar';
-export * from './badge';
-export * from './breadcrumb';
+// Core UI components 
 export * from './button';
 export * from './card';
-export * from './carousel';
-export * from './collapsible';
 export * from './dialog';
 export * from './dropdown-menu';
-export * from './hover-card';
-export * from './popover';
-export * from './resizable';
-export * from './scroll-area';
-export * from './separator';
-export * from './sheet';
-export * from './tabs';
-
-// Form components
-export * from './calendar';
-export * from './checkbox';
 export * from './form';
 export * from './input';
 export * from './label';
-export * from './radio-group';
+export * from './popover'; 
 export * from './select';
-export * from './slider';
-export * from './switch';
+export * from './separator';
+export * from './sheet';
+export * from './tabs';
 export * from './textarea';
-export * from './toggle';
+export * from './toast';
+export * from './tooltip';
+
+// Avatar components
+export * from './avatar';
+export * from './badge';
+
+// Navigation components
+export * from './accordion';
+export * from './breadcrumb';
+export * from './navigation-menu';
+export * from './pagination';
+export * from './scroll-area';
 
 // Data display components
-export * from './data-table';
-export * from './progress';
+export * from './alert';
+export * from './alert-dialog';
+export * from './hover-card';
 export * from './skeleton';
 export * from './table';
 
+// Form components
+export * from './checkbox';
+export * from './radio-group';
+export * from './slider';
+export * from './switch';
+
 // Feedback components
-export * from './alert';
+export * from './progress';
 export * from './spinner';
-export * from './toast'; 
 
-// Navigation components
-export * from './navigation-menu';
-export * from './pagination';
-
-// Overlay components
-export * from './tooltip';
-
-// Interactive components
-export * from './command';
-export * from './context-menu';
-
-// Notification components
+// Toast notifications
 export * from './toaster';
 export * from './use-toast';

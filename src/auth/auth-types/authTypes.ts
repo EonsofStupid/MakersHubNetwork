@@ -46,6 +46,9 @@ export interface AuthState {
   isAuthenticated: boolean;
   status: 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
   error: Error | null;
+  roles?: string[];
+  isLoading?: boolean;
+  profile?: any;
 }
 
 /**
@@ -56,3 +59,5 @@ export interface Permission {
   name: string;
   description?: string;
 }
+
+export * from '@/shared/types/shared.types';

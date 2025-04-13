@@ -1,32 +1,31 @@
 
-import React, { useEffect } from "react";
-import Routes from "./router/Routes";
-import { useLogger } from "./hooks/use-logger";
-import { LOG_CATEGORY } from "./shared/types/shared.types";
-import { AppInitializer } from "./app/initializer/AppInitializer";
-import { SiteThemeProvider } from "./app/theme/SiteThemeProvider";
-import { useAuthStore } from "./auth/store/auth.store";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import AboutPage from './pages/AboutPage';
+import { Toaster } from '@/shared/ui/toaster';
+import { LogCategory } from '@/shared/types/shared.types';
+import { useLogger } from '@/hooks/use-logger';
 
-export default function App() {
-  const logger = useLogger("App", LOG_CATEGORY.SYSTEM);
-  const initialize = useAuthStore(state => state.initialize);
-  const initialized = useAuthStore(state => state.initialized);
-
-  // Initialize auth when the app loads
-  useEffect(() => {
-    if (!initialized) {
-      logger.info("Initializing App");
-      initialize();
-    }
-  }, [initialize, initialized, logger]);
-
-  logger.info("App rendering");
+function App() {
+  const logger = useLogger('App', LogCategory.APP);
+  
+  React.useEffect(() => {
+    logger.info('App initialized');
+  }, [logger]);
   
   return (
-    <SiteThemeProvider>
-      <AppInitializer>
-        <Routes />
-      </AppInitializer>
-    </SiteThemeProvider>
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<AboutPage />} />
+          {/* Add more routes as needed */}
+        </Routes>
+      </BrowserRouter>
+      <Toaster />
+    </>
   );
 }
+
+export default App;

@@ -1,116 +1,207 @@
 
-import { LogCategory, LogLevel, LogEntry, LogDetails } from '@/shared/types/shared.types';
 import { v4 as uuidv4 } from 'uuid';
+import { LogCategory, LogLevel, LogDetails, LogEntry } from '@/shared/types/shared.types';
 
-class LoggerService {
-  private logEntries: LogEntry[] = [];
-  private maxEntries: number = 1000;
-  private consoleEnabled: boolean = true;
-  private memoryEnabled: boolean = true;
-  
-  /**
-   * Log an entry with specified level and category
-   */
-  public log(level: LogLevel, category: LogCategory, message: string | Record<string, unknown>, details?: LogDetails): void {
-    const timestamp = new Date().toISOString();
-    const id = uuidv4();
-    const source = details?.source || 'unknown';
-    
-    const logEntry: LogEntry = {
-      id,
+// Default config
+const DEFAULT_CONFIG = {
+  minLevel: LogLevel.INFO,
+  includeSource: true,
+  enableConsole: true,
+};
+
+// Storage for transports
+const transports: Array<(entry: LogEntry) => void> = [];
+
+// In-memory log storage
+let logEntries: LogEntry[] = [];
+const MAX_LOG_ENTRIES = 1000;
+
+// Logger class for the application
+export class Logger {
+  private source: string;
+  private category: LogCategory;
+
+  constructor(source: string, category: LogCategory) {
+    this.source = source;
+    this.category = category;
+  }
+
+  // Log a message at the specified level
+  log(level: LogLevel, message: string, details?: LogDetails): void {
+    const entry: LogEntry = {
+      id: uuidv4(),
       level,
-      category,
+      category: this.category,
       message,
-      details,
-      timestamp,
-      source
+      details: details ? { ...details, source: this.source } : { source: this.source },
+      timestamp: new Date().toISOString(),
+      source: this.source,
     };
-    
-    // Store in memory
-    if (this.memoryEnabled) {
-      this.logEntries.push(logEntry);
-      
-      // Trim if exceeds max entries
-      if (this.logEntries.length > this.maxEntries) {
-        this.logEntries = this.logEntries.slice(-this.maxEntries);
-      }
+
+    // Add to in-memory storage with size limit
+    logEntries.push(entry);
+    if (logEntries.length > MAX_LOG_ENTRIES) {
+      logEntries = logEntries.slice(-MAX_LOG_ENTRIES);
     }
-    
-    // Console output
-    if (this.consoleEnabled) {
-      this.outputToConsole(logEntry);
+
+    // Process through transports
+    transports.forEach(transport => transport(entry));
+
+    // Output to console based on config
+    if (DEFAULT_CONFIG.enableConsole) {
+      this.logToConsole(entry);
     }
   }
-  
-  /**
-   * Print log entry to console
-   */
-  private outputToConsole(entry: LogEntry): void {
-    const { level, category, message, timestamp, source, details } = entry;
-    const prefix = `[${timestamp}] [${level.toUpperCase()}] [${category}] [${source}]`;
-    
-    switch (level) {
+
+  // Convenience methods for different log levels
+  debug(message: string, details?: LogDetails): void {
+    this.log(LogLevel.DEBUG, message, details);
+  }
+
+  info(message: string, details?: LogDetails): void {
+    this.log(LogLevel.INFO, message, details);
+  }
+
+  warn(message: string, details?: LogDetails): void {
+    this.log(LogLevel.WARN, message, details);
+  }
+
+  error(message: string, details?: LogDetails): void {
+    this.log(LogLevel.ERROR, message, details);
+  }
+
+  critical(message: string, details?: LogDetails): void {
+    this.log(LogLevel.CRITICAL, message, details);
+  }
+
+  trace(message: string, details?: LogDetails): void {
+    this.log(LogLevel.TRACE, message, details);
+  }
+
+  success(message: string, details?: LogDetails): void {
+    this.log(LogLevel.SUCCESS, message, details);
+  }
+
+  // Format and output to console with colors
+  private logToConsole(entry: LogEntry): void {
+    // Skip if below min level
+    if (!this.shouldLogLevel(entry.level)) {
+      return;
+    }
+
+    const timestamp = new Date(entry.timestamp).toLocaleTimeString();
+    const source = entry.source ? `[${entry.source}]` : '';
+    let logMethod: keyof Console = 'log';
+    let style = '';
+
+    // Determine console method and style based on level
+    switch (entry.level) {
       case LogLevel.DEBUG:
-        console.debug(prefix, message, details || '');
+        logMethod = 'debug';
+        style = 'color: gray';
         break;
       case LogLevel.INFO:
-      case LogLevel.SUCCESS:
-        console.info(prefix, message, details || '');
+        logMethod = 'info';
+        style = 'color: dodgerblue';
         break;
       case LogLevel.WARN:
-        console.warn(prefix, message, details || '');
+        logMethod = 'warn';
+        style = 'color: orange';
         break;
       case LogLevel.ERROR:
       case LogLevel.CRITICAL:
-      case LogLevel.FATAL:
-        console.error(prefix, message, details || '');
+        logMethod = 'error';
+        style = 'color: red; font-weight: bold';
+        break;
+      case LogLevel.SUCCESS:
+        logMethod = 'log';
+        style = 'color: green';
+        break;
+      case LogLevel.TRACE:
+        logMethod = 'debug';
+        style = 'color: lightgray';
         break;
       default:
-        console.log(prefix, message, details || '');
+        logMethod = 'log';
     }
+
+    // Format the message
+    const formattedMessage = `%c${timestamp} [${entry.level}] ${entry.category} ${source}: ${entry.message}`;
+
+    // Log to console with style
+    console[logMethod](formattedMessage, style, entry.details || '');
   }
-  
-  /**
-   * Get all stored log entries
-   */
-  public getLogs(filter?: { category?: LogCategory; level?: LogLevel; source?: string }): LogEntry[] {
-    if (!filter) {
-      return [...this.logEntries];
-    }
-    
-    return this.logEntries.filter(entry => {
-      const categoryMatch = !filter.category || entry.category === filter.category;
-      const levelMatch = !filter.level || entry.level === filter.level;
-      const sourceMatch = !filter.source || entry.source === filter.source;
-      
-      return categoryMatch && levelMatch && sourceMatch;
-    });
-  }
-  
-  /**
-   * Clear all logs
-   */
-  public clearLogs(): void {
-    this.logEntries = [];
-  }
-  
-  /**
-   * Configure logger options
-   */
-  public configure(options: { consoleEnabled?: boolean; memoryEnabled?: boolean; maxEntries?: number }): void {
-    if (options.consoleEnabled !== undefined) {
-      this.consoleEnabled = options.consoleEnabled;
-    }
-    
-    if (options.memoryEnabled !== undefined) {
-      this.memoryEnabled = options.memoryEnabled;
-    }
-    
-    if (options.maxEntries !== undefined && options.maxEntries > 0) {
-      this.maxEntries = options.maxEntries;
-    }
+
+  // Check if we should log at this level
+  private shouldLogLevel(level: LogLevel): boolean {
+    const levels = [
+      LogLevel.DEBUG,
+      LogLevel.TRACE,
+      LogLevel.INFO,
+      LogLevel.SUCCESS,
+      LogLevel.WARN,
+      LogLevel.ERROR,
+      LogLevel.CRITICAL,
+      LogLevel.FATAL,
+    ];
+
+    const minLevelIndex = levels.indexOf(DEFAULT_CONFIG.minLevel);
+    const currentLevelIndex = levels.indexOf(level);
+
+    return currentLevelIndex >= minLevelIndex;
   }
 }
 
-// Export a singleton instance
-export const logger = new LoggerService();
+// Add a transport to the logger
+export function addTransport(transport: (entry: LogEntry) => void): void {
+  transports.push(transport);
+}
+
+// Set minimum log level
+export function setMinLogLevel(level: LogLevel): void {
+  DEFAULT_CONFIG.minLevel = level;
+}
+
+// Get all log entries
+export function getLogEntries(): LogEntry[] {
+  return [...logEntries];
+}
+
+// Clear log entries
+export function clearLogEntries(): void {
+  logEntries = [];
+}
+
+// Create a logger factory
+export function createLogger(source: string, category: LogCategory): Logger {
+  return new Logger(source, category);
+}
+
+// Singleton logger instance for direct use
+export const logger = {
+  log: (level: LogLevel, category: LogCategory, message: string, details?: LogDetails) => {
+    const logger = new Logger('app', category);
+    logger.log(level, message, details);
+  },
+  debug: (category: LogCategory, message: string, details?: LogDetails) => {
+    const logger = new Logger('app', category);
+    logger.debug(message, details);
+  },
+  info: (category: LogCategory, message: string, details?: LogDetails) => {
+    const logger = new Logger('app', category);
+    logger.info(message, details);
+  },
+  warn: (category: LogCategory, message: string, details?: LogDetails) => {
+    const logger = new Logger('app', category);
+    logger.warn(message, details);
+  },
+  error: (category: LogCategory, message: string, details?: LogDetails) => {
+    const logger = new Logger('app', category);
+    logger.error(message, details);
+  },
+};
+
+// Hook for use in components
+export function useLogger(source: string, category: LogCategory): Logger {
+  return new Logger(source, category);
+}

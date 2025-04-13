@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
 import { Check } from 'lucide-react';
-import { authBridge } from '@/auth/bridge';
+import { authBridge } from '@/bridges/AuthBridge';
 import { AuthEventType } from '@/shared/types/shared.types';
 
 export const LinkedAccountAlert: React.FC = () => {
