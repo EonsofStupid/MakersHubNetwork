@@ -1,11 +1,11 @@
 
-import { LogLevel, LogCategory, LogEntry, LogFilter } from '@/shared/types/shared.types';
+import { LogLevel, LogCategory, LogEntry, LogFilter, LogEvent } from '@/shared/types/shared.types';
 
 /**
  * LogBridge Interface
  * Provides a clean abstraction for logging across the application
  */
-export interface LogBridge {
+export interface ILogBridge {
   // Core logging methods
   log(level: LogLevel, category: LogCategory, message: string, details?: Record<string, any>): void;
   debug(category: LogCategory, message: string, details?: Record<string, any>): void;
@@ -23,7 +23,7 @@ export interface LogBridge {
   clearLogs(): void;
   
   // Event handling
-  onNewLog(callback: (log: LogEntry) => void): () => void;
+  onNewLog(callback: (log: LogEntry) => void): { unsubscribe: () => void };
   
   // Utilities
   getStats(): { totalLogs: number; byLevel: Record<LogLevel, number>; byCategory: Record<LogCategory, number> };
@@ -33,11 +33,78 @@ export interface LogBridge {
  * LogBridge Implementation
  * Concrete implementation of the LogBridge interface
  */
-export class LogBridgeImpl implements LogBridge {
+export class LogBridgeImpl implements ILogBridge {
   private logs: LogEntry[] = [];
   private minLevel: LogLevel = LogLevel.INFO;
   private enabledCategories: Set<LogCategory> = new Set(Object.values(LogCategory));
   private logListeners: ((log: LogEntry) => void)[] = [];
+  
+  // Helper method to check if a log should be recorded
+  private shouldLog(level: LogLevel, category: LogCategory): boolean {
+    const levelValue = this.getLevelValue(level);
+    const minLevelValue = this.getLevelValue(this.minLevel);
+    
+    return levelValue >= minLevelValue && this.enabledCategories.has(category);
+  }
+  
+  // Helper method to get log level value
+  private getLevelValue(level: LogLevel): number {
+    const levelValues: Record<LogLevel, number> = {
+      [LogLevel.TRACE]: 0,
+      [LogLevel.DEBUG]: 1,
+      [LogLevel.INFO]: 2,
+      [LogLevel.SUCCESS]: 3,
+      [LogLevel.WARN]: 4,
+      [LogLevel.ERROR]: 5,
+      [LogLevel.FATAL]: 6,
+      [LogLevel.CRITICAL]: 7,
+      [LogLevel.SILENT]: 8,
+    };
+    
+    return levelValues[level] || 2; // Default to INFO level value
+  }
+  
+  // Helper method to generate a log ID
+  private generateLogId(): string {
+    return `log_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  }
+  
+  // Helper method to notify listeners about a new log
+  private notifyListeners(log: LogEntry): void {
+    this.logListeners.forEach(listener => {
+      try {
+        listener(log);
+      } catch (error) {
+        console.error('Error in log listener:', error);
+      }
+    });
+  }
+  
+  // Helper method to log to console in development
+  private logToConsole(log: LogEntry): void {
+    const prefix = `[${log.category}]`;
+    
+    switch (log.level) {
+      case LogLevel.DEBUG:
+        console.debug(prefix, log.message, log.details || '');
+        break;
+      case LogLevel.INFO:
+      case LogLevel.SUCCESS:
+        console.info(prefix, log.message, log.details || '');
+        break;
+      case LogLevel.WARN:
+        console.warn(prefix, log.message, log.details || '');
+        break;
+      case LogLevel.ERROR:
+      case LogLevel.FATAL:
+      case LogLevel.CRITICAL:
+        console.error(prefix, log.message, log.details || '');
+        break;
+      default:
+        console.log(prefix, log.message, log.details || '');
+        break;
+    }
+  }
   
   // Core logging methods
   log(level: LogLevel, category: LogCategory, message: string, details?: Record<string, any>): void {
@@ -106,14 +173,14 @@ export class LogBridgeImpl implements LogBridge {
       }
       
       if (filter.source) {
-        filteredLogs = filteredLogs.filter(log => log.source && log.source.includes(filter.source!));
+        filteredLogs = filteredLogs.filter(log => log.source && log.source.includes(filter.source || ''));
       }
       
       if (filter.search) {
         const searchLower = filter.search.toLowerCase();
-        filteredLogs = filteredLogs.filter(log =>
+        filteredLogs = filteredLogs.filter(log => 
           log.message.toLowerCase().includes(searchLower) ||
-          (log.details && JSON.stringify(log.details).toLowerCase().includes(searchLower))
+          (log.source && log.source.toLowerCase().includes(searchLower))
         );
       }
       
@@ -134,97 +201,43 @@ export class LogBridgeImpl implements LogBridge {
   }
   
   // Event handling
-  onNewLog(callback: (log: LogEntry) => void): () => void {
+  onNewLog(callback: (log: LogEntry) => void): { unsubscribe: () => void } {
     this.logListeners.push(callback);
     
-    return () => {
-      const index = this.logListeners.indexOf(callback);
-      if (index !== -1) {
-        this.logListeners.splice(index, 1);
+    return {
+      unsubscribe: () => {
+        const index = this.logListeners.indexOf(callback);
+        if (index !== -1) {
+          this.logListeners.splice(index, 1);
+        }
       }
     };
   }
   
   // Utilities
   getStats(): { totalLogs: number; byLevel: Record<LogLevel, number>; byCategory: Record<LogCategory, number> } {
-    const byLevel = Object.values(LogLevel).reduce((acc, level) => {
-      acc[level] = this.logs.filter(log => log.level === level).length;
+    const byLevel: Record<LogLevel, number> = Object.values(LogLevel).reduce((acc, level) => {
+      acc[level] = 0;
       return acc;
     }, {} as Record<LogLevel, number>);
     
-    const byCategory = Object.values(LogCategory).reduce((acc, category) => {
-      acc[category] = this.logs.filter(log => log.category === category).length;
+    const byCategory: Record<LogCategory, number> = Object.values(LogCategory).reduce((acc, category) => {
+      acc[category] = 0;
       return acc;
     }, {} as Record<LogCategory, number>);
+    
+    this.logs.forEach(log => {
+      byLevel[log.level] = (byLevel[log.level] || 0) + 1;
+      byCategory[log.category] = (byCategory[log.category] || 0) + 1;
+    });
     
     return {
       totalLogs: this.logs.length,
       byLevel,
-      byCategory,
+      byCategory
     };
-  }
-  
-  // Private methods
-  private shouldLog(level: LogLevel, category: LogCategory): boolean {
-    const levelValues: Record<LogLevel, number> = {
-      [LogLevel.TRACE]: 0,
-      [LogLevel.DEBUG]: 1,
-      [LogLevel.INFO]: 2,
-      [LogLevel.SUCCESS]: 3,
-      [LogLevel.WARN]: 4,
-      [LogLevel.ERROR]: 5,
-      [LogLevel.FATAL]: 6,
-      [LogLevel.CRITICAL]: 7,
-    };
-    
-    const levelValue = levelValues[level];
-    const minLevelValue = levelValues[this.minLevel];
-    
-    return levelValue >= minLevelValue && this.enabledCategories.has(category);
-  }
-  
-  private notifyListeners(log: LogEntry): void {
-    this.logListeners.forEach(listener => {
-      try {
-        listener(log);
-      } catch (error) {
-        console.error('Error in log listener:', error);
-      }
-    });
-  }
-  
-  private generateLogId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
-  }
-  
-  private logToConsole(log: LogEntry): void {
-    const timestamp = log.timestamp.toISOString();
-    const prefix = `[${timestamp}] [${log.level.toUpperCase()}] [${log.category}]`;
-    
-    switch (log.level) {
-      case LogLevel.TRACE:
-        console.debug(prefix, log.message, log.details);
-        break;
-      case LogLevel.DEBUG:
-        console.debug(prefix, log.message, log.details);
-        break;
-      case LogLevel.INFO:
-        console.info(prefix, log.message, log.details);
-        break;
-      case LogLevel.SUCCESS:
-        console.info(prefix, log.message, log.details);
-        break;
-      case LogLevel.WARN:
-        console.warn(prefix, log.message, log.details);
-        break;
-      case LogLevel.ERROR:
-      case LogLevel.FATAL:
-      case LogLevel.CRITICAL:
-        console.error(prefix, log.message, log.details);
-        break;
-    }
   }
 }
 
 // Create a singleton instance
-export const LogBridge = new LogBridgeImpl();
+export const LogBridge: ILogBridge = new LogBridgeImpl();

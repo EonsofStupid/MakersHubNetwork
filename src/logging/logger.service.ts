@@ -1,6 +1,6 @@
 
-import { LogLevel, LogCategory, LogEntry } from '@/shared/types/shared.types';
-import { LogBridge } from './bridge';
+import { LogLevel, LogCategory, LogEntry, LogFilter } from '@/shared/types/shared.types';
+import { LogBridge } from '@/logging/bridge';
 
 /**
  * Logger service
@@ -70,10 +70,11 @@ class LoggerService {
   
   /**
    * Get all logs
+   * @param filter Optional filter to apply
    * @returns Array of log entries
    */
-  getLogs(): LogEntry[] {
-    return LogBridge.getLogs();
+  getLogs(filter?: LogFilter): LogEntry[] {
+    return LogBridge.getLogs(filter);
   }
   
   /**
@@ -88,7 +89,7 @@ class LoggerService {
    * @param callback The callback function to call when a new log is added
    * @returns A function to unsubscribe
    */
-  onNewLog(callback: (log: LogEntry) => void): () => void {
+  onNewLog(callback: (log: LogEntry) => void): { unsubscribe: () => void } {
     return LogBridge.onNewLog(callback);
   }
   

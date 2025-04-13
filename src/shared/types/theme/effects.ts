@@ -1,38 +1,10 @@
 
-/**
- * Theme effect props interface
- */
-export interface ThemeEffectProps {
-  effect: ThemeEffect;
-  intensity?: number;
-  className?: string;
-  style?: React.CSSProperties;
-}
-
-/**
- * Theme effect provider props interface
- */
-export interface ThemeEffectProviderProps {
-  children: React.ReactNode;
-  className?: string;
-  effect?: ThemeEffect;
-}
-
-/**
- * Effect renderer props
- */
-export interface EffectRendererProps {
-  effect: ThemeEffect;
-  intensity?: number;
-  className?: string;
-  style?: React.CSSProperties;
-  children?: React.ReactNode;
-}
+import { ReactNode, CSSProperties } from 'react';
 
 /**
  * Theme effect enum
  */
-export enum ThemeEffect {
+export enum ThemeEffectType {
   NONE = 'none',
   BLUR = 'blur',
   GRAIN = 'grain',
@@ -46,12 +18,42 @@ export enum ThemeEffect {
 }
 
 /**
- * Theme effect interface
+ * Theme effect props interface
+ */
+export interface ThemeEffectProps {
+  effect: ThemeEffect;
+  intensity?: number;
+  className?: string;
+  style?: CSSProperties;
+}
+
+/**
+ * Theme effect provider props interface
+ */
+export interface ThemeEffectProviderProps {
+  children: ReactNode;
+  className?: string;
+  effect?: ThemeEffect;
+}
+
+/**
+ * Effect renderer props
+ */
+export interface EffectRendererProps {
+  effect: ThemeEffect;
+  intensity?: number;
+  className?: string;
+  style?: CSSProperties;
+  children?: ReactNode;
+}
+
+/**
+ * Base theme effect interface
  */
 export interface ThemeEffect {
-  id?: string;
-  type: string;
+  type: ThemeEffectType | string;
   enabled: boolean;
+  id?: string;
   duration?: number;
   [key: string]: any;
 }

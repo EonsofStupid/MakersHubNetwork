@@ -1,19 +1,7 @@
 
+import { useCallback } from 'react';
+import { LogLevel, LogCategory, LogDetails } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
-import { LogLevel, LogCategory } from '@/shared/types/shared.types';
-
-/**
- * Log details type
- */
-interface LogDetails {
-  details?: Record<string, any>;
-  tags?: string[];
-  source?: string;
-  userId?: string;
-  email?: string;
-  error?: string | Error;
-  message?: string;
-}
 
 /**
  * Custom hook for component-level logging
@@ -22,29 +10,34 @@ interface LogDetails {
  * @returns Object with log methods
  */
 export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.APP) {
-  const logWithSource = (level: LogLevel, message: string, options?: LogDetails) => {
+  const logWithSource = useCallback((level: LogLevel, message: string, options?: Partial<LogDetails>) => {
     const details = options ? { ...options, source } : { source };
     logger.log(level, defaultCategory, message, details);
-  };
+  }, [source, defaultCategory]);
 
   return {
-    debug: (message: string, options?: LogDetails) => {
+    debug: useCallback((message: string, options?: Partial<LogDetails>) => {
       logWithSource(LogLevel.DEBUG, message, options);
-    },
-    info: (message: string, options?: LogDetails) => {
+    }, [logWithSource]),
+    
+    info: useCallback((message: string, options?: Partial<LogDetails>) => {
       logWithSource(LogLevel.INFO, message, options);
-    },
-    warn: (message: string, options?: LogDetails) => {
+    }, [logWithSource]),
+    
+    warn: useCallback((message: string, options?: Partial<LogDetails>) => {
       logWithSource(LogLevel.WARN, message, options);
-    },
-    error: (message: string, options?: LogDetails) => {
+    }, [logWithSource]),
+    
+    error: useCallback((message: string, options?: Partial<LogDetails>) => {
       logWithSource(LogLevel.ERROR, message, options);
-    },
-    log: (level: LogLevel, message: string, options?: LogDetails) => {
+    }, [logWithSource]),
+    
+    log: useCallback((level: LogLevel, message: string, options?: Partial<LogDetails>) => {
       logWithSource(level, message, options);
-    },
-    withCategory: (category: LogCategory) => {
+    }, [logWithSource]),
+    
+    withCategory: useCallback((category: LogCategory) => {
       return useLogger(source, category);
-    }
+    }, [source])
   };
 }

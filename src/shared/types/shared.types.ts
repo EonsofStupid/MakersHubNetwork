@@ -76,7 +76,10 @@ export interface UserProfile {
   last_sign_in_at?: string;
   user_metadata?: Record<string, unknown>;
   app_metadata?: Record<string, unknown>;
-  roles?: UserRole[];
+  display_name?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
 }
 
 // User type for backward compatibility
@@ -124,7 +127,21 @@ export enum LogLevel {
   TRACE = 'trace',
   FATAL = 'fatal',
   CRITICAL = 'critical',
+  SILENT = 'silent',
 }
+
+// For backward compatibility
+export const LOG_LEVEL = {
+  DEBUG: LogLevel.DEBUG,
+  INFO: LogLevel.INFO,
+  WARN: LogLevel.WARN,
+  ERROR: LogLevel.ERROR,
+  SUCCESS: LogLevel.SUCCESS,
+  TRACE: LogLevel.TRACE,
+  FATAL: LogLevel.FATAL,
+  CRITICAL: LogLevel.CRITICAL,
+  SILENT: LogLevel.SILENT,
+} as const;
 
 // For backward compatibility
 export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
@@ -136,6 +153,7 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.ERROR]: 5,
   [LogLevel.FATAL]: 6,
   [LogLevel.CRITICAL]: 7,
+  [LogLevel.SILENT]: 8,
 };
 
 /**
@@ -289,6 +307,8 @@ export const RBAC = {
   builders: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
   users: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
   guests: [ROLES.GUEST],
+  authenticated: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  adminOnly: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
 };
 
 // Path policies for backward compatibility

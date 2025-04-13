@@ -1,3 +1,2 @@
 
-// Re-export tabs component from shadcn
-export { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from '@/chat/src/components/ui/tabs';
