@@ -3,8 +3,8 @@ import { useAtom } from 'jotai';
 import { isAuthenticatedAtom, isInitializedAtom, authStatusAtom } from '@/atoms/auth.atoms';
 import { isAdminAtom } from '@/atoms/rbac.atoms';
 import { AUTH_STATUS } from '@/types/shared';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { UnauthorizedError } from '@/components/errors/UnauthorizedError';
+import { LoadingSpinner } from '@/shared/ui/LoadingSpinner';
+import { UnauthorizedError } from '@/shared/components/errors/UnauthorizedError';
 
 interface AdminAuthGuardProps {
   children: ReactNode;
