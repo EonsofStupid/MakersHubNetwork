@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/shared/ui/button';
-import { Textarea } from "@/shared/ui/textarea';
+import { Button } from '@/shared/ui/button';
+import { Textarea } from '@/shared/ui/textarea';
 import { Input } from '@/shared/ui/input';
 import { FormLabel } from '@/shared/ui/form';
 import { RatingStars, ReviewRating } from './RatingStars';
