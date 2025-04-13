@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
+import { Button } from '@/shared/ui/button';
 import { useLayoutSkeleton } from '@/admin/hooks/useLayoutSkeleton';
 import { createDefaultDashboardLayout } from '@/admin/utils/layoutUtils';
 import { v4 as uuidv4 } from 'uuid';
