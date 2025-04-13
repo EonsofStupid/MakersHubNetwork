@@ -1,8 +1,7 @@
-
 import { useEffect } from 'react';
 import { useAdminStore } from '../store/admin.store';
 import { authBridge } from '@/auth/bridge';
-import { LogCategory, UserProfile } from '@/shared/types/shared.types';
+import { LogCategory, UserProfile, AuthStatus } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
 
 export function useAdminAuth() {
@@ -54,8 +53,9 @@ export function useAdminAuth() {
   return {
     user,
     isAuthenticated,
-    isLoading: status === 'LOADING',
-    error
+    isLoading: status === AuthStatus.LOADING,
+    error,
+    roles: user?.roles || []
   };
 }
 
