@@ -1,57 +1,42 @@
 
 import React from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/shared/ui/avatar';
-import { UserProfile } from '@/shared/types/shared.types';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
+import { UserProfile } from '@/shared/types/auth.types';
 
-interface UserAvatarProps {
-  user?: UserProfile | null;
-  fallbackText?: string;
+export interface UserAvatarProps {
+  user: UserProfile | null;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
-export function UserAvatar({ 
-  user, 
-  fallbackText, 
-  size = 'md',
-  className = ''
-}: UserAvatarProps) {
-  // Size mappings
+export const UserAvatar: React.FC<UserAvatarProps> = ({ user, size = 'md', className = '' }) => {
+  // Generate avatar size classes
   const sizeClasses = {
     sm: 'h-8 w-8',
     md: 'h-10 w-10',
-    lg: 'h-16 w-16',
-    xl: 'h-24 w-24'
+    lg: 'h-12 w-12',
+    xl: 'h-16 w-16',
   };
-
-  // Get user avatar URL from metadata if available
-  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   
-  // Fallback text (initials)
-  const text = fallbackText || getInitials(user?.email || (user?.user_metadata?.full_name as string) || '');
+  // Get initial letter from user email or name
+  const getInitials = () => {
+    if (!user) return '?';
+    
+    const name = user.name || user.email || '';
+    if (!name) return '?';
+    
+    return name.charAt(0).toUpperCase();
+  };
 
   return (
     <Avatar className={`${sizeClasses[size]} ${className}`}>
-      {avatarUrl && <AvatarImage src={avatarUrl} alt="User avatar" />}
-      <AvatarFallback>{text}</AvatarFallback>
+      <AvatarImage 
+        src={user?.avatar_url || ''} 
+        alt={user?.name || user?.email || 'User'}
+      />
+      <AvatarFallback className="bg-primary text-primary-foreground">
+        {getInitials()}
+      </AvatarFallback>
     </Avatar>
   );
-}
-
-// Helper function to get initials from a name or email
-function getInitials(nameOrEmail: string): string {
-  if (!nameOrEmail) return '?';
-  
-  // If it's an email, get first letter before the @ sign
-  if (nameOrEmail.includes('@')) {
-    return nameOrEmail.split('@')[0][0].toUpperCase();
-  }
-  
-  // Otherwise get initials from name
-  return nameOrEmail
-    .split(' ')
-    .map(part => part[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
-}
+};

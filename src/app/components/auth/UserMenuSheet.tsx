@@ -1,145 +1,86 @@
 
-import React from "react";
-import { LogOut, Settings, User, Shield } from "lucide-react";
-import { Sheet, SheetContent } from "@/shared/ui/sheet";
-import { Button } from "@/shared/ui/button";
-import { UserAvatar } from "@/shared/ui/UserAvatar";
-import { Separator } from "@/shared/ui/separator";
-import { Badge } from "@/shared/ui/badge";
-import { cn } from "@/shared/utils/cn";
-import { UserRole } from "@/shared/types/shared.types";
-import { useNavigate } from "react-router-dom";
-import { RBACBridge } from "@/rbac/bridge";
+import React from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/shared/ui/sheet';
+import { Button } from '@/shared/ui/button';
+import { UserAvatar } from '@/shared/ui/UserAvatar';
+import { Badge } from '@/shared/ui/badge';
+import { UserRole } from '@/shared/types/shared.types';
 
 interface UserMenuSheetProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  userEmail?: string | null;
-  userDisplayName?: string | null;
-  userAvatar?: string | null;
-  isLoadingLogout?: boolean;
-  onShowProfile?: () => void;
-  onLogout?: () => void;
-  roles?: UserRole[];
+  onOpenChange: (isOpen: boolean) => void;
+  userDisplayName: string;
+  userEmail: string;
+  userAvatar?: string;
+  onShowProfile: () => void;
+  onLogout: () => void;
+  roles: UserRole[];
 }
 
-export function UserMenuSheet({
+export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   isOpen,
   onOpenChange,
-  userEmail,
   userDisplayName,
+  userEmail,
   userAvatar,
-  isLoadingLogout = false,
   onShowProfile,
   onLogout,
-  roles = []
-}: UserMenuSheetProps) {
-  const navigate = useNavigate();
-
-  const hasAdminAccess = RBACBridge.hasAdminAccess();
-
-  const handleAdminClick = () => {
-    navigate('/admin');
-    onOpenChange(false); // Close the sheet
-  };
-
+  roles
+}) => {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent 
-        className={cn(
-          "sm:max-w-sm backdrop-blur-xl bg-background/80 border-primary/20",
-          "shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu"
-        )}
-      >
-        <div className="transform">
-          <div className="text-left">
-            <div className="flex items-center gap-3 pb-4">
-              <UserAvatar 
-                size="lg" 
-                fallbackText={userDisplayName || "U"} 
-                className="ring-2 ring-primary/30" 
-              />
-              <div className="flex flex-col">
-                <span className="font-medium">{userDisplayName || "User"}</span>
-                {userEmail && (
-                  <span className="text-xs text-muted-foreground">{userEmail}</span>
-                )}
-              </div>
+      <SheetContent>
+        <SheetHeader className="text-left">
+          <SheetTitle>Your Account</SheetTitle>
+          <SheetDescription>
+            Manage your account settings
+          </SheetDescription>
+        </SheetHeader>
+        
+        <div className="py-6">
+          <div className="flex items-center gap-4 mb-6">
+            <UserAvatar user={{ email: userEmail, name: userDisplayName, avatar_url: userAvatar } as any} size="lg" />
+            <div>
+              <h3 className="font-medium">{userDisplayName}</h3>
+              <p className="text-sm text-muted-foreground">{userEmail}</p>
             </div>
           </div>
-
-          {/* User roles badges */}
-          {roles && roles.length > 0 && (
-            <div className="py-2">
-              <div className="flex flex-wrap gap-2">
-                {roles.map((role) => (
-                  <Badge key={role} variant="outline" className="capitalize">
-                    {role.replace('_', ' ')}
-                  </Badge>
-                ))}
-              </div>
+          
+          <div className="mb-6">
+            <h4 className="text-sm font-medium mb-2">Roles</h4>
+            <div className="flex flex-wrap gap-2">
+              {roles.map((role) => (
+                <Badge key={role} variant="outline">
+                  {role}
+                </Badge>
+              ))}
             </div>
-          )}
-
-          <Separator className="my-4" />
-
-          <div className="flex flex-col gap-2 py-4">
-            <Button
-              variant="ghost"
-              className="justify-start gap-2"
-              onClick={onShowProfile}
-            >
-              <User className="h-4 w-4" />
-              <span>Profile</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="justify-start gap-2"
-              onClick={onLogout}
-              disabled={isLoadingLogout}
-            >
-              <LogOut className="h-4 w-4" />
-              <span>{isLoadingLogout ? "Logging out..." : "Log out"}</span>
-            </Button>
           </div>
-
-          {hasAdminAccess && (
-            <>
-              <Separator className="my-4" />
-              <div className="flex flex-col gap-2 py-4">
-                <h4 className="mb-1 px-2 text-sm font-medium text-muted-foreground">
-                  Administration
-                </h4>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "justify-start gap-2",
-                    "bg-primary/5 hover:bg-primary/10 group relative overflow-hidden"
-                  )}
-                  onClick={handleAdminClick}
-                >
-                  <Shield className="h-4 w-4 text-primary" />
-                  <span className="text-primary">Admin Dashboard</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="justify-start gap-2"
-                  onClick={() => {
-                    navigate('/admin/settings');
-                    onOpenChange(false);
-                  }}
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>System Settings</span>
-                </Button>
-              </div>
-            </>
-          )}
         </div>
+        
+        <div className="space-y-3">
+          <Button className="w-full" variant="outline" onClick={onShowProfile}>
+            View Profile
+          </Button>
+          
+          <Button className="w-full" variant="outline" asChild>
+            <a href="/settings">Settings</a>
+          </Button>
+        </div>
+        
+        <SheetFooter className="mt-6">
+          <Button onClick={onLogout} variant="destructive" className="w-full">
+            Logout
+          </Button>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );
-}
+};
