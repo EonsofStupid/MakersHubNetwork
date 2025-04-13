@@ -1,13 +1,9 @@
 
-// This provider component handles the global theming for the site
-// It applies CSS variables and provides theme context to components
-
-import React, { createContext, useMemo, useEffect, useState } from "react";
-import { Theme, ComponentTokens, ThemeToken } from "@/shared/types/theme.types";
-import { useThemeStore } from "@/shared/stores/theme/store";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/shared/types/shared.types";
-import { ThemeLogDetails } from "@/shared/types/theme.types";
+import React, { createContext, useContext, useMemo, useEffect, useState } from "react";
+import { Theme, ThemeToken, ThemeComponent, ThemeLogDetails, LogLevel, LogCategory } from "@/shared/types/shared.types";
+import { useThemeStore } from "@/shared/store/theme/store";
+import { useLogger } from "@/logging/hooks/use-logger";
+import { logger } from "@/logging/logger.service";
 
 export interface SiteThemeContextType {
   theme: Theme | null;
@@ -26,205 +22,173 @@ interface SiteThemeProviderProps {
   defaultTheme?: string;
 }
 
-export function SiteThemeProvider({ children, defaultTheme = 'default' }: SiteThemeProviderProps) {
+export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: SiteThemeProviderProps) {
+  const log = useLogger("SiteThemeProvider", LogCategory.SYSTEM);
+  const [theme, setTheme] = useState<Theme | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [appliedTheme, setAppliedTheme] = useState<Theme | null>(null);
-  const [cssVariables, setCssVariables] = useState<Record<string, string>>({});
+  const [themeError, setThemeError] = useState<Error | null>(null);
   const [componentStyles, setComponentStyles] = useState<Record<string, Record<string, string>> | null>(null);
   const [animations, setAnimations] = useState<Record<string, string> | null>(null);
+  const [cssVariables, setCssVariables] = useState<Record<string, string> | null>(null);
 
-  const themeState = useThemeStore();
-  const logger = useLogger('SiteThemeProvider', LogCategory.UI);
-  
-  // Get current theme 
-  const currentTheme = themeState.themes.find(theme => theme.id === themeState.activeThemeId);
+  const { 
+    themes, 
+    loadThemes, 
+    activeThemeId, 
+    setActiveTheme,
+    isLoading
+  } = useThemeStore();
 
-  // Apply theme when it changes
+  // Load themes on mount
   useEffect(() => {
-    const applyTheme = async () => {
-      try {
-        // Log that theme application is starting
-        logger.info('Applying site theme', { 
-          details: { 
-            themeName: currentTheme?.name || defaultTheme 
-          } as ThemeLogDetails 
-        });
-        
-        if (!currentTheme) {
-          setIsLoaded(true);
-          return;
-        }
+    log.info("Initializing theme system", { themeName: defaultTheme });
+    
+    try {
+      loadThemes();
+    } catch (error) {
+      log.error("Error loading themes", { error });
+      setThemeError(error instanceof Error ? error : new Error("Failed to load themes"));
+    }
+  }, [loadThemes, defaultTheme, log]);
 
-        // Store the theme in state
-        setAppliedTheme(currentTheme);
+  // Set active theme
+  useEffect(() => {
+    if (themes.length > 0 && !activeThemeId) {
+      // Find the default theme or use the first one
+      const themeToUse = themes.find(t => t.id === defaultTheme) || themes[0];
+      setActiveTheme(themeToUse.id);
+      log.info(`Setting active theme: ${themeToUse.name} (${themeToUse.id})`);
+    }
+  }, [themes, activeThemeId, defaultTheme, setActiveTheme, log]);
 
-        // Extract CSS variables from theme tokens
-        const variables: Record<string, string> = {};
+  // Update theme state when active theme changes
+  useEffect(() => {
+    if (activeThemeId && themes.length > 0) {
+      const activeTheme = themes.find(t => t.id === activeThemeId);
+      if (activeTheme) {
+        setTheme(activeTheme);
         
-        // Process theme tokens into CSS variables
-        if (currentTheme.tokens) {
-          Object.entries(currentTheme.tokens).forEach(([key, token]) => {
-            if (token && typeof token === 'object') {
-              if (token.type === 'color' || token.type === 'gradient') {
-                variables[`--${key}`] = token.value;
-              } 
-              else if (token.type === 'animation') {
-                // For animations, we might need to define keyframes
-                if (token.keyframes) {
-                  const keyframesName = `${key}-keyframes`;
-                  const cssKeyframes = `@keyframes ${keyframesName} {
-                    ${token.keyframes}
-                  }`;
-                  
-                  // Append the keyframes to a style element
-                  appendKeyframesToStylesheet(keyframesName, cssKeyframes);
-                  
-                  // Store animation name in variables
-                  variables[`--${key}`] = keyframesName;
-                }
-              }
-              else {
-                // For other types (spacing, shadow, etc.)
-                variables[`--${key}`] = token.value;
-              }
+        // Process tokens if available
+        if (activeTheme.tokens?.length) {
+          // Extract CSS variables
+          const variables: Record<string, string> = {};
+          const cssAnimations: Record<string, string> = {};
+          
+          activeTheme.tokens.forEach(token => {
+            if (token.type === 'css') {
+              variables[token.name] = token.value;
+            } else if (token.type === 'animation' && token.keyframes) {
+              cssAnimations[token.name] = token.keyframes;
             }
+          });
+          
+          setCssVariables(variables);
+          setAnimations(cssAnimations);
+          
+          log.debug("Theme tokens processed", { 
+            tokenCount: activeTheme.tokens.length,
+            variableCount: Object.keys(variables).length,
+            animationCount: Object.keys(cssAnimations).length
           });
         }
         
-        // Process component styles
-        if (currentTheme.components) {
+        // Process component styles if available
+        if (activeTheme.components?.length) {
           const styles: Record<string, Record<string, string>> = {};
           
-          Object.entries(currentTheme.components).forEach(([componentName, componentTokens]) => {
-            if (componentTokens && typeof componentTokens === 'object' && componentTokens.styles) {
-              styles[componentName] = componentTokens.styles;
-            }
+          activeTheme.components.forEach(component => {
+            styles[component.component_name] = component.styles;
           });
           
           setComponentStyles(styles);
+          log.debug("Component styles processed", { 
+            componentCount: activeTheme.components.length 
+          });
         }
         
-        // Process animations separately for easier access
-        const extractedAnimations: Record<string, string> = {};
-        
-        // Extract all animation/transition tokens
-        Object.entries(currentTheme.tokens || {}).forEach(([key, token]) => {
-          if (token && typeof token === 'object') {
-            if (token.type === 'animation' || key.startsWith('animation') || key.startsWith('transition')) {
-              extractedAnimations[key] = token.value;
-            }
-          }
-        });
-        
-        setAnimations(extractedAnimations);
-        
-        // Apply CSS variables to the document root
-        const rootElement = document.documentElement;
-        Object.entries(variables).forEach(([variable, value]) => {
-          rootElement.style.setProperty(variable, value);
-        });
-        
-        // Apply common shadcn variables
-        rootElement.style.setProperty('--background', variables['--site-background'] || '#ffffff');
-        rootElement.style.setProperty('--foreground', variables['--site-foreground'] || '#0f172a');
-        rootElement.style.setProperty('--card', variables['--site-card'] || '#ffffff');
-        rootElement.style.setProperty('--card-foreground', variables['--site-card-foreground'] || '#0f172a');
-        rootElement.style.setProperty('--popover', variables['--site-popover'] || '#ffffff');
-        rootElement.style.setProperty('--popover-foreground', variables['--site-popover-foreground'] || '#0f172a');
-        rootElement.style.setProperty('--primary', variables['--site-primary'] || '#0f172a');
-        rootElement.style.setProperty('--primary-foreground', variables['--site-primary-foreground'] || '#ffffff');
-        rootElement.style.setProperty('--secondary', variables['--site-secondary'] || '#f1f5f9');
-        rootElement.style.setProperty('--secondary-foreground', variables['--site-secondary-foreground'] || '#0f172a');
-        rootElement.style.setProperty('--muted', variables['--site-muted'] || '#f1f5f9');
-        rootElement.style.setProperty('--muted-foreground', variables['--site-muted-foreground'] || '#64748b');
-        rootElement.style.setProperty('--accent', variables['--site-accent'] || '#f1f5f9');
-        rootElement.style.setProperty('--accent-foreground', variables['--site-accent-foreground'] || '#0f172a');
-        rootElement.style.setProperty('--destructive', variables['--site-destructive'] || '#ef4444');
-        rootElement.style.setProperty('--destructive-foreground', variables['--site-destructive-foreground'] || '#ffffff');
-        rootElement.style.setProperty('--border', variables['--site-border'] || '#e2e8f0');
-        rootElement.style.setProperty('--input', variables['--site-input'] || '#e2e8f0');
-        rootElement.style.setProperty('--ring', variables['--site-ring'] || '#cbd5e1');
-        
-        // Apply additional custom variables
-        rootElement.style.setProperty('--radius', variables['--site-radius'] || '0.5rem');
-        rootElement.style.setProperty('--effect-color', variables['--site-effect-color'] || '#00F0FF');
-        rootElement.style.setProperty('--effect-secondary', variables['--site-effect-secondary'] || '#FF2D6E');
-        rootElement.style.setProperty('--effect-tertiary', variables['--site-effect-tertiary'] || '#FFFF00');
-        
-        // Animation/transition timing variables
-        rootElement.style.setProperty('--transition-fast', variables['--site-transition-fast'] || '0.15s');
-        rootElement.style.setProperty('--transition-normal', variables['--site-transition-normal'] || '0.3s');
-        rootElement.style.setProperty('--transition-slow', variables['--site-transition-slow'] || '0.5s');
-        rootElement.style.setProperty('--animation-fast', variables['--site-animation-fast'] || '0.5s');
-        rootElement.style.setProperty('--animation-normal', variables['--site-animation-normal'] || '1s');
-        rootElement.style.setProperty('--animation-slow', variables['--site-animation-slow'] || '2s');
-        
-        // Border radius variables
-        rootElement.style.setProperty('--radius-sm', variables['--site-radius-sm'] || '0.25rem');
-        rootElement.style.setProperty('--radius-md', variables['--site-radius-md'] || '0.5rem');
-        rootElement.style.setProperty('--radius-lg', variables['--site-radius-lg'] || '0.75rem');
-        rootElement.style.setProperty('--radius-full', variables['--site-radius-full'] || '9999px');
-        
-        // Store the CSS variables for later use
-        setCssVariables(variables);
-        
-        // Mark theme as loaded
         setIsLoaded(true);
-        setError(null);
-        
-        logger.info('Theme applied successfully', { 
-          details: { 
-            theme: currentTheme.name, 
-            cssVarsCount: Object.keys(variables).length 
-          } as ThemeLogDetails 
-        });
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to apply theme'));
-        setIsLoaded(true); // Still mark as loaded to prevent blocking the UI
-        
-        logger.error('Failed to apply theme', { 
-          details: { 
-            error: err instanceof Error ? err.message : String(err)
-          } as ThemeLogDetails 
-        });
       }
-    };
-
-    applyTheme();
-  }, [currentTheme, defaultTheme, logger]);
-
-  // Helper to append keyframes to a stylesheet
-  const appendKeyframesToStylesheet = (name: string, css: string) => {
-    let styleElement = document.getElementById('theme-keyframes');
-    
-    if (!styleElement) {
-      styleElement = document.createElement('style');
-      styleElement.id = 'theme-keyframes';
-      document.head.appendChild(styleElement);
     }
-    
-    // Check if keyframes already exists
-    if (styleElement.textContent?.includes(`@keyframes ${name}`)) {
-      return;
-    }
-    
-    styleElement.textContent += css;
-  };
+  }, [activeThemeId, themes, log]);
 
-  // Create the context value
-  const contextValue = useMemo(() => ({
-    theme: appliedTheme,
+  // Apply CSS variables to document root
+  useEffect(() => {
+    if (cssVariables && isLoaded) {
+      try {
+        const root = document.documentElement;
+        
+        // Apply CSS variables
+        Object.entries(cssVariables).forEach(([key, value]) => {
+          root.style.setProperty(`--${key}`, value);
+        });
+        
+        // Log success
+        logger.log(LogLevel.INFO, LogCategory.SYSTEM, "Theme CSS variables applied", {
+          theme: activeThemeId,
+          cssVarsCount: Object.keys(cssVariables).length
+        } as unknown as ThemeLogDetails);
+        
+      } catch (error) {
+        // Log error
+        logger.log(LogLevel.ERROR, LogCategory.SYSTEM, "Failed to apply theme CSS variables", {
+          error: error instanceof Error ? error.message : String(error)
+        } as unknown as ThemeLogDetails);
+        
+        setThemeError(error instanceof Error ? error : new Error("Failed to apply CSS variables"));
+      }
+    }
+  }, [cssVariables, isLoaded, activeThemeId]);
+
+  // Apply animations to style tag
+  useEffect(() => {
+    if (animations && isLoaded) {
+      try {
+        // Create or update style tag
+        let styleTag = document.getElementById("theme-animations");
+        if (!styleTag) {
+          styleTag = document.createElement("style");
+          styleTag.id = "theme-animations";
+          document.head.appendChild(styleTag);
+        }
+        
+        // Combine animations into CSS
+        const animationsCSS = Object.entries(animations)
+          .map(([name, keyframes]) => `@keyframes ${name} { ${keyframes} }`)
+          .join("\n");
+        
+        styleTag.textContent = animationsCSS;
+        
+        log.debug("Theme animations applied", { count: Object.keys(animations).length });
+        
+      } catch (error) {
+        log.error("Failed to apply theme animations", { error });
+        setThemeError(error instanceof Error ? error : new Error("Failed to apply animations"));
+      }
+    }
+  }, [animations, isLoaded, log]);
+
+  // Prepare context value
+  const contextValue = useMemo<SiteThemeContextType>(() => ({
+    theme,
     isLoaded,
     componentStyles,
     animations,
     variables: cssVariables,
-    themeError: error
-  }), [appliedTheme, isLoaded, componentStyles, animations, cssVariables, error]);
+    themeError,
+  }), [theme, isLoaded, componentStyles, animations, cssVariables, themeError]);
 
   return (
     <SiteThemeContext.Provider value={contextValue}>
       {children}
     </SiteThemeContext.Provider>
   );
+}
+
+// Hook to use the theme context
+export function useSiteTheme() {
+  const context = useContext(SiteThemeContext);
+  if (!context) {
+    throw new Error("useSiteTheme must be used within a SiteThemeProvider");
+  }
+  return context;
 }

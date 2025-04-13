@@ -1,8 +1,8 @@
 
 import { useCallback } from 'react';
 import { RBACBridge } from '@/rbac/bridge';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import { useLogger } from '@/logging/hooks/use-logger';
+import { LogCategory, Permission } from '@/shared/types/shared.types';
 
 /**
  * Hook for checking admin permissions
@@ -10,7 +10,7 @@ import { LogCategory } from '@/shared/types/shared.types';
 export function useAdminPermissions() {
   const logger = useLogger('useAdminPermissions', LogCategory.ADMIN);
   
-  const hasPermission = useCallback((permission: string) => {
+  const hasPermission = useCallback((permission: Permission) => {
     // Check for direct permission
     const hasDirectPermission = RBACBridge.hasPermission(permission);
     

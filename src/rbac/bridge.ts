@@ -31,7 +31,7 @@ class RBACBridgeImpl {
     return this.permissions;
   }
 
-  public hasPermission(permission: string): boolean {
+  public hasPermission(permission: Permission): boolean {
     return this.permissions.includes(permission);
   }
 
@@ -98,7 +98,7 @@ class RBACBridgeImpl {
     return ROLES.USER;
   }
 
-  public can(permission: string): boolean {
+  public can(permission: Permission): boolean {
     return this.hasPermission(permission);
   }
 }

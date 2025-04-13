@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -7,7 +8,7 @@ import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
-import { useToast } from '@/shared/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { Loader2 } from 'lucide-react';
 
@@ -34,12 +35,20 @@ export const ProfileEditor: React.FC<{
   const profile = useAuthStore(state => state.profile);
   const updateProfile = useAuthStore(state => state.updateProfile);
 
+  // Extract values from profile or user_metadata safely
+  const userMetadata = user?.user_metadata || {};
+  const displayName = profile?.name || userMetadata.full_name || '';
+  const bio = userMetadata.bio || '';
+  const avatarUrl = profile?.avatar_url || userMetadata.avatar_url || '';
+  const location = userMetadata.location || '';
+  const website = userMetadata.website || '';
+
   const defaultValues: Partial<ProfileFormValues> = {
-    displayName: profile?.display_name || user?.user_metadata?.full_name || '',
-    bio: profile?.bio || '',
-    avatarUrl: profile?.avatar_url || user?.user_metadata?.avatar_url || '',
-    location: profile?.location || '',
-    website: profile?.website || '',
+    displayName,
+    bio,
+    avatarUrl,
+    location,
+    website,
   };
 
   const form = useForm<ProfileFormValues>({
@@ -52,11 +61,15 @@ export const ProfileEditor: React.FC<{
       setIsLoading(true);
       
       await updateProfile({
-        display_name: data.displayName,
-        bio: data.bio || null,
-        avatar_url: data.avatarUrl || null,
-        location: data.location || null,
-        website: data.website || null,
+        name: data.displayName,
+        user_metadata: {
+          ...userMetadata,
+          full_name: data.displayName,
+          bio: data.bio || '',
+          avatar_url: data.avatarUrl || '',
+          location: data.location || '',
+          website: data.website || '',
+        }
       });
       
       toast({

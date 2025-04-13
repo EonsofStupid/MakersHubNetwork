@@ -1,21 +1,19 @@
 
-import React from 'react';
+import React from "react";
+import { UserRole } from "@/shared/types/shared.types";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/shared/ui/sheet';
-import { Button } from '@/shared/ui/button';
-import { UserAvatar } from '@/shared/ui/UserAvatar';
-import { Badge } from '@/shared/ui/badge';
-import { UserRole } from '@/shared/types/shared.types';
+  SheetFooter,
+} from "@/shared/ui/sheet";
+import { Button } from "@/shared/ui/button";
+import { LogOut, User } from "lucide-react";
 
 interface UserMenuSheetProps {
   isOpen: boolean;
-  onOpenChange: (isOpen: boolean) => void;
+  onOpenChange: (open: boolean) => void;
   userDisplayName: string;
   userEmail: string;
   userAvatar?: string;
@@ -32,52 +30,64 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   userAvatar,
   onShowProfile,
   onLogout,
-  roles
+  roles,
 }) => {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent>
-        <SheetHeader className="text-left">
-          <SheetTitle>Your Account</SheetTitle>
-          <SheetDescription>
-            Manage your account settings
-          </SheetDescription>
+      <SheetContent side="right" className="w-80">
+        <SheetHeader>
+          <SheetTitle>Account</SheetTitle>
         </SheetHeader>
         
-        <div className="py-6">
-          <div className="flex items-center gap-4 mb-6">
-            <UserAvatar user={{ email: userEmail, name: userDisplayName, avatar_url: userAvatar } as any} size="lg" />
-            <div>
-              <h3 className="font-medium">{userDisplayName}</h3>
-              <p className="text-sm text-muted-foreground">{userEmail}</p>
-            </div>
+        <div className="py-4 flex flex-col items-center text-center">
+          <div className="relative w-16 h-16 rounded-full overflow-hidden mb-2 bg-primary flex items-center justify-center text-white text-xl">
+            {userAvatar ? (
+              <img
+                src={userAvatar}
+                alt={userDisplayName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              userDisplayName.charAt(0).toUpperCase()
+            )}
           </div>
           
-          <div className="mb-6">
-            <h4 className="text-sm font-medium mb-2">Roles</h4>
-            <div className="flex flex-wrap gap-2">
+          <h3 className="font-medium text-lg">{userDisplayName}</h3>
+          <p className="text-muted-foreground text-sm">{userEmail}</p>
+          
+          {roles.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1 justify-center">
               {roles.map((role) => (
-                <Badge key={role} variant="outline">
+                <span
+                  key={role}
+                  className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
+                >
                   {role}
-                </Badge>
+                </span>
               ))}
             </div>
-          </div>
+          )}
         </div>
         
-        <div className="space-y-3">
-          <Button className="w-full" variant="outline" onClick={onShowProfile}>
-            View Profile
-          </Button>
-          
-          <Button className="w-full" variant="outline" asChild>
-            <a href="/settings">Settings</a>
+        <div className="space-y-3 mt-4">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            onClick={onShowProfile}
+          >
+            <User className="mr-2 h-4 w-4" />
+            Your Profile
           </Button>
         </div>
         
-        <SheetFooter className="mt-6">
-          <Button onClick={onLogout} variant="destructive" className="w-full">
-            Logout
+        <SheetFooter className="absolute bottom-4 left-4 right-4">
+          <Button 
+            variant="outline" 
+            className="w-full border-destructive text-destructive hover:bg-destructive/10"
+            onClick={onLogout}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Log out
           </Button>
         </SheetFooter>
       </SheetContent>
