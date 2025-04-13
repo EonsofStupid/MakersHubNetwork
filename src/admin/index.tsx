@@ -12,32 +12,28 @@ import '@/admin/styles/text-effects.css';
 import '@/admin/theme/impulse/impulse-theme.css';
 
 // Export the AdminDashboard from its dedicated component file
-export { AdminDashboard } from './components/dashboard/AdminDashboard';
+export { OverviewDashboard as AdminDashboard } from './panels/overview/OverviewDashboard';
 
 // Export routes
 export { AdminRoutes } from './routes';
 
 // Export components
-import { AdminLayout } from './components/AdminLayout';
-import { AdminSidebar } from './components/AdminSidebar';
-import { AdminTopNav } from './components/navigation/AdminTopNav';
-import { useAdminStore } from './store/admin.store';
-import { AdminThemeProvider, useAdminTheme } from './theme/AdminThemeProvider';
-import { useAdminChat, useAdminChatListener } from './hooks/useAdminChat';
-import { useAdminPermissions } from './hooks/useAdminPermissions';
-import { DashboardShortcuts } from './components/dashboard/DashboardShortcuts';
-import { DragIndicator } from './components/ui/DragIndicator';
+import { AdminLayout } from './panels/layout/AdminLayout';
+import { AdminSidebar } from './panels/layout/AdminSidebar';
+import { AdminHeader } from './panels/layout/AdminHeader';
+import { useAdminAuth } from './panels/auth/useAdminAuth';
+import { useAdminRoles } from './panels/auth/useAdminRoles';
+import { AdminAuthGuard } from './panels/auth/AdminAuthGuard';
+import ChatManagement from './panels/chat/ChatManagement';
 import React from 'react';
 
 // Export admin UI components
 export { AdminLayout };
 export { AdminSidebar };
-export { AdminTopNav };
-export { DashboardShortcuts };
-export { DragIndicator };
+export { AdminHeader };
+export { AdminAuthGuard };
+export { ChatManagement };
 
-// Export admin state and hooks
-export { useAdminStore };
-export { AdminThemeProvider, useAdminTheme };
-export { useAdminChat, useAdminChatListener };
-export { useAdminPermissions };
+// Export admin hooks
+export { useAdminAuth };
+export { useAdminRoles };
