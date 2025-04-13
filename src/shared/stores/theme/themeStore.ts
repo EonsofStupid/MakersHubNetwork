@@ -5,8 +5,14 @@ import { Theme, ThemeState, ComponentTokens, DesignTokens } from '@/shared/types
 // Initial state
 const initialState: ThemeState = {
   themes: [],
-  activeTheme: '',
-  componentTokens: {},
+  activeThemeId: '',
+  componentTokens: {
+    button: {},
+    card: {},
+    input: {},
+    badge: {},
+    alert: {},
+  },
   isLoading: false,
   error: null
 };
@@ -27,16 +33,16 @@ const useThemeStore = create<ThemeState & {
   },
 
   setActiveTheme: (themeId) => {
-    set({ activeTheme: themeId });
+    set({ activeThemeId: themeId });
   },
 
   setDesignTokens: (tokens) => {
     set((state) => {
-      const activeTheme = state.themes.find(theme => theme.id === state.activeTheme);
+      const activeTheme = state.themes.find(theme => theme.id === state.activeThemeId);
       if (activeTheme) {
         const updatedThemes = state.themes.map(theme => {
-          if (theme.id === state.activeTheme) {
-            return { ...theme, design_tokens: tokens };
+          if (theme.id === state.activeThemeId) {
+            return { ...theme, designTokens: tokens };
           }
           return theme;
         });

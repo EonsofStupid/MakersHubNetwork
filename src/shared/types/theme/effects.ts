@@ -30,7 +30,7 @@ export interface EffectRendererProps {
 }
 
 /**
- * Theme effect type
+ * Theme effect enum
  */
 export enum ThemeEffect {
   NONE = 'none',

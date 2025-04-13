@@ -2,6 +2,9 @@
 import { logger } from '@/logging/logger.service';
 import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
+/**
+ * Log details type
+ */
 interface LogDetails {
   details?: Record<string, any>;
   tags?: string[];

@@ -1,252 +1,193 @@
 
-import { UserProfile, AuthStatus, LogLevel, LogCategory } from '@/shared/types/shared.types';
-import { logger } from '@/logging/logger.service';
 import { AuthBridge } from '@/auth/bridge';
+import { UserProfile } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
+import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
 /**
- * Auth bridge implementation 
- * Provides a clean abstraction layer for authentication functionality
+ * Auth Bridge Implementation
+ * 
+ * This is a concrete implementation of the AuthBridge interface that
+ * provides authentication functionality for the application.
  */
 class AuthBridgeImpl implements AuthBridge {
-  private loggerSource = 'AuthBridge';
-
-  /**
-   * Get the current session
-   */
+  // Session management
   async getCurrentSession(): Promise<{ user: UserProfile } | null> {
     try {
-      // For demo purposes, we'll check local storage
+      // In a real implementation, this would check for an existing session
+      // in localStorage or via an API call
       const storedUser = localStorage.getItem('auth_user');
-      
       if (storedUser) {
         return { user: JSON.parse(storedUser) };
       }
-      
       return null;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get current session', { 
-        details: { error }, 
-        source: this.loggerSource
+        details: { errorMessage: error instanceof Error ? error.message : String(error) } 
       });
-      
       return null;
     }
   }
 
-  /**
-   * Refresh the current session
-   */
   async refreshSession(): Promise<{ user_id: string } | null> {
     try {
-      const session = await this.getCurrentSession();
-      
-      if (session?.user) {
-        return { user_id: session.user.id };
+      // In a real implementation, this would refresh the auth token
+      const storedUser = localStorage.getItem('auth_user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser) as UserProfile;
+        return { user_id: user.id };
       }
-      
       return null;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to refresh session', { 
-        details: { error }, 
-        source: this.loggerSource 
+        details: { errorMessage: error instanceof Error ? error.message : String(error) } 
       });
-      
       return null;
     }
   }
 
-  /**
-   * Sign in with email and password
-   */
+  // Authentication methods
   async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      // Demo implementation - in a real app, call an auth API
-      if (email && password) {
-        const demoUser: UserProfile = {
-          id: '123',
-          email,
-          name: 'Demo User',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        // Store user in local storage for demo
-        localStorage.setItem('auth_user', JSON.stringify(demoUser));
-        localStorage.setItem('auth_token', 'demo_token');
-        
-        logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed in', { 
-          details: { userId: demoUser.id, email: demoUser.email },
-          source: this.loggerSource
-        });
-        
-        return { user: demoUser, error: null };
-      }
-      
-      return { user: null, error: new Error('Invalid email or password') };
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error during sign in');
-      
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Sign in failed', { 
-        details: { error, email }, 
-        source: this.loggerSource 
-      });
-      
-      return { user: null, error: err };
-    }
-  }
-
-  /**
-   * Sign up with email and password
-   */
-  async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    try {
-      // Demo implementation - in a real app, call an auth API
-      const demoUser: UserProfile = {
-        id: '123',
+      // For demo purposes
+      const user: UserProfile = {
+        id: 'demo-user-id',
         email,
-        name: 'New User',
+        name: email.split('@')[0],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-      
-      // Store user in local storage for demo
-      localStorage.setItem('auth_user', JSON.stringify(demoUser));
-      localStorage.setItem('auth_token', 'demo_token');
-      
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed up', { 
-        details: { userId: demoUser.id, email: demoUser.email },
-        source: this.loggerSource
+
+      localStorage.setItem('auth_user', JSON.stringify(user));
+      localStorage.setItem('auth_token', 'demo-token');
+
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed in with email', { 
+        details: { email } 
       });
-      
-      return { user: demoUser, error: null };
+
+      return { user, error: null };
     } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error during sign up');
-      
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Sign up failed', { 
-        details: { error, email }, 
-        source: this.loggerSource 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign in with email', { 
+        details: { email, errorMessage: error instanceof Error ? error.message : String(error) } 
       });
-      
-      return { user: null, error: err };
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
 
-  /**
-   * Sign out the current user
-   */
+  async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
+    try {
+      // For demo purposes
+      const user: UserProfile = {
+        id: 'demo-user-id',
+        email,
+        name: email.split('@')[0],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      localStorage.setItem('auth_user', JSON.stringify(user));
+      localStorage.setItem('auth_token', 'demo-token');
+
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed up with email', { 
+        details: { email } 
+      });
+
+      return { user, error: null };
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign up with email', { 
+        details: { email, errorMessage: error instanceof Error ? error.message : String(error) } 
+      });
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
+    }
+  }
+
   async signOut(): Promise<void> {
     try {
-      // Clear local storage
       localStorage.removeItem('auth_user');
       localStorage.removeItem('auth_token');
-      
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed out', { 
-        source: this.loggerSource 
-      });
+      localStorage.removeItem('user_roles');
+
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed out');
     } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Sign out failed', { 
-        details: { error }, 
-        source: this.loggerSource 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign out', { 
+        details: { errorMessage: error instanceof Error ? error.message : String(error) } 
       });
     }
   }
 
-  /**
-   * Sign in with OAuth provider
-   */
   async signInWithOAuth(provider: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'OAuth sign in initiated', { 
-        details: { provider }, 
-        source: this.loggerSource 
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'OAuth sign-in attempted', { 
+        details: { provider } 
       });
-      
-      // This would be implemented with a real provider
-      return { user: null, error: new Error('OAuth not implemented in demo') };
+      // Simplified for demo
+      return this.signInWithEmail('oauth-user@example.com', 'password');
     } catch (error) {
-      const err = error instanceof Error ? error : new Error('Unknown error during OAuth sign in');
-      
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'OAuth sign in failed', { 
-        details: { error, provider }, 
-        source: this.loggerSource 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign in with OAuth', { 
+        details: { provider, errorMessage: error instanceof Error ? error.message : String(error) } 
       });
-      
-      return { user: null, error: err };
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
 
-  /**
-   * Link account to provider
-   */
+  // Account linking
   async linkAccount(provider: string): Promise<boolean> {
     try {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Account linking initiated', { 
-        details: { provider }, 
-        source: this.loggerSource 
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Account linking attempted', { 
+        details: { provider } 
       });
-      
-      // This would be implemented with a real provider
-      return false;
+      return true;
     } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Account linking failed', { 
-        details: { error, provider }, 
-        source: this.loggerSource 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to link account', { 
+        details: { provider, errorMessage: error instanceof Error ? error.message : String(error) } 
       });
-      
       return false;
     }
   }
 
-  /**
-   * Subscribe to auth events
-   */
   onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
-    // Empty implementation for now
-    return { unsubscribe: () => {} };
+    // In a real implementation, this would set up event listeners
+    return {
+      unsubscribe: () => {
+        // Clean up event listeners
+      }
+    };
   }
 
-  /**
-   * Reset password
-   */
+  // Password management
   async resetPassword(email: string): Promise<void> {
     try {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Password reset initiated', { 
-        details: { email }, 
-        source: this.loggerSource 
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Password reset requested', { 
+        details: { email } 
       });
-      
-      // This would send an email in a real implementation
     } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Password reset failed', { 
-        details: { error, email }, 
-        source: this.loggerSource 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to reset password', { 
+        details: { email, errorMessage: error instanceof Error ? error.message : String(error) } 
       });
     }
   }
 
-  /**
-   * Get user profile
-   */
+  // User profile
   async getUserProfile(userId?: string): Promise<UserProfile | null> {
     try {
-      // For demo purposes, we'll check local storage
       const storedUser = localStorage.getItem('auth_user');
-      
       if (storedUser) {
-        return JSON.parse(storedUser);
+        const user = JSON.parse(storedUser) as UserProfile;
+        // If userId is provided, only return if it matches
+        if (userId && user.id !== userId) {
+          return null;
+        }
+        return user;
       }
-      
       return null;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get user profile', { 
-        details: { error, userId }, 
-        source: this.loggerSource 
+        details: { userId, errorMessage: error instanceof Error ? error.message : String(error) } 
       });
-      
       return null;
     }
   }
 }
 
-// Export singleton instance
+// Export a singleton instance
 export const authBridge = new AuthBridgeImpl();

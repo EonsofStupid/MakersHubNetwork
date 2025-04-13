@@ -2,7 +2,6 @@
 import React from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
-import { UserAvatar } from '@/shared/ui/UserAvatar';
 import { Button } from '@/shared/ui/button';
 import { LogCategory, LogLevel } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
@@ -26,7 +25,9 @@ const AdminTopNav: React.FC<AdminTopNavProps> = ({
     try {
       await logout();
     } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Logout failed', { error });
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Logout failed', { 
+        details: { errorMessage: error instanceof Error ? error.message : String(error) } 
+      });
     }
   };
 
@@ -66,6 +67,25 @@ const AdminTopNav: React.FC<AdminTopNavProps> = ({
         </Button>
       </div>
     </header>
+  );
+};
+
+// UserAvatar component
+const UserAvatar: React.FC<{ user: any; size?: string }> = ({ user, size = "md" }) => {
+  const initials = user?.name 
+    ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() 
+    : user?.email?.[0]?.toUpperCase() || '?';
+  
+  const sizeClass = {
+    sm: "w-8 h-8 text-xs",
+    md: "w-10 h-10 text-sm",
+    lg: "w-12 h-12 text-base"
+  }[size] || "w-10 h-10 text-sm";
+  
+  return (
+    <div className={`${sizeClass} rounded-full bg-primary flex items-center justify-center text-white font-medium`}>
+      {initials}
+    </div>
   );
 };
 

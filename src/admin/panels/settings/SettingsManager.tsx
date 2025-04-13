@@ -1,12 +1,14 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { 
+  Card, CardContent, CardHeader, CardTitle, CardDescription,
+  Tabs, TabsContent, TabsList, TabsTrigger,
+  Button,
+  Input,
+  Label,
+  Switch
+} from "@/shared/ui/ui-components";
+import { useToast } from "@/shared/ui/use-toast";
 
 export default function SettingsManager() {
   const { toast } = useToast();
