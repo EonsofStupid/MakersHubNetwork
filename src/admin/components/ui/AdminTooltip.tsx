@@ -1,11 +1,10 @@
-
 import React from 'react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/shared/ui/tooltip';
 
 interface AdminTooltipProps {
   content: React.ReactNode;

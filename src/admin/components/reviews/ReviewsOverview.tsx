@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
@@ -71,9 +70,13 @@ export function ReviewsOverview() {
                               ))}
                             </div>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">{review.body.substring(0, 100)}...</p>
+                          {review.body ? (
+                            <p className="text-sm text-gray-600">{review.body.substring(0, 100)}...</p>
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">No review content</p>
+                          )}
                           <div className="text-xs text-muted-foreground mt-2">
-                            By {review.reviewer_name || 'Anonymous'} • {new Date(review.created_at).toLocaleDateString()}
+                            By {review.user?.displayName || 'Anonymous Reviewer'} • {new Date(review.created_at).toLocaleDateString()}
                           </div>
                         </div>
                         <div className="flex gap-2">
