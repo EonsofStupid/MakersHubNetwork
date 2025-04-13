@@ -1,51 +1,38 @@
 
-import { ReactNode, useEffect } from "react";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/shared/types/shared.types";
-import { useSiteTheme } from "@/shared/hooks/useSiteTheme";
-import { useAuthStore } from "@/auth/store/auth.store";
-import { AppBootstrap } from "../bootstrap/AppBootstrap";
-import { LinkedAccountAlert } from "@/auth/components/LinkedAccountAlert";
-import { AccountLinkingModal } from "@/auth/components/AccountLinkingModal";
+import React, { ReactNode, useEffect } from 'react';
+import { useLogger } from '@/hooks/use-logger';
+import { LOG_CATEGORY } from '@/shared/types/shared.types';
+import { useAuthStore } from '@/auth/store/auth.store';
 
 interface AppInitializerProps {
   children: ReactNode;
 }
 
-export function AppInitializer({ children }: AppInitializerProps) {
-  const logger = useLogger("AppInitializer", LogCategory.SYSTEM);
-  const { isLoaded: themeLoaded } = useSiteTheme();
-  
-  // Use selectors from auth store for better performance
-  const status = useAuthStore(state => state.status);
+export const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
+  const logger = useLogger('AppInitializer', LOG_CATEGORY.SYSTEM);
+  const initialize = useAuthStore(state => state.initialize);
   const initialized = useAuthStore(state => state.initialized);
   
-  // Log app initialization status
+  // Initialize app systems
   useEffect(() => {
-    logger.info("App initializing, auth status:", {
-      details: {
-        status,
-        themeLoaded,
-        authInitialized: initialized
-      },
-    });
-    
-    if (initialized && themeLoaded) {
-      logger.info("All systems initialized, rendering application");
+    if (!initialized) {
+      logger.info('Initializing app systems');
+      initialize();
     }
-  }, [status, themeLoaded, initialized, logger]);
-
-  return (
-    <>
-      {/* Add the AppBootstrap component to handle initialization */}
-      <AppBootstrap />
-      
-      {/* Account linking components */}
-      <LinkedAccountAlert />
-      <AccountLinkingModal />
-      
-      {/* Render children regardless of initialization status */}
-      {children}
-    </>
-  );
-}
+  }, [initialize, initialized, logger]);
+  
+  // If not initialized yet, show loading state
+  if (!initialized) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Loading Application</h1>
+          <p className="text-muted-foreground">Initializing systems...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Once initialized, render children
+  return <>{children}</>;
+};

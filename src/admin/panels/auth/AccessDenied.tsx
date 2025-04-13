@@ -1,47 +1,26 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
+import { ShieldX } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
-import { Shield, Home } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { LOG_CATEGORY } from '@/shared/types/shared.types';
-import { useLogger } from '@/hooks/use-logger';
+import { useNavigate } from 'react-router-dom';
 
 export const AccessDenied: React.FC = () => {
-  const logger = useLogger('AccessDenied', LOG_CATEGORY.AUTH);
-  
-  // Log access denied
-  React.useEffect(() => {
-    logger.warn('Access denied to protected route');
-  }, [logger]);
+  const navigate = useNavigate();
   
   return (
-    <div className="flex items-center justify-center min-h-screen bg-muted/10 p-4">
-      <Card className="mx-auto w-full max-w-md">
-        <CardHeader className="bg-destructive/10 text-destructive">
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Access Denied
-          </CardTitle>
-          <CardDescription className="text-destructive/80">
-            You don't have permission to access this resource
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <p className="mb-6 text-muted-foreground">
-            If you believe this is an error, please contact your administrator
-            or try logging in with an account that has the necessary permissions.
-          </p>
-          <div className="flex justify-center">
-            <Button asChild variant="outline">
-              <Link to="/" className="flex items-center gap-2">
-                <Home className="h-4 w-4" />
-                Return to Home
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex flex-col items-center max-w-md p-6 text-center">
+        <ShieldX className="w-16 h-16 text-destructive mb-4" />
+        <h1 className="text-2xl font-bold tracking-tight">Access Denied</h1>
+        <p className="mt-4 text-muted-foreground">
+          You don't have permission to access this section. Please contact an administrator if you believe this is an error.
+        </p>
+        <div className="mt-6 flex gap-4">
+          <Button onClick={() => navigate('/')}>
+            Return Home
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

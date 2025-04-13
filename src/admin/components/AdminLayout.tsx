@@ -1,5 +1,6 @@
+
 import React, { ReactNode } from 'react';
-import { AdminSidebar } from './AdminSidebar';
+import { AdminSidebar } from '../panels/layout/AdminSidebar';
 import AdminTopNav from './navigation/AdminTopNav';
 
 interface AdminLayoutProps {

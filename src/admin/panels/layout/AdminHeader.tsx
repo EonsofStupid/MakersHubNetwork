@@ -10,7 +10,6 @@ import {
 import { Button } from '@/shared/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/shared/ui/sheet';
 import { useNavigate } from 'react-router-dom';
-import { useAdminSidebar } from '../hooks/useAdminSidebar';
 import { cn } from '@/shared/utils/cn';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { UserAvatar } from '@/shared/ui/user-avatar';
@@ -21,13 +20,21 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
   const navigate = useNavigate();
-  const { toggle: toggleSidebar } = useAdminSidebar();
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
+
+  const toggleSidebar = () => {
+    setSidebarExpanded(!sidebarExpanded);
+  };
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    try {
+      await useAuthStore.getState().logout();
+      navigate('/');
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   };
 
   const navigateToSection = (path: string) => {
@@ -37,6 +44,7 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
 
   // Get user's first initial for avatar fallback
   const userInitial = user?.user_metadata?.full_name?.[0] || 'U';
+  const displayName = user?.user_metadata?.full_name as string || "Admin User";
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -49,7 +57,7 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="border-r border-primary/10">
-            {/* Mobile sidebar content */}
+            {/* Mobile sidebar content will go here */}
           </SheetContent>
         </Sheet>
         <Button
@@ -77,15 +85,15 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
               user={user ? {
                 id: user.id,
                 email: user.email || '',
-                user_metadata: user.user_metadata,
-                display_name: user.user_metadata?.full_name
+                display_name: displayName,
+                user_metadata: user.user_metadata
               } : undefined}
               fallbackText={userInitial}
               size="sm"
               className="h-8 w-8"
             />
             <span className="hidden text-sm font-medium md:inline-block">
-              {user?.user_metadata?.full_name || 'Admin User'}
+              {displayName}
             </span>
             <ChevronDown
               className={cn(

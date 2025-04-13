@@ -1,5 +1,6 @@
-import { UserRole, ROLES } from '@/shared/types/SharedTypes';
-import { AdminSection, SECTION_PERMISSIONS, ROLE_LABELS } from './types/RBACTypes';
+
+import { UserRole, ROLES } from '@/shared/types/shared.types';
+import { ROLE_LABELS } from './types/RBACTypes';
 
 /**
  * Core RBAC functionality
@@ -21,7 +22,7 @@ export function hasRole(
   if (!userRoles || userRoles.length === 0) return false;
   
   // Superadmin has all roles
-  if (userRoles.includes(ROLES.SUPERADMIN)) return true;
+  if (userRoles.includes(ROLES.SUPER_ADMIN)) return true;
   
   // Check for specific roles
   const rolesToCheck = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
@@ -34,7 +35,7 @@ export function hasRole(
  * @returns Boolean indicating if user has admin access
  */
 export function hasAdminAccess(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, [ROLES.ADMIN, ROLES.SUPERADMIN]);
+  return hasRole(userRoles, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 }
 
 /**
@@ -43,7 +44,7 @@ export function hasAdminAccess(userRoles: UserRole[]): boolean {
  * @returns Boolean indicating if user is a super admin
  */
 export function isSuperAdmin(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, ROLES.SUPERADMIN);
+  return hasRole(userRoles, ROLES.SUPER_ADMIN);
 }
 
 /**
@@ -52,7 +53,7 @@ export function isSuperAdmin(userRoles: UserRole[]): boolean {
  * @returns Boolean indicating if user is a moderator or higher
  */
 export function isModerator(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPERADMIN]);
+  return hasRole(userRoles, [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 }
 
 /**
@@ -61,7 +62,7 @@ export function isModerator(userRoles: UserRole[]): boolean {
  * @returns Boolean indicating if user is a builder or higher
  */
 export function isBuilder(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPERADMIN]);
+  return hasRole(userRoles, [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 }
 
 /**
@@ -70,11 +71,12 @@ export function isBuilder(userRoles: UserRole[]): boolean {
  * @returns The highest role the user has
  */
 export function getHighestRole(userRoles: UserRole[]): UserRole {
-  if (hasRole(userRoles, ROLES.SUPERADMIN)) return ROLES.SUPERADMIN;
+  if (hasRole(userRoles, ROLES.SUPER_ADMIN)) return ROLES.SUPER_ADMIN;
   if (hasRole(userRoles, ROLES.ADMIN)) return ROLES.ADMIN;
   if (hasRole(userRoles, ROLES.MODERATOR)) return ROLES.MODERATOR;
   if (hasRole(userRoles, ROLES.BUILDER)) return ROLES.BUILDER;
-  return ROLES.USER;
+  if (hasRole(userRoles, ROLES.USER)) return ROLES.USER;
+  return ROLES.GUEST;
 }
 
 /**
@@ -83,7 +85,7 @@ export function getHighestRole(userRoles: UserRole[]): UserRole {
  * @returns Boolean indicating if user has elevated privileges
  */
 export function hasElevatedPrivileges(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, [ROLES.ADMIN, ROLES.SUPERADMIN]);
+  return hasRole(userRoles, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
 }
 
 /**
@@ -92,11 +94,20 @@ export function hasElevatedPrivileges(userRoles: UserRole[]): boolean {
  * @param section Admin section to check access for
  * @returns Boolean indicating if user can access the section
  */
-export function canAccessAdminSection(userRoles: UserRole[], section: AdminSection): boolean {
+export function canAccessAdminSection(userRoles: UserRole[], section: string): boolean {
   // Super admins can access everything
-  if (hasRole(userRoles, ROLES.SUPERADMIN)) return true;
+  if (hasRole(userRoles, ROLES.SUPER_ADMIN)) return true;
 
-  const allowedRoles = SECTION_PERMISSIONS[section];
+  // Define section permissions
+  const sectionPermissions: Record<string, UserRole[]> = {
+    dashboard: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    users: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+    content: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MODERATOR],
+    settings: [ROLES.SUPER_ADMIN],
+    system: [ROLES.SUPER_ADMIN]
+  };
+
+  const allowedRoles = sectionPermissions[section];
   if (!allowedRoles) return false;
 
   return hasRole(userRoles, allowedRoles);
@@ -107,5 +118,12 @@ export function canAccessAdminSection(userRoles: UserRole[], section: AdminSecti
  * @returns Record of role keys to display labels
  */
 export function getRoleLabels(): Record<UserRole, string> {
-  return ROLE_LABELS;
-} 
+  return {
+    [ROLES.USER]: 'User',
+    [ROLES.ADMIN]: 'Admin',
+    [ROLES.SUPER_ADMIN]: 'Super Admin',
+    [ROLES.MODERATOR]: 'Moderator',
+    [ROLES.BUILDER]: 'Builder',
+    [ROLES.GUEST]: 'Guest'
+  };
+}
