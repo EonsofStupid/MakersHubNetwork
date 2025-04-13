@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/stores/auth/auth.store';
 import { UserRole, RBAC, PATH_POLICIES } from '@/shared/types/shared.types';
+import { useRbac } from '@/auth/rbac/use-rbac';
 
 /**
  * Custom hook for role-based access control
@@ -8,8 +9,8 @@ import { UserRole, RBAC, PATH_POLICIES } from '@/shared/types/shared.types';
  * @returns boolean indicating if the current user has the required roles
  */
 export const useHasRole = (allowedRoles: UserRole | UserRole[]): boolean => {
-  const { roles } = useAuthStore();
-  return useAuthStore.getState().hasRole(allowedRoles);
+  const { hasRole } = useRbac();
+  return hasRole(allowedRoles);
 };
 
 /**
@@ -18,7 +19,8 @@ export const useHasRole = (allowedRoles: UserRole | UserRole[]): boolean => {
  * @returns boolean indicating if the current user is an admin or super admin
  */
 export const useIsAdmin = (): boolean => {
-  return useHasRole(RBAC.adminOnly);
+  const { hasAdminAccess } = useRbac();
+  return hasAdminAccess();
 };
 
 /**
@@ -27,7 +29,8 @@ export const useIsAdmin = (): boolean => {
  * @returns boolean indicating if the current user is a super admin
  */
 export const useIsSuperAdmin = (): boolean => {
-  return useHasRole(RBAC.superAdmins);
+  const { isSuperAdmin } = useRbac();
+  return isSuperAdmin();
 };
 
 /**
@@ -36,7 +39,8 @@ export const useIsSuperAdmin = (): boolean => {
  * @returns boolean indicating if the current user is a moderator, admin, or super admin
  */
 export const useIsModerator = (): boolean => {
-  return useHasRole(RBAC.moderators);
+  const { isModerator } = useRbac();
+  return isModerator();
 };
 
 /**
@@ -45,7 +49,8 @@ export const useIsModerator = (): boolean => {
  * @returns boolean indicating if the current user is a builder, admin, or super admin
  */
 export const useIsBuilder = (): boolean => {
-  return useHasRole(RBAC.builders);
+  const { isBuilder } = useRbac();
+  return isBuilder();
 };
 
 /**
@@ -64,7 +69,7 @@ export const useIsAuthenticated = (): boolean => {
  * @returns boolean indicating if the current user can access the path
  */
 export const useCanAccessPath = (path: string): boolean => {
-  const { roles } = useAuthStore();
+  const { hasRole } = useRbac();
   const allowedRoles = PATH_POLICIES[path] || [];
   
   // If no policy exists for the path, allow access
@@ -72,7 +77,7 @@ export const useCanAccessPath = (path: string): boolean => {
     return true;
   }
   
-  return useAuthStore.getState().hasRole(allowedRoles);
+  return hasRole(allowedRoles);
 };
 
 /**

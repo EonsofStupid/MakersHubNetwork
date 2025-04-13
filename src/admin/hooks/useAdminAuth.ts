@@ -1,61 +1,48 @@
 import { useEffect } from 'react';
-import { useAdminStore } from '../store/admin.store';
-import { authBridge } from '@/auth/bridge';
-import { LogCategory, UserProfile, AuthStatus } from '@/shared/types/shared.types';
+import { useAuthStore } from '@/stores/auth/auth.store';
+import { useRbac } from '@/auth/rbac/use-rbac';
 import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
 
+/**
+ * Hook for checking and managing admin access
+ * 
+ * Provides comprehensive data about user's admin status and permissions
+ */
 export function useAdminAuth() {
-  const {
-    user,
-    status,
-    setAdminUser,
-    isAuthenticated,
-    error
-  } = useAdminStore();
+  const { user, roles, isAuthenticated, isLoading } = useAuthStore();
+  const { hasAdminAccess, isSuperAdmin } = useRbac();
+  const logger = useLogger('AdminAccess', LogCategory.ADMIN);
   
-  const logger = useLogger('AdminAuth', LogCategory.AUTH);
-
+  // Log admin access check
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const currentUser = await authBridge.getCurrentUser();
-        
-        if (currentUser) {
-          setAdminUser(currentUser as UserProfile);
+    if (isAuthenticated && hasAdminAccess()) {
+      logger.info('Admin access granted', {
+        details: {
+          userId: user?.id,
+          roles,
+          isAdmin: hasAdminAccess(),
+          isSuperAdmin: isSuperAdmin()
         }
-        
-        const unsubscribe = authBridge.subscribeToAuthEvents((event) => {
-          const details = {
-            eventType: event.type,
-            hasUser: !!event.user
-          };
-          
-          logger.info(`Auth event: ${event.type}`, { details });
-          
-          if (event.type === 'SIGNED_IN' && event.user) {
-            setAdminUser(event.user);
-          } else if (event.type === 'SIGNED_OUT') {
-            setAdminUser(null);
-          }
-        });
-        
-        return () => {
-          if (unsubscribe) unsubscribe();
-        };
-      } catch (error) {
-        logger.error('Error initializing admin auth', { details: { error } });
-      }
-    };
-    
-    initAuth();
-  }, []);
+      });
+    } else if (isAuthenticated) {
+      logger.debug('Admin access check - user is not admin', {
+        details: {
+          userId: user?.id,
+          roles
+        }
+      });
+    }
+  }, [isAuthenticated, hasAdminAccess, user?.id, roles, logger, isSuperAdmin]);
   
   return {
-    user,
     isAuthenticated,
-    isLoading: status === AuthStatus.LOADING,
-    error,
-    roles: user?.roles || []
+    isAdmin: hasAdminAccess(),
+    isSuperAdmin: isSuperAdmin(),
+    hasAdminAccess: hasAdminAccess(),
+    roles,
+    isLoading,
+    user
   };
 }
 

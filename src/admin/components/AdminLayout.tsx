@@ -1,47 +1,57 @@
-
-import React, { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useAdminAuth } from '@/admin/hooks/useAdminAuth';
+import { useRbac } from '@/auth/rbac/use-rbac';
+import { AdminHeader } from './AdminHeader';
 import AdminSidebar from './AdminSidebar';
-import { useAdminStore } from '../store/admin.store';
-import { useAdminAuth } from '../hooks/useAdminAuth';
-import { useAdminPermissions } from '../hooks/useAdminPermissions';
-import { Spinner } from '@/shared/ui/spinner';
-import { UserRoleEnum } from '@/shared/types/shared.types';
-import { hasRole } from '@/auth/utils/hasRole';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
+import { AdminAuthGuard } from './AdminAuthGuard';
 
-const AdminLayout: React.FC = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, isLoading, roles } = useAdminAuth();
-  const { hasPermission } = useAdminPermissions();
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
+/**
+ * Admin layout component that provides structure for admin pages
+ * Includes header and sidebar
+ */
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+  const { user, isAuthenticated, isLoading } = useAdminAuth();
+  const { hasAdminAccess } = useRbac();
+  const logger = useLogger('AdminLayout', LogCategory.ADMIN);
   
-  useEffect(() => {
-    // Redirect if not authenticated or doesn't have admin role
-    if (!isLoading && !isAuthenticated) {
-      navigate('/auth/login?redirect=/admin');
-    } else if (!isLoading && isAuthenticated && 
-               !hasRole(roles || [], [UserRoleEnum.ADMIN, UserRoleEnum.SUPERADMIN])) {
-      navigate('/admin/unauthorized');
+  // Log admin access
+  React.useEffect(() => {
+    if (isAuthenticated && user) {
+      if (hasAdminAccess()) {
+        logger.info('Admin access granted', {
+          details: {
+            userId: user.id,
+            roles: user.roles
+          }
+        });
+      } else {
+        logger.warn('User attempted to access admin area without proper permissions', {
+          details: {
+            userId: user.id,
+            roles: user.roles
+          }
+        });
+      }
     }
-  }, [isAuthenticated, isLoading, navigate, hasPermission, roles]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
+  }, [isAuthenticated, user, hasAdminAccess, logger]);
+  
   return (
-    <div className="flex h-screen bg-background">
-      <AdminSidebar />
-      <div className="flex-1 overflow-auto">
-        <main className="p-6">
-          <Outlet />
-        </main>
+    <AdminAuthGuard>
+      <div className="admin-layout">
+        <AdminHeader />
+        <div className="admin-content">
+          <AdminSidebar />
+          <main className="admin-main">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </AdminAuthGuard>
   );
 };
-
-export default AdminLayout;
