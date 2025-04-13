@@ -9,4 +9,4 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue
-} from '@/components/ui/select';
+} from '@/shared/ui/select';
