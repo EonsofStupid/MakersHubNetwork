@@ -19,3 +19,13 @@ export interface ThemeEffectProviderProps {
   className?: string;
   effect?: ThemeEffect;
 }
+
+/**
+ * Effect renderer props
+ */
+export interface EffectRendererProps {
+  effect: ThemeEffect;
+  intensity?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}

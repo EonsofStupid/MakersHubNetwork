@@ -6,7 +6,7 @@ import { BuildApprovalWidget } from '@/admin/components/dashboard/BuildApprovalW
 import { StatsCards } from '@/admin/components/dashboard/StatsCards';
 import { AdminFeatureSection } from '@/admin/components/dashboard/AdminFeatureSection';
 import AdminSidebar from '@/admin/components/AdminSidebar';
-import { AdminTopNav } from '@/admin/components/navigation/AdminTopNav';
+import AdminTopNav from '@/admin/components/navigation/AdminTopNav';
 import { DashboardShortcuts } from '@/admin/components/dashboard/DashboardShortcuts';
 import { ActiveUsersList } from '@/admin/components/dashboard/ActiveUsersList';
 import { ReviewsOverview } from '@/admin/components/reviews/ReviewsOverview';

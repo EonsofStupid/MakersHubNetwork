@@ -34,3 +34,7 @@ export type AuthPermissionValue = typeof AUTH_PERMISSIONS[keyof typeof AUTH_PERM
 
 // Permission map type
 export type PermissionMap = Record<AuthPermissionValue, boolean>;
+
+// Export PERMISSIONS for backward compatibility
+export const PERMISSIONS = AUTH_PERMISSIONS;
+export type PermissionValue = AuthPermissionValue;

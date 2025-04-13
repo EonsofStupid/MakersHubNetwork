@@ -1,25 +1,41 @@
 
-import { ReactNode } from 'react';
-import type { AdminPermissionValue } from '@/admin/constants/permissions';
+/**
+ * Types for layout system
+ */
 
-export interface Component {
-  id: string;
-  type: string;
-  props?: Record<string, any>;
-  children?: Component[];
-  permissions?: string[]; // Permission IDs required to view this component
+/**
+ * Layout component props
+ */
+export interface LayoutComponentProps {
+  [key: string]: any;
 }
 
+/**
+ * Layout component
+ */
+export interface LayoutComponent {
+  id: string;
+  type: string;
+  props?: LayoutComponentProps;
+  children?: LayoutComponent[];
+}
+
+/**
+ * Complete layout
+ */
 export interface Layout {
   id: string;
   name: string;
   type: string;
   scope: string;
-  components: Component[];
+  components: LayoutComponent[];
   meta?: Record<string, any>;
   version: number;
 }
 
+/**
+ * Layout skeleton stored in the database
+ */
 export interface LayoutSkeleton {
   id: string;
   name: string;
@@ -30,18 +46,4 @@ export interface LayoutSkeleton {
   is_active: boolean;
   is_locked?: boolean;
   version: number;
-}
-
-export interface LayoutRendererProps {
-  layout: Layout | null;
-  isLoading?: boolean;
-  fallback?: ReactNode;
-  error?: Error | null;
-}
-
-export interface LayoutEditorProps {
-  layout: Layout | null;
-  onSave?: (layout: Layout) => void;
-  onCancel?: () => void;
-  readOnly?: boolean;
 }

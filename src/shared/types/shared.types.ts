@@ -4,7 +4,7 @@
  */
 
 /**
- * Role definitions - using enum for strong typing and const object for runtime use
+ * Role definitions - using enum for strong typing
  */
 export enum UserRoleEnum {
   USER = 'user',
@@ -17,20 +17,16 @@ export enum UserRoleEnum {
 
 // Export as const for runtime access
 export const ROLES = {
-  USER: 'user' as UserRoleEnum.USER,
-  ADMIN: 'admin' as UserRoleEnum.ADMIN,
-  SUPER_ADMIN: 'super_admin' as UserRoleEnum.SUPER_ADMIN,
-  MODERATOR: 'moderator' as UserRoleEnum.MODERATOR,
-  BUILDER: 'builder' as UserRoleEnum.BUILDER,
-  GUEST: 'guest' as UserRoleEnum.GUEST,
+  USER: UserRoleEnum.USER,
+  ADMIN: UserRoleEnum.ADMIN,
+  SUPER_ADMIN: UserRoleEnum.SUPER_ADMIN,
+  MODERATOR: UserRoleEnum.MODERATOR,
+  BUILDER: UserRoleEnum.BUILDER,
+  GUEST: UserRoleEnum.GUEST,
 } as const;
 
-// Type alias for UserRole
+// Type alias for UserRole - the string literal union type
 export type UserRole = typeof ROLES[keyof typeof ROLES];
-
-// Backward compatibility
-export { ROLES as UserRoleEnum };
-export type UserRoleType = UserRole;
 
 /**
  * Permission definitions
@@ -68,7 +64,7 @@ export const PATH_POLICIES = RBAC_POLICIES;
 /**
  * Auth status enum
  */
-export enum AUTH_STATUS {
+export enum AuthStatus {
   IDLE = 'idle',
   LOADING = 'loading',
   AUTHENTICATED = 'authenticated',
@@ -76,7 +72,7 @@ export enum AUTH_STATUS {
   ERROR = 'error',
 }
 
-export type AuthStatus = AUTH_STATUS;
+export const AUTH_STATUS = AuthStatus;
 
 /**
  * User profile type
@@ -90,7 +86,8 @@ export interface UserProfile {
   updated_at: string;
   last_sign_in_at?: string;
   user_metadata?: Record<string, unknown>;
-  roles?: UserRole[]; // Include roles in the profile for convenience
+  app_metadata?: Record<string, unknown>;
+  roles?: UserRole[];
 }
 
 /**
@@ -244,6 +241,10 @@ export const RBAC = {
   builders: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
   normalUsers: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
   guests: [ROLES.GUEST],
+  
+  // Common role checks
+  adminOnly: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  authenticated: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
 };
 
 // Theme related types
@@ -258,6 +259,20 @@ export enum ThemeStatus {
   PUBLISHED = 'published',
   ARCHIVED = 'archived',
   ACTIVE = 'active',
+}
+
+// Theme effect type
+export enum ThemeEffect {
+  NONE = 'none',
+  BLUR = 'blur',
+  GRAIN = 'grain',
+  NOISE = 'noise',
+  GLOW = 'glow',
+  GLITCH = 'glitch',
+  GRADIENT = 'gradient',
+  CYBER = 'cyber',
+  PULSE = 'pulse',
+  PARTICLE = 'particle',
 }
 
 // Make TS aware this is a module

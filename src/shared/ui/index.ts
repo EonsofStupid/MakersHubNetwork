@@ -1,51 +1,55 @@
 
-// Re-export all UI components for convenient imports
+// Re-export all UI components from the shared directory
+// This serves as the central point for UI component imports
 
-// Core UI components 
+// Button components
 export * from './button';
-export * from './card';
-export * from './dialog';
-export * from './dropdown-menu';
-export * from './form';
-export * from './input';
-export * from './label';
-export * from './popover'; 
-export * from './select';
-export * from './separator';
-export * from './sheet';
-export * from './tabs';
-export * from './textarea';
-export * from './toast';
-export * from './tooltip';
 
-// Avatar components
-export * from './avatar';
-export * from './badge';
+// Layout components
+export * from './card';
+export * from './separator';
 
 // Navigation components
-export * from './accordion';
+export * from './tabs';
 export * from './breadcrumb';
-export * from './navigation-menu';
-export * from './pagination';
-export * from './scroll-area';
-
-// Data display components
-export * from './alert';
-export * from './alert-dialog';
-export * from './hover-card';
-export * from './skeleton';
-export * from './table';
 
 // Form components
+export * from './input';
+export * from './textarea';
+export * from './label';
 export * from './checkbox';
-export * from './radio-group';
-export * from './slider';
+export * from './select';
 export * from './switch';
+export * from './slider';
+export * from './radio-group';
+export * from './form';
 
 // Feedback components
+export * from './alert';
+export * from './badge';
 export * from './progress';
-export * from './spinner';
-
-// Toast notifications
+export * from './skeleton';
+export * from './toast';
 export * from './toaster';
 export * from './use-toast';
+
+// Overlay components
+export * from './dialog';
+export * from './alert-dialog';
+export * from './hover-card';
+export * from './popover';
+export * from './tooltip';
+export * from './sheet';
+
+// Data display components
+export * from './avatar';
+export * from './table';
+export * from './accordion';
+export * from './calendar';
+
+// Utility components
+export * from './scroll-area';
+export * from './spinner';
+
+// Export utility functions
+export { cn } from '../utils/cn';
