@@ -1,5 +1,4 @@
 
-import { useAuthStore } from '@/auth/store/auth.store';
 import { UserRole, ROLES, LogCategory } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
 
@@ -28,14 +27,8 @@ class RBACBridgeImpl {
    * Get all roles for the current user
    */
   getRoles(): UserRole[] {
-    // Get roles from auth store if available, otherwise return empty array
-    const state = useAuthStore.getState();
+    // Get roles from storage, default to empty array
     const storageRoles = this.getRolesFromStorage();
-    
-    if (!state.isAuthenticated) {
-      return [];
-    }
-    
     return storageRoles;
   }
 
@@ -78,11 +71,7 @@ class RBACBridgeImpl {
         }
       }
       
-      // Default role if authenticated but no roles found
-      if (useAuthStore.getState().isAuthenticated) {
-        return [ROLES.USER];
-      }
-      
+      // Default role if no roles found
       return [];
     } catch (error) {
       this.logger.error('Failed to parse roles from storage', { details: { error } });

@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { UserProfile, AUTH_STATUS } from '@/shared/types/shared.types';
+import { UserProfile, AUTH_STATUS, LogCategory } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 
 // Define the auth state interface
@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           initialized: true
         });
         
-        logger.info('User session restored', 'auth', { 
+        logger.log(LogLevel.INFO, LogCategory.AUTH, 'User session restored', { 
           userId: user.id,
           email: user.email
         });
@@ -65,7 +65,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           initialized: true
         });
         
-        logger.info('No user session found', 'auth');
+        logger.log(LogLevel.INFO, LogCategory.AUTH, 'No user session found');
       }
     } catch (error) {
       set({ 
@@ -74,7 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         initialized: true
       });
       
-      logger.error('Failed to initialize auth', 'auth', { 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to initialize auth', { 
         error 
       });
     }
@@ -106,7 +106,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: null
       });
       
-      logger.info('User logged in', 'auth', { 
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User logged in', { 
         userId: demoUser.id, 
         email: demoUser.email 
       });
@@ -117,7 +117,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: false
       });
       
-      logger.error('Login failed', 'auth', { 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Login failed', { 
         email, 
         error 
       });
@@ -142,14 +142,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: null
       });
       
-      logger.info('User logged out', 'auth');
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User logged out');
     } catch (error) {
       set({
         status: AUTH_STATUS.ERROR,
         error: error as Error
       });
       
-      logger.error('Logout failed', 'auth', { 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Logout failed', { 
         error 
       });
     }
@@ -181,7 +181,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: null
       });
       
-      logger.info('User signed up', 'auth', { 
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed up', { 
         userId: demoUser.id, 
         email: demoUser.email 
       });
@@ -191,7 +191,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         error: error as Error
       });
       
-      logger.error('Signup failed', 'auth', { 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Signup failed', { 
         email, 
         error 
       });

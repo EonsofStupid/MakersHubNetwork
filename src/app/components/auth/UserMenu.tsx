@@ -3,17 +3,18 @@ import { useState, memo, useCallback } from "react";
 import { useToast } from "@/shared/ui/use-toast";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/shared/types/shared.types";
+import { LogCategory, LogLevel } from "@/shared/types/shared.types";
 import { authBridge } from "@/auth/bridge";
 import { RBACBridge } from "@/rbac/bridge";
 import { Button } from "@/shared/ui/button";
 import { UserMenuSheet } from "./UserMenuSheet";
 import { useAuthStore } from "@/auth/store/auth.store";
+import { logger } from "@/logging/logger.service";
 
 export function UserMenu() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { toast } = useToast();
-  const logger = useLogger("UserMenu", LogCategory.AUTH);
+  const loggingContext = useLogger("UserMenu", LogCategory.AUTH);
   
   // Get auth data from centralized store
   const user = useAuthStore(state => state.user);
@@ -22,8 +23,11 @@ export function UserMenu() {
   // Handle opening the user menu
   const handleOpenUserMenu = useCallback(() => {
     setIsMenuOpen(true);
-    logger.debug('User menu opened', { details: { roles } });
-  }, [logger, roles]);
+    logger.log(LogLevel.DEBUG, LogCategory.AUTH, 'User menu opened', { 
+      source: 'UserMenu',
+      roles 
+    });
+  }, [roles]);
   
   // Handle profile
   const handleShowProfile = useCallback(() => {
@@ -34,22 +38,25 @@ export function UserMenu() {
   // Logout handler
   const handleLogout = useCallback(async () => {
     try {
-      logger.info("User logging out");
+      logger.log(LogLevel.INFO, LogCategory.AUTH, "User logging out", { source: 'UserMenu' });
       await authBridge.signOut();
-      logger.info("User logged out successfully");
+      logger.log(LogLevel.INFO, LogCategory.AUTH, "User logged out successfully", { source: 'UserMenu' });
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",
       });
     } catch (error: any) {
-      logger.error("Error logging out", { details: { message: error?.message } });
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, "Error logging out", { 
+        source: 'UserMenu',
+        message: error?.message 
+      });
       toast({
         variant: "destructive",
         title: "Error logging out",
         description: "Please try again",
       });
     }
-  }, [toast, logger]);
+  }, [toast]);
 
   // Don't render if no user
   if (!user) {

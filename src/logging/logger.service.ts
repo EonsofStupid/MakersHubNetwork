@@ -1,130 +1,116 @@
 
+import { LogCategory, LogLevel, LogEntry, LogDetails } from '@/shared/types/shared.types';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  LogLevel, 
-  LogCategory, 
-  LogDetails, 
-  LogEntry 
-} from '@/shared/types/shared.types';
 
-class Logger {
-  private listeners: Array<(entry: LogEntry) => void> = [];
-  private config = {
-    minLevel: LogLevel.DEBUG,
-    enabled: true,
-    defaultCategory: LogCategory.SYSTEM
-  };
-
-  log(
-    level: LogLevel,
-    message: string | Record<string, unknown>,
-    category = this.config.defaultCategory,
-    details?: Record<string, unknown>
-  ) {
-    if (!this.config.enabled) return;
-
-    const entry: LogEntry = {
-      id: uuidv4(),
+class LoggerService {
+  private logEntries: LogEntry[] = [];
+  private maxEntries: number = 1000;
+  private consoleEnabled: boolean = true;
+  private memoryEnabled: boolean = true;
+  
+  /**
+   * Log an entry with specified level and category
+   */
+  public log(level: LogLevel, category: LogCategory, message: string | Record<string, unknown>, details?: LogDetails): void {
+    const timestamp = new Date().toISOString();
+    const id = uuidv4();
+    const source = details?.source || 'unknown';
+    
+    const logEntry: LogEntry = {
+      id,
       level,
       category,
       message,
       details,
-      timestamp: new Date().toISOString(),
-      source: details?.source as string || 'app'
+      timestamp,
+      source
     };
-
-    this.emit(entry);
-  }
-
-  private emit(entry: LogEntry) {
-    // Notify all listeners
-    this.listeners.forEach(listener => {
-      try {
-        listener(entry);
-      } catch (error) {
-        console.error('Error in log listener', error);
-      }
-    });
     
-    // Also output to console for development
-    this.outputToConsole(entry);
-  }
-
-  private outputToConsole(entry: LogEntry) {
-    const timestamp = new Date(entry.timestamp).toLocaleTimeString();
-    const prefix = `${timestamp} [${entry.level}] [${entry.category}] [${entry.source}]:`;
-    const detailsStr = entry.details 
-      ? `\n${JSON.stringify(entry.details, null, 2)}`
-      : '';
-
-    switch (entry.level) {
-      case LogLevel.TRACE:
-        console.trace(`${prefix} ${entry.message}${detailsStr}`);
-        break;
-      case LogLevel.DEBUG:
-        console.debug(`${prefix} ${entry.message}${detailsStr}`);
-        break;
-      case LogLevel.INFO:
-        console.info(`${prefix} ${entry.message}${detailsStr}`);
-        break;
-      case LogLevel.WARN:
-        console.warn(`${prefix} ${entry.message}${detailsStr}`);
-        break;
-      case LogLevel.ERROR:
-      case LogLevel.FATAL:
-        console.error(`${prefix} ${entry.message}${detailsStr}`);
-        break;
-      case LogLevel.SUCCESS:
-        console.log(`%c${prefix} ${entry.message}`, 'color: green', detailsStr);
-        break;
-      default:
-        console.log(`${prefix} ${entry.message}${detailsStr}`);
+    // Store in memory
+    if (this.memoryEnabled) {
+      this.logEntries.push(logEntry);
+      
+      // Trim if exceeds max entries
+      if (this.logEntries.length > this.maxEntries) {
+        this.logEntries = this.logEntries.slice(-this.maxEntries);
+      }
+    }
+    
+    // Console output
+    if (this.consoleEnabled) {
+      this.outputToConsole(logEntry);
     }
   }
-
-  addListener(listener: (entry: LogEntry) => void) {
-    this.listeners.push(listener);
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
-    };
+  
+  /**
+   * Print log entry to console
+   */
+  private outputToConsole(entry: LogEntry): void {
+    const { level, category, message, timestamp, source, details } = entry;
+    const prefix = `[${timestamp}] [${level.toUpperCase()}] [${category}] [${source}]`;
+    
+    switch (level) {
+      case LogLevel.DEBUG:
+        console.debug(prefix, message, details || '');
+        break;
+      case LogLevel.INFO:
+      case LogLevel.SUCCESS:
+        console.info(prefix, message, details || '');
+        break;
+      case LogLevel.WARN:
+        console.warn(prefix, message, details || '');
+        break;
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
+      case LogLevel.FATAL:
+        console.error(prefix, message, details || '');
+        break;
+      default:
+        console.log(prefix, message, details || '');
+    }
   }
-
-  setConfig(config: Partial<typeof this.config>) {
-    this.config = {
-      ...this.config,
-      ...config
-    };
+  
+  /**
+   * Get all stored log entries
+   */
+  public getLogs(filter?: { category?: LogCategory; level?: LogLevel; source?: string }): LogEntry[] {
+    if (!filter) {
+      return [...this.logEntries];
+    }
+    
+    return this.logEntries.filter(entry => {
+      const categoryMatch = !filter.category || entry.category === filter.category;
+      const levelMatch = !filter.level || entry.level === filter.level;
+      const sourceMatch = !filter.source || entry.source === filter.source;
+      
+      return categoryMatch && levelMatch && sourceMatch;
+    });
   }
-
-  // Convenience methods for different log levels
-  trace(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
-    this.log(LogLevel.TRACE, message, category, details);
+  
+  /**
+   * Clear all logs
+   */
+  public clearLogs(): void {
+    this.logEntries = [];
   }
-
-  debug(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
-    this.log(LogLevel.DEBUG, message, category, details);
-  }
-
-  info(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
-    this.log(LogLevel.INFO, message, category, details);
-  }
-
-  warn(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
-    this.log(LogLevel.WARN, message, category, details);
-  }
-
-  error(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
-    this.log(LogLevel.ERROR, message, category, details);
-  }
-
-  fatal(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
-    this.log(LogLevel.FATAL, message, category, details);
-  }
-
-  success(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
-    this.log(LogLevel.SUCCESS, message, category, details);
+  
+  /**
+   * Configure logger options
+   */
+  public configure(options: { consoleEnabled?: boolean; memoryEnabled?: boolean; maxEntries?: number }): void {
+    if (options.consoleEnabled !== undefined) {
+      this.consoleEnabled = options.consoleEnabled;
+    }
+    
+    if (options.memoryEnabled !== undefined) {
+      this.memoryEnabled = options.memoryEnabled;
+    }
+    
+    if (options.maxEntries !== undefined && options.maxEntries > 0) {
+      this.maxEntries = options.maxEntries;
+    }
   }
 }
 
-// Create singleton instance
-export const logger = new Logger();
+// Export a singleton instance
+export const logger = new LoggerService();

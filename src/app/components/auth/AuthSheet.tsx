@@ -11,7 +11,8 @@ import { authBridge } from '@/auth/bridge';
 import { RBACBridge } from '@/rbac/bridge';
 import { useNavigate } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
 
 type AuthMode = 'login' | 'signup';
 
@@ -25,7 +26,7 @@ export function AuthSheet() {
   
   const { toast } = useToast();
   const navigate = useNavigate();
-  const logger = useLogger("AuthSheet", LogCategory.AUTH);
+  const loggingContext = useLogger("AuthSheet", LogCategory.AUTH);
 
   const toggleMode = () => {
     setMode(mode === 'login' ? 'signup' : 'login');
@@ -54,7 +55,10 @@ export function AuthSheet() {
       
       // Log the roles that were assigned during login
       const roles = RBACBridge.getRoles();
-      logger.info("Login successful", { details: { email, roles } });
+      logger.log(LogLevel.INFO, LogCategory.AUTH, "Login successful", { 
+        source: "AuthSheet", 
+        details: { email, roles } 
+      });
       
       toast({
         title: "Success",
@@ -63,7 +67,11 @@ export function AuthSheet() {
       
       setIsOpen(false);
     } catch (error) {
-      logger.error("Login failed", { details: { error } });
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, "Login failed", {
+        source: "AuthSheet",
+        details: { email, error }
+      });
+      
       toast({
         title: "Login failed",
         description: error instanceof Error ? error.message : "An error occurred during login",
@@ -111,13 +119,20 @@ export function AuthSheet() {
       
       // Log the assigned role
       const roles = RBACBridge.getRoles();
-      logger.info("Signup successful", { details: { email, roles } });
+      logger.log(LogLevel.INFO, LogCategory.AUTH, "Signup successful", {
+        source: "AuthSheet",
+        details: { email, roles }
+      });
       
       setMode('login');
       setPassword('');
       setConfirmPassword('');
     } catch (error) {
-      logger.error("Signup failed", { details: { error } });
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, "Signup failed", {
+        source: "AuthSheet",
+        details: { error }
+      });
+      
       toast({
         title: "Signup failed",
         description: error instanceof Error ? error.message : "An error occurred during signup",
@@ -131,7 +146,9 @@ export function AuthSheet() {
   const handleAdminClick = () => {
     setIsOpen(false);
     navigate('/admin');
-    logger.info("Navigating to admin dashboard");
+    logger.log(LogLevel.INFO, LogCategory.AUTH, "Navigating to admin dashboard", { 
+      source: "AuthSheet" 
+    });
   };
 
   const hasAdminAccess = RBACBridge.hasAdminAccess();
