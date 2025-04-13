@@ -1,21 +1,20 @@
-
-import { User, UserProfile, UserRole, AuthEvent, AuthEventType } from '@/shared/types/shared.types';
+import { User, UserProfile, UserRole, AuthEvent, AuthEventType } from '@/shared/types/SharedTypes';
 
 export interface AuthBridge {
   // Session management
-  getCurrentSession: () => Promise<any | null>;
+  getCurrentSession: () => Promise<AuthSession | null>;
   getUserProfile: (userId: string) => Promise<UserProfile | null>;
   
   // Authentication methods
   signInWithEmail: (email: string, password: string) => Promise<{ 
     user: User | null; 
-    session: any | null; 
+    session: AuthSession | null; 
     error: Error | null 
   }>;
   signInWithOAuth: (provider: 'google' | 'github' | 'facebook') => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ 
     user: User | null; 
-    session: any | null; 
+    session: AuthSession | null; 
     error: Error | null 
   }>;
   signOut: () => Promise<void>;
@@ -46,3 +45,12 @@ export type AuthState = {
   roles: UserRole[];
   error: string | null;
 };
+
+// Session type
+export interface AuthSession {
+  id: string;
+  user_id: string;
+  created_at: string;
+  expires_at?: string;
+  last_active_at?: string;
+} 
