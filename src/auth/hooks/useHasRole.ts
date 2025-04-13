@@ -24,7 +24,7 @@ export function useHasRole(options?: UseHasRoleProps): boolean {
     }
     
     // Super admins have all roles
-    if (isSuperAdmin) {
+    if (isSuperAdmin()) {
       return true;
     }
     

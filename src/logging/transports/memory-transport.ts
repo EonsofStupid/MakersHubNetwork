@@ -1,75 +1,68 @@
 
+import { LogEntry, LogLevel, LOG_LEVEL_VALUES } from '@/shared/types/shared.types';
 import { Transport } from './transport.interface';
-import { LogEntry, LogFilter } from '@/shared/types/shared.types';
-import { LOG_LEVEL_VALUES } from '@/shared/types/shared.types';
 
-export class MemoryTransport implements Transport {
-  private entries: LogEntry[] = [];
-  private maxEntries: number = 1000;
-  
-  constructor(maxEntries?: number) {
-    if (maxEntries) {
-      this.maxEntries = maxEntries;
-    }
+class MemoryTransport implements Transport {
+  private logs: LogEntry[] = [];
+  private maxEntries: number;
+  private minLevel: LogLevel;
+
+  constructor(maxEntries = 1000, minLevel = LogLevel.DEBUG) {
+    this.maxEntries = maxEntries;
+    this.minLevel = minLevel;
   }
-  
+
   log(entry: LogEntry): void {
-    this.entries.unshift(entry);
-    
-    // Trim entries if we exceed max size
-    if (this.entries.length > this.maxEntries) {
-      this.entries = this.entries.slice(0, this.maxEntries);
+    // Only log if the level is greater than or equal to the minimum level
+    if (LOG_LEVEL_VALUES[entry.level] >= LOG_LEVEL_VALUES[this.minLevel]) {
+      this.logs.unshift(entry); // Add to the beginning for reverse chronological order
+      
+      // Trim if we exceed maxEntries
+      if (this.logs.length > this.maxEntries) {
+        this.logs = this.logs.slice(0, this.maxEntries);
+      }
     }
   }
-  
-  async query(filter?: LogFilter): Promise<LogEntry[]> {
-    if (!filter) return [...this.entries];
+
+  async query(options?: any): Promise<LogEntry[]> {
+    let result = [...this.logs];
     
-    return this.entries.filter(entry => {
+    if (options) {
       // Filter by level
-      if (filter.level && LOG_LEVEL_VALUES[entry.level] < LOG_LEVEL_VALUES[filter.level]) {
-        return false;
+      if (options.level) {
+        result = result.filter(log => log.level === options.level);
       }
       
       // Filter by category
-      if (filter.category && entry.category !== filter.category) {
-        return false;
+      if (options.category) {
+        result = result.filter(log => log.category === options.category);
       }
       
       // Filter by search term
-      if (filter.search) {
-        const searchTerm = filter.search.toLowerCase();
-        if (!entry.message.toLowerCase().includes(searchTerm)) {
-          return false;
-        }
+      if (options.search) {
+        const searchTerm = options.search.toLowerCase();
+        result = result.filter(log => 
+          log.message.toLowerCase().includes(searchTerm) || 
+          (log.details && JSON.stringify(log.details).toLowerCase().includes(searchTerm))
+        );
       }
       
-      // Filter by time range
-      if (filter.startTime && entry.timestamp < filter.startTime.getTime()) {
-        return false;
+      // Filter by date range
+      if (options.from) {
+        result = result.filter(log => new Date(log.timestamp) >= new Date(options.from));
       }
       
-      if (filter.endTime && entry.timestamp > filter.endTime.getTime()) {
-        return false;
+      if (options.to) {
+        result = result.filter(log => new Date(log.timestamp) <= new Date(options.to));
       }
-      
-      // Filter by source
-      if (filter.source && entry.source !== filter.source) {
-        return false;
-      }
-      
-      return true;
-    });
+    }
+    
+    return result;
   }
-  
+
   clear(): void {
-    this.entries = [];
-  }
-  
-  getEntries(): LogEntry[] {
-    return [...this.entries];
+    this.logs = [];
   }
 }
 
-// Export a singleton instance
 export const memoryTransport = new MemoryTransport();

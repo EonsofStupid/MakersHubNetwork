@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => ({
             "useSuspenseInfiniteQuery",
             "useSuspenseQueries",
           ],
-          "@/stores/auth/store": [
+          "@/auth/store/auth.store": [
             "useAuthStore",
             "selectUser",
             "selectIsAuthenticated",
@@ -47,20 +47,20 @@ export default defineConfig(({ mode }) => ({
             "selectError",
             "selectIsLoading",
           ],
-          "@/stores/ui/store": [
+          "@/shared/stores/ui/store": [
             "useUIStore",
             "selectThemeMode",
             "selectAccentColor",
             "selectLayout",
             "selectPreferences",
           ],
-          "@/stores/theme/store": [
+          "@/shared/stores/theme/store": [
             "useThemeStore",
             "selectCurrentTheme",
             "selectThemeTokens",
             "selectThemeComponents",
           ],
-          "@/hooks/use-toast": ["useToast"],
+          "@/shared/hooks/use-toast": ["useToast"],
           "lucide-react": [
             "Search",
             "Menu",
