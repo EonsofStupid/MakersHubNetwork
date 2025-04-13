@@ -6,38 +6,50 @@
  * Maps roles to permissions
  */
 
-import { UserRole, ROLES } from '@/types/shared';
+import { UserRole, UserRoleEnum } from '@/shared/types/shared.types';
 import { PermissionValue, PERMISSIONS } from '@/auth/permissions';
 
 // Map roles to their allowed permissions
 const rolePermissionsMap: Record<UserRole, PermissionValue[]> = {
-  super_admin: Object.values(PERMISSIONS),
-  admin: [
+  'super_admin': Object.values(PERMISSIONS),
+  'admin': [
     PERMISSIONS.ADMIN_ACCESS,
     PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT, PERMISSIONS.DELETE_CONTENT,
     PERMISSIONS.VIEW_USERS, PERMISSIONS.EDIT_USERS,
     PERMISSIONS.SYSTEM_VIEW, 
   ],
-  editor: [
+  'editor': [
     PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT, PERMISSIONS.EDIT_CONTENT,
     PERMISSIONS.VIEW_USERS,
   ],
-  moderator: [
+  'moderator': [
     PERMISSIONS.VIEW_CONTENT, PERMISSIONS.EDIT_CONTENT,
     PERMISSIONS.VIEW_USERS,
   ],
-  builder: [
+  'builder': [
     PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT,
   ],
-  maker: [
+  'maker': [
     PERMISSIONS.VIEW_CONTENT, PERMISSIONS.CREATE_CONTENT,
   ],
-  viewer: [
+  'viewer': [
     PERMISSIONS.VIEW_CONTENT,
   ],
-  user: [
+  'user': [
     PERMISSIONS.VIEW_CONTENT,
   ],
+  'guest': []
+};
+
+// Create an object with role constants
+export const ROLES = {
+  SUPER_ADMIN: UserRoleEnum.SUPERADMIN,
+  ADMIN: UserRoleEnum.ADMIN,
+  EDITOR: 'editor',
+  MODERATOR: UserRoleEnum.MODERATOR,
+  BUILDER: UserRoleEnum.BUILDER,
+  USER: UserRoleEnum.USER,
+  GUEST: UserRoleEnum.GUEST
 };
 
 /**

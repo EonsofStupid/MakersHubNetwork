@@ -1,71 +1,53 @@
 
-import { UserRole } from '@/shared/types';
+import { UserRole, UserRoleEnum } from '@/shared/types/shared.types';
 
 /**
- * Checks if a user has admin permission based on roles and permission
- * @param roles User roles
+ * Check if user has admin permission
+ * @param roles Array of user roles
  * @param permission Permission to check
- * @returns Boolean indicating if user has permission
+ * @returns Boolean indicating whether the user has the permission
  */
-export function hasAdminPermission(roles: string[], permission: string): boolean {
-  // Super admin has all permissions
-  if (roles.includes('superadmin')) {
-    return true;
-  }
-
-  // Admin role
-  if (roles.includes('admin')) {
-    // Admin can do everything except critical system operations
+export function hasAdminPermission(roles: UserRole[] = [], permission: string): boolean {
+  // Super admins have all permissions
+  if (roles.includes(UserRoleEnum.SUPERADMIN)) {
     return true;
   }
   
-  // Moderator role has limited permissions
-  if (roles.includes('moderator')) {
-    // List of permissions allowed for moderators
-    const moderatorPermissions = [
-      'view_admin_panel',
-      'manage_content',
-      'view_users'
-    ];
-    
-    return moderatorPermissions.includes(permission);
+  // Admins have basic admin permissions
+  if (permission === 'view_admin_panel' && roles.includes(UserRoleEnum.ADMIN)) {
+    return true;
   }
+  
+  // In a real app, we would check against a permissions database or API
+  // For now, we'll just hardcode some basic rules
   
   return false;
 }
 
 /**
- * Checks if a user has specific role
- * @param userRoles User roles
- * @param requiredRole Required role to check
- * @returns Boolean indicating if user has the role
+ * Check if a user has any of the required roles
+ * @param userRoles Array of user's roles
+ * @param requiredRoles Array of required roles (any match grants access)
+ * @returns Boolean indicating if the user has any of the required roles
  */
-export function hasRole(userRoles: UserRole[], requiredRole: UserRole | UserRole[]): boolean {
-  if (!userRoles) return false;
-  
-  if (Array.isArray(requiredRole)) {
-    return requiredRole.some(role => userRoles.includes(role));
+export function hasAnyRole(userRoles: UserRole[] = [], requiredRoles: UserRole[]): boolean {
+  if (userRoles.includes(UserRoleEnum.SUPERADMIN)) {
+    return true;
   }
   
-  return userRoles.includes(requiredRole);
+  return requiredRoles.some(role => userRoles.includes(role));
 }
 
 /**
- * Formats a list of roles for display
- * @param roles User roles
- * @returns Formatted string of roles
+ * Check if a user has all of the required roles
+ * @param userRoles Array of user's roles
+ * @param requiredRoles Array of required roles (all must match)
+ * @returns Boolean indicating if the user has all of the required roles
  */
-export function formatRoles(roles: UserRole[]): string {
-  if (!roles || roles.length === 0) {
-    return 'No roles';
+export function hasAllRoles(userRoles: UserRole[] = [], requiredRoles: UserRole[]): boolean {
+  if (userRoles.includes(UserRoleEnum.SUPERADMIN)) {
+    return true;
   }
   
-  return roles.map(role => {
-    // Capitalize first letter and replace underscores with spaces
-    const formatted = role.replace(/_/g, ' ').replace(/\w\S*/g, 
-      txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-    );
-    
-    return formatted;
-  }).join(', ');
+  return requiredRoles.every(role => userRoles.includes(role));
 }

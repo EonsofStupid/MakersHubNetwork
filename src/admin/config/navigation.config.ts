@@ -1,78 +1,108 @@
 
-import { 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  FileStack, 
+import {
+  Home,
+  Settings,
+  Users,
+  FileText,
+  Boxes,
+  ThumbsUp,
   PaintBucket,
-  BarChart3,
-  MessageSquare,
-  FileJson,
-  AlertCircle,
-  Database
+  Activity,
+  Database,
+  Bot
 } from 'lucide-react';
-import { UserRole } from '@/shared/types/shared.types';
-import { NavigationItemType } from '../types/navigation.types';
+import { UserRoleEnum } from '@/shared/types/shared.types';
 
-export const navigationItems: NavigationItemType[] = [
+// Define the admin navigation structure
+export const adminNavigation = [
   {
-    name: 'Dashboard',
-    href: '/admin',
-    icon: LayoutDashboard,
-    requiredRole: UserRole.ADMIN,
+    id: 'overview',
+    label: 'Overview',
+    path: '/admin',
+    icon: Home,
+    section: 'main',
+    requiredRole: UserRoleEnum.ADMIN
   },
   {
-    name: 'Users',
-    href: '/admin/users',
+    id: 'builds',
+    label: 'Builds',
+    path: '/admin/builds',
+    icon: Boxes,
+    section: 'main',
+    requiredRole: UserRoleEnum.ADMIN
+  },
+  {
+    id: 'reviews',
+    label: 'Reviews',
+    path: '/admin/reviews',
+    icon: ThumbsUp,
+    section: 'main',
+    requiredRole: UserRoleEnum.ADMIN
+  },
+  {
+    id: 'content',
+    label: 'Content',
+    path: '/admin/content',
+    icon: FileText,
+    section: 'main',
+    requiredRole: UserRoleEnum.ADMIN
+  },
+  {
+    id: 'users',
+    label: 'Users',
+    path: '/admin/users',
     icon: Users,
-    requiredRole: UserRole.ADMIN,
+    section: 'main',
+    requiredRole: UserRoleEnum.ADMIN
   },
   {
-    name: 'Content',
-    href: '/admin/content',
-    icon: FileStack,
-    requiredRole: UserRole.ADMIN,
-  },
-  {
-    name: 'Builds',
-    href: '/admin/builds',
-    icon: FileJson,
-    requiredRole: UserRole.ADMIN,
-  },
-  {
-    name: 'Analytics',
-    href: '/admin/analytics',
-    icon: BarChart3,
-    requiredRole: UserRole.ADMIN,
-  },
-  {
-    name: 'Themes',
-    href: '/admin/themes',
+    id: 'theme',
+    label: 'Themes',
+    path: '/admin/themes',
     icon: PaintBucket,
-    requiredRole: UserRole.SUPERADMIN,
+    section: 'system',
+    requiredRole: UserRoleEnum.ADMIN
   },
   {
-    name: 'Settings',
-    href: '/admin/settings',
-    icon: Settings,
-    requiredRole: UserRole.ADMIN,
+    id: 'analytics',
+    label: 'Analytics',
+    path: '/admin/analytics',
+    icon: Activity,
+    section: 'system',
+    requiredRole: UserRoleEnum.ADMIN
   },
   {
-    name: 'Chat Management',
-    href: '/admin/chat',
-    icon: MessageSquare,
-    requiredRole: UserRole.ADMIN,
-  },
-  {
-    name: 'Logs',
-    href: '/admin/logs',
-    icon: AlertCircle,
-    requiredRole: UserRole.SUPERADMIN,
-  },
-  {
-    name: 'Data Management',
-    href: '/admin/data',
+    id: 'data',
+    label: 'Data Maestro',
+    path: '/admin/data',
     icon: Database,
-    requiredRole: UserRole.SUPERADMIN,
+    section: 'system',
+    requiredRole: UserRoleEnum.ADMIN
+  },
+  {
+    id: 'chat',
+    label: 'Chat',
+    path: '/admin/chat',
+    icon: Bot,
+    section: 'system',
+    requiredRole: UserRoleEnum.ADMIN
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    path: '/admin/settings',
+    icon: Settings,
+    section: 'system',
+    requiredRole: UserRoleEnum.ADMIN
   },
 ];
+
+// Helper to get navigation items by section
+export const getNavigationBySection = (section: string) => {
+  return adminNavigation.filter(item => item.section === section);
+};
+
+// Helper to get a navigation item by id
+export const getNavigationById = (id: string) => {
+  return adminNavigation.find(item => item.id === id);
+};

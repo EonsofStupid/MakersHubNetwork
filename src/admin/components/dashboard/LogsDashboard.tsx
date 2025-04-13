@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { LogEntry, LogCategory, memoryTransport } from '@/logging';
-import { LogLevel } from '@/logging/constants/log-level';
+import { LogLevel } from '@/shared/types/shared.types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { CyberCard } from '@/admin/components/ui/CyberCard';
 import { cn } from '@/lib/utils';
@@ -17,8 +17,8 @@ export function LogsDashboard() {
   // Update logs and stats
   useEffect(() => {
     const updateStats = () => {
-      const allLogs = memoryTransport.getLogs();
-      setLogs(allLogs);
+      const allLogs: LogEntry[] = memoryTransport.getLogs();
+      setLogs(() => allLogs);
       
       // Calculate level stats
       const levelCounts: Record<string, number> = {};
@@ -67,7 +67,9 @@ export function LogsDashboard() {
       }
       
       allLogs.forEach(log => {
-        const logTime = new Date(log.timestamp);
+        const timestampValue = typeof log.timestamp === 'string' ? log.timestamp : String(log.timestamp);
+        const logTime = new Date(timestampValue);
+        
         if (logTime >= lastHour && logTime <= nowTime) {
           // Find which 5-min interval this belongs to
           const minutesSinceLastHour = Math.floor((logTime.getTime() - lastHour.getTime()) / (5 * 60 * 1000));
@@ -102,7 +104,10 @@ export function LogsDashboard() {
     'info': '#00F0FF',
     'warn': '#FFB400',
     'error': '#FF2D6E',
-    'critical': '#FF4136'
+    'critical': '#FF4136',
+    'trace': '#BBBBBB',
+    'success': '#00FF9D',
+    'fatal': '#FF0000'
   };
   
   return (
@@ -228,5 +233,3 @@ export function LogsDashboard() {
     </div>
   );
 }
-
-export default LogsDashboard;

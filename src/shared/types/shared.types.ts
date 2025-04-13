@@ -59,7 +59,10 @@ export enum LogLevel {
   INFO = 'info',
   WARN = 'warn',
   ERROR = 'error',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
+  TRACE = 'trace',
+  SUCCESS = 'success',
+  FATAL = 'fatal'
 }
 
 // Log level values for filtering
@@ -68,7 +71,10 @@ export const LOG_LEVEL_VALUES = {
   info: 1,
   warn: 2,
   error: 3,
-  critical: 4
+  critical: 4,
+  trace: 0, // Added to match the LogLevel enum
+  success: 1, // Added to match the LogLevel enum
+  fatal: 4 // Added to match the LogLevel enum
 };
 
 // Review Status enumeration
@@ -101,7 +107,8 @@ export enum ThemeContext {
 export enum ThemeStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
-  ARCHIVED = 'archived'
+  ARCHIVED = 'archived',
+  ACTIVE = 'active'
 }
 
 // Log related interfaces
@@ -118,7 +125,7 @@ export interface LogDetails {
 
 export interface LogEntry {
   id: string;
-  timestamp: number | string;
+  timestamp: string; // Changed to string for consistency
   level: LogLevel;
   message: string;
   category: LogCategory;
@@ -127,6 +134,7 @@ export interface LogEntry {
 }
 
 export interface LogEvent {
+  type: string;
   entry: LogEntry;
 }
 
@@ -179,7 +187,8 @@ export enum AuthEventType {
   USER_UPDATED = 'USER_UPDATED',
   USER_DELETED = 'USER_DELETED',
   PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
-  PROFILE_UPDATED = 'PROFILE_UPDATED'
+  PROFILE_UPDATED = 'PROFILE_UPDATED',
+  AUTH_STATE_CHANGE = 'AUTH_STATE_CHANGE'
 }
 
 export interface AuthEvent {
@@ -189,6 +198,27 @@ export interface AuthEvent {
 }
 
 // Build related interfaces
+export interface UserInfo {
+  displayName?: string;
+  avatarUrl?: string;
+  id: string;
+}
+
+export interface BuildPart {
+  id: string;
+  name: string;
+  quantity: number;
+  part_id: string;
+  notes?: string;
+}
+
+export interface BuildMod {
+  id: string;
+  name: string;
+  description?: string;
+  complexity?: number;
+}
+
 export interface Build {
   id: string;
   title: string;
@@ -201,6 +231,11 @@ export interface Build {
   created_at: string;
   updated_at: string;
   images?: string[];
+  user?: UserInfo;
+  parts?: BuildPart[];
+  mods?: BuildMod[];
+  complexity?: number;
+  image_urls?: string[];
 }
 
 export interface BuildReview {
@@ -210,9 +245,13 @@ export interface BuildReview {
   rating: number;
   title?: string;
   body?: string;
+  content?: string;
   created_at: string;
   updated_at?: string;
   approved: boolean;
   category?: string[];
+  categories?: string[];
   image_urls?: string[];
+  user?: UserInfo;
+  is_verified_purchase?: boolean;
 }
