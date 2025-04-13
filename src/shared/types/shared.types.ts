@@ -84,56 +84,61 @@ export const LOG_CATEGORY = {
 export type LogCategory = (typeof LOG_CATEGORY)[keyof typeof LOG_CATEGORY];
 
 /**
- * RBAC helper constants for permission groups
+ * Log levels
  */
-export const RBAC = {
-  adminOnly: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  superAdmins: [ROLES.SUPER_ADMIN],
-  moderators: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  builders: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  authenticated: [ROLES.USER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.BUILDER],
+export const LOG_LEVEL = {
+  TRACE: 'trace',
+  DEBUG: 'debug',
+  INFO: 'info',
+  WARN: 'warn',
+  ERROR: 'error',
+  FATAL: 'fatal'
+} as const;
+
+export type LogLevel = (typeof LOG_LEVEL)[keyof typeof LOG_LEVEL];
+
+/**
+ * Log level values for comparison
+ */
+export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+  trace: 10,
+  debug: 20,
+  info: 30,
+  warn: 40,
+  error: 50,
+  fatal: 60
 };
 
 /**
- * Path policies for route protection
+ * Log details interface
  */
-export const PATH_POLICIES: Record<string, UserRole[]> = {
-  '/admin': RBAC.adminOnly,
-  '/admin/users': RBAC.adminOnly,
-  '/admin/roles': RBAC.superAdmins,
-  '/admin/settings': RBAC.adminOnly,
-  '/admin/system': RBAC.superAdmins,
-};
-
-/**
- * User role enum for backward compatibility
- */
-export enum UserRoleEnum {
-  USER = 'user',
-  ADMIN = 'admin',
-  SUPERADMIN = 'superadmin',
-  MODERATOR = 'moderator',
-  BUILDER = 'builder',
+export interface LogDetails {
+  message?: string;
+  details?: Record<string, unknown>;
+  timestamp?: string;
+  [key: string]: unknown;
 }
 
 /**
- * Log entry interface
+ * Log event interface
  */
-export interface LogEntry {
-  id: string;
-  timestamp: string;
-  level: string;
+export interface LogEvent {
+  level: LogLevel;
   category: LogCategory;
   message: string;
   details?: Record<string, unknown>;
+  timestamp: string;
+  source: string;
 }
 
 /**
- * Auth event types
+ * Log filter interface
  */
-export type AuthEventType = 
-  | 'AUTH_STATE_CHANGE'
-  | 'AUTH_LINKING_REQUIRED'
-  | 'AUTH_ERROR'
-  | 'SIGNED_IN'
-  | 'SIGNED_OUT';
+export interface LogFilter {
+  level?: LogLevel | LogLevel[];
+  category?: LogCategory | LogCategory[];
+  source?: string | string[];
+  search?: string;
+  from?: Date;
+  to?: Date;
+}
