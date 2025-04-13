@@ -1,155 +1,97 @@
 
-import { useState } from "react";
-import { useAuthStore } from "@/auth/store/auth.store";
-import { cn } from "@/lib/utils";
-import { Button } from "@/shared/ui/button";
-import { User, Edit2, Github, Twitter } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { ProfileEditor } from "./ProfileEditor";
+import React from 'react';
+import { UserProfile } from '@/shared/types/shared.types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
+import { Edit, Mail, User } from 'lucide-react';
 
-export const ProfileDisplay = () => {
-  const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
-  const user = useAuthStore((state) => state.user);
-  const profile = useAuthStore((state) => state.profile);
+interface ProfileDisplayProps {
+  profile: UserProfile;
+  onEditClick?: () => void;
+  canEdit?: boolean;
+}
 
-  // Extract user information safely
-  const userMetadata = user?.user_metadata || {};
-  const displayName = profile?.name || userMetadata.full_name || "Anonymous Maker";
-  const bio = profile?.bio || userMetadata.bio || "No bio yet";
-  const theme = userMetadata.theme_preference || "Cyberpunk";
-  const motionEnabled = userMetadata.motion_enabled === true;
+export function ProfileDisplay({ profile, onEditClick, canEdit = true }: ProfileDisplayProps) {
+  const {
+    name = '',
+    email = '',
+    avatar_url,
+    bio = '',
+    created_at,
+    last_sign_in_at,
+  } = profile;
 
-  const handleSocialConnect = (platform: string) => {
-    toast({
-      title: "Coming Soon",
-      description: `${platform} integration will be available soon!`,
-      variant: "default",
+  // Format date for display
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
-  if (isEditing) {
-    return <ProfileEditor onClose={() => setIsEditing(false)} />;
-  }
+  // Get initials from name for avatar fallback
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    return name.split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4">
-      <div
-        className={cn(
-          "w-[672px] max-w-[95vw]", // Increased by 12% from 600px
-          "rounded-lg overflow-hidden",
-          "bg-background/20 backdrop-blur-xl",
-          "border border-primary/30",
-          "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]",
-          "before:absolute before:inset-0",
-          "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
-          "before:pointer-events-none",
-          "relative z-50",
-          "transform-gpu scale-[1.12]" // 12% scale increase
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-2xl">Profile</CardTitle>
+        {canEdit && (
+          <Button variant="outline" size="sm" onClick={onEditClick}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit Profile
+          </Button>
         )}
-        style={{
-          maxHeight: "90vh",
-          overflowY: "auto",
-          scrollbarWidth: "thin",
-          scrollbarColor: "rgba(0, 240, 255, 0.3) transparent"
-        }}
-      >
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-          {/* This would normally be the ThemeDataStream component */}
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex flex-col md:flex-row gap-6 items-center">
+          <Avatar className="h-24 w-24">
+            {avatar_url ? (
+              <AvatarImage src={avatar_url} alt={name || 'User'} />
+            ) : (
+              <AvatarFallback className="text-xl">{getInitials(name || '')}</AvatarFallback>
+            )}
+          </Avatar>
+          
+          <div className="space-y-2 text-center md:text-left">
+            <h2 className="text-2xl font-bold">{name || 'No name provided'}</h2>
+            <div className="flex items-center justify-center md:justify-start gap-1">
+              <Mail className="h-4 w-4 opacity-70" />
+              <span>{email}</span>
+            </div>
+          </div>
         </div>
         
-        <div className="relative z-10 p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative group">
-                <div className="w-20 h-20 rounded-full border-2 border-primary/50 overflow-hidden bg-primary/20">
-                  {userMetadata.avatar_url ? (
-                    <img
-                      src={userMetadata.avatar_url as string}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-10 h-10 text-primary" />
-                    </div>
-                  )}
-                </div>
-                <div className="absolute inset-0 rounded-full bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              
-              <div className="space-y-1">
-                <h3 className="text-xl font-bold text-primary animate-morph-header">
-                  {displayName}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {bio}
-                </p>
-              </div>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsEditing(true)}
-              className={cn(
-                "relative overflow-hidden",
-                "before:absolute before:inset-0",
-                "before:bg-primary/20 before:translate-y-full",
-                "hover:before:translate-y-0",
-                "before:transition-transform before:duration-300",
-                "mad-scientist-hover"
-              )}
-            >
-              <Edit2 className="w-4 h-4" />
-            </Button>
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Bio</h3>
+            <p className="text-muted-foreground">
+              {bio || 'No bio provided.'}
+            </p>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground">Theme</h4>
-              <p className="text-sm">{theme}</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium text-sm text-muted-foreground mb-1">Member since</h4>
+              <p>{formatDate(created_at)}</p>
             </div>
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-muted-foreground">Motion</h4>
-              <p className="text-sm">{motionEnabled ? "Enabled" : "Disabled"}</p>
+            <div>
+              <h4 className="font-medium text-sm text-muted-foreground mb-1">Last login</h4>
+              <p>{formatDate(last_sign_in_at)}</p>
             </div>
-          </div>
-
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSocialConnect("GitHub")}
-              className={cn(
-                "group relative overflow-hidden",
-                "before:absolute before:inset-0",
-                "before:bg-primary/20 before:translate-y-full",
-                "hover:before:translate-y-0",
-                "before:transition-transform before:duration-300"
-              )}
-            >
-              <Github className="w-4 h-4 mr-2" />
-              Connect GitHub
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSocialConnect("Twitter")}
-              className={cn(
-                "group relative overflow-hidden",
-                "before:absolute before:inset-0",
-                "before:bg-primary/20 before:translate-y-full",
-                "hover:before:translate-y-0",
-                "before:transition-transform before:duration-300"
-              )}
-            >
-              <Twitter className="w-4 h-4 mr-2" />
-              Connect Twitter
-            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

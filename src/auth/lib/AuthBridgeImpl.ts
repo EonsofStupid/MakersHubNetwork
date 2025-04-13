@@ -1,8 +1,7 @@
 
-import { AuthBridge } from '@/auth/bridge';
-import { UserProfile } from '@/shared/types/shared.types';
+import { IAuthBridge } from '@/auth/bridge';
+import { UserProfile, LogLevel, LogCategory } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
-import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
 /**
  * Auth Bridge Implementation
@@ -10,7 +9,7 @@ import { LogLevel, LogCategory } from '@/shared/types/shared.types';
  * This is a concrete implementation of the AuthBridge interface that
  * provides authentication functionality for the application.
  */
-class AuthBridgeImpl implements AuthBridge {
+class AuthBridgeImpl implements IAuthBridge {
   private eventSubscribers: Map<string, ((event: any) => void)[]> = new Map();
   private _isAuthenticated: boolean = false;
 
@@ -133,42 +132,6 @@ class AuthBridgeImpl implements AuthBridge {
     }
   }
 
-  async signInWithOAuth(provider: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    try {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Attempting OAuth sign in', { 
-        details: { provider }
-      });
-      
-      // Mock implementation
-      return { 
-        user: null, 
-        error: new Error('OAuth sign in not implemented yet') 
-      };
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'OAuth sign in failed', { 
-        details: { provider, error: String(error) }
-      });
-      return { 
-        user: null, 
-        error: error instanceof Error ? error : new Error('Unknown error')
-      };
-    }
-  }
-  
-  async linkAccount(provider: string): Promise<boolean> {
-    try {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Linking account', { 
-        details: { provider } 
-      });
-      return false; // Mock implementation
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to link account', { 
-        details: { provider, error: String(error) }
-      });
-      return false;
-    }
-  }
-
   subscribeToEvent(event: string, callback: (event: any) => void): { unsubscribe: () => void } {
     if (!this.eventSubscribers.has(event)) {
       this.eventSubscribers.set(event, []);
@@ -205,7 +168,7 @@ class AuthBridgeImpl implements AuthBridge {
     }
   }
   
-  async getUserProfile(userId?: string): Promise<UserProfile | null> {
+  getUser(): UserProfile | null {
     try {
       const storedUser = localStorage.getItem('auth_user');
       if (storedUser) {
@@ -213,11 +176,15 @@ class AuthBridgeImpl implements AuthBridge {
       }
       return null;
     } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get user profile', { 
-        details: { userId, error: String(error) }
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get user', { 
+        details: { error: String(error) }
       });
       return null;
     }
+  }
+
+  getProfile(): UserProfile | null {
+    return this.getUser();
   }
 }
 

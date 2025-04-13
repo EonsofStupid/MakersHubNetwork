@@ -6,8 +6,11 @@ export function useSiteTheme() {
   const variables = useThemeStore(state => state.variables);
   const componentStyles = useThemeStore(state => state.componentStyles);
   const isLoaded = useThemeStore(state => state.isLoaded);
-  const animations = useThemeStore(state => state.componentTokens)
-    .find(component => component.component_name === 'animations')?.styles || {};
+  
+  let animations = {};
+  if (componentStyles && 'animations' in componentStyles) {
+    animations = componentStyles.animations || {};
+  }
 
   return {
     theme,

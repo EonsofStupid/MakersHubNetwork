@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { UserRole, Permission, LogCategory } from '@/shared/types/shared.types';
+import { UserRole, Permission, LogCategory, LogLevel } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 
 /**

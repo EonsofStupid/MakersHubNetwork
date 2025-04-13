@@ -47,7 +47,7 @@ export const PERMISSIONS = {
   SUPER_ADMIN: 'super:admin',
 } as const;
 
-export type Permission = keyof typeof PERMISSIONS;
+export type Permission = keyof typeof PERMISSIONS | string;
 
 /**
  * RBAC route policies
@@ -87,6 +87,8 @@ export interface UserProfile {
   updated_at: string;
   last_sign_in_at?: string;
   user_metadata?: Record<string, unknown>;
+  bio?: string;
+  roles?: UserRole[];
 }
 
 /**
@@ -110,6 +112,8 @@ export enum LogCategory {
   SYSTEM = 'system',
   ADMIN = 'admin',
   DEBUG = 'debug',
+  APP = 'app',
+  CHAT = 'chat',
 }
 
 /**
@@ -149,6 +153,15 @@ export interface LogEvent {
 }
 
 /**
+ * Log details
+ */
+export interface LogDetails {
+  source?: string;
+  tags?: string[];
+  [key: string]: any;
+}
+
+/**
  * Log filter type
  */
 export interface LogFilter {
@@ -175,6 +188,10 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.SILENT]: 8,
 };
 
+// Re-export for backward compatibility
+export const LOG_LEVEL = LogLevel;
+export const LOG_CATEGORY = LogCategory;
+
 /**
  * Theme-related types
  */
@@ -190,6 +207,9 @@ export interface Theme {
   tokens?: ThemeToken[];
   components?: ThemeComponent[];
   variables?: Record<string, string>;
+  created_by?: string | null;
+  published_at?: string | null;
+  parent_theme_id?: string | null;
 }
 
 export interface ThemeToken {
@@ -284,12 +304,17 @@ export interface ThemeState {
   componentTokens: ComponentTokens;
   isLoading: boolean;
   error: string | null;
+  theme?: Theme;
+  variables?: Record<string, string>;
+  componentStyles?: Record<string, any>;
+  isLoaded?: boolean;
+  tokens?: ThemeToken[];
 }
 
 /**
  * Theme effect
  */
-export enum ThemeEffect {
+export enum ThemeEffectType {
   NONE = 'none',
   GRADIENT = 'gradient',
   GLOW = 'glow',
@@ -348,3 +373,51 @@ export interface User {
   role?: UserRole;
   roles?: UserRole[];
 }
+
+/**
+ * Build related types
+ */
+export enum BuildStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled',
+}
+
+export interface BuildPart {
+  id: string;
+  name: string;
+  description: string;
+  image_url: string;
+  price: number;
+  inventory: number;
+  category: string;
+}
+
+export interface BuildMod {
+  id: string;
+  name: string;
+  description: string;
+  compatibility: string[];
+  price: number;
+}
+
+export interface UserInfo {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface BaseEntity {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Re-export for backward compatibility
+export const AUTH_STATUS = AuthStatus;
+export const RBAC = {
+  POLICIES: RBAC_POLICIES
+};
+export const PATH_POLICIES = RBAC_POLICIES;

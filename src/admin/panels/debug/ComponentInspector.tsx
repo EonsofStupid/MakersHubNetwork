@@ -21,6 +21,10 @@ export function ComponentInspector() {
 
   if (!isVisible || !inspectedComponent) return null;
 
+  const handleTabChange = (value: string) => {
+    setInspectorTab(value);
+  };
+
   return (
     <div 
       className="fixed z-50 bg-background border border-border rounded-md shadow-lg w-80"
@@ -41,7 +45,7 @@ export function ComponentInspector() {
         </Button>
       </div>
 
-      <Tabs defaultValue={inspectorTab} onValueChange={setInspectorTab}>
+      <Tabs defaultValue={inspectorTab} onValueChange={handleTabChange}>
         <TabsList className="w-full">
           <TabsTrigger value="styles" className="flex-1">Styles</TabsTrigger>
           <TabsTrigger value="props" className="flex-1">Props</TabsTrigger>
