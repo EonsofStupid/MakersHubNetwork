@@ -1,6 +1,8 @@
 
 import { create } from 'zustand';
 import { UserRole } from '@/shared/types/SharedTypes';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/SharedTypes';
 
 /**
  * RBAC state interface
@@ -21,6 +23,8 @@ interface RbacState {
  * Manages roles and permissions separately from auth
  */
 export const useRbacStore = create<RbacState>((set, get) => {
+  const logger = useLogger('RbacStore', LogCategory.RBAC);
+  
   return {
     roles: [],
     
@@ -38,6 +42,7 @@ export const useRbacStore = create<RbacState>((set, get) => {
      */
     setRoles: (roles: UserRole[]) => {
       set({ roles });
+      logger.info('Roles updated', { details: { roles } });
     },
     
     /**
@@ -45,6 +50,7 @@ export const useRbacStore = create<RbacState>((set, get) => {
      */
     clear: () => {
       set({ roles: [] });
+      logger.info('RBAC state cleared');
     }
   };
 });

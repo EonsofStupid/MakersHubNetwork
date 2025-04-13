@@ -34,5 +34,19 @@ export const RBACBridge = {
    */
   isSuperAdmin: (): boolean => {
     return useRbacStore.getState().hasRole('superadmin');
+  },
+  
+  /**
+   * Set user roles
+   */
+  setRoles: (roles: UserRole[]): void => {
+    useRbacStore.getState().setRoles(roles);
+  },
+  
+  /**
+   * Clear roles
+   */
+  clearRoles: (): void => {
+    useRbacStore.getState().clear();
   }
 };

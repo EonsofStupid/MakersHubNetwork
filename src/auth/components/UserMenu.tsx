@@ -1,69 +1,69 @@
 
-import { useState, memo, useCallback } from "react" 
-import { useToast } from "@/shared/ui/use-toast"
-import { UserMenuSheet } from "./UserMenuSheet"
-import { useAuthStore } from "@/auth/store/auth.store"
-import { useLogger } from "@/hooks/use-logger"
-import { LogCategory } from "@/shared/types/SharedTypes"
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar"
-import { authBridge } from "@/auth/bridge"
-import { RBACBridge } from "@/rbac/bridge"
+import { useState, memo, useCallback } from "react";
+import { useToast } from "@/shared/ui/use-toast";
+import { UserMenuSheet } from "./UserMenuSheet";
+import { useAuthStore } from "@/auth/store/auth.store";
+import { useLogger } from "@/hooks/use-logger";
+import { LogCategory } from "@/shared/types/SharedTypes";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
+import { authBridge } from "@/auth/bridge";
+import { RBACBridge } from "@/rbac/bridge";
 
 export const UserMenu = memo(() => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { toast } = useToast()
-  const logger = useLogger("UserMenu", LogCategory.AUTH)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { toast } = useToast();
+  const logger = useLogger("UserMenu", LogCategory.AUTH);
   
   // Get auth data from centralized store
-  const user = useAuthStore(state => state.user)
-  const roles = RBACBridge.getRoles()
+  const user = useAuthStore(state => state.user);
+  const roles = RBACBridge.getRoles();
   
   // Handle opening the user menu
   const handleOpenUserMenu = useCallback(() => {
-    setIsMenuOpen(true)
-  }, [])
+    setIsMenuOpen(true);
+  }, []);
   
   // Handle profile
   const handleShowProfile = useCallback(() => {
-    setIsMenuOpen(false)
+    setIsMenuOpen(false);
     // Navigate to profile page if needed
-  }, [])
+  }, []);
   
   // Logout handler
   const handleLogout = useCallback(async () => {
     try {
-      logger.info("User logging out")
-      await authBridge.signOut()
-      logger.info("User logged out successfully")
+      logger.info("User logging out");
+      await authBridge.signOut();
+      logger.info("User logged out successfully");
       toast({
         title: "Logged out",
         description: "You have been successfully logged out",
-      })
-      window.location.reload()
+      });
+      window.location.reload();
     } catch (error) {
-      logger.error("Error logging out", { error })
+      logger.error("Error logging out", { error });
       toast({
         variant: "destructive",
         title: "Error logging out",
         description: "Please try again",
-      })
+      });
     }
-  }, [toast, logger])
+  }, [toast, logger]);
 
   // Don't render if no user
   if (!user) {
-    return null
+    return null;
   }
 
   // Get display name and email from user
-  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
-  const avatarUrl = user.user_metadata?.avatar_url
+  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  const avatarUrl = user.user_metadata?.avatar_url;
   const initials = displayName
     .split(' ')
     .map(n => n[0])
     .join('')
     .substring(0, 2)
-    .toUpperCase()
+    .toUpperCase();
 
   return (
     <>
@@ -89,7 +89,7 @@ export const UserMenu = memo(() => {
         roles={roles}
       />
     </>
-  )
-})
+  );
+});
 
-UserMenu.displayName = "UserMenu"
+UserMenu.displayName = "UserMenu";
