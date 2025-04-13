@@ -1,14 +1,6 @@
 
-import { getLogger } from '@/logging';
-import { LogCategory } from '@/logging/types';
-
-// Define LogOptions type to match the expected type in logging system
-interface LogOptions {
-  category?: LogCategory;
-  details?: Record<string, any>;
-  source?: string;
-  tags?: string[];
-}
+import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
 
 export type ChatBridgeMessage = {
   type: string;
@@ -26,7 +18,6 @@ export type ChatBridgeListener = (message: ChatBridgeMessage) => void;
  */
 class ChatBridgeImpl {
   private listeners: Map<ChatBridgeChannel, ChatBridgeListener[]> = new Map();
-  private logger = getLogger();
   
   /**
    * Subscribe to a channel
@@ -42,8 +33,7 @@ class ChatBridgeImpl {
     const channelListeners = this.listeners.get(channel)!;
     channelListeners.push(listener);
     
-    this.logger.debug(`Listener added to ${channel} channel`, { 
-      category: LogCategory.CHAT,
+    logger.log(LogLevel.DEBUG, LogCategory.CHAT, `Listener added to ${channel} channel`, { 
       details: { listenersCount: channelListeners.length }
     });
     
@@ -52,8 +42,7 @@ class ChatBridgeImpl {
       const index = channelListeners.indexOf(listener);
       if (index !== -1) {
         channelListeners.splice(index, 1);
-        this.logger.debug(`Listener removed from ${channel} channel`, { 
-          category: LogCategory.CHAT,
+        logger.log(LogLevel.DEBUG, LogCategory.CHAT, `Listener removed from ${channel} channel`, { 
           details: { listenersCount: channelListeners.length }
         });
       }
@@ -72,8 +61,7 @@ class ChatBridgeImpl {
     
     const channelListeners = this.listeners.get(channel)!;
     
-    this.logger.debug(`Publishing to ${channel} channel`, {
-      category: LogCategory.CHAT,
+    logger.log(LogLevel.DEBUG, LogCategory.CHAT, `Publishing to ${channel} channel`, {
       details: { message, listenersCount: channelListeners.length }
     });
     
@@ -83,8 +71,7 @@ class ChatBridgeImpl {
         try {
           listener(message);
         } catch (error) {
-          this.logger.error(`Error in ${channel} channel listener`, {
-            category: LogCategory.CHAT,
+          logger.log(LogLevel.ERROR, LogCategory.CHAT, `Error in ${channel} channel listener`, {
             details: { error, messageType: message.type }
           });
         }

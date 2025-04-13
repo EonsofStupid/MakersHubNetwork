@@ -1,37 +1,116 @@
 
 import { create } from 'zustand';
 import { 
-  Theme, 
-  ThemeState, 
-  ComponentTokens, 
-  DesignTokens, 
-  ThemeStatus, 
-  ThemeContext,
-  ThemeToken
-} from '@/shared/types/theme.types';
+  Theme, ThemeState, ComponentTokens, DesignTokens, 
+  ColorTokens, SpacingTokens, TypographyTokens, 
+  EffectTokens, RadiusTokens, ShadowTokens,
+  LogLevel, LogCategory 
+} from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
 
-// Initial design tokens
-const initialDesignTokens: DesignTokens = {
-  colors: {},
-  spacing: {},
-  typography: {},
-  effects: {},
-  borders: {}
+// Define initial component tokens to avoid type errors
+const initialComponentTokens: ComponentTokens = {
+  button: {},
+  card: {},
+  input: {},
+  badge: {},
+  alert: {}
 };
 
-// Initial component tokens
-const initialComponentTokens: ComponentTokens = {
-  styles: {}
+// Initial design tokens to avoid type errors
+const initialDesignTokens: DesignTokens = {
+  colors: {
+    primary: '#8B5CF6',
+    secondary: '#EC4899',
+    accent: '#F97316',
+    background: '#0F1729',
+    foreground: '#F8FAFC',
+    muted: '#334155',
+    'muted-foreground': '#94A3B8',
+    popover: '#1E293B',
+    'popover-foreground': '#F8FAFC',
+    card: '#1E293B',
+    'card-foreground': '#F8FAFC', 
+    border: '#334155',
+    input: '#334155',
+    ring: '#8B5CF6'
+  },
+  spacing: {
+    sm: '0.5rem',
+    md: '1rem',
+    lg: '1.5rem',
+    xl: '2rem',
+    xxl: '4rem'
+  },
+  typography: {
+    fontFamily: "'Inter', sans-serif",
+    fontSize: {
+      xs: '0.75rem',
+      sm: '0.875rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem',
+      '5xl': '3rem',
+    },
+    fontWeight: {
+      light: '300',
+      normal: '400',
+      medium: '500',
+      semibold: '600',
+      bold: '700',
+    },
+    lineHeight: {
+      none: '1',
+      tight: '1.25',
+      snug: '1.375',
+      normal: '1.5',
+      relaxed: '1.625',
+      loose: '2',
+    }
+  },
+  effects: {
+    blur: {
+      sm: '4px',
+      md: '8px',
+      lg: '12px'
+    },
+    glow: {
+      sm: '0 0 4px',
+      md: '0 0 8px',
+      lg: '0 0 16px'
+    }
+  },
+  radius: {
+    sm: '0.25rem',
+    md: '0.5rem',
+    lg: '0.75rem',
+    xl: '1rem',
+    full: '9999px'
+  },
+  shadows: {
+    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+  }
 };
 
 // Initial state
 const initialState: ThemeState = {
   themes: [],
-  activeThemeId: null,
+  activeThemeId: '',
   designTokens: initialDesignTokens,
   componentTokens: initialComponentTokens,
   isLoading: false,
-  error: null
+  error: null,
+  isLoaded: false,
+  theme: undefined,
+  variables: {},
+  componentStyles: {},
+  tokens: []
 };
 
 // Create the store
@@ -42,11 +121,10 @@ export const useThemeStore = create<ThemeState & {
   setComponentTokens: (tokens: ComponentTokens) => void;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
-  loadTheme: (themeId: string) => Promise<void>;
-  updateComponentToken: (component: string, token: string, value: string) => void;
-  updateDesignToken: (category: string, token: string, value: string) => void;
+  applyTheme: (themeId: string) => void;
+  loadThemes: () => Promise<void>;
   resetTheme: () => void;
-}>((set) => ({
+}>((set, get) => ({
   ...initialState,
 
   setThemes: (themes) => {
@@ -67,9 +145,15 @@ export const useThemeStore = create<ThemeState & {
           }
           return theme;
         });
-        return { themes: updatedThemes, designTokens: tokens };
+        return { 
+          themes: updatedThemes, 
+          designTokens: tokens 
+        };
       }
-      return { designTokens: tokens };
+      return { 
+        themes: state.themes, 
+        designTokens: tokens 
+      };
     });
   },
 
@@ -85,144 +169,83 @@ export const useThemeStore = create<ThemeState & {
     set({ error });
   },
 
-  loadTheme: async (themeId) => {
+  applyTheme: (themeId) => {
+    set((state) => {
+      const theme = state.themes.find(t => t.id === themeId);
+      if (theme) {
+        return {
+          activeThemeId: themeId,
+          designTokens: theme.designTokens,
+          componentTokens: theme.componentTokens,
+          theme: theme
+        };
+      }
+      return state;
+    });
+
+    logger.log(LogLevel.INFO, LogCategory.SYSTEM, `Theme applied: ${themeId}`);
+  },
+
+  loadThemes: async () => {
     set({ isLoading: true, error: null });
     
     try {
-      // Mock theme loading
-      const mockTheme: Theme = {
-        id: themeId,
-        name: 'Cyberpunk',
-        description: 'A futuristic cyberpunk theme',
-        status: ThemeStatus.ACTIVE,
-        context: ThemeContext.SITE,
-        tokens: {
-          'primary': {
-            value: '#00ffcc',
-            type: 'color',
-            description: 'Primary brand color'
+      // Mock theme loading for now
+      // In a real app this would fetch from an API
+      setTimeout(() => {
+        const mockTheme: Theme = {
+          id: 'impulsivity',
+          name: 'Impulsivity',
+          description: 'Default theme for the Makers IMPULSE system',
+          version: 1,
+          designTokens: initialDesignTokens,
+          componentTokens: initialComponentTokens,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          created_by: '',
+          published_at: '',
+          parent_theme_id: ''
+        };
+        
+        set({
+          themes: [mockTheme],
+          activeThemeId: mockTheme.id,
+          designTokens: mockTheme.designTokens,
+          componentTokens: mockTheme.componentTokens,
+          isLoading: false,
+          isLoaded: true,
+          theme: mockTheme,
+          variables: {
+            '--primary': mockTheme.designTokens.colors.primary,
+            '--secondary': mockTheme.designTokens.colors.secondary,
+            '--accent': mockTheme.designTokens.colors.accent,
+            '--background': mockTheme.designTokens.colors.background,
+            '--foreground': mockTheme.designTokens.colors.foreground
           },
-          'secondary': {
-            value: '#ff00cc',
-            type: 'color',
-            description: 'Secondary brand color'
-          },
-          'background': {
-            value: '#111122',
-            type: 'color',
-            description: 'Background color'
-          },
-          'text': {
-            value: '#ffffff',
-            type: 'color',
-            description: 'Text color'
-          },
-          'spacing-sm': {
-            value: '0.5rem',
-            type: 'spacing',
-            description: 'Small spacing'
-          },
-          'spacing-md': {
-            value: '1rem',
-            type: 'spacing',
-            description: 'Medium spacing'
-          },
-          'spacing-lg': {
-            value: '2rem',
-            type: 'spacing',
-            description: 'Large spacing'
+          componentStyles: {
+            button: mockTheme.componentTokens.button,
+            card: mockTheme.componentTokens.card,
+            input: mockTheme.componentTokens.input,
+            badge: mockTheme.componentTokens.badge,
+            alert: mockTheme.componentTokens.alert
           }
-        },
-        designTokens: {
-          colors: {
-            primary: {
-              value: '#00ffcc',
-              type: 'color',
-              description: 'Primary brand color'
-            },
-            secondary: {
-              value: '#ff00cc',
-              type: 'color',
-              description: 'Secondary brand color'
-            }
-          }
-        },
-        componentTokens: {
-          styles: {
-            button: {
-              styles: {
-                backgroundColor: 'var(--colors-primary)',
-                textColor: 'var(--colors-text)',
-                borderRadius: '4px'
-              }
-            }
-          }
-        }
-      };
+        });
+        
+        logger.log(LogLevel.INFO, LogCategory.SYSTEM, 'Themes loaded', { count: 1 });
+      }, 100);
       
-      // Update state with the mock theme
-      set({ 
-        themes: [mockTheme],
-        activeThemeId: mockTheme.id,
-        designTokens: mockTheme.designTokens || initialDesignTokens,
-        componentTokens: mockTheme.componentTokens || initialComponentTokens,
-        isLoading: false
-      });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load themes';
+      logger.log(LogLevel.ERROR, LogCategory.SYSTEM, 'Failed to load themes', { error: errorMessage });
       set({ 
-        error: error instanceof Error ? error.message : 'Failed to load theme',
-        isLoading: false
+        isLoading: false,
+        error: errorMessage
       });
     }
   },
 
-  updateComponentToken: (component, token, value) => {
-    set(state => {
-      const updatedTokens = { ...state.componentTokens };
-      
-      if (!updatedTokens.styles[component]) {
-        updatedTokens.styles[component] = {
-          styles: {}
-        };
-      }
-      
-      updatedTokens.styles[component].styles[token] = value;
-      
-      return { componentTokens: updatedTokens };
-    });
-  },
-
-  updateDesignToken: (category, token, value) => {
-    set(state => {
-      const updatedTokens = { ...state.designTokens };
-      
-      if (!updatedTokens[category]) {
-        updatedTokens[category] = {};
-      }
-      
-      updatedTokens[category][token] = {
-        value,
-        type: category === 'colors' ? 'color' : 
-              category === 'spacing' ? 'spacing' : 
-              category === 'typography' ? 'typography' : 'color'
-      };
-      
-      return { designTokens: updatedTokens };
-    });
-  },
-
   resetTheme: () => {
-    set({
-      activeThemeId: null,
-      designTokens: initialDesignTokens,
-      componentTokens: initialComponentTokens
-    });
+    set(initialState);
+    logger.log(LogLevel.INFO, LogCategory.SYSTEM, 'Theme state reset');
   }
 }));
-
-// Selectors for easier state access
-export const selectCurrentTheme = (state: ThemeState) => 
-  state.themes.find(theme => theme.id === state.activeThemeId);
-
-export const selectThemeTokens = (state: ThemeState) => state.designTokens;
-export const selectThemeComponents = (state: ThemeState) => state.componentTokens;

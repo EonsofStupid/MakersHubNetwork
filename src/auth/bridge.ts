@@ -1,11 +1,11 @@
 
-import type { UserProfile } from '@/shared/types/shared.types';
-import { AuthBridge } from '@/bridges/AuthBridge';
+import { UserProfile } from '@/shared/types/shared.types';
+import { authBridge } from '@/auth/lib/AuthBridgeImpl';
 
 /**
- * Re-export the AuthBridge from the bridges folder
+ * Re-export the AuthBridge from the auth/lib folder
  */
-export { AuthBridge };
+export { authBridge };
 
 /**
  * AuthBridge interface
@@ -17,8 +17,8 @@ export interface IAuthBridge {
   refreshSession: () => Promise<{ user_id: string } | null>;
   
   // Authentication methods
-  signInWithEmail: (email: string, password: string) => Promise<{ user: any | null; error: Error | null }>;
-  signUp: (email: string, password: string) => Promise<{ user: any | null; error: Error | null }>;
+  signInWithEmail: (email: string, password: string) => Promise<{ user: UserProfile | null; error: Error | null }>;
+  signUp: (email: string, password: string) => Promise<{ user: UserProfile | null; error: Error | null }>;
   signOut: () => Promise<void>;
   
   // Account linking
@@ -28,6 +28,6 @@ export interface IAuthBridge {
   resetPassword: (email: string) => Promise<void>;
   
   // User profile
-  getUser: () => any | null;
+  getUser: () => UserProfile | null;
   getProfile: () => UserProfile | null;
 }
