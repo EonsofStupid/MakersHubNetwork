@@ -2,13 +2,13 @@
 import React from 'react';
 import { useDebugOverlay } from '../../hooks/useDebugOverlay';
 import { useLogger } from '@/hooks/use-logger';
-import { LOG_CATEGORY } from '@/shared/types/shared.types';
+import { LogCategory } from '@/shared/types/shared.types';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 
 export const DebugOverlay: React.FC = () => {
   const { isVisible, hasAccess } = useDebugOverlay();
-  const logger = useLogger('DebugOverlay', LOG_CATEGORY.ADMIN);
+  const logger = useLogger('DebugOverlay', LogCategory.ADMIN);
   const user = useAuthStore(state => state.user);
   const roles = RBACBridge.getRoles();
 

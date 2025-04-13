@@ -1,3 +1,4 @@
+
 // Permission constants in UPPER_SNAKE case
 export const AUTH_PERMISSIONS = {
   ADMIN_ACCESS: 'admin:access',
