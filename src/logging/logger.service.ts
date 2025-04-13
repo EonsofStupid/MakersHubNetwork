@@ -1,207 +1,127 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { LogCategory, LogLevel, LogDetails, LogEntry } from '@/shared/types/shared.types';
+import { loggingBridge } from './bridge';
+import { LogCategory, LogLevel, type LogDetails } from '@/shared/types/shared.types';
 
-// Default config
-const DEFAULT_CONFIG = {
-  minLevel: LogLevel.INFO,
-  includeSource: true,
-  enableConsole: true,
-};
-
-// Storage for transports
-const transports: Array<(entry: LogEntry) => void> = [];
-
-// In-memory log storage
-let logEntries: LogEntry[] = [];
-const MAX_LOG_ENTRIES = 1000;
-
-// Logger class for the application
+/**
+ * Logger class for consistent logging across the application
+ */
 export class Logger {
-  private source: string;
-  private category: LogCategory;
+  constructor(
+    private readonly source: string,
+    private readonly category: LogCategory
+  ) {}
 
-  constructor(source: string, category: LogCategory) {
-    this.source = source;
-    this.category = category;
-  }
-
-  // Log a message at the specified level
+  /**
+   * Log a message with the specified level
+   */
   log(level: LogLevel, message: string, details?: LogDetails): void {
-    const entry: LogEntry = {
+    const entry = {
       id: uuidv4(),
       level,
       category: this.category,
       message,
-      details: details ? { ...details, source: this.source } : { source: this.source },
+      details: {
+        ...details,
+        source: this.source,
+      },
       timestamp: new Date().toISOString(),
       source: this.source,
     };
 
-    // Add to in-memory storage with size limit
-    logEntries.push(entry);
-    if (logEntries.length > MAX_LOG_ENTRIES) {
-      logEntries = logEntries.slice(-MAX_LOG_ENTRIES);
-    }
+    // Send to logging bridge
+    loggingBridge.log(entry);
 
-    // Process through transports
-    transports.forEach(transport => transport(entry));
-
-    // Output to console based on config
-    if (DEFAULT_CONFIG.enableConsole) {
-      this.logToConsole(entry);
-    }
+    // Also log to console
+    const logMethod = this.getConsoleMethod(level);
+    console[logMethod](`[${level.toUpperCase()}][${this.category}] ${message}`, details);
   }
 
-  // Convenience methods for different log levels
+  /**
+   * Log a debug message
+   */
   debug(message: string, details?: LogDetails): void {
     this.log(LogLevel.DEBUG, message, details);
   }
 
+  /**
+   * Log an info message
+   */
   info(message: string, details?: LogDetails): void {
     this.log(LogLevel.INFO, message, details);
   }
 
+  /**
+   * Log a warning message
+   */
   warn(message: string, details?: LogDetails): void {
     this.log(LogLevel.WARN, message, details);
   }
 
+  /**
+   * Log an error message
+   */
   error(message: string, details?: LogDetails): void {
     this.log(LogLevel.ERROR, message, details);
   }
 
+  /**
+   * Log a critical message
+   */
   critical(message: string, details?: LogDetails): void {
     this.log(LogLevel.CRITICAL, message, details);
   }
 
-  trace(message: string, details?: LogDetails): void {
-    this.log(LogLevel.TRACE, message, details);
-  }
-
-  success(message: string, details?: LogDetails): void {
-    this.log(LogLevel.SUCCESS, message, details);
-  }
-
-  // Format and output to console with colors
-  private logToConsole(entry: LogEntry): void {
-    // Skip if below min level
-    if (!this.shouldLogLevel(entry.level)) {
-      return;
-    }
-
-    const timestamp = new Date(entry.timestamp).toLocaleTimeString();
-    const source = entry.source ? `[${entry.source}]` : '';
-    let logMethod: keyof Console = 'log';
-    let style = '';
-
-    // Determine console method and style based on level
-    switch (entry.level) {
-      case LogLevel.DEBUG:
-        logMethod = 'debug';
-        style = 'color: gray';
-        break;
-      case LogLevel.INFO:
-        logMethod = 'info';
-        style = 'color: dodgerblue';
-        break;
-      case LogLevel.WARN:
-        logMethod = 'warn';
-        style = 'color: orange';
-        break;
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-        logMethod = 'error';
-        style = 'color: red; font-weight: bold';
-        break;
-      case LogLevel.SUCCESS:
-        logMethod = 'log';
-        style = 'color: green';
-        break;
-      case LogLevel.TRACE:
-        logMethod = 'debug';
-        style = 'color: lightgray';
-        break;
-      default:
-        logMethod = 'log';
-    }
-
-    // Format the message
-    const formattedMessage = `%c${timestamp} [${entry.level}] ${entry.category} ${source}: ${entry.message}`;
-
-    // Log to console with style
-    console[logMethod](formattedMessage, style, entry.details || '');
-  }
-
-  // Check if we should log at this level
-  private shouldLogLevel(level: LogLevel): boolean {
-    const levels = [
-      LogLevel.DEBUG,
-      LogLevel.TRACE,
-      LogLevel.INFO,
-      LogLevel.SUCCESS,
-      LogLevel.WARN,
-      LogLevel.ERROR,
-      LogLevel.CRITICAL,
-      LogLevel.FATAL,
-    ];
-
-    const minLevelIndex = levels.indexOf(DEFAULT_CONFIG.minLevel);
-    const currentLevelIndex = levels.indexOf(level);
-
-    return currentLevelIndex >= minLevelIndex;
+  /**
+   * Map log level to console method
+   */
+  private getConsoleMethod(level: LogLevel): 'log' | 'info' | 'warn' | 'error' | 'debug' {
+    const mapping: Record<LogLevel, 'log' | 'info' | 'warn' | 'error' | 'debug'> = {
+      [LogLevel.DEBUG]: 'debug',
+      [LogLevel.INFO]: 'info',
+      [LogLevel.SUCCESS]: 'info',
+      [LogLevel.WARN]: 'warn',
+      [LogLevel.ERROR]: 'error',
+      [LogLevel.CRITICAL]: 'error',
+      [LogLevel.FATAL]: 'error',
+      [LogLevel.TRACE]: 'debug',
+      [LogLevel.SILENT]: 'log',
+    };
+    return mapping[level] || 'log';
   }
 }
 
-// Add a transport to the logger
-export function addTransport(transport: (entry: LogEntry) => void): void {
-  transports.push(transport);
-}
-
-// Set minimum log level
-export function setMinLogLevel(level: LogLevel): void {
-  DEFAULT_CONFIG.minLevel = level;
-}
-
-// Get all log entries
-export function getLogEntries(): LogEntry[] {
-  return [...logEntries];
-}
-
-// Clear log entries
-export function clearLogEntries(): void {
-  logEntries = [];
-}
-
-// Create a logger factory
+/**
+ * Create a new logger instance
+ */
 export function createLogger(source: string, category: LogCategory): Logger {
   return new Logger(source, category);
 }
 
-// Singleton logger instance for direct use
+// Singleton logger for static usage
 export const logger = {
   log: (level: LogLevel, category: LogCategory, message: string, details?: LogDetails) => {
-    const logger = new Logger('app', category);
+    const logger = new Logger('AppLogger', category);
     logger.log(level, message, details);
   },
   debug: (category: LogCategory, message: string, details?: LogDetails) => {
-    const logger = new Logger('app', category);
+    const logger = new Logger('AppLogger', category);
     logger.debug(message, details);
   },
   info: (category: LogCategory, message: string, details?: LogDetails) => {
-    const logger = new Logger('app', category);
+    const logger = new Logger('AppLogger', category);
     logger.info(message, details);
   },
   warn: (category: LogCategory, message: string, details?: LogDetails) => {
-    const logger = new Logger('app', category);
+    const logger = new Logger('AppLogger', category);
     logger.warn(message, details);
   },
   error: (category: LogCategory, message: string, details?: LogDetails) => {
-    const logger = new Logger('app', category);
+    const logger = new Logger('AppLogger', category);
     logger.error(message, details);
   },
+  critical: (category: LogCategory, message: string, details?: LogDetails) => {
+    const logger = new Logger('AppLogger', category);
+    logger.critical(message, details);
+  }
 };
-
-// Hook for use in components
-export function useLogger(source: string, category: LogCategory): Logger {
-  return new Logger(source, category);
-}
