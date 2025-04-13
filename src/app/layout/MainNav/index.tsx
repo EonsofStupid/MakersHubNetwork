@@ -3,12 +3,11 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/shared/utils/cn";
 import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
-import { SearchButton } from "./components/SearchButton";
-import { AuthSection } from "./components/AuthSection";
+import AuthSection from "./components/AuthSection";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { useSiteTheme } from "@/shared/hooks/useSiteTheme";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/shared/types/shared.types";
+import { LogCategory } from "@/shared/types/SharedTypes";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -129,7 +128,6 @@ export function MainNav() {
           <Logo />
           <NavigationItems />
           <div className="flex items-center gap-2">
-            <SearchButton />
             <AuthSection />
           </div>
         </div>

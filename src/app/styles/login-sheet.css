@@ -57,7 +57,8 @@
 }
 
 /* Glowing accent line */
-.trapezoid-sheet .sheet-accent {
+.trapezoid-sheet .sheet-accent,
+.sheet-accent {
   position: absolute;
   bottom: 15%;
   left: 0;
@@ -69,6 +70,9 @@
 
 /* Admin button shimmer animation */
 @keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
   100% {
     transform: translateX(100%);
   }
