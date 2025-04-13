@@ -1,318 +1,305 @@
 
 import { create } from 'zustand';
-import { UserRole, AuthStatus } from '@/shared/types/shared.types';
-import { authBridge } from '@/auth/bridge';
+import { AuthBridge } from '../bridge';
+import { UserProfile, AuthStatus, UserRoleEnum } from '@/shared/types/shared.types';
+import { logger } from '@/logging';
 
-// Re-export UserProfile type
-export interface UserProfile {
-  id: string;
-  display_name: string | null;
-  avatar_url: string | null;
-  bio: string | null;
-  theme_preference: string | null;
-  motion_enabled: boolean | null;
-}
-
+// Define the authentication state
 export interface AuthState {
-  user: User | null;
-  profile: UserProfile | null;
   status: AuthStatus;
-  roles: UserRole[];
-  error: Error | null;
-  initialized: boolean;
+  user: UserProfile | null;
+  roles: UserRoleEnum[];
   isAuthenticated: boolean;
+  error: string | null;
+  isLoading: boolean;
   
-  // Methods
+  // Session management
   initialize: () => Promise<void>;
   refreshSession: () => Promise<void>;
-  loadUserProfile: () => Promise<void>;
-  loadUserRoles: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  
+  // Authentication methods
+  signIn: (email: string, password: string) => Promise<void>;
+  signInWithProvider: (provider: string) => Promise<void>;
+  signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<void>;
+  signOut: () => Promise<void>;
+  
+  // User profile methods
   updateUserProfile: (profile: Partial<UserProfile>) => Promise<void>;
   
-  // Helpers
-  hasRole: (role: UserRole | UserRole[]) => boolean;
-  isAdmin: () => boolean;
-  isSuperAdmin: () => boolean;
+  // Role management
+  hasRole: (role: UserRoleEnum | UserRoleEnum[]) => boolean;
+  setRoles: (roles: UserRoleEnum[]) => void;
+  
+  // Password management
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (oldPassword: string, newPassword: string) => Promise<void>;
+  
+  // Error handling
+  clearError: () => void;
 }
 
+// Create the authentication store
 export const useAuthStore = create<AuthState>((set, get) => ({
+  status: AuthStatus.IDLE,
   user: null,
-  profile: null,
-  status: AuthStatus.LOADING,
   roles: [],
-  error: null,
-  initialized: false,
   isAuthenticated: false,
-  
+  error: null,
+  isLoading: false,
+
+  // Initialize auth state
   initialize: async () => {
+    set({ isLoading: true, status: AuthStatus.LOADING });
     try {
-      set({ status: AuthStatus.LOADING });
-      
-      const session = await authBridge.getCurrentSession();
+      const session = await AuthBridge.getCurrentSession();
       
       if (session) {
-        set({ 
-          user: session.user,
+        const user = await AuthBridge.getUserProfile();
+        
+        // Set user data in store
+        set({
+          user,
+          isAuthenticated: true,
           status: AuthStatus.AUTHENTICATED,
-          isAuthenticated: true
+          roles: user?.roles?.map(role => role as unknown as UserRoleEnum) || [],
+          isLoading: false
         });
         
-        // Load user profile
-        await get().loadUserProfile();
-        
-        // Load user roles
-        await get().loadUserRoles();
+        logger.info('User authenticated', { category: 'auth', user: user?.id });
       } else {
-        set({ 
+        set({
           user: null,
-          profile: null,
-          status: AuthStatus.UNAUTHENTICATED,
           isAuthenticated: false,
-          roles: []
+          status: AuthStatus.UNAUTHENTICATED,
+          roles: [],
+          isLoading: false
         });
+        
+        logger.info('No authenticated user');
       }
-      
-      // Set up auth state change listener
-      const { data: { subscription } } = authBridge.auth.onAuthStateChange(
-        async (event, session) => {
-          if (event === 'SIGNED_IN' && session) {
-            set({ 
-              user: session.user, 
-              status: AuthStatus.AUTHENTICATED,
-              isAuthenticated: true
-            });
-            
-            // Load user profile and roles
-            await get().loadUserProfile();
-            await get().loadUserRoles();
-          } else if (event === 'SIGNED_OUT') {
-            set({ 
-              user: null, 
-              profile: null,
-              status: AuthStatus.UNAUTHENTICATED,
-              isAuthenticated: false,
-              roles: []
-            });
-          } else if (event === 'USER_UPDATED' && session) {
-            set({ user: session.user });
-            await get().loadUserProfile();
-          }
-        }
-      );
-      
-      // Mark initialization as complete
-      set({ initialized: true });
-      
-      return () => {
-        subscription.unsubscribe();
-      };
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error : new Error('Failed to initialize auth'),
-        status: AuthStatus.UNAUTHENTICATED,
+      logger.error('Authentication error', { error: error instanceof Error ? error.message : String(error) });
+      set({
+        user: null,
         isAuthenticated: false,
-        initialized: true
+        status: AuthStatus.ERROR,
+        roles: [],
+        error: error instanceof Error ? error.message : 'Authentication error',
+        isLoading: false
       });
     }
   },
-  
+
+  // Refresh session
   refreshSession: async () => {
     try {
-      set({ status: AuthStatus.LOADING });
-      
-      const session = await authBridge.getCurrentSession();
+      const session = await AuthBridge.getCurrentSession();
       
       if (session) {
-        set({ 
-          user: session.user, 
-          status: AuthStatus.AUTHENTICATED,
-          isAuthenticated: true 
-        });
+        const user = await AuthBridge.getUserProfile();
         
-        // Load user profile and roles
-        await get().loadUserProfile();
-        await get().loadUserRoles();
+        set({
+          user,
+          isAuthenticated: true,
+          status: AuthStatus.AUTHENTICATED,
+          roles: user?.roles?.map(role => role as unknown as UserRoleEnum) || [],
+        });
       } else {
-        set({ 
-          user: null, 
-          profile: null,
-          status: AuthStatus.UNAUTHENTICATED,
+        set({
+          user: null,
           isAuthenticated: false,
-          roles: [] 
+          status: AuthStatus.UNAUTHENTICATED,
+          roles: [],
         });
       }
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error : new Error('Failed to refresh session'),
-        status: AuthStatus.UNAUTHENTICATED,
-        isAuthenticated: false 
+      logger.error('Session refresh error', { error: error instanceof Error ? error.message : String(error) });
+      set({
+        error: error instanceof Error ? error.message : 'Session refresh error'
       });
     }
   },
-  
-  loadUserProfile: async () => {
-    const { user } = get();
-    if (!user) return;
+
+  // Check if user has a role
+  hasRole: (role) => {
+    const { roles } = get();
     
-    try {
-      const profile = await authBridge.getUserProfile(user.id);
-      set({ profile });
-    } catch (error) {
-      console.error('Failed to load user profile:', error);
-      // Don't set error state here, as profile might be optional
+    // Super admin has all roles
+    if (roles.includes(UserRoleEnum.SUPERADMIN)) {
+      return true;
     }
-  },
-  
-  loadUserRoles: async () => {
-    const { user } = get();
-    if (!user) return;
     
-    try {
-      // This is a mock implementation. In a real app, you'd fetch roles from your database
-      // based on the user ID or claims from the session
-      const mockRoles: UserRole[] = [UserRole.USER];
-      
-      // Check if the user's email contains "admin" to mock admin roles
-      if (user.email?.includes('admin')) {
-        mockRoles.push(UserRole.ADMIN);
-      }
-      
-      // Check if the user's email contains "super" to mock superadmin roles
-      if (user.email?.includes('super')) {
-        mockRoles.push(UserRole.SUPERADMIN);
-      }
-      
-      set({ roles: mockRoles });
-    } catch (error) {
-      console.error('Failed to load user roles:', error);
-      set({ roles: [UserRole.USER] }); // Default to basic user role
+    if (Array.isArray(role)) {
+      return role.some(r => roles.includes(r));
     }
+    
+    return roles.includes(role);
   },
-  
-  signInWithEmail: async (email, password) => {
+
+  // Set user roles
+  setRoles: (roles) => {
+    set({ roles });
+  },
+
+  // Sign in with email/password
+  signIn: async (email, password) => {
+    set({ isLoading: true, error: null });
     try {
-      set({ status: AuthStatus.LOADING });
-      
-      await authBridge.signInWithEmail(email, password);
-      
-      // Session state will be updated via the onAuthStateChange listener
-      
+      await AuthBridge.signInWithEmail({ email, password });
+      get().initialize();
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error : new Error('Failed to sign in'),
-        status: AuthStatus.UNAUTHENTICATED,
-        isAuthenticated: false 
+      logger.error('Sign in error', { error: error instanceof Error ? error.message : String(error) });
+      set({
+        error: error instanceof Error ? error.message : 'Sign in failed',
+        isLoading: false,
+        status: AuthStatus.ERROR
       });
       throw error;
     }
   },
-  
-  signInWithGoogle: async () => {
+
+  // Sign in with OAuth provider
+  signInWithProvider: async (provider) => {
+    set({ isLoading: true, error: null });
     try {
-      set({ status: AuthStatus.LOADING });
-      
-      await authBridge.signInWithOAuth('google');
-      
-      // Session state will be updated via the onAuthStateChange listener
-      
+      await AuthBridge.signInWithOAuth(provider);
+      // Auth bridge will handle the redirect, no need to update state
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error : new Error('Failed to sign in with Google'),
-        status: AuthStatus.UNAUTHENTICATED,
-        isAuthenticated: false 
+      logger.error('OAuth sign in error', { error: error instanceof Error ? error.message : String(error), provider });
+      set({
+        error: error instanceof Error ? error.message : `Sign in with ${provider} failed`,
+        isLoading: false,
+        status: AuthStatus.ERROR
       });
       throw error;
     }
   },
-  
-  signUp: async (email, password) => {
+
+  // Sign up new user
+  signUp: async (email, password, metadata) => {
+    set({ isLoading: true, error: null });
     try {
-      set({ status: AuthStatus.LOADING });
+      await AuthBridge.signUp({
+        email,
+        password,
+        options: { data: metadata }
+      });
       
-      await authBridge.signUp(email, password);
-      
-      const session = await authBridge.getCurrentSession();
+      const session = await AuthBridge.getCurrentSession();
       
       if (session) {
-        set({ 
-          user: session.user, 
-          status: AuthStatus.AUTHENTICATED,
-          isAuthenticated: true 
-        });
-        
-        // Load user profile
-        await get().loadUserProfile();
-        
-        // Load user roles
-        await get().loadUserRoles();
+        get().initialize();
       } else {
-        set({ 
-          user: null, 
-          status: AuthStatus.UNAUTHENTICATED,
-          isAuthenticated: false,
-          error: new Error('Signup successful but requires email verification before login') 
+        set({
+          isLoading: false,
+          status: AuthStatus.UNAUTHENTICATED
         });
       }
     } catch (error) {
-      set({ 
-        error: error instanceof Error ? error : new Error('Failed to sign up'),
-        status: AuthStatus.UNAUTHENTICATED,
-        isAuthenticated: false
+      logger.error('Sign up error', { error: error instanceof Error ? error.message : String(error) });
+      set({
+        error: error instanceof Error ? error.message : 'Sign up failed',
+        isLoading: false,
+        status: AuthStatus.ERROR
       });
       throw error;
     }
   },
-  
-  logout: async () => {
+
+  // Sign out
+  signOut: async () => {
+    set({ isLoading: true });
     try {
-      await authBridge.signOut();
-      
-      // Session state will be updated via the onAuthStateChange listener
-      
+      await AuthBridge.signOut();
+      set({
+        user: null,
+        isAuthenticated: false,
+        status: AuthStatus.UNAUTHENTICATED,
+        roles: [],
+        isLoading: false
+      });
+      logger.info('User signed out');
     } catch (error) {
-      set({ error: error instanceof Error ? error : new Error('Failed to log out') });
-      throw error;
+      logger.error('Sign out error', { error: error instanceof Error ? error.message : String(error) });
+      set({
+        error: error instanceof Error ? error.message : 'Sign out failed',
+        isLoading: false
+      });
     }
   },
-  
+
+  // Update user profile
   updateUserProfile: async (profileData) => {
+    const { user } = get();
+    if (!user) {
+      throw new Error('No authenticated user');
+    }
+    
+    set({ isLoading: true });
+    
     try {
-      const { user, profile } = get();
-      if (!user || !profile) throw new Error('User not authenticated');
-      
-      // Update profile with new data
-      const updatedProfile = await authBridge.updateUserProfile({
-        ...profileData,
-        id: user.id
+      const updatedProfile = await AuthBridge.updateUserProfile({
+        id: user.id,
+        ...profileData
       });
       
-      set({ profile: updatedProfile });
-      return updatedProfile;
+      set({
+        user: updatedProfile,
+        isLoading: false
+      });
+      
+      return;
     } catch (error) {
-      set({ error: error instanceof Error ? error : new Error('Failed to update profile') });
+      logger.error('Profile update error', { error: error instanceof Error ? error.message : String(error) });
+      set({
+        error: error instanceof Error ? error.message : 'Profile update failed',
+        isLoading: false
+      });
       throw error;
     }
   },
-  
-  hasRole: (roleOrRoles) => {
-    const { roles } = get();
-    if (Array.isArray(roleOrRoles)) {
-      return roleOrRoles.some(role => roles.includes(role));
+
+  // Password reset
+  resetPassword: async (email) => {
+    set({ isLoading: true });
+    try {
+      await AuthBridge.resetPassword(email);
+      set({ isLoading: false });
+      logger.info('Password reset requested');
+    } catch (error) {
+      logger.error('Password reset error', { error: error instanceof Error ? error.message : String(error) });
+      set({
+        error: error instanceof Error ? error.message : 'Password reset failed',
+        isLoading: false
+      });
+      throw error;
     }
-    return roles.includes(roleOrRoles);
   },
-  
-  isAdmin: () => {
-    const { roles } = get();
-    return roles.includes(UserRole.ADMIN) || roles.includes(UserRole.SUPERADMIN);
+
+  // Password update
+  updatePassword: async (oldPassword, newPassword) => {
+    set({ isLoading: true });
+    try {
+      // Check if user is authenticated
+      if (!get().user || !get().isAuthenticated) {
+        throw new Error('User not authenticated');
+      }
+      
+      await AuthBridge.updatePassword(oldPassword, newPassword);
+      set({ isLoading: false });
+      logger.info('Password updated');
+    } catch (error) {
+      logger.error('Password update error', { error: error instanceof Error ? error.message : String(error) });
+      set({
+        error: error instanceof Error ? error.message : 'Password update failed',
+        isLoading: false
+      });
+      throw error;
+    }
   },
-  
-  isSuperAdmin: () => {
-    const { roles } = get();
-    return roles.includes(UserRole.SUPERADMIN);
+
+  // Clear error
+  clearError: () => {
+    set({ error: null });
   }
 }));
