@@ -1,7 +1,7 @@
-
 import { AuthBridge } from '../bridge';
 import { UserProfile, UserRole } from '@/shared/types/SharedTypes';
 import { RBACBridge } from '@/rbac/bridge';
+import { useAuthStore } from '@/auth/store/auth.store';
 
 /**
  * Implementation of the AuthBridge interface
@@ -12,8 +12,9 @@ export class AuthBridgeImpl implements AuthBridge {
    */
   public async getCurrentSession(): Promise<{ user: UserProfile } | null> {
     // This would normally come from an actual auth provider
-    // For now, return a mock implementation
-    return null;
+    // For now, return a mock implementation or use the store state
+    const user = useAuthStore.getState().user;
+    return user ? { user } : null;
   }
   
   /**
@@ -39,6 +40,9 @@ export class AuthBridgeImpl implements AuthBridge {
           full_name: email.split('@')[0],
         }
       };
+
+      // Update auth store with user
+      useAuthStore.getState().setUser(mockUser);
       
       // Update RBAC store with roles
       RBACBridge.setRoles(roles);
@@ -65,6 +69,9 @@ export class AuthBridgeImpl implements AuthBridge {
         }
       };
       
+      // Update auth store with user
+      useAuthStore.getState().setUser(mockUser);
+      
       // Set default role as 'user'
       RBACBridge.setRoles(['user']);
       
@@ -78,6 +85,9 @@ export class AuthBridgeImpl implements AuthBridge {
    * Sign out the current user
    */
   public async signOut(): Promise<void> {
+    // Clear auth store
+    useAuthStore.getState().clearUser();
+    
     // Clear RBAC store on sign out
     RBACBridge.clearRoles();
   }
@@ -95,14 +105,20 @@ export class AuthBridgeImpl implements AuthBridge {
    */
   public async refreshSession(): Promise<{ user_id: string } | null> {
     // Placeholder implementation
-    return null;
+    const user = useAuthStore.getState().user;
+    return user ? { user_id: user.id } : null;
   }
 
   /**
    * Get a user profile by ID
    */
-  public async getUserProfile(userId: string): Promise<UserProfile | null> {
-    // Placeholder implementation
-    return null;
+  public async getUserProfile(userId?: string): Promise<UserProfile | null> {
+    // Return the current user from the store if no ID is provided
+    if (!userId) {
+      return useAuthStore.getState().user;
+    }
+    
+    // Otherwise, placeholder implementation
+    return useAuthStore.getState().user;
   }
 }
