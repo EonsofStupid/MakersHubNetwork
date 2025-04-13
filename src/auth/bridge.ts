@@ -1,174 +1,132 @@
 
-// Import necessary dependencies
-import { supabase } from '@/lib/supabase';
-import { User, UserRole, AuthStatus } from '@/shared/types/shared.types';
+import { User, UserProfile } from '@/shared/types/auth.types';
+import { AuthEvent, AuthEventType } from '@/shared/types/shared.types';
+import { UserRole } from '@/shared/types/shared.types';
 
-// Type definitions for auth events and subscribers
-export type AuthEventType = 'SIGNED_IN' | 'SIGNED_OUT' | 'USER_UPDATED' | 'PASSWORD_RECOVERY';
-export type AuthEventCallback = (event: any) => void;
-export type AuthEventSubscriber = { id: string; callback: AuthEventCallback };
+// Type for auth event callback
+type AuthEventCallback = (event: AuthEvent) => void;
 
-class AuthBridgeImpl {
-  private subscribers: AuthEventSubscriber[] = [];
-  private nextSubscriberId = 1;
+// Auth Bridge Interface
+export interface AuthBridge {
+  // Auth methods
+  signIn(provider?: string): Promise<UserProfile | null>;
+  signOut(): Promise<void>;
+  getCurrentUser(): Promise<UserProfile | null>;
+  
+  // Profile methods
+  updateUserProfile(profile: Partial<UserProfile>): Promise<UserProfile>;
+  
+  // Password methods
+  resetPassword(email: string): Promise<void>;
+  
+  // Event subscription
+  subscribeToAuthEvents(callback: AuthEventCallback): () => void;
+  
+  // Role checks
+  hasRole(user: UserProfile | null, role: UserRole | UserRole[]): boolean;
+  isAdmin(user: UserProfile | null): boolean;
+  
+  // Session management
+  refreshSession(): Promise<UserProfile | null>;
+}
 
-  // Get current auth status
-  getStatus(): { status: AuthStatus } {
-    if (this.isLoading()) {
-      return { status: AuthStatus.LOADING };
-    }
+// Auth Bridge Implementation
+export class AuthBridgeImpl implements AuthBridge {
+  private eventCallbacks: AuthEventCallback[] = [];
+  
+  // Auth methods
+  async signIn(provider?: string): Promise<UserProfile | null> {
+    // Placeholder implementation
+    console.log("Sign in with provider:", provider);
+    return null;
+  }
+  
+  async signOut(): Promise<void> {
+    // Placeholder implementation
+    console.log("Sign out");
+    this.emitEvent({
+      type: AuthEventType.SIGNED_OUT,
+      user: null
+    });
+  }
+  
+  async getCurrentUser(): Promise<UserProfile | null> {
+    // Placeholder implementation
+    return null;
+  }
+  
+  // Profile methods
+  async updateUserProfile(profile: Partial<UserProfile>): Promise<UserProfile> {
+    // Placeholder implementation
+    console.log("Update profile:", profile);
     
-    if (this.isAuthenticated()) {
-      return { status: AuthStatus.AUTHENTICATED };
-    }
+    // Create a mock updated user for the return value
+    const updatedUser: UserProfile = {
+      id: '123',
+      roles: [UserRole.USER],
+      ...profile
+    };
     
-    return { status: AuthStatus.UNAUTHENTICATED };
+    this.emitEvent({
+      type: AuthEventType.PROFILE_UPDATED,
+      user: updatedUser
+    });
+    
+    return updatedUser;
   }
-
-  // Check if auth is loading
-  isLoading(): boolean {
-    return supabase.auth.session === undefined;
+  
+  // Password methods
+  async resetPassword(email: string): Promise<void> {
+    // Placeholder implementation
+    console.log("Reset password for:", email);
+    
+    this.emitEvent({
+      type: AuthEventType.PASSWORD_RECOVERY,
+      user: null,
+      metadata: { email }
+    });
   }
-
-  // Check if user is authenticated
-  isAuthenticated(): boolean {
-    return !!supabase.auth.session();
-  }
-
-  // Get current user session
-  async getCurrentSession() {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      return session;
-    } catch (error) {
-      console.error('Error getting session:', error);
-      return null;
-    }
-  }
-
-  // Get current user
-  async getCurrentUser(): Promise<User | null> {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) throw error;
-      return user as User;
-    } catch (error) {
-      console.error('Error getting current user:', error);
-      return null;
-    }
-  }
-
-  // Get user profile
-  async getUserProfile(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
-  }
-
-  // Update user profile
-  async updateUserProfile(profile: any) {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .upsert(profile)
-        .select();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      throw error;
-    }
-  }
-
-  // Sign in with email and password
-  async signInWithEmail(email: string, password: string) {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error signing in:', error);
-      throw error;
-    }
-  }
-
-  // Sign in with OAuth provider
-  async signInWithOAuth(provider: 'google' | 'github') {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-      });
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error signing in with OAuth:', error);
-      throw error;
-    }
-  }
-
-  // Sign out
-  async signOut() {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
-    }
-  }
-
-  // Subscribe to auth events
+  
+  // Event subscription
   subscribeToAuthEvents(callback: AuthEventCallback): () => void {
-    const id = `sub_${this.nextSubscriberId++}`;
-    this.subscribers.push({ id, callback });
+    this.eventCallbacks.push(callback);
     
     return () => {
-      this.subscribers = this.subscribers.filter(sub => sub.id !== id);
+      this.eventCallbacks = this.eventCallbacks.filter(cb => cb !== callback);
     };
   }
-
-  // Check user role
-  hasRole(role: UserRole | UserRole[]): boolean {
-    const user = supabase.auth.user();
+  
+  // Role checks
+  hasRole(user: UserProfile | null, role: UserRole | UserRole[]): boolean {
     if (!user) return false;
     
-    const userRoles = user.app_metadata?.roles || [];
-    
-    if (Array.isArray(role)) {
-      return role.some(r => userRoles.includes(r));
-    }
-    
-    return userRoles.includes(role);
+    const roles = Array.isArray(role) ? role : [role];
+    return roles.some(r => user.roles.includes(r));
   }
-
-  // Check if user is admin
-  isAdmin(): boolean {
-    return this.hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  
+  isAdmin(user: UserProfile | null): boolean {
+    if (!user) return false;
+    return this.hasRole(user, [UserRole.ADMIN, UserRole.SUPERADMIN]);
   }
-
-  // Check if user is super admin
-  isSuperAdmin(): boolean {
-    return this.hasRole(UserRole.SUPER_ADMIN);
+  
+  // Session management
+  async refreshSession(): Promise<UserProfile | null> {
+    // Placeholder implementation
+    console.log("Refresh session");
+    return null;
+  }
+  
+  // Helper method to emit events to subscribers
+  private emitEvent(event: AuthEvent): void {
+    this.eventCallbacks.forEach(callback => {
+      try {
+        callback(event);
+      } catch (error) {
+        console.error("Error in auth event callback:", error);
+      }
+    });
   }
 }
 
-// Export singleton instance
+// Create the singleton instance
 export const authBridge = new AuthBridgeImpl();

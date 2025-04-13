@@ -1,91 +1,71 @@
 
-import { ThemeContext, ThemeStatus } from './shared.types';
+import { ThemeLogDetails } from '@/shared/types/shared.types';
 
-export interface ThemeToken {
-  id: string;
-  theme_id: string;
-  token_name: string;
-  token_value: string;
-  category: string;
-  description?: string;
-  fallback_value?: string;
+// Theme status enum
+export enum ThemeStatus {
+  ACTIVE = 'ACTIVE',
+  DRAFT = 'DRAFT',
+  ARCHIVED = 'ARCHIVED'
 }
 
-export interface ComponentTokens {
-  [key: string]: Record<string, string>;
+// Theme context enum
+export enum ThemeContext {
+  SITE = 'SITE',
+  ADMIN = 'ADMIN',
+  APP = 'APP'
 }
 
-export interface DesignTokens {
-  colors?: Record<string, string>;
-  typography?: Record<string, string>;
-  spacing?: Record<string, string>;
-  radii?: Record<string, string>;
-  shadows?: Record<string, string>;
-  [key: string]: Record<string, string> | undefined;
-}
-
-export interface ThemeState {
-  themes: Theme[];
-  activeTheme: string;
-  componentTokens: ComponentTokens;
-  isLoading: boolean;
-  error: string | null;
-}
-
+// Theme base interface
 export interface Theme {
   id: string;
   name: string;
   description?: string;
   status: ThemeStatus;
   context: ThemeContext;
-  design_tokens: DesignTokens;
-  component_tokens: ComponentTokens;
-  is_default: boolean;
-  is_system: boolean;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  version: number;
-  parent_theme_id?: string;
+  designTokens: DesignTokens;
+  componentTokens: ComponentTokens;
+  variables?: Record<string, string>;
+  metadata?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
 }
 
-// Theme variables interface
-export interface ThemeVariables {
-  [key: string]: string | ThemeVariables;
+// Theme token interface
+export interface ThemeToken {
+  id: string;
+  token_name: string;
+  token_value: string;
+  category: string;
+  description?: string;
 }
 
-export type ThemeEffectType = 
-  | 'glow'
-  | 'flicker'
-  | 'pulse'
-  | 'shimmer'
-  | 'neon'
-  | 'cyber'
-  | 'noise'
-  | 'distortion'
-  | 'glitch'
-  | 'gradient'
-  | 'particle'
-  | 'morph';
-
-export interface ThemeEffect {
-  id?: string;
-  type: ThemeEffectType;
-  enabled: boolean;
-  intensity?: number;
-  color?: string;
-  duration?: number;
-  delay?: number;
-  options?: Record<string, any>;
+// Design tokens interface
+export interface DesignTokens {
+  colors?: Record<string, string>;
+  typography?: Record<string, any>;
+  spacing?: Record<string, string>;
+  borders?: Record<string, string>;
+  shadows?: Record<string, string>;
+  radii?: Record<string, string>;
+  zIndices?: Record<string, string>;
+  breakpoints?: Record<string, string>;
+  transitions?: Record<string, string>;
+  animations?: Record<string, any>;
+  [key: string]: any;
 }
 
-export interface ThemeEffectProps {
-  effect: ThemeEffect;
-  children: React.ReactNode;
+// Component tokens interface
+export interface ComponentTokens {
+  [componentName: string]: Record<string, string>;
 }
 
-export interface ThemeEffectProviderProps {
-  children: React.ReactNode;
-  className?: string;
-  effect?: ThemeEffect;
+// Theme state interface
+export interface ThemeState {
+  themes: Theme[];
+  activeThemeId: string | null;
+  designTokens: DesignTokens;
+  componentTokens: ComponentTokens;
+  isLoading: boolean;
+  error: string | null;
 }
