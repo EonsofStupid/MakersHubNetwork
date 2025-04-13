@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@shared/ui/button';
 import { authBridge } from '@/auth/bridge';
 import { useState } from 'react';
 
