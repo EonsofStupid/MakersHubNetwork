@@ -1,11 +1,11 @@
 
 import { useNavigate } from 'react-router-dom';
-import { useAdminPermissions } from './useAdminPermissions';
+import { useHasRole } from '@/auth/hooks/useHasRole';
 import { UserRole } from '@/shared/types/shared.types';
 
 export function useAdminNavigation() {
   const navigate = useNavigate();
-  const { hasRole } = useAdminPermissions();
+  const { hasRole } = useHasRole();
   
   const navigateToAdmin = () => {
     navigate('/admin');
@@ -50,5 +50,3 @@ export function useAdminNavigation() {
     hasAdminAccess
   };
 }
-
-export default useAdminNavigation;

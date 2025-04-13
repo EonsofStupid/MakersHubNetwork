@@ -1,14 +1,16 @@
 
 import { useCallback } from 'react';
-import { useAdminStore } from '../store/admin.store';
+import { useAuthStore } from '@/auth/store/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory, UserRole } from '@/shared/types/shared.types';
+import { useHasRole } from '@/auth/hooks/useHasRole';
 
 /**
  * Hook for role-based access control in the admin panel
  */
 export function useAdminRoles() {
-  const { hasRole } = useAdminStore();
+  const { roles } = useAuthStore();
+  const { hasRole } = useHasRole();
   const logger = useLogger('useAdminRoles', LogCategory.AUTH);
 
   // Check if user is a Super Admin
@@ -32,8 +34,8 @@ export function useAdminRoles() {
   }, [hasRole]);
 
   // Check if user has at least one of the given roles
-  const hasAnyRole = useCallback((roles: UserRole[]) => {
-    return roles.some(role => hasRole(role));
+  const hasAnyRole = useCallback((checkRoles: UserRole[]) => {
+    return checkRoles.some(role => hasRole(role));
   }, [hasRole]);
 
   // Get the highest role for UI display (Super Admin > Admin > Moderator > Builder > User)

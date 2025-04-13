@@ -6,7 +6,10 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 
 export default function AdminOverlay() {
-  const { showAdminOverlay } = useDebugStore();
+  const { showAdminOverlay, toggleAdminOverlay } = useDebugStore(state => ({
+    showAdminOverlay: state.showAdminOverlay,
+    toggleAdminOverlay: state.toggleAdminOverlay
+  }));
   const { hasAdminAccess } = useHasRole();
   const logger = useLogger('AdminOverlay', LogCategory.ADMIN);
   
@@ -19,14 +22,14 @@ export default function AdminOverlay() {
         e.key.toLowerCase() === 'a'
       ) {
         e.preventDefault();
-        useDebugStore.getState().toggleAdminOverlay();
+        toggleAdminOverlay();
         logger.info('Admin overlay toggled via keyboard shortcut');
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [logger]);
+  }, [logger, toggleAdminOverlay]);
   
   // Don't render anything if overlay is disabled or user doesn't have admin access
   if (!showAdminOverlay || !hasAdminAccess()) return null;
