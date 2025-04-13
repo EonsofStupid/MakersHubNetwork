@@ -4,18 +4,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/shared/ui/navigation-menu';
 import { Button } from '@/shared/ui/button';
-import { UserMenu } from '@/auth/components/UserMenu';
+import { UserMenu } from '@/app/components/auth/UserMenu';
+import { AuthSheet } from '@/app/components/auth/AuthSheet';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { LoginSheet } from '@/auth/components/LoginSheet';
-import { useAdminNavigation } from '@/admin/hooks/useAdminNavigation';
+import { RBACBridge } from '@/rbac/bridge';
 import { Shield } from 'lucide-react';
 
 export function MainNav() {
   const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
-  const isLoading = useAuthStore(state => state.status === 'loading');
+  const isLoading = useAuthStore(state => state.status === 'LOADING');
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const { navigateToAdmin, hasAdminAccess } = useAdminNavigation();
+  const hasAdminAccess = RBACBridge.hasAdminAccess();
   
   return (
     <div className="flex justify-between items-center py-3">
@@ -65,12 +65,12 @@ export function MainNav() {
               </Button>
             </NavigationMenuItem>
           )}
-          {isAuthenticated && hasAdminAccess() && (
+          {isAuthenticated && hasAdminAccess && (
             <NavigationMenuItem>
               <Button 
                 variant="ghost"
                 className="text-sm font-medium transition-colors hover:text-primary p-0 flex items-center gap-1"
-                onClick={() => navigateToAdmin()}
+                onClick={() => navigate('/admin')}
               >
                 <Shield className="h-3 w-3" />
                 Admin
@@ -86,7 +86,7 @@ export function MainNav() {
         ) : isAuthenticated ? (
           <UserMenu />
         ) : (
-          <LoginSheet />
+          <AuthSheet />
         )}
       </div>
     </div>

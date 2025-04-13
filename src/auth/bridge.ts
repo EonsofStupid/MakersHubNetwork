@@ -1,6 +1,7 @@
 
 import { UserProfile } from '@/shared/types/SharedTypes';
 import { AuthBridgeImpl } from './lib/AuthBridgeImpl';
+import { useAuthStore } from './store/auth.store';
 
 // Export the bridge interface type
 export interface AuthBridge {
@@ -17,8 +18,17 @@ export interface AuthBridge {
   resetPassword: (email: string) => Promise<void>;
   
   // User profile
-  getUserProfile: (userId: string) => Promise<UserProfile | null>;
+  getUserProfile: (userId?: string) => Promise<UserProfile | null>;
 }
 
 // Create a singleton instance of the auth bridge
-export const authBridge = new AuthBridgeImpl();
+const authBridgeInstance = new AuthBridgeImpl();
+
+// Export the auth bridge
+export const authBridge: AuthBridge = {
+  ...authBridgeInstance,
+  
+  // Additional accessors through the store
+  getCurrentSession: () => authBridgeInstance.getCurrentSession(),
+  getUserProfile: (userId?: string) => authBridgeInstance.getUserProfile(userId || useAuthStore.getState().user?.id || '')
+};
