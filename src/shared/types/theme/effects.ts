@@ -46,56 +46,62 @@ export enum ThemeEffect {
 }
 
 /**
- * Specific effect interfaces
+ * Theme effect interface
  */
-export interface GlitchEffectProps {
-  type: 'glitch';
-  color?: string;
-  frequency?: string;
-  amplitude?: string;
-  enabled?: boolean;
+export interface ThemeEffect {
+  id?: string;
+  type: string;
+  enabled: boolean;
+  duration?: number;
+  [key: string]: any;
 }
 
-export interface GradientEffectProps {
+/**
+ * Specific effect interfaces
+ */
+export interface GlitchEffect extends ThemeEffect {
+  type: 'glitch';
+  color?: string;
+  frequency?: number;
+  amplitude?: number;
+}
+
+export interface GradientEffect extends ThemeEffect {
   type: 'gradient';
   colors?: string[];
   speed?: number;
-  enabled?: boolean;
 }
 
-export interface CyberEffectProps {
+export interface CyberEffect extends ThemeEffect {
   type: 'cyber';
   glowColor?: string;
   scanLines?: boolean;
-  enabled?: boolean;
+  textShadow?: boolean;
 }
 
-export interface PulseEffectProps {
+export interface PulseEffect extends ThemeEffect {
   type: 'pulse';
   color?: string;
   minOpacity?: number;
   maxOpacity?: number;
-  enabled?: boolean;
 }
 
-export interface ParticleEffectProps {
+export interface ParticleEffect extends ThemeEffect {
   type: 'particle';
   color?: string;
   count?: number;
-  enabled?: boolean;
 }
 
-export interface MorphEffectProps {
+export interface MorphEffect extends ThemeEffect {
   type: 'morph';
   intensity?: number;
   speed?: number;
-  enabled?: boolean;
 }
 
 export type ThemeEffectConfig = 
-  | GlitchEffectProps
-  | GradientEffectProps
-  | CyberEffectProps
-  | PulseEffectProps
-  | ParticleEffectProps
-  | MorphEffectProps;
+  | GlitchEffect
+  | GradientEffect
+  | CyberEffect
+  | PulseEffect
+  | ParticleEffect
+  | MorphEffect;

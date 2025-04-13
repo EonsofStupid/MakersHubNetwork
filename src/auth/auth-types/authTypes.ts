@@ -1,11 +1,11 @@
 
-import { UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserRole, ROLES, AuthStatus, UserProfile } from '@/shared/types/shared.types';
 
 /**
  * Re-export the UserRole type for backward compatibility
  */
-export type { UserRole };
-export { ROLES };
+export type { UserRole, UserProfile };
+export { ROLES, AuthStatus };
 
 /**
  * Auth user type
@@ -42,13 +42,25 @@ export interface AuthCredential {
  * Auth state type
  */
 export interface AuthState {
-  user: AuthUser | null;
+  user: UserProfile | null;
   isAuthenticated: boolean;
-  status: 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'error';
+  status: AuthStatus;
   error: Error | null;
-  roles?: string[];
-  isLoading?: boolean;
-  profile?: any;
+  roles: UserRole[];
+  isLoading: boolean;
+  profile?: UserProfile;
+  initialized: boolean;
+  sessionToken?: string | null;
+  refreshToken?: string | null;
+  
+  // Auth actions
+  initialize: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updateProfile?: (profile: Partial<UserProfile>) => Promise<void>;
+  register?: (email: string, password: string) => Promise<void>;
 }
 
 /**
@@ -59,5 +71,3 @@ export interface Permission {
   name: string;
   description?: string;
 }
-
-export * from '@/shared/types/shared.types';

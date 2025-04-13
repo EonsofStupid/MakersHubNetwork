@@ -8,6 +8,11 @@ import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 interface LogDetails {
   details?: Record<string, any>;
   tags?: string[];
+  source?: string;
+  userId?: string;
+  email?: string;
+  error?: string | Error;
+  message?: string;
 }
 
 /**
@@ -18,11 +23,8 @@ interface LogDetails {
  */
 export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.APP) {
   const logWithSource = (level: LogLevel, message: string, options?: LogDetails) => {
-    logger.log(level, defaultCategory, message, {
-      source,
-      details: options?.details,
-      tags: options?.tags
-    });
+    const details = options ? { ...options, source } : { source };
+    logger.log(level, defaultCategory, message, details);
   };
 
   return {
