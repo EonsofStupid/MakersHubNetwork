@@ -1,5 +1,6 @@
+
 import { AuthBridge } from '../bridge';
-import { UserProfile, UserRole } from '@/shared/types/SharedTypes';
+import { UserProfile, UserRole } from '@/shared/types/shared.types';
 import { RBACBridge } from '@/rbac/bridge';
 import { useAuthStore } from '@/auth/store/auth.store';
 
@@ -121,4 +122,59 @@ export class AuthBridgeImpl implements AuthBridge {
     // Otherwise, placeholder implementation
     return useAuthStore.getState().user;
   }
+
+  /**
+   * Sign in with OAuth provider
+   * Implementation for GoogleLoginButton
+   */
+  public async signInWithOAuth(provider: string): Promise<{ user: UserProfile | null; error: Error | null }> {
+    // Mock implementation
+    if (provider === 'google') {
+      const mockUser: UserProfile = {
+        id: '456',
+        email: 'google.user@example.com',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_metadata: {
+          full_name: 'Google User',
+          avatar_url: 'https://api.dicebear.com/6.x/avataaars/svg?seed=google'
+        }
+      };
+      
+      useAuthStore.getState().setUser(mockUser);
+      RBACBridge.setRoles(['user']);
+      
+      return { user: mockUser, error: null };
+    }
+    
+    return { user: null, error: new Error(`OAuth provider ${provider} not supported`) };
+  }
+
+  /**
+   * Link account with OAuth provider
+   * Implementation for AccountLinkingModal
+   */
+  public async linkAccount(provider: string): Promise<boolean> {
+    // Mock implementation
+    console.log(`Linking account with ${provider}`);
+    return true;
+  }
+
+  /**
+   * Subscribe to auth events
+   * Implementation for AccountLinkingModal
+   */
+  public onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
+    // Mock implementation
+    const mockUnsubscribe = () => {
+      console.log('Unsubscribed from auth events');
+    };
+    
+    return {
+      unsubscribe: mockUnsubscribe
+    };
+  }
 }
+
+// Create singleton instance and export
+export const authBridge = new AuthBridgeImpl();

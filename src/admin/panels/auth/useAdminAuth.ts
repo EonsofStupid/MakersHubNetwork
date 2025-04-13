@@ -1,49 +1,53 @@
-import { useEffect } from 'react';
-import { useAuthStore } from '@/stores/auth/auth.store';
-import { useRbac } from '@/auth/rbac/use-rbac';
+
+import { useCallback } from 'react';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { RBACBridge } from '@/rbac/bridge';
+import { UserRole, LOG_CATEGORY } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
 
 /**
- * Hook for checking and managing admin access
- * 
- * Provides comprehensive data about user's admin status and permissions
+ * Hook for managing admin authentication
+ * Provides auth state and admin-specific auth utilities
  */
-export function useAdminAuth() {
-  const { user, roles, isAuthenticated, isLoading } = useAuthStore();
-  const { hasAdminAccess, isSuperAdmin } = useRbac();
-  const logger = useLogger('AdminAccess', LogCategory.ADMIN);
+export const useAdminAuth = () => {
+  const user = useAuthStore(state => state.user);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const status = useAuthStore(state => state.status);
+  const logger = useLogger('useAdminAuth', LOG_CATEGORY.ADMIN);
   
-  // Log admin access check
-  useEffect(() => {
-    if (isAuthenticated && hasAdminAccess()) {
-      logger.info('Admin access granted', {
-        details: {
-          userId: user?.id,
-          roles,
-          isAdmin: hasAdminAccess(),
-          isSuperAdmin: isSuperAdmin()
-        }
-      });
-    } else if (isAuthenticated) {
-      logger.debug('Admin access check - user is not admin', {
-        details: {
-          userId: user?.id,
-          roles
-        }
-      });
-    }
-  }, [isAuthenticated, hasAdminAccess, user?.id, roles, logger, isSuperAdmin]);
+  // Check if user has admin access
+  const hasAdminAccess = useCallback((): boolean => {
+    const result = RBACBridge.hasRole(['admin', 'superadmin']);
+    return result;
+  }, []);
+  
+  // Check if user is super admin
+  const isSuperAdmin = useCallback((): boolean => {
+    return RBACBridge.hasRole('superadmin');
+  }, []);
+  
+  // Get user roles
+  const roles = RBACBridge.getRoles();
+  
+  // Log admin errors
+  const logAdminError = useCallback((action: string, error: unknown) => {
+    logger.error(`Admin ${action} failed`, {
+      details: {
+        error,
+        userId: user?.id,
+        email: user?.email
+      }
+    });
+  }, [logger, user]);
   
   return {
+    user,
     isAuthenticated,
-    isAdmin: hasAdminAccess(),
-    isSuperAdmin: isSuperAdmin(),
-    hasAdminAccess: hasAdminAccess(),
+    isLoading: status === 'LOADING',
+    status,
     roles,
-    isLoading,
-    user
+    hasAdminAccess,
+    isSuperAdmin,
+    logAdminError
   };
-}
-
-export default useAdminAuth;
+};

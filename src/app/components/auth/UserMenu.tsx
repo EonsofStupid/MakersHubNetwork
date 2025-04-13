@@ -1,9 +1,9 @@
 
 import { useState, memo, useCallback } from "react";
-import { useToast } from "@/shared/ui/use-toast";
+import { useToast } from "@/shared/hooks/use-toast";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/shared/types/SharedTypes";
+import { LogCategory } from "@/shared/types/shared.types";
 import { authBridge } from "@/auth/bridge";
 import { RBACBridge } from "@/rbac/bridge";
 import { Button } from "@/shared/ui/button";
@@ -40,8 +40,8 @@ export function UserMenu() {
         title: "Logged out",
         description: "You have been successfully logged out",
       });
-    } catch (error) {
-      logger.error("Error logging out", { error });
+    } catch (error: any) {
+      logger.error("Error logging out", { details: { message: error?.message } });
       toast({
         variant: "destructive",
         title: "Error logging out",
@@ -57,6 +57,8 @@ export function UserMenu() {
 
   // Get display name and email from user
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  const userEmail = user.email || '';
+  const userAvatar = user.user_metadata?.avatar_url as string | undefined;
 
   return (
     <>
@@ -73,8 +75,8 @@ export function UserMenu() {
         isOpen={isMenuOpen}
         onOpenChange={setIsMenuOpen}
         userDisplayName={displayName}
-        userEmail={user.email}
-        userAvatar={user.user_metadata?.avatar_url}
+        userEmail={userEmail}
+        userAvatar={userAvatar}
         onShowProfile={handleShowProfile}
         onLogout={handleLogout}
         roles={roles}

@@ -1,41 +1,50 @@
+
 import { useCallback } from 'react';
-import { useAuthStore } from '@/stores/auth/auth.store';
+import { RBACBridge } from '@/rbac/bridge';
+import { UserRole, LOG_CATEGORY } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory, UserRole } from '@/shared/types/shared.types';
-import { useRbac } from '@/auth/rbac/use-rbac';
 
 /**
- * Hook for role-based access control in the admin panel
+ * Hook for admin role-based access control
+ * Provides role-checking utilities specific to admin functionality
  */
-export function useAdminRoles() {
-  const { roles } = useAuthStore();
-  const { 
-    hasRole, 
-    hasAdminAccess, 
-    isSuperAdmin, 
-    isModerator, 
-    isBuilder, 
-    getHighestRole, 
-    hasElevatedPrivileges, 
-    canAccessAdminSection, 
-    getRoleLabels 
-  } = useRbac();
-  const logger = useLogger('useAdminRoles', LogCategory.AUTH);
-
-  // Check if user has at least one of the given roles
-  const hasAnyRole = useCallback((checkRoles: UserRole[]) => {
-    return checkRoles.some(role => hasRole(role));
-  }, [hasRole]);
-
+export const useAdminRoles = () => {
+  const logger = useLogger('useAdminRoles', LOG_CATEGORY.RBAC);
+  const roles = RBACBridge.getRoles();
+  
+  // Check if user has specific role
+  const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
+    return RBACBridge.hasRole(role);
+  }, []);
+  
+  // Check if user has general admin access
+  const hasAdminAccess = useCallback((): boolean => {
+    return RBACBridge.hasAdminAccess();
+  }, []);
+  
+  // Check if user has super admin access
+  const isSuperAdmin = useCallback((): boolean => {
+    return RBACBridge.isSuperAdmin();
+  }, []);
+  
+  // Log access attempt
+  const logAccessAttempt = useCallback((resource: string, granted: boolean) => {
+    if (granted) {
+      logger.info(`Access granted to ${resource}`, {
+        details: { roles, resource }
+      });
+    } else {
+      logger.warn(`Access denied to ${resource}`, {
+        details: { roles, resource }
+      });
+    }
+  }, [logger, roles]);
+  
   return {
+    roles,
+    hasRole,
+    hasAdminAccess,
     isSuperAdmin,
-    isAdmin: hasAdminAccess,
-    isModerator,
-    isBuilder,
-    hasAnyRole,
-    getHighestRole,
-    hasElevatedPrivileges,
-    canAccessAdminSection,
-    getRoleLabels,
+    logAccessAttempt
   };
-}
+};

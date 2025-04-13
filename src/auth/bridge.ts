@@ -1,7 +1,6 @@
 
-import { UserProfile } from '@/shared/types/SharedTypes';
-import { AuthBridgeImpl } from './lib/AuthBridgeImpl';
-import { useAuthStore } from './store/auth.store';
+import { UserProfile } from '@/shared/types/shared.types';
+import { authBridge as authBridgeInstance } from './lib/AuthBridgeImpl';
 
 /**
  * AuthBridge interface
@@ -16,6 +15,11 @@ export interface AuthBridge {
   signInWithEmail: (email: string, password: string) => Promise<{ user: UserProfile | null; error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ user: UserProfile | null; error: Error | null }>;
   signOut: () => Promise<void>;
+  signInWithOAuth: (provider: string) => Promise<{ user: UserProfile | null; error: Error | null }>;
+  
+  // Account linking
+  linkAccount: (provider: string) => Promise<boolean>;
+  onAuthEvent: (callback: (event: any) => void) => { unsubscribe: () => void };
   
   // Password management
   resetPassword: (email: string) => Promise<void>;
@@ -24,17 +28,8 @@ export interface AuthBridge {
   getUserProfile: (userId?: string) => Promise<UserProfile | null>;
 }
 
-// Create a singleton instance of the auth bridge
-const authBridgeInstance = new AuthBridgeImpl();
-
 /**
  * Export the auth bridge as a singleton
  * This provides a consistent interface for components to interact with auth functionality
  */
-export const authBridge: AuthBridge = {
-  ...authBridgeInstance,
-  
-  // Additional methods with store integration
-  getCurrentSession: () => authBridgeInstance.getCurrentSession(),
-  getUserProfile: (userId?: string) => authBridgeInstance.getUserProfile(userId || useAuthStore.getState().user?.id || '')
-};
+export const authBridge: AuthBridge = authBridgeInstance;
