@@ -1,32 +1,34 @@
 
-import { UserProfile, LogCategory, LogLevel, AuthStatus, UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserProfile, AuthStatus, LogLevel, LogCategory } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
-import { RBACBridge } from '@/rbac/bridge';
+import { AuthBridge } from '@/auth/bridge';
 
 /**
- * Implementation of the AuthBridge interface
- * Provides authentication functionality
+ * Auth bridge implementation 
+ * Provides a clean abstraction layer for authentication functionality
  */
-class AuthBridgeImpl {
+class AuthBridgeImpl implements AuthBridge {
   private loggerSource = 'AuthBridge';
 
   /**
-   * Get the current authenticated session
+   * Get the current session
    */
   async getCurrentSession(): Promise<{ user: UserProfile } | null> {
     try {
-      // Check local storage for demo user
+      // For demo purposes, we'll check local storage
       const storedUser = localStorage.getItem('auth_user');
+      
       if (storedUser) {
-        const user = JSON.parse(storedUser) as UserProfile;
-        return { user };
+        return { user: JSON.parse(storedUser) };
       }
+      
       return null;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get current session', { 
-        details: { error },
+        details: { error }, 
         source: this.loggerSource
       });
+      
       return null;
     }
   }
@@ -37,15 +39,18 @@ class AuthBridgeImpl {
   async refreshSession(): Promise<{ user_id: string } | null> {
     try {
       const session = await this.getCurrentSession();
+      
       if (session?.user) {
         return { user_id: session.user.id };
       }
+      
       return null;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to refresh session', { 
-        details: { error },
-        source: this.loggerSource
+        details: { error }, 
+        source: this.loggerSource 
       });
+      
       return null;
     }
   }
@@ -55,36 +60,38 @@ class AuthBridgeImpl {
    */
   async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      // Demo implementation - in a real app, call an API
-      const demoUser: UserProfile = {
-        id: '123',
-        email,
-        name: 'Demo User',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        roles: [ROLES.USER]
-      };
+      // Demo implementation - in a real app, call an auth API
+      if (email && password) {
+        const demoUser: UserProfile = {
+          id: '123',
+          email,
+          name: 'Demo User',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        // Store user in local storage for demo
+        localStorage.setItem('auth_user', JSON.stringify(demoUser));
+        localStorage.setItem('auth_token', 'demo_token');
+        
+        logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed in', { 
+          details: { userId: demoUser.id, email: demoUser.email },
+          source: this.loggerSource
+        });
+        
+        return { user: demoUser, error: null };
+      }
       
-      // Store user in local storage for demo
-      localStorage.setItem('auth_user', JSON.stringify(demoUser));
-      localStorage.setItem('auth_token', 'demo_token');
-      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
-      
-      // Set roles in RBAC store
-      RBACBridge.setRoles([ROLES.USER]);
-      
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed in', { 
-        details: { email },
-        source: this.loggerSource
-      });
-      
-      return { user: demoUser, error: null };
+      return { user: null, error: new Error('Invalid email or password') };
     } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error during sign in');
+      
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Sign in failed', { 
-        details: { error },
-        source: this.loggerSource
+        details: { error, email }, 
+        source: this.loggerSource 
       });
-      return { user: null, error: error as Error };
+      
+      return { user: null, error: err };
     }
   }
 
@@ -93,36 +100,34 @@ class AuthBridgeImpl {
    */
   async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      // Demo implementation - in a real app, call an API
+      // Demo implementation - in a real app, call an auth API
       const demoUser: UserProfile = {
         id: '123',
         email,
         name: 'New User',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        roles: [ROLES.USER]
+        updated_at: new Date().toISOString()
       };
       
       // Store user in local storage for demo
       localStorage.setItem('auth_user', JSON.stringify(demoUser));
       localStorage.setItem('auth_token', 'demo_token');
-      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
-      
-      // Set roles in RBAC store
-      RBACBridge.setRoles([ROLES.USER]);
       
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed up', { 
-        details: { email },
+        details: { userId: demoUser.id, email: demoUser.email },
         source: this.loggerSource
       });
       
       return { user: demoUser, error: null };
     } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error during sign up');
+      
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Sign up failed', { 
-        details: { error },
-        source: this.loggerSource
+        details: { error, email }, 
+        source: this.loggerSource 
       });
-      return { user: null, error: error as Error };
+      
+      return { user: null, error: err };
     }
   }
 
@@ -134,18 +139,14 @@ class AuthBridgeImpl {
       // Clear local storage
       localStorage.removeItem('auth_user');
       localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_roles');
       
-      // Clear roles in RBAC store
-      RBACBridge.clearRoles();
-      
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed out', {
-        source: this.loggerSource
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed out', { 
+        source: this.loggerSource 
       });
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Sign out failed', { 
-        details: { error },
-        source: this.loggerSource
+        details: { error }, 
+        source: this.loggerSource 
       });
     }
   }
@@ -155,56 +156,43 @@ class AuthBridgeImpl {
    */
   async signInWithOAuth(provider: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      // Demo implementation - in a real app, call an API
-      const demoUser: UserProfile = {
-        id: '123',
-        email: `user@${provider}.com`,
-        name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} User`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        roles: [ROLES.USER]
-      };
-      
-      // Store user in local storage for demo
-      localStorage.setItem('auth_user', JSON.stringify(demoUser));
-      localStorage.setItem('auth_token', 'demo_token');
-      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
-      
-      // Set roles in RBAC store
-      RBACBridge.setRoles([ROLES.USER]);
-      
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed in with OAuth', { 
-        details: { provider },
-        source: this.loggerSource
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'OAuth sign in initiated', { 
+        details: { provider }, 
+        source: this.loggerSource 
       });
       
-      return { user: demoUser, error: null };
+      // This would be implemented with a real provider
+      return { user: null, error: new Error('OAuth not implemented in demo') };
     } catch (error) {
+      const err = error instanceof Error ? error : new Error('Unknown error during OAuth sign in');
+      
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'OAuth sign in failed', { 
-        details: { error },
-        source: this.loggerSource
+        details: { error, provider }, 
+        source: this.loggerSource 
       });
-      return { user: null, error: error as Error };
+      
+      return { user: null, error: err };
     }
   }
 
   /**
-   * Link an OAuth provider to the current account
+   * Link account to provider
    */
   async linkAccount(provider: string): Promise<boolean> {
     try {
-      // Demo implementation - in a real app, call an API
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Account linked', { 
-        details: { provider },
-        source: this.loggerSource
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Account linking initiated', { 
+        details: { provider }, 
+        source: this.loggerSource 
       });
       
-      return true;
+      // This would be implemented with a real provider
+      return false;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Account linking failed', { 
-        details: { error },
-        source: this.loggerSource
+        details: { error, provider }, 
+        source: this.loggerSource 
       });
+      
       return false;
     }
   }
@@ -213,82 +201,52 @@ class AuthBridgeImpl {
    * Subscribe to auth events
    */
   onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
-    // Demo implementation - in a real app, set up real event listeners
-    const unsubscribe = () => {};
-    return { unsubscribe };
+    // Empty implementation for now
+    return { unsubscribe: () => {} };
   }
 
   /**
-   * Reset password for an email
+   * Reset password
    */
   async resetPassword(email: string): Promise<void> {
     try {
-      // Demo implementation - in a real app, call an API
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Password reset requested', { 
-        details: { email },
-        source: this.loggerSource
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Password reset initiated', { 
+        details: { email }, 
+        source: this.loggerSource 
       });
+      
+      // This would send an email in a real implementation
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Password reset failed', { 
-        details: { error },
-        source: this.loggerSource
+        details: { error, email }, 
+        source: this.loggerSource 
       });
     }
   }
 
   /**
-   * Get a user's profile
+   * Get user profile
    */
   async getUserProfile(userId?: string): Promise<UserProfile | null> {
     try {
-      // If no userId provided, get the current user
-      if (!userId) {
-        const session = await this.getCurrentSession();
-        return session?.user || null;
-      }
-      
-      // Demo implementation - in a real app, call an API
+      // For demo purposes, we'll check local storage
       const storedUser = localStorage.getItem('auth_user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser) as UserProfile;
-        if (user.id === userId) {
-          return user;
-        }
-      }
       
-      logger.log(LogLevel.WARN, LogCategory.AUTH, 'User profile not found', { 
-        details: { userId },
-        source: this.loggerSource
-      });
+      if (storedUser) {
+        return JSON.parse(storedUser);
+      }
       
       return null;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get user profile', { 
-        details: { error },
-        source: this.loggerSource
+        details: { error, userId }, 
+        source: this.loggerSource 
       });
+      
       return null;
     }
   }
-
-  /**
-   * Check if the current user is authenticated
-   */
-  isAuthenticated(): boolean {
-    const token = localStorage.getItem('auth_token');
-    return !!token;
-  }
-
-  /**
-   * Get the current authentication status
-   */
-  getAuthStatus(): AuthStatus {
-    if (this.isAuthenticated()) {
-      return AuthStatus.AUTHENTICATED;
-    }
-    return AuthStatus.UNAUTHENTICATED;
-  }
 }
 
-// Export a singleton instance
+// Export singleton instance
 export const authBridge = new AuthBridgeImpl();

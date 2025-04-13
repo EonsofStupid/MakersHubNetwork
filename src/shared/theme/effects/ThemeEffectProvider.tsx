@@ -1,73 +1,91 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { ThemeEffect, ThemeEffectProps } from '@/shared/types/theme/effects';
 
-interface ThemeEffectContextType {
-  effects: Record<string, ThemeEffect>;
-  addEffect: (elementId: string, effect: ThemeEffect) => void;
-  removeEffect: (effectId: string) => void;
-  getEffectForElement: (elementId: string) => ThemeEffect | undefined;
-}
+import React from 'react';
+import { ThemeEffect, ThemeEffectProviderProps } from '@/shared/types/theme/effects';
+import { EffectRenderer } from './EffectRenderer';
 
-const ThemeEffectContext = createContext<ThemeEffectContextType>({
-  effects: {},
-  addEffect: () => {},
-  removeEffect: () => {},
-  getEffectForElement: () => undefined,
-});
-
-export const useThemeEffect = () => useContext(ThemeEffectContext);
-
-interface ThemeEffectProviderProps {
-  children: React.ReactNode;
-  maxEffects?: number;
-}
-
-export function ThemeEffectProvider({ 
-  children, 
-  maxEffects = 10 
-}: ThemeEffectProviderProps) {
-  const [effects, setEffects] = useState<Record<string, ThemeEffect>>({});
-
-  const addEffect = useCallback((elementId: string, effect: ThemeEffect) => {
-    setEffects(prev => {
-      const effectWithId = effect as ThemeEffect & { id: string };
-      const newEffects = { ...prev, [effectWithId.id]: effectWithId };
-      
-      // Limit the number of active effects
-      const effectIds = Object.keys(newEffects);
-      if (effectIds.length > maxEffects) {
-        const oldestId = effectIds[0];
-        const { [oldestId]: _, ...rest } = newEffects;
-        return rest;
-      }
-      
-      return newEffects;
-    });
-  }, [maxEffects]);
-
-  const removeEffect = useCallback((effectId: string) => {
-    setEffects(prev => {
-      const { [effectId]: _, ...rest } = prev;
-      return rest;
-    });
-  }, []);
-
-  const getEffectForElement = useCallback((elementId: string) => {
-    // Find effect by element ID pattern (elementId-effectType)
-    const effectId = Object.keys(effects).find(id => id.startsWith(`${elementId}-`));
-    return effectId ? effects[effectId] : undefined;
-  }, [effects]);
+/**
+ * Provider component to add theme effects to children
+ */
+export const ThemeEffectProvider: React.FC<ThemeEffectProviderProps> = ({
+  children,
+  className = '',
+  effect = ThemeEffect.NONE
+}) => {
+  // If no effect specified, return children
+  if (effect === ThemeEffect.NONE) {
+    return <>{children}</>;
+  }
 
   return (
-    <ThemeEffectContext.Provider 
-      value={{ 
-        effects, 
-        addEffect, 
-        removeEffect, 
-        getEffectForElement 
-      }}
-    >
+    <EffectRenderer effect={effect} className={className}>
       {children}
-    </ThemeEffectContext.Provider>
+    </EffectRenderer>
   );
-}
+};
+
+/**
+ * Factory function to create effect-specific providers
+ */
+export const createEffectProvider = (defaultEffect: ThemeEffect) => {
+  return ({ children, className = '' }: Omit<ThemeEffectProviderProps, 'effect'>) => (
+    <ThemeEffectProvider effect={defaultEffect} className={className}>
+      {children}
+    </ThemeEffectProvider>
+  );
+};
+
+/**
+ * Pre-configured effect providers
+ */
+export const GlitchEffectProvider = createEffectProvider(ThemeEffect.GLITCH);
+export const GradientEffectProvider = createEffectProvider(ThemeEffect.GRADIENT);
+export const CyberEffectProvider = createEffectProvider(ThemeEffect.CYBER);
+export const BlurEffectProvider = createEffectProvider(ThemeEffect.BLUR);
+export const GrainEffectProvider = createEffectProvider(ThemeEffect.GRAIN);
+export const NoiseEffectProvider = createEffectProvider(ThemeEffect.NOISE);
+export const PulseEffectProvider = createEffectProvider(ThemeEffect.PULSE);
+export const ParticleEffectProvider = createEffectProvider(ThemeEffect.PARTICLE);
+
+/**
+ * Hook to get CSS for current effect
+ * @param effect The effect to get CSS for
+ * @returns CSS object for the specified effect
+ */
+export const useEffectStyles = (effect: ThemeEffect): React.CSSProperties => {
+  const effectStyles: Record<string, React.CSSProperties> = {
+    [ThemeEffect.BLUR]: {
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)'
+    },
+    [ThemeEffect.GLITCH]: {
+      position: 'relative',
+      overflow: 'hidden'
+    },
+    [ThemeEffect.GRADIENT]: {
+      backgroundImage: 'linear-gradient(135deg, var(--effect-color), var(--effect-secondary))',
+      backgroundSize: '400% 400%',
+      animation: 'gradient 15s ease infinite'
+    },
+    [ThemeEffect.CYBER]: {
+      position: 'relative',
+      boxShadow: '0 0 10px var(--effect-color)'
+    },
+    [ThemeEffect.GRAIN]: {
+      position: 'relative',
+      isolation: 'isolate'
+    },
+    [ThemeEffect.NOISE]: {
+      position: 'relative'
+    },
+    [ThemeEffect.PULSE]: {
+      animation: 'pulse 2s infinite ease-in-out'
+    },
+    [ThemeEffect.PARTICLE]: {
+      position: 'relative',
+      overflow: 'hidden'
+    },
+    [ThemeEffect.NONE]: {}
+  };
+
+  return effectStyles[effect] || {};
+};

@@ -1,108 +1,113 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/shared/utils/cn';
+import { ROLES } from '@/shared/types/shared.types';
 import { RBACBridge } from '@/rbac/bridge';
-import { Button } from '@/shared/ui/button';
-import { LayoutDashboard, Users, Settings, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-import { UserRole, ROLES } from '@/shared/types/shared.types';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import { 
+  LayoutDashboard, 
+  Users, 
+  FileText, 
+  Settings,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
+import { useAdminStore } from '@/admin/store/admin.store';
+import { cn } from '@/shared/utils/cn';
 
-/**
- * AdminSidebar component
- * Provides navigation for the admin area
- */
-export const AdminSidebar: React.FC = () => {
-  const [collapsed, setCollapsed] = React.useState(false);
+interface SidebarItemProps {
+  to: string;
+  label: string;
+  icon: React.ReactNode;
+  isCollapsed?: boolean;
+}
+
+function SidebarItem({ to, label, icon, isCollapsed = false }: SidebarItemProps) {
   const location = useLocation();
-  const logger = useLogger('AdminSidebar', LogCategory.ADMIN);
-  
-  // Navigation items with permission requirements
-  const navItems = [
-    {
-      label: 'Dashboard',
-      path: '/admin',
-      icon: LayoutDashboard,
-      requiredRole: [ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[]
-    },
-    {
-      label: 'Users',
-      path: '/admin/users',
-      icon: Users,
-      requiredRole: [ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[]
-    },
-    {
-      label: 'Content',
-      path: '/admin/content',
-      icon: FileText,
-      requiredRole: [ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[]
-    },
-    {
-      label: 'Settings',
-      path: '/admin/settings',
-      icon: Settings,
-      requiredRole: [ROLES.SUPER_ADMIN] as UserRole[]
-    }
-  ];
-  
-  // Get user roles for logging
-  const roles = RBACBridge.getRoles();
-  
-  React.useEffect(() => {
-    logger.debug('Admin sidebar mounted', { details: { roles } });
-  }, [logger, roles]);
-  
-  // Filter items based on user roles
-  const visibleItems = navItems.filter(item => 
-    RBACBridge.hasRole(item.requiredRole)
-  );
+  const isActive = location.pathname === to;
   
   return (
-    <div
-      className={cn(
-        "min-h-screen bg-background border-r flex flex-col transition-all",
-        collapsed ? "w-16" : "w-64"
-      )}
-    >
-      <div className="flex items-center justify-between p-4 border-b">
-        {!collapsed && <span className="font-semibold">Admin</span>}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className={collapsed ? "mx-auto" : "ml-auto"}
+    <li>
+      <Link
+        to={to}
+        className={cn(
+          "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+          isActive 
+            ? "bg-primary/10 text-primary" 
+            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+        )}
+        title={isCollapsed ? label : undefined}
+      >
+        {icon}
+        {!isCollapsed && <span>{label}</span>}
+      </Link>
+    </li>
+  );
+}
+
+export function AdminSidebar() {
+  const { sidebarOpen, toggleSidebar } = useAdminStore();
+  
+  // Only show admin items for admin users
+  const hasAdminAccess = RBACBridge.hasAdminAccess();
+  const isSuperAdmin = RBACBridge.hasRole(ROLES.SUPER_ADMIN);
+  
+  if (!hasAdminAccess) return null;
+  
+  return (
+    <div className={cn(
+      "flex flex-col border-r min-h-screen bg-background transition-all duration-300",
+      sidebarOpen ? "w-64" : "w-16"
+    )}>
+      <div className="p-4 border-b flex justify-between items-center">
+        {sidebarOpen && <h2 className="font-semibold">Admin Panel</h2>}
+        <button 
+          onClick={toggleSidebar} 
+          className="p-1 rounded-full hover:bg-muted"
+          aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </Button>
+          {sidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+        </button>
       </div>
       
-      <nav className="flex-1 py-4">
+      <nav className="flex-1 p-2">
         <ul className="space-y-1">
-          {visibleItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            const Icon = item.icon;
-            
-            return (
-              <li key={item.path} className="px-2">
-                <Link
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive 
-                      ? "bg-primary/10 text-primary" 
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-                    collapsed && "justify-center"
-                  )}
-                >
-                  <Icon size={18} />
-                  {!collapsed && <span>{item.label}</span>}
-                </Link>
-              </li>
-            );
-          })}
+          <SidebarItem 
+            to="/admin" 
+            label="Dashboard" 
+            icon={<LayoutDashboard size={18} />} 
+            isCollapsed={!sidebarOpen}
+          />
+          
+          <SidebarItem 
+            to="/admin/users" 
+            label="Users" 
+            icon={<Users size={18} />} 
+            isCollapsed={!sidebarOpen}
+          />
+          
+          <SidebarItem 
+            to="/admin/content" 
+            label="Content" 
+            icon={<FileText size={18} />} 
+            isCollapsed={!sidebarOpen}
+          />
+          
+          {isSuperAdmin && (
+            <SidebarItem 
+              to="/admin/settings" 
+              label="Settings" 
+              icon={<Settings size={18} />} 
+              isCollapsed={!sidebarOpen}
+            />
+          )}
         </ul>
       </nav>
+      
+      {sidebarOpen && (
+        <div className="p-4 border-t text-xs text-muted-foreground">
+          Admin v1.0.0
+        </div>
+      )}
     </div>
   );
-};
+}

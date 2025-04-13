@@ -1,6 +1,14 @@
 
 import { create } from 'zustand';
-import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeStatus, ThemeContext } from '@/shared/types/theme.types';
+import { 
+  Theme, 
+  ThemeState, 
+  ComponentTokens, 
+  DesignTokens, 
+  ThemeStatus, 
+  ThemeContext,
+  ThemeToken
+} from '@/shared/types/theme.types';
 
 // Initial design tokens
 const initialDesignTokens: DesignTokens = {
@@ -27,7 +35,7 @@ const initialState: ThemeState = {
 };
 
 // Create the store
-const useThemeStore = create<ThemeState & {
+export const useThemeStore = create<ThemeState & {
   setThemes: (themes: Theme[]) => void;
   setActiveTheme: (themeId: string) => void;
   setDesignTokens: (tokens: DesignTokens) => void;
@@ -88,98 +96,133 @@ const useThemeStore = create<ThemeState & {
         description: 'A futuristic cyberpunk theme',
         status: ThemeStatus.ACTIVE,
         context: ThemeContext.SITE,
+        tokens: {
+          'primary': {
+            value: '#00ffcc',
+            type: 'color',
+            description: 'Primary brand color'
+          },
+          'secondary': {
+            value: '#ff00cc',
+            type: 'color',
+            description: 'Secondary brand color'
+          },
+          'background': {
+            value: '#111122',
+            type: 'color',
+            description: 'Background color'
+          },
+          'text': {
+            value: '#ffffff',
+            type: 'color',
+            description: 'Text color'
+          },
+          'spacing-sm': {
+            value: '0.5rem',
+            type: 'spacing',
+            description: 'Small spacing'
+          },
+          'spacing-md': {
+            value: '1rem',
+            type: 'spacing',
+            description: 'Medium spacing'
+          },
+          'spacing-lg': {
+            value: '2rem',
+            type: 'spacing',
+            description: 'Large spacing'
+          }
+        },
         designTokens: {
           colors: {
-            primary: { value: '#00ffcc', description: 'Primary brand color' },
-            secondary: { value: '#ff00cc', description: 'Secondary brand color' },
-            background: { value: '#111122', description: 'Background color' },
-            text: { value: '#ffffff', description: 'Text color' }
-          },
-          spacing: {
-            small: { value: '0.5rem', description: 'Small spacing' },
-            medium: { value: '1rem', description: 'Medium spacing' },
-            large: { value: '2rem', description: 'Large spacing' }
+            primary: {
+              value: '#00ffcc',
+              type: 'color',
+              description: 'Primary brand color'
+            },
+            secondary: {
+              value: '#ff00cc',
+              type: 'color',
+              description: 'Secondary brand color'
+            }
           }
         },
         componentTokens: {
           styles: {
             button: {
-              backgroundColor: 'var(--colors-primary)',
-              textColor: 'var(--colors-text)',
-              borderRadius: '4px'
-            },
-            card: {
-              backgroundColor: 'var(--colors-background)',
-              boxShadow: '0 0 10px rgba(0,255,204,0.5)'
+              styles: {
+                backgroundColor: 'var(--colors-primary)',
+                textColor: 'var(--colors-text)',
+                borderRadius: '4px'
+              }
             }
           }
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        }
       };
       
-      const mockComponentTokens = mockTheme.componentTokens || initialComponentTokens;
-      const mockDesignTokens = mockTheme.designTokens || initialDesignTokens;
-      
-      set({
+      // Update state with the mock theme
+      set({ 
         themes: [mockTheme],
-        activeThemeId: themeId,
-        componentTokens: mockComponentTokens,
-        designTokens: mockDesignTokens,
+        activeThemeId: mockTheme.id,
+        designTokens: mockTheme.designTokens || initialDesignTokens,
+        componentTokens: mockTheme.componentTokens || initialComponentTokens,
         isLoading: false
       });
     } catch (error) {
-      console.error('Failed to load theme:', error);
       set({ 
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to load theme'
+        error: error instanceof Error ? error.message : 'Failed to load theme',
+        isLoading: false
       });
     }
   },
 
-  updateComponentToken: (component: string, token: string, value: string) => {
-    set((state) => {
+  updateComponentToken: (component, token, value) => {
+    set(state => {
       const updatedTokens = { ...state.componentTokens };
+      
       if (!updatedTokens.styles[component]) {
-        updatedTokens.styles[component] = {};
+        updatedTokens.styles[component] = {
+          styles: {}
+        };
       }
       
-      updatedTokens.styles[component][token] = value;
+      updatedTokens.styles[component].styles[token] = value;
       
       return { componentTokens: updatedTokens };
     });
   },
 
-  updateDesignToken: (category: string, token: string, value: string) => {
-    set((state) => {
-      const updatedDesignTokens = { ...state.designTokens };
-      if (!updatedDesignTokens[category]) {
-        updatedDesignTokens[category] = {};
+  updateDesignToken: (category, token, value) => {
+    set(state => {
+      const updatedTokens = { ...state.designTokens };
+      
+      if (!updatedTokens[category]) {
+        updatedTokens[category] = {};
       }
       
-      if (typeof updatedDesignTokens[category] === 'object' && updatedDesignTokens[category] !== null) {
-        const categoryObj = updatedDesignTokens[category] as Record<string, any>;
-        categoryObj[token] = { value };
-      }
+      updatedTokens[category][token] = {
+        value,
+        type: category === 'colors' ? 'color' : 
+              category === 'spacing' ? 'spacing' : 
+              category === 'typography' ? 'typography' : 'color'
+      };
       
-      const updatedThemes = state.themes.map(theme => {
-        if (theme.id === state.activeThemeId) {
-          return { 
-            ...theme, 
-            designTokens: updatedDesignTokens,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return theme;
-      });
-      
-      return { themes: updatedThemes, designTokens: updatedDesignTokens };
+      return { designTokens: updatedTokens };
     });
   },
 
   resetTheme: () => {
-    set(initialState);
+    set({
+      activeThemeId: null,
+      designTokens: initialDesignTokens,
+      componentTokens: initialComponentTokens
+    });
   }
 }));
 
-export { useThemeStore };
+// Selectors for easier state access
+export const selectCurrentTheme = (state: ThemeState) => 
+  state.themes.find(theme => theme.id === state.activeThemeId);
+
+export const selectThemeTokens = (state: ThemeState) => state.designTokens;
+export const selectThemeComponents = (state: ThemeState) => state.componentTokens;

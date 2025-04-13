@@ -1,12 +1,9 @@
 
 import React, { useMemo } from 'react';
 import { Component, Layout } from '@/admin/types/layout.types';
-import componentRegistry from '@/admin/services/componentRegistry';
-import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
 import { Skeleton } from '@/shared/ui/skeleton';
-import { useAtom } from 'jotai';
-import { adminEditModeAtom } from '@/admin/atoms/tools.atoms';
-import { PermissionValue } from '@/auth/permissions';
 
 interface LayoutRendererProps {
   layout: Layout | null;
@@ -16,8 +13,7 @@ interface LayoutRendererProps {
 }
 
 export function LayoutRenderer({ layout, isLoading, fallback, error }: LayoutRendererProps) {
-  const { hasPermission } = useAdminPermissions();
-  const [isEditMode] = useAtom(adminEditModeAtom);
+  const logger = useLogger('LayoutRenderer', LogCategory.ADMIN);
   
   // Show loading state
   if (isLoading) {
@@ -36,6 +32,7 @@ export function LayoutRenderer({ layout, isLoading, fallback, error }: LayoutRen
   
   // Show error state
   if (error) {
+    logger.error('Layout error', { details: { error: error.message } });
     return (
       <div className="p-6 border border-destructive/30 bg-destructive/10 rounded-lg">
         <h3 className="text-lg font-medium text-destructive mb-2">Layout Error</h3>
@@ -56,8 +53,6 @@ export function LayoutRenderer({ layout, isLoading, fallback, error }: LayoutRen
         <ComponentRenderer 
           key={component.id || index} 
           component={component} 
-          hasPermission={hasPermission} 
-          isEditMode={isEditMode}
         />
       ))}
     </div>
@@ -66,74 +61,50 @@ export function LayoutRenderer({ layout, isLoading, fallback, error }: LayoutRen
 
 interface ComponentRendererProps {
   component: Component;
-  hasPermission: (permission: PermissionValue) => boolean;
-  isEditMode: boolean;
 }
 
-function ComponentRenderer({ component, hasPermission, isEditMode }: ComponentRendererProps) {
-  // Check permissions if required
-  const hasRequiredPermissions = useMemo(() => {
-    if (!component.permissions || component.permissions.length === 0) {
-      return true;
+function ComponentRenderer({ component }: ComponentRendererProps) {
+  const logger = useLogger('ComponentRenderer', LogCategory.ADMIN);
+  
+  // Basic component rendering
+  const renderComponent = () => {
+    switch(component.type) {
+      case 'container':
+        return (
+          <div className="border rounded-md p-4 mb-4" data-component-type="container">
+            {component.children?.map((child, index) => (
+              <ComponentRenderer key={child.id || index} component={child} />
+            ))}
+          </div>
+        );
+        
+      case 'text':
+        return (
+          <div className="mb-4" data-component-type="text">
+            <p>{component.props?.content || 'Text content'}</p>
+          </div>
+        );
+        
+      case 'image':
+        return (
+          <div className="mb-4" data-component-type="image">
+            <img 
+              src={component.props?.src || 'https://via.placeholder.com/400x200'} 
+              alt={component.props?.alt || 'Image'} 
+              className="max-w-full h-auto rounded-md"
+            />
+          </div>
+        );
+        
+      default:
+        logger.warn('Unknown component type', { details: { type: component.type } });
+        return (
+          <div className="border border-dashed border-amber-400 p-4 mb-4 bg-amber-50 text-amber-600 rounded-md">
+            Unknown component type: {component.type}
+          </div>
+        );
     }
-    
-    return component.permissions.some(permission => hasPermission(permission as PermissionValue));
-  }, [component.permissions, hasPermission]);
+  };
   
-  // Skip rendering if no permissions
-  if (!hasRequiredPermissions && !isEditMode) {
-    return null;
-  }
-  
-  // Get the component from registry
-  const ComponentType = componentRegistry.getComponent(component.type);
-  
-  // If component not found, show a placeholder in edit mode or nothing
-  if (!ComponentType) {
-    if (isEditMode) {
-      return (
-        <div className="p-4 border border-dashed border-yellow-500 rounded-md bg-yellow-50 dark:bg-yellow-950/30">
-          <p className="text-sm text-yellow-700 dark:text-yellow-400">
-            Component not found: {component.type}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  }
-  
-  // Create a wrapper with edit mode indicators if needed
-  const wrapperClassName = isEditMode 
-    ? "relative border border-dashed border-primary/30 rounded-md p-1 hover:border-primary transition-colors duration-200"
-    : "";
-  
-  // Render missing permissions warning in edit mode
-  const missingPermissions = isEditMode && !hasRequiredPermissions;
-    
-  return (
-    <div className={wrapperClassName} data-component-id={component.id} data-component-type={component.type}>
-      {isEditMode && (
-        <div className="absolute -top-3 -right-1 bg-background border border-border px-2 py-0.5 rounded-full text-xs">
-          {component.type}
-        </div>
-      )}
-      
-      {missingPermissions && (
-        <div className="absolute -top-3 left-2 bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full text-xs">
-          Missing permissions
-        </div>
-      )}
-      
-      <ComponentType {...(component.props || {})}>
-        {component.children && component.children.map((child, index) => (
-          <ComponentRenderer 
-            key={child.id || index} 
-            component={child} 
-            hasPermission={hasPermission}
-            isEditMode={isEditMode}
-          />
-        ))}
-      </ComponentType>
-    </div>
-  );
+  return renderComponent();
 }

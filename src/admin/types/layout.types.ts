@@ -13,11 +13,12 @@ export interface LayoutComponentProps {
 /**
  * Layout component
  */
-export interface LayoutComponent {
+export interface Component {
   id: string;
   type: string;
   props?: LayoutComponentProps;
-  children?: LayoutComponent[];
+  children?: Component[];
+  permissions?: string[];
 }
 
 /**
@@ -28,7 +29,7 @@ export interface Layout {
   name: string;
   type: string;
   scope: string;
-  components: LayoutComponent[];
+  components: Component[];
   meta?: Record<string, any>;
   version: number;
 }

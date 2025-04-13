@@ -1,141 +1,149 @@
 
-import { v4 as uuidv4 } from 'uuid';
-import { LogLevel, LogCategory, LogEntry, LogEvent } from '@/shared/types/shared.types';
-import { loggingBridge } from '@/logging/bridge';
+import { LogLevel, LogCategory } from '@/shared/types/shared.types';
+
+interface LogDetails {
+  source?: string;
+  details?: Record<string, any>;
+  tags?: string[];
+}
 
 /**
- * Logger class for centralized application logging
+ * Logger service
+ * Provides logging functionality with levels and categories
  */
-class Logger {
-  private source: string;
-  private category: LogCategory;
-
-  constructor(source: string, category: LogCategory = LogCategory.APP) {
-    this.source = source;
-    this.category = category;
-  }
-
+class LoggerService {
+  private enabled = true;
+  private minLevel = LogLevel.INFO;
+  
   /**
-   * Log a message at the specified level
+   * Log a message
    */
-  log(level: LogLevel, category: LogCategory, message: string, details?: Record<string, any>): void {
-    const entry: LogEntry = {
-      id: uuidv4(),
+  log(level: LogLevel, category: LogCategory, message: string, logDetails?: LogDetails): void {
+    if (!this.enabled || this.getLevelValue(level) < this.getLevelValue(this.minLevel)) {
+      return;
+    }
+    
+    const details = logDetails?.details || {};
+    const source = logDetails?.source || 'app';
+    const tags = logDetails?.tags || [];
+    
+    const timestamp = new Date().toISOString();
+    
+    // Build log entry
+    const logEntry = {
       level,
       category,
       message,
       details,
-      timestamp: new Date().toISOString(),
-      source: this.source
+      source,
+      tags,
+      timestamp
     };
-
-    // Send to logging bridge
-    loggingBridge.log(entry);
-
-    // Also log to console in development
-    this.consoleLog(entry);
+    
+    // Log to console with appropriate styling
+    this.consoleLog(logEntry);
+    
+    // Here you would also send logs to any configured transports
+    // this.sendToTransports(logEntry);
   }
-
+  
   /**
    * Debug level log
    */
-  debug(message: string, details?: Record<string, any>): void {
-    this.log(LogLevel.DEBUG, this.category, message, details);
+  debug(message: string, details?: LogDetails): void {
+    this.log(LogLevel.DEBUG, LogCategory.APP, message, details);
   }
-
+  
   /**
    * Info level log
    */
-  info(message: string, details?: Record<string, any>): void {
-    this.log(LogLevel.INFO, this.category, message, details);
+  info(message: string, details?: LogDetails): void {
+    this.log(LogLevel.INFO, LogCategory.APP, message, details);
   }
-
+  
   /**
-   * Warn level log
+   * Warning level log
    */
-  warn(message: string, details?: Record<string, any>): void {
-    this.log(LogLevel.WARN, this.category, message, details);
+  warn(message: string, details?: LogDetails): void {
+    this.log(LogLevel.WARN, LogCategory.APP, message, details);
   }
-
+  
   /**
    * Error level log
    */
-  error(message: string, details?: Record<string, any>): void {
-    this.log(LogLevel.ERROR, this.category, message, details);
+  error(message: string, details?: LogDetails): void {
+    this.log(LogLevel.ERROR, LogCategory.APP, message, details);
   }
-
+  
   /**
-   * Critical level log
+   * Set the minimum log level
    */
-  critical(message: string, details?: Record<string, any>): void {
-    this.log(LogLevel.CRITICAL, this.category, message, details);
+  setMinLevel(level: LogLevel): void {
+    this.minLevel = level;
   }
-
+  
   /**
-   * Success level log
+   * Enable/disable logging
    */
-  success(message: string, details?: Record<string, any>): void {
-    this.log(LogLevel.SUCCESS, this.category, message, details);
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
   }
-
+  
   /**
-   * Trace level log
+   * Get the numeric value of a log level for comparison
    */
-  trace(message: string, details?: Record<string, any>): void {
-    this.log(LogLevel.TRACE, this.category, message, details);
+  private getLevelValue(level: LogLevel): number {
+    const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+      [LogLevel.DEBUG]: 0,
+      [LogLevel.TRACE]: 1,
+      [LogLevel.INFO]: 2,
+      [LogLevel.SUCCESS]: 3,
+      [LogLevel.WARN]: 4,
+      [LogLevel.ERROR]: 5,
+      [LogLevel.CRITICAL]: 6,
+      [LogLevel.FATAL]: 7,
+      [LogLevel.SILENT]: 8,
+    };
+    
+    return LOG_LEVEL_VALUES[level] || 0;
   }
-
+  
   /**
-   * Fatal level log
+   * Log to console with appropriate styling
    */
-  fatal(message: string, details?: Record<string, any>): void {
-    this.log(LogLevel.FATAL, this.category, message, details);
-  }
-
-  /**
-   * Log to console with appropriate styling based on level
-   */
-  private consoleLog(entry: LogEntry): void {
-    const timestamp = new Date(entry.timestamp).toLocaleTimeString();
-    const source = entry.source ? `[${entry.source}]` : '';
-    const category = `[${entry.category}]`;
-    const logPrefix = `${timestamp} ${category} ${source}`;
-
-    switch (entry.level) {
-      case LogLevel.DEBUG:
-        console.debug(`%c${logPrefix}`, 'color: #666', entry.message, entry.details || '');
-        break;
-      case LogLevel.INFO:
-        console.info(`%c${logPrefix}`, 'color: #0086b3', entry.message, entry.details || '');
-        break;
-      case LogLevel.WARN:
-        console.warn(`%c${logPrefix}`, 'color: #ffa500', entry.message, entry.details || '');
-        break;
-      case LogLevel.ERROR:
-        console.error(`%c${logPrefix}`, 'color: #dc3545', entry.message, entry.details || '');
-        break;
-      case LogLevel.CRITICAL:
-      case LogLevel.FATAL:
-        console.error(`%c${logPrefix}`, 'color: #dc3545; font-weight: bold', entry.message, entry.details || '');
-        break;
-      case LogLevel.SUCCESS:
-        console.log(`%c${logPrefix}`, 'color: #28a745', entry.message, entry.details || '');
-        break;
-      case LogLevel.TRACE:
-        console.debug(`%c${logPrefix}`, 'color: #6c757d', entry.message, entry.details || '');
-        break;
-      default:
-        console.log(`%c${logPrefix}`, '', entry.message, entry.details || '');
-    }
+  private consoleLog(logEntry: any): void {
+    const { level, category, message, details, source, timestamp } = logEntry;
+    
+    // Define colors for different log levels
+    const levelColors: Record<string, string> = {
+      [LogLevel.DEBUG]: '#6b7280', // gray-500
+      [LogLevel.TRACE]: '#9ca3af', // gray-400
+      [LogLevel.INFO]: '#3b82f6', // blue-500
+      [LogLevel.SUCCESS]: '#10b981', // green-500
+      [LogLevel.WARN]: '#f59e0b', // amber-500
+      [LogLevel.ERROR]: '#ef4444', // red-500
+      [LogLevel.CRITICAL]: '#b91c1c', // red-700
+      [LogLevel.FATAL]: '#7f1d1d', // red-900
+    };
+    
+    // Set message color based on log level
+    const color = levelColors[level] || '#6b7280';
+    
+    // Format timestamp to be more readable
+    const formattedTime = new Date(timestamp).toLocaleTimeString();
+    
+    // Log to console with appropriate colors
+    console.log(
+      `%c${formattedTime}%c [${level.toUpperCase()}] %c[${category}]%c ${source}: %c${message}`,
+      'color: #9ca3af', // gray timestamp
+      `color: ${color}; font-weight: bold;`, // level with color
+      'color: #8b5cf6; font-weight: bold;', // purple category
+      'color: #6b7280', // gray source
+      'color: #111827', // black message
+      details
+    );
   }
 }
 
-// Singleton logger instance for direct use
-export const logger = new Logger('AppLogger');
-
-// Function to create a new logger instance with a specific source
-export function getLogger(source: string, category: LogCategory = LogCategory.APP): Logger {
-  return new Logger(source, category);
-}
-
-export { Logger };
+// Export singleton instance
+export const logger = new LoggerService();
