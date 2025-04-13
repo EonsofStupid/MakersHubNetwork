@@ -1,142 +1,110 @@
 
-import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog';
+import React, { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Button } from '@/shared/ui/button';
-import { FcGoogle } from 'react-icons/fc';
-import { User, Mail, Key } from 'lucide-react';
+import { Github, Google, Twitter } from 'lucide-react';
+import { useToast } from '@/shared/ui/use-toast';
 import { authBridge } from '@/auth/bridge';
-import { useToast } from '@/shared/hooks/use-toast';
-import { AuthEventType } from '@/shared/types/shared.types';
+import { RBACBridge } from '@/rbac/bridge';
+import { AuthEventType, LogCategory } from '@/shared/types/shared.types';
+import { useLogger } from '@/hooks/use-logger';
 
-export function AccountLinkingModal() {
-  const [open, setOpen] = useState(false);
-  const [linking, setLinking] = useState(false);
-  const [email, setEmail] = useState<string | null>(null);
-  const [provider, setProvider] = useState<string | null>(null);
+interface AccountLinkingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({ isOpen, onClose }) => {
   const { toast } = useToast();
-
+  const logger = useLogger('AccountLinkingModal', LogCategory.AUTH);
+  const [loading, setLoading] = useState<string | null>(null);
+  
   useEffect(() => {
-    // Listen for AUTH_LINKING_REQUIRED events
+    // Listen for auth events to know when linking completes
     const unsubscribe = authBridge.onAuthEvent((event) => {
-      if (event.type === 'AUTH_LINKING_REQUIRED') {
-        // Only show if we have email and provider
-        if (event.payload?.email && event.payload?.provider) {
-          setEmail(event.payload.email);
-          setProvider(event.payload.provider);
-          setOpen(true);
-        }
+      if (event.type === AuthEventType.USER_UPDATED) {
+        setLoading(null);
+        onClose();
       }
     });
     
-    return () => unsubscribe();
-  }, []);
-
-  const handleLinkAccount = async () => {
-    if (!provider) return;
-    
+    // Cleanup subscription
+    return () => {
+      if (unsubscribe && typeof unsubscribe.unsubscribe === 'function') {
+        unsubscribe.unsubscribe();
+      }
+    };
+  }, [onClose]);
+  
+  const handleLinkAccount = async (provider: string) => {
     try {
-      setLinking(true);
+      setLoading(provider);
+      const success = await authBridge.linkAccount(provider);
       
-      // Link the account
-      if (provider === 'google') {
-        await authBridge.linkAccount('google');
+      if (!success) {
+        throw new Error(`Failed to link ${provider} account`);
       }
       
-      toast({
-        title: 'Accounts linked successfully',
-        description: 'You can now sign in with either method',
-      });
-      
-      // Close the modal
-      setOpen(false);
+      logger.info(`Successfully initiated ${provider} account linking`);
     } catch (error) {
+      logger.error(`Error linking ${provider} account`, { details: { error } });
       toast({
-        title: 'Failed to link accounts',
-        description: error instanceof Error ? error.message : 'An unexpected error occurred',
+        title: 'Error Linking Account',
+        description: `Could not link your ${provider} account. Please try again.`,
         variant: 'destructive',
       });
-    } finally {
-      setLinking(false);
-    }
-  };
-  
-  // Determine provider icon
-  const ProviderIcon = () => {
-    switch (provider) {
-      case 'google':
-        return <FcGoogle className="h-6 w-6" />;
-      default:
-        return <User className="h-6 w-6" />;
+      setLoading(null);
     }
   };
   
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center">Link your accounts</DialogTitle>
-          <DialogDescription className="text-center">
-            We found an existing account with the same email
+          <DialogTitle>Link External Accounts</DialogTitle>
+          <DialogDescription>
+            Connect your social accounts for easier login and additional features.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6 py-4">
-          <div className="flex flex-col items-center justify-center gap-4">
-            <div className="rounded-full bg-muted p-3">
-              <Mail className="h-6 w-6" />
-            </div>
-            <p className="text-sm text-center text-muted-foreground">
-              {email}
-            </p>
-          </div>
-          
-          <div className="flex items-center justify-center">
-            <div className="flex flex-col items-center">
-              <div className="rounded-full bg-muted p-3">
-                <Key className="h-6 w-6" />
-              </div>
-              <p className="text-xs mt-2">Password</p>
-            </div>
-            
-            <div className="h-px w-12 bg-border mx-4" />
-            
-            <div className="flex flex-col items-center">
-              <div className="rounded-full bg-muted p-3">
-                <ProviderIcon />
-              </div>
-              <p className="text-xs mt-2 capitalize">{provider}</p>
-            </div>
-          </div>
-          
-          <p className="text-center text-sm">
-            Would you like to link these accounts so you can sign in using either method?
-          </p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        <div className="grid gap-4 py-4">
           <Button
             variant="outline"
-            onClick={() => setOpen(false)}
-            className="flex-1"
+            className="flex items-center justify-start gap-2"
+            disabled={loading === 'google'}
+            onClick={() => handleLinkAccount('google')}
           >
-            No, thanks
+            <Google className="h-4 w-4" />
+            {loading === 'google' ? 'Connecting...' : 'Connect Google Account'}
           </Button>
+          
           <Button
-            variant="default"
-            onClick={handleLinkAccount}
-            disabled={linking}
-            className="flex-1"
+            variant="outline"
+            className="flex items-center justify-start gap-2"
+            disabled={loading === 'github'}
+            onClick={() => handleLinkAccount('github')}
           >
-            {linking ? 'Linking...' : 'Link accounts'}
+            <Github className="h-4 w-4" />
+            {loading === 'github' ? 'Connecting...' : 'Connect GitHub Account'}
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-2"
+            disabled={loading === 'twitter'}
+            onClick={() => handleLinkAccount('twitter')}
+          >
+            <Twitter className="h-4 w-4" />
+            {loading === 'twitter' ? 'Connecting...' : 'Connect Twitter Account'}
           </Button>
         </div>
+        
+        <DialogFooter>
+          <Button variant="default" onClick={onClose}>
+            Cancel
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};

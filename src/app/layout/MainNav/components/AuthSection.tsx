@@ -15,7 +15,9 @@ const AuthSection: React.FC = () => {
   React.useEffect(() => {
     if (isAuthenticated) {
       const roles = RBACBridge.getRoles();
-      logger.debug('User roles in AuthSection', { details: { roles } });
+      logger.debug('User roles in AuthSection', {
+        details: { roles }
+      });
     }
   }, [isAuthenticated, logger]);
   

@@ -3,9 +3,8 @@ import React, { ReactNode } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 import { AccessDenied } from './AccessDenied';
-import { AUTH_STATUS, UserRole, ROLES } from '@/shared/types/shared.types';
+import { AUTH_STATUS, UserRole, ROLES, LogCategory } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
 
 interface AdminAuthGuardProps {
   children: ReactNode;

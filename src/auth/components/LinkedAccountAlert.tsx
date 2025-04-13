@@ -2,95 +2,41 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
-import { FcGoogle } from 'react-icons/fc';
-import { Link as LinkIcon, X } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { authBridge } from '@/auth/bridge';
-import { useToast } from '@/shared/hooks/use-toast';
 import { AuthEventType } from '@/shared/types/shared.types';
 
-export function LinkedAccountAlert() {
-  const [show, setShow] = useState(false);
-  const [provider, setProvider] = useState<string | null>(null);
-  const [linking, setLinking] = useState(false);
-  const { toast } = useToast();
+export const LinkedAccountAlert: React.FC = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [provider, setProvider] = useState<string>('');
   
   useEffect(() => {
-    // Listen for AUTH_LINKING_REQUIRED events
+    // Listen for auth events
     const unsubscribe = authBridge.onAuthEvent((event) => {
-      if (event.type === 'AUTH_LINKING_REQUIRED' && event.payload?.provider) {
-        setProvider(event.payload.provider);
-        setShow(true);
+      if (event.type === AuthEventType.USER_UPDATED && event.provider) {
+        setProvider(event.provider);
+        setIsVisible(true);
       }
     });
     
-    return () => unsubscribe();
+    // Cleanup subscription
+    return () => {
+      unsubscribe.unsubscribe();
+    };
   }, []);
   
-  // Don't render anything if not showing
-  if (!show || !provider) return null;
-  
-  const handleLink = async () => {
-    try {
-      setLinking(true);
-      
-      if (provider === 'google') {
-        await authBridge.linkAccount('google');
-        
-        toast({
-          title: 'Account linked successfully',
-          description: 'You can now sign in with either method',
-        });
-        
-        setShow(false);
-      }
-    } catch (error) {
-      toast({
-        title: 'Failed to link account',
-        description: error instanceof Error ? error.message : 'An error occurred',
-        variant: 'destructive',
-      });
-    } finally {
-      setLinking(false);
-    }
-  };
+  if (!isVisible) return null;
   
   return (
-    <Alert className="fixed bottom-4 left-4 w-80 z-50 shadow-lg animate-in fade-in slide-in-from-bottom-10 duration-300">
-      <div className="flex justify-between items-start">
-        <div className="flex-1">
-          <AlertTitle className="flex items-center gap-2">
-            <LinkIcon className="h-4 w-4" />
-            Link your accounts
-          </AlertTitle>
-          <AlertDescription className="mt-2">
-            {provider === 'google' ? (
-              <div className="space-y-2">
-                <p>Link your Google account for easier sign in</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleLink}
-                  disabled={linking}
-                  className="flex items-center gap-2 w-full"
-                >
-                  <FcGoogle className="h-4 w-4" />
-                  {linking ? 'Linking...' : 'Link Google Account'}
-                </Button>
-              </div>
-            ) : (
-              <p>Link your accounts for easier sign in</p>
-            )}
-          </AlertDescription>
-        </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-7 w-7 p-0" 
-          onClick={() => setShow(false)}
-        >
-          <X className="h-4 w-4" />
+    <Alert className="border-green-500 bg-green-50 dark:bg-green-900/20 mb-4">
+      <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
+      <AlertTitle>Account Successfully Linked!</AlertTitle>
+      <AlertDescription className="flex items-center justify-between">
+        <span>Your {provider} account has been linked to your profile.</span>
+        <Button variant="ghost" size="sm" onClick={() => setIsVisible(false)}>
+          Dismiss
         </Button>
-      </div>
+      </AlertDescription>
     </Alert>
   );
-}
+};
