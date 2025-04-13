@@ -1,102 +1,90 @@
-import { AuthBridge, AuthSession, User, UserProfile, UserRole, AuthEvent, AuthEventType } from '@/shared/types/SharedTypes';
 
-// Auth Bridge Implementation
+import { AuthBridge } from '../AuthBridge';
+import { UserProfile, UserRole } from '@/shared/types/SharedTypes';
+
+/**
+ * Implementation of the AuthBridge interface
+ */
 export class AuthBridgeImpl implements AuthBridge {
-  private eventCallbacks: ((event: AuthEvent) => void)[] = [];
-  private state: {
-    user: UserProfile | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    roles: UserRole[];
-    error: Error | null;
-  } = {
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    roles: [],
-    error: null
-  };
-  
-  // Session management
-  async getCurrentSession(): Promise<AuthSession | null> {
-    // Placeholder implementation
-    return null;
+  /**
+   * Check if the current user has the specified role(s)
+   * @param role - A single role or array of roles to check
+   * @returns boolean indicating if the user has any of the specified roles
+   */
+  public hasRole(role: UserRole | UserRole[]): boolean {
+    // Get the current user's roles from the auth store
+    const userRoles = this.getCurrentUserRoles();
+    
+    // If no roles or no user, return false
+    if (!userRoles || userRoles.length === 0) {
+      return false;
+    }
+    
+    // Check if the user has any of the specified roles
+    if (Array.isArray(role)) {
+      return role.some(r => userRoles.includes(r));
+    }
+    
+    return userRoles.includes(role);
   }
   
-  async getUserProfile(userId: string): Promise<UserProfile | null> {
-    // Placeholder implementation
-    return null;
+  /**
+   * Get the current user's roles
+   * @returns Array of user roles
+   */
+  private getCurrentUserRoles(): UserRole[] {
+    // This would normally come from your auth store
+    // For now, return an empty array as placeholder
+    // Implementation depends on how your auth store is structured
+    return [];
   }
-  
-  async refreshSession(): Promise<AuthSession | null> {
-    // Placeholder implementation
-    return null;
-  }
-  
-  // Authentication methods
-  async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    // Placeholder implementation
-    return { user: null, error: null };
-  }
-  
-  async signInWithOAuth(provider: string): Promise<void> {
-    // Placeholder implementation
-  }
-  
-  async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
+
+  /**
+   * Sign in with email and password
+   */
+  public async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     // Placeholder implementation
     return { user: null, error: null };
   }
-  
-  async signOut(): Promise<void> {
+
+  /**
+   * Sign up with email and password
+   */
+  public async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
+    // Placeholder implementation
+    return { user: null, error: null };
+  }
+
+  /**
+   * Sign out the current user
+   */
+  public async signOut(): Promise<void> {
     // Placeholder implementation
   }
-  
-  // User management
-  async updateUserProfile(profile: Partial<UserProfile>): Promise<UserProfile> {
-    // Placeholder implementation
-    return {} as UserProfile;
-  }
-  
-  // Password management
-  async resetPassword(email: string): Promise<void> {
+
+  /**
+   * Reset password for a user
+   */
+  public async resetPassword(email: string): Promise<void> {
     // Placeholder implementation
   }
-  
-  async updatePassword(oldPassword: string, newPassword: string): Promise<void> {
+
+  /**
+   * Refresh the current session
+   */
+  public async refreshSession(): Promise<{ user_id: string } | null> {
     // Placeholder implementation
+    return null;
   }
-  
-  // Event subscription
-  subscribeToAuthEvents(callback: (event: AuthEvent) => void): () => void {
-    this.eventCallbacks.push(callback);
-    return () => {
-      this.eventCallbacks = this.eventCallbacks.filter(cb => cb !== callback);
-    };
-  }
-  
-  // Role checking helpers
-  hasPermission(permission: string): boolean {
+
+  /**
+   * Get a user profile by ID
+   */
+  public async getUserProfile(userId: string): Promise<UserProfile | null> {
     // Placeholder implementation
-    return false;
-  }
-  
-  hasRole(role: UserRole | UserRole[]): boolean {
-    // Placeholder implementation
-    return false;
-  }
-  
-  // Helper method to emit events to subscribers
-  private emitEvent(event: AuthEvent): void {
-    this.eventCallbacks.forEach(callback => {
-      try {
-        callback(event);
-      } catch (error) {
-        console.error("Error in auth event callback:", error);
-      }
-    });
+    return null;
   }
 }
 
-// Create the singleton instance
-export const authBridge = new AuthBridgeImpl(); 
+// Create a singleton instance of the auth bridge
+export const authBridge = new AuthBridgeImpl();
