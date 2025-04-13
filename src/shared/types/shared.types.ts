@@ -8,6 +8,7 @@ export const ROLES = {
   SUPER_ADMIN: 'super_admin',
   MODERATOR: 'moderator',
   BUILDER: 'builder',
+  GUEST: 'guest',
 } as const;
 
 export type UserRole = (typeof ROLES)[keyof typeof ROLES];
@@ -80,6 +81,7 @@ export enum LogCategory {
   UI = 'ui',
   SYSTEM = 'system',
   ADMIN = 'admin',
+  CHAT = 'chat',
 }
 
 /**
@@ -93,7 +95,8 @@ export enum LogLevel {
   CRITICAL = 'critical',
   TRACE = 'trace',
   SUCCESS = 'success',
-  FATAL = 'fatal'
+  FATAL = 'fatal',
+  SILENT = 'silent',
 }
 
 /**
@@ -124,4 +127,14 @@ export interface LogFilter {
   category?: LogCategory;
   source?: string;
   search?: string;
+}
+
+/**
+ * Theme log details
+ */
+export interface ThemeLogDetails extends LogDetails {
+  themeName?: string;
+  cssVarsCount?: number;
+  error?: string;
+  [key: string]: any;
 }

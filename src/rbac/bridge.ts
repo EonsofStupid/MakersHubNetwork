@@ -138,7 +138,6 @@ class RBACBridgeImpl {
    * Check if user has a specific permission
    */
   hasPermission(permission: string): boolean {
-    // In a real app, this would check against a permissions store
     // For now, we'll just check if the user is a super_admin
     return this.isSuperAdmin();
   }

@@ -1,12 +1,17 @@
+
 import { AuthBridge } from '../bridge';
 import { UserProfile, UserRole, ROLES } from '@/shared/types/shared.types';
 import { RBACBridge } from '@/rbac/bridge';
 import { useAuthStore } from '@/auth/store/auth.store';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
 
 /**
  * Implementation of the AuthBridge interface
  */
 export class AuthBridgeImpl implements AuthBridge {
+  private logger = useLogger('AuthBridgeImpl', LogCategory.AUTH);
+  
   /**
    * Get current session
    */
@@ -28,9 +33,11 @@ export class AuthBridgeImpl implements AuthBridge {
         const isAdmin = email.includes('admin');
         const isSuperAdmin = email.includes('super');
         
-        const roles: UserRole[] = ['user'];
+        const roles: UserRole[] = [ROLES.USER];
         if (isAdmin) roles.push(ROLES.ADMIN);
         if (isSuperAdmin) roles.push(ROLES.SUPER_ADMIN);
+        
+        this.logger.info('Attempting sign in', { details: { email, roles } });
         
         const mockUser: UserProfile = {
           id: '123',
@@ -49,11 +56,14 @@ export class AuthBridgeImpl implements AuthBridge {
         // Update RBAC store with roles
         RBACBridge.setRoles(roles);
         
+        this.logger.info('Login successful', { details: { email, roles } });
+        
         return { user: mockUser, error: null };
       }
       
       return { user: null, error: new Error('Invalid credentials') };
     } catch (error) {
+      this.logger.error('Login failed', { details: { error } });
       return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
@@ -82,11 +92,14 @@ export class AuthBridgeImpl implements AuthBridge {
         // Set default role as 'user'
         RBACBridge.setRoles([ROLES.USER]);
         
+        this.logger.info('Signup successful', { details: { email } });
+        
         return { user: mockUser, error: null };
       }
       
       return { user: null, error: new Error('Invalid credentials') };
     } catch (error) {
+      this.logger.error('Signup failed', { details: { error } });
       return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
@@ -102,8 +115,10 @@ export class AuthBridgeImpl implements AuthBridge {
       
       // Clear RBAC store on sign out
       RBACBridge.clearRoles();
+      
+      this.logger.info('User signed out');
     } catch (error) {
-      console.error('Error signing out:', error);
+      this.logger.error('Error signing out', { details: { error } });
     }
   }
 
@@ -112,7 +127,7 @@ export class AuthBridgeImpl implements AuthBridge {
    */
   public async resetPassword(email: string): Promise<void> {
     // Placeholder implementation
-    console.log(`Reset password email sent to ${email}`);
+    this.logger.info(`Reset password email sent to ${email}`);
   }
 
   /**
@@ -160,11 +175,14 @@ export class AuthBridgeImpl implements AuthBridge {
         authStore.login('google.user@example.com', 'oauth-login');
         RBACBridge.setRoles([ROLES.USER]);
         
+        this.logger.info('OAuth sign in successful', { details: { provider } });
+        
         return { user: mockUser, error: null };
       }
       
       return { user: null, error: new Error(`OAuth provider ${provider} not supported`) };
     } catch (error) {
+      this.logger.error('OAuth sign in failed', { details: { provider, error } });
       return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
@@ -175,7 +193,7 @@ export class AuthBridgeImpl implements AuthBridge {
    */
   public async linkAccount(provider: string): Promise<boolean> {
     // Mock implementation
-    console.log(`Linking account with ${provider}`);
+    this.logger.info(`Linking account with ${provider}`);
     return true;
   }
 
@@ -186,7 +204,7 @@ export class AuthBridgeImpl implements AuthBridge {
   public onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
     // Mock implementation
     const mockUnsubscribe = () => {
-      console.log('Unsubscribed from auth events');
+      this.logger.info('Unsubscribed from auth events');
     };
     
     return {

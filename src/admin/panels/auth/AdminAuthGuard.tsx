@@ -4,6 +4,8 @@ import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 import { AccessDenied } from './AccessDenied';
 import { AUTH_STATUS, UserRole, ROLES } from '@/shared/types/shared.types';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
 
 interface AdminAuthGuardProps {
   children: ReactNode;
@@ -18,8 +20,18 @@ export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({
   children, 
   requiredRole = [ROLES.ADMIN, ROLES.SUPER_ADMIN]
 }) => {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const status = useAuthStore(state => state.status);
+  const { isAuthenticated, status } = useAuthStore();
+  const logger = useLogger('AdminAuthGuard', LogCategory.ADMIN);
+
+  // Log current roles
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      const roles = RBACBridge.getRoles();
+      logger.debug('Current roles in AdminAuthGuard', {
+        details: { roles, requiredRole }
+      });
+    }
+  }, [isAuthenticated, requiredRole, logger]);
 
   // Show loading state while initializing
   if (status === AUTH_STATUS.LOADING) {
@@ -28,6 +40,14 @@ export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({
 
   // Check if user is authenticated and has admin role
   const hasRequiredRole = isAuthenticated && RBACBridge.hasRole(requiredRole);
+
+  logger.debug('Access check result', { 
+    details: { 
+      isAuthenticated, 
+      hasRequiredRole, 
+      status 
+    } 
+  });
 
   // Show unauthorized error if not authenticated or not admin
   if (!hasRequiredRole) {

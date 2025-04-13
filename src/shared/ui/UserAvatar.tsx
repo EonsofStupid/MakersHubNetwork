@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/shared/ui/avatar';
 import { UserProfile } from '@/shared/types/shared.types';
@@ -27,7 +28,7 @@ export function UserAvatar({
   const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   
   // Fallback text (initials)
-  const text = fallbackText || getInitials(user?.email || user?.user_metadata?.full_name as string || '');
+  const text = fallbackText || getInitials(user?.email || (user?.user_metadata?.full_name as string) || '');
 
   return (
     <Avatar className={`${sizeClasses[size]} ${className}`}>

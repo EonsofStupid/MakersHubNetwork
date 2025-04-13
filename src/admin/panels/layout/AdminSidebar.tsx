@@ -6,6 +6,8 @@ import { RBACBridge } from '@/rbac/bridge';
 import { Button } from '@/shared/ui/button';
 import { LayoutDashboard, Users, Settings, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { UserRole, ROLES } from '@/shared/types/shared.types';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
 
 /**
  * AdminSidebar component
@@ -14,6 +16,7 @@ import { UserRole, ROLES } from '@/shared/types/shared.types';
 export const AdminSidebar: React.FC = () => {
   const [collapsed, setCollapsed] = React.useState(false);
   const location = useLocation();
+  const logger = useLogger('AdminSidebar', LogCategory.ADMIN);
   
   // Navigation items with permission requirements
   const navItems = [
@@ -42,6 +45,13 @@ export const AdminSidebar: React.FC = () => {
       requiredRole: [ROLES.SUPER_ADMIN] as UserRole[]
     }
   ];
+  
+  // Get user roles for logging
+  const roles = RBACBridge.getRoles();
+  
+  React.useEffect(() => {
+    logger.debug('Admin sidebar mounted', { details: { roles } });
+  }, [logger, roles]);
   
   // Filter items based on user roles
   const visibleItems = navItems.filter(item => 
