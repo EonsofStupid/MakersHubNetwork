@@ -5,12 +5,12 @@ import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 import { cn } from '@/lib/utils';
 import { ComponentWrapper } from '@/admin/components/debug/ComponentWrapper';
-import { useDebugStore } from '@/shared/store/debug.store';
+import { useDebugStore } from '@/shared/stores/debug/debug.store';
 import { useHasRole } from '@/auth/hooks/useHasRole';
 import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
 
 export function DebugOverlay() {
-  // Use our new role checking hook
+  // Use role checking hook
   const { hasAdminAccess } = useHasRole();
   const { isSuperAdmin } = useAdminPermissions();
   

@@ -5,7 +5,7 @@ import AdminOverlay from '../debug/AdminOverlay';
 import { AdminOverlayToggleButton } from '../debug/AdminOverlayToggleButton';
 import { useHasRole } from '@/auth/hooks/useHasRole';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory, UserRole } from '@/shared/types/shared.types';
+import { LogCategory } from '@/shared/types/shared.types';
 import { useToast } from '@/shared/hooks/use-toast';
 
 export function AdminLayout() {

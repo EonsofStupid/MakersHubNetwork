@@ -1,68 +1,50 @@
 
-import { LogEntry, LogLevel, LOG_LEVEL_VALUES } from '@/shared/types/shared.types';
-import { Transport } from './transport.interface';
+import { LogEntry, LogTransport } from '../types';
+import { LogLevel } from '../constants/log-level';
+import { LogCategory } from '@/shared/types/shared.types';
 
-class MemoryTransport implements Transport {
+/**
+ * In-memory transport for storing logs
+ * Useful for displaying logs in the UI
+ */
+class MemoryTransport implements LogTransport {
   private logs: LogEntry[] = [];
-  private maxEntries: number;
-  private minLevel: LogLevel;
+  private maxLogs: number = 1000;
 
-  constructor(maxEntries = 1000, minLevel = LogLevel.DEBUG) {
-    this.maxEntries = maxEntries;
-    this.minLevel = minLevel;
+  constructor(maxLogs?: number) {
+    if (maxLogs) {
+      this.maxLogs = maxLogs;
+    }
   }
 
   log(entry: LogEntry): void {
-    // Only log if the level is greater than or equal to the minimum level
-    if (LOG_LEVEL_VALUES[entry.level] >= LOG_LEVEL_VALUES[this.minLevel]) {
-      this.logs.unshift(entry); // Add to the beginning for reverse chronological order
-      
-      // Trim if we exceed maxEntries
-      if (this.logs.length > this.maxEntries) {
-        this.logs = this.logs.slice(0, this.maxEntries);
-      }
+    this.logs.unshift(entry);
+    
+    // Trim logs if we exceed the maximum
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(0, this.maxLogs);
     }
   }
-
-  async query(options?: any): Promise<LogEntry[]> {
-    let result = [...this.logs];
-    
-    if (options) {
-      // Filter by level
-      if (options.level) {
-        result = result.filter(log => log.level === options.level);
-      }
-      
-      // Filter by category
-      if (options.category) {
-        result = result.filter(log => log.category === options.category);
-      }
-      
-      // Filter by search term
-      if (options.search) {
-        const searchTerm = options.search.toLowerCase();
-        result = result.filter(log => 
-          log.message.toLowerCase().includes(searchTerm) || 
-          (log.details && JSON.stringify(log.details).toLowerCase().includes(searchTerm))
-        );
-      }
-      
-      // Filter by date range
-      if (options.from) {
-        result = result.filter(log => new Date(log.timestamp) >= new Date(options.from));
-      }
-      
-      if (options.to) {
-        result = result.filter(log => new Date(log.timestamp) <= new Date(options.to));
-      }
-    }
-    
-    return result;
+  
+  // Add getLogs method to retrieve stored logs
+  getLogs(): LogEntry[] {
+    return [...this.logs];
   }
-
-  clear(): void {
+  
+  // Get logs filtered by level and category
+  getFilteredLogs(level?: LogLevel, category?: LogCategory): LogEntry[] {
+    return this.logs.filter(log => {
+      const levelMatch = !level || log.level === level;
+      const categoryMatch = !category || log.category === category;
+      return levelMatch && categoryMatch;
+    });
+  }
+  
+  // Clear logs
+  clearLogs(): void {
     this.logs = [];
   }
 }
 
+// Export a singleton instance
 export const memoryTransport = new MemoryTransport();
