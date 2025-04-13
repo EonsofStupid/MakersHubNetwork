@@ -10,13 +10,13 @@ import {
 class Logger {
   private listeners: Array<(entry: LogEntry) => void> = [];
   private config = {
-    minLevel: 'debug' as LogLevel,
+    minLevel: LogLevel.DEBUG,
     enabled: true,
-    defaultCategory: 'system' as LogCategory
+    defaultCategory: LogCategory.SYSTEM
   };
 
   log(
-    level: string,
+    level: LogLevel,
     message: string | Record<string, unknown>,
     category = this.config.defaultCategory,
     details?: Record<string, unknown>
@@ -25,8 +25,8 @@ class Logger {
 
     const entry: LogEntry = {
       id: uuidv4(),
-      level: level as LogLevel,
-      category: category as LogCategory,
+      level,
+      category,
       message,
       details,
       timestamp: new Date().toISOString(),
@@ -58,23 +58,23 @@ class Logger {
       : '';
 
     switch (entry.level) {
-      case 'trace':
+      case LogLevel.TRACE:
         console.trace(`${prefix} ${entry.message}${detailsStr}`);
         break;
-      case 'debug':
+      case LogLevel.DEBUG:
         console.debug(`${prefix} ${entry.message}${detailsStr}`);
         break;
-      case 'info':
+      case LogLevel.INFO:
         console.info(`${prefix} ${entry.message}${detailsStr}`);
         break;
-      case 'warn':
+      case LogLevel.WARN:
         console.warn(`${prefix} ${entry.message}${detailsStr}`);
         break;
-      case 'error':
-      case 'fatal':
+      case LogLevel.ERROR:
+      case LogLevel.FATAL:
         console.error(`${prefix} ${entry.message}${detailsStr}`);
         break;
-      case 'success':
+      case LogLevel.SUCCESS:
         console.log(`%c${prefix} ${entry.message}`, 'color: green', detailsStr);
         break;
       default:
@@ -97,32 +97,32 @@ class Logger {
   }
 
   // Convenience methods for different log levels
-  trace(message: string, category = 'system', details?: Record<string, unknown>) {
-    this.log('trace', message, category, details);
+  trace(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
+    this.log(LogLevel.TRACE, message, category, details);
   }
 
-  debug(message: string, category = 'system', details?: Record<string, unknown>) {
-    this.log('debug', message, category, details);
+  debug(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
+    this.log(LogLevel.DEBUG, message, category, details);
   }
 
-  info(message: string, category = 'system', details?: Record<string, unknown>) {
-    this.log('info', message, category, details);
+  info(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
+    this.log(LogLevel.INFO, message, category, details);
   }
 
-  warn(message: string, category = 'system', details?: Record<string, unknown>) {
-    this.log('warn', message, category, details);
+  warn(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
+    this.log(LogLevel.WARN, message, category, details);
   }
 
-  error(message: string, category = 'system', details?: Record<string, unknown>) {
-    this.log('error', message, category, details);
+  error(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
+    this.log(LogLevel.ERROR, message, category, details);
   }
 
-  fatal(message: string, category = 'system', details?: Record<string, unknown>) {
-    this.log('fatal', message, category, details);
+  fatal(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
+    this.log(LogLevel.FATAL, message, category, details);
   }
 
-  success(message: string, category = 'system', details?: Record<string, unknown>) {
-    this.log('success', message, category, details);
+  success(message: string, category = LogCategory.SYSTEM, details?: Record<string, unknown>) {
+    this.log(LogLevel.SUCCESS, message, category, details);
   }
 }
 

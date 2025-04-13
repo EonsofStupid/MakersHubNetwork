@@ -2,12 +2,15 @@
 import { useState, useEffect } from 'react';
 import { useAdminAccess } from './useAdminAccess';
 import { useLogger } from '@/hooks/use-logger';
-import { LOG_CATEGORY } from '@/shared/types/shared.types';
+import { LogCategory } from '@/shared/types/shared.types';
 
+/**
+ * Hook for controlling the debug overlay
+ */
 export function useDebugOverlay() {
   const [isVisible, setIsVisible] = useState(false);
   const { hasSuperAdminAccess } = useAdminAccess();
-  const logger = useLogger('DebugOverlay', LOG_CATEGORY.ADMIN);
+  const logger = useLogger('DebugOverlay', LogCategory.ADMIN);
 
   useEffect(() => {
     if (hasSuperAdminAccess()) {

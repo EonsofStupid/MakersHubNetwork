@@ -1,45 +1,50 @@
-import { AuthStatus, UserRole } from '@/shared/types/shared.types';
 
-export function redirectIfAuthenticated(status: AuthStatus, roles?: UserRole[]) {
-  if (status === 'AUTHENTICATED') {
-    // Redirect logic here
-    return true;
-  }
+import { useAuthStore } from '@/auth/store/auth.store';
+import { AUTH_STATUS } from '@/shared/types/shared.types';
 
-  if (status === 'LOADING') {
-    // Loading logic here
-    return true;
-  }
-
-  return false;
-}
-
-export function redirectIfNotAuthenticated(status: AuthStatus, roles?: UserRole[]) {
-  if (status !== 'AUTHENTICATED') {
-    // Redirect logic here
-    return true;
-  }
-
-  return false;
-}
-
-export function redirectIfNoAccess(status: AuthStatus, role: UserRole | UserRole[], hasRole: (role: UserRole[]) => boolean) {
-  const requiredRoles = Array.isArray(role) ? role : [role];
+export function redirectIfAuthenticated(navigate: (path: string) => void, to: string = '/') {
+  const status = useAuthStore.getState().status;
   
-  if (status !== 'AUTHENTICATED') {
-    // Redirect logic for not authenticated
+  if (status === AUTH_STATUS.AUTHENTICATED) {
+    navigate(to);
     return true;
   }
+  return false;
+}
 
-  if (status === 'LOADING') {
-    // Loading logic
+export function redirectIfLoading(navigate: (path: string) => void, to: string = '/loading') {
+  const status = useAuthStore.getState().status;
+  
+  if (status === AUTH_STATUS.LOADING) {
+    navigate(to);
     return true;
   }
+  return false;
+}
 
-  if (!hasRole(requiredRoles)) {
-    // No access logic
+export function redirectIfUnauthenticated(navigate: (path: string) => void, to: string = '/login') {
+  const status = useAuthStore.getState().status;
+  
+  if (status !== AUTH_STATUS.AUTHENTICATED) {
+    navigate(to);
     return true;
   }
+  return false;
+}
 
+export function redirectBasedOnAuth(
+  navigate: (path: string) => void, 
+  authenticatedPath: string = '/', 
+  unauthenticatedPath: string = '/login'
+) {
+  const status = useAuthStore.getState().status;
+  
+  if (status === AUTH_STATUS.AUTHENTICATED) {
+    navigate(authenticatedPath);
+    return true;
+  } else if (status !== AUTH_STATUS.LOADING) {
+    navigate(unauthenticatedPath);
+    return true;
+  }
   return false;
 }
