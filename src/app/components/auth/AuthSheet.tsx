@@ -46,11 +46,21 @@ export function AuthSheet() {
     setLoading(true);
 
     try {
-      await authBridge.signInWithEmail(email, password);
+      const result = await authBridge.signInWithEmail(email, password);
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      // Log the roles that were assigned during login
+      const roles = RBACBridge.getRoles();
+      logger.info("Login successful", { details: { email, roles } });
+      
       toast({
         title: "Success",
         description: "You have successfully logged in.",
       });
+      
       setIsOpen(false);
     } catch (error) {
       logger.error("Login failed", { details: { error } });
@@ -88,11 +98,21 @@ export function AuthSheet() {
     setLoading(true);
 
     try {
-      await authBridge.signUp(email, password);
+      const result = await authBridge.signUp(email, password);
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
       toast({
         title: "Success",
         description: "Your account has been created.",
       });
+      
+      // Log the assigned role
+      const roles = RBACBridge.getRoles();
+      logger.info("Signup successful", { details: { email, roles } });
+      
       setMode('login');
       setPassword('');
       setConfirmPassword('');
@@ -111,6 +131,7 @@ export function AuthSheet() {
   const handleAdminClick = () => {
     setIsOpen(false);
     navigate('/admin');
+    logger.info("Navigating to admin dashboard");
   };
 
   const hasAdminAccess = RBACBridge.hasAdminAccess();

@@ -1,39 +1,41 @@
 
-import { LogLevel, LogCategory } from '@/shared/types/shared.types';
+import { useCallback } from 'react';
 import { logger } from '@/logging/logger.service';
+import { LogCategory, LogLevel, LogDetails } from '@/shared/types/shared.types';
 
 /**
- * Custom hook for component logging
- * 
- * @param source - The source of the log (usually component name)
- * @param category - The category of the log
- * @returns Logger interface with methods for different log levels
+ * Custom hook for component-scoped logging
+ * @param source The source of the logs (usually component name)
+ * @param category The category of logs (default: UI)
  */
-export function useLogger(source: string, category: LogCategory = LogCategory.APP) {
+export function useLogger(source: string, category: LogCategory = LogCategory.UI) {
+  const debug = useCallback((message: string, details?: LogDetails) => {
+    logger.log(LogLevel.DEBUG, category, message, { source, ...details });
+  }, [source, category]);
+
+  const info = useCallback((message: string, details?: LogDetails) => {
+    logger.log(LogLevel.INFO, category, message, { source, ...details });
+  }, [source, category]);
+
+  const warn = useCallback((message: string, details?: LogDetails) => {
+    logger.log(LogLevel.WARN, category, message, { source, ...details });
+  }, [source, category]);
+
+  const error = useCallback((message: string, details?: LogDetails) => {
+    logger.log(LogLevel.ERROR, category, message, { source, ...details });
+  }, [source, category]);
+
+  const success = useCallback((message: string, details?: LogDetails) => {
+    logger.log(LogLevel.SUCCESS, category, message, { source, ...details });
+  }, [source, category]);
+
   return {
-    trace: (message: string, details?: Record<string, unknown>) => {
-      logger.log(LogLevel.TRACE, message, category, { source, ...details });
-    },
-    debug: (message: string, details?: Record<string, unknown>) => {
-      logger.log(LogLevel.DEBUG, message, category, { source, ...details });
-    },
-    info: (message: string, details?: Record<string, unknown>) => {
-      logger.log(LogLevel.INFO, message, category, { source, ...details });
-    },
-    warn: (message: string, details?: Record<string, unknown>) => {
-      logger.log(LogLevel.WARN, message, category, { source, ...details });
-    },
-    error: (message: string, details?: Record<string, unknown>) => {
-      logger.log(LogLevel.ERROR, message, category, { source, ...details });
-    },
-    fatal: (message: string, details?: Record<string, unknown>) => {
-      logger.log(LogLevel.FATAL, message, category, { source, ...details });
-    },
-    success: (message: string, details?: Record<string, unknown>) => {
-      logger.log(LogLevel.SUCCESS, message, category, { source, ...details });
-    },
-    log: (level: LogLevel, message: string, details?: Record<string, unknown>) => {
-      logger.log(level, message, category, { source, ...details });
-    }
+    debug,
+    info,
+    warn,
+    error,
+    success,
+    // Add the source name to allow for reference in other places
+    source
   };
 }

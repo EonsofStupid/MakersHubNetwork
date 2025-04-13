@@ -22,7 +22,8 @@ export function UserMenu() {
   // Handle opening the user menu
   const handleOpenUserMenu = useCallback(() => {
     setIsMenuOpen(true);
-  }, []);
+    logger.debug('User menu opened', { details: { roles } });
+  }, [logger, roles]);
   
   // Handle profile
   const handleShowProfile = useCallback(() => {
@@ -56,7 +57,7 @@ export function UserMenu() {
   }
 
   // Get display name and email from user
-  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+  const displayName = user.user_metadata?.full_name as string || user.email?.split('@')[0] || 'User';
   const userEmail = user.email || '';
   const userAvatar = user.user_metadata?.avatar_url as string | undefined;
 

@@ -1,6 +1,5 @@
 
 import { UserRole, ROLES } from '@/shared/types/shared.types';
-import { ROLE_LABELS } from './types/RBACTypes';
 
 /**
  * Core RBAC functionality
