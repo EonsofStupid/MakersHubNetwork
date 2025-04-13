@@ -11,6 +11,13 @@ import { LogLevel, LogCategory } from '@/shared/types/shared.types';
  * provides authentication functionality for the application.
  */
 class AuthBridgeImpl implements AuthBridge {
+  private eventSubscribers: Map<string, ((event: any) => void)[]> = new Map();
+  private _isAuthenticated: boolean = false;
+
+  get isAuthenticated(): boolean {
+    return this._isAuthenticated;
+  }
+
   // Session management
   async getCurrentSession(): Promise<{ user: UserProfile } | null> {
     try {
@@ -18,13 +25,16 @@ class AuthBridgeImpl implements AuthBridge {
       // in localStorage or via an API call
       const storedUser = localStorage.getItem('auth_user');
       if (storedUser) {
+        this._isAuthenticated = true;
         return { user: JSON.parse(storedUser) };
       }
+      this._isAuthenticated = false;
       return null;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get current session', { 
         details: { errorMessage: error instanceof Error ? error.message : String(error) } 
       });
+      this._isAuthenticated = false;
       return null;
     }
   }
@@ -35,13 +45,16 @@ class AuthBridgeImpl implements AuthBridge {
       const storedUser = localStorage.getItem('auth_user');
       if (storedUser) {
         const user = JSON.parse(storedUser) as UserProfile;
+        this._isAuthenticated = true;
         return { user_id: user.id };
       }
+      this._isAuthenticated = false;
       return null;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to refresh session', { 
         details: { errorMessage: error instanceof Error ? error.message : String(error) } 
       });
+      this._isAuthenticated = false;
       return null;
     }
   }
@@ -60,7 +73,8 @@ class AuthBridgeImpl implements AuthBridge {
 
       localStorage.setItem('auth_user', JSON.stringify(user));
       localStorage.setItem('auth_token', 'demo-token');
-
+      this._isAuthenticated = true;
+      
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed in with email', { 
         details: { email } 
       });
@@ -70,6 +84,7 @@ class AuthBridgeImpl implements AuthBridge {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign in with email', { 
         details: { email, errorMessage: error instanceof Error ? error.message : String(error) } 
       });
+      this._isAuthenticated = false;
       return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
@@ -87,6 +102,7 @@ class AuthBridgeImpl implements AuthBridge {
 
       localStorage.setItem('auth_user', JSON.stringify(user));
       localStorage.setItem('auth_token', 'demo-token');
+      this._isAuthenticated = true;
 
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed up with email', { 
         details: { email } 
@@ -97,6 +113,7 @@ class AuthBridgeImpl implements AuthBridge {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign up with email', { 
         details: { email, errorMessage: error instanceof Error ? error.message : String(error) } 
       });
+      this._isAuthenticated = false;
       return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   }
@@ -106,88 +123,103 @@ class AuthBridgeImpl implements AuthBridge {
       localStorage.removeItem('auth_user');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_roles');
+      this._isAuthenticated = false;
 
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed out');
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign out', { 
-        details: { errorMessage: error instanceof Error ? error.message : String(error) } 
+        details: { errorMessage: error instanceof Error ? error.message : String(error) }
       });
     }
   }
 
   async signInWithOAuth(provider: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'OAuth sign-in attempted', { 
-        details: { provider } 
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Attempting OAuth sign in', { 
+        details: { provider }
       });
-      // Simplified for demo
-      return this.signInWithEmail('oauth-user@example.com', 'password');
+      
+      // Mock implementation
+      return { 
+        user: null, 
+        error: new Error('OAuth sign in not implemented yet') 
+      };
     } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign in with OAuth', { 
-        details: { provider, errorMessage: error instanceof Error ? error.message : String(error) } 
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'OAuth sign in failed', { 
+        details: { provider, error: String(error) }
       });
-      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
+      return { 
+        user: null, 
+        error: error instanceof Error ? error : new Error('Unknown error')
+      };
     }
   }
-
-  // Account linking
+  
   async linkAccount(provider: string): Promise<boolean> {
     try {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Account linking attempted', { 
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Linking account', { 
         details: { provider } 
       });
-      return true;
+      return false; // Mock implementation
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to link account', { 
-        details: { provider, errorMessage: error instanceof Error ? error.message : String(error) } 
+        details: { provider, error: String(error) }
       });
       return false;
     }
   }
 
-  onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
-    // In a real implementation, this would set up event listeners
+  subscribeToEvent(event: string, callback: (event: any) => void): { unsubscribe: () => void } {
+    if (!this.eventSubscribers.has(event)) {
+      this.eventSubscribers.set(event, []);
+    }
+    
+    this.eventSubscribers.get(event)?.push(callback);
+    
     return {
       unsubscribe: () => {
-        // Clean up event listeners
+        const subscribers = this.eventSubscribers.get(event) || [];
+        const index = subscribers.indexOf(callback);
+        if (index !== -1) {
+          subscribers.splice(index, 1);
+        }
       }
     };
   }
-
-  // Password management
+  
+  onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
+    return this.subscribeToEvent('auth', callback);
+  }
+  
   async resetPassword(email: string): Promise<void> {
     try {
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'Password reset requested', { 
-        details: { email } 
+        details: { email }
       });
+      // Mock implementation
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to reset password', { 
-        details: { email, errorMessage: error instanceof Error ? error.message : String(error) } 
+        details: { email, error: String(error) }
       });
+      throw error;
     }
   }
-
-  // User profile
+  
   async getUserProfile(userId?: string): Promise<UserProfile | null> {
     try {
       const storedUser = localStorage.getItem('auth_user');
       if (storedUser) {
-        const user = JSON.parse(storedUser) as UserProfile;
-        // If userId is provided, only return if it matches
-        if (userId && user.id !== userId) {
-          return null;
-        }
-        return user;
+        return JSON.parse(storedUser);
       }
       return null;
     } catch (error) {
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get user profile', { 
-        details: { userId, errorMessage: error instanceof Error ? error.message : String(error) } 
+        details: { userId, error: String(error) }
       });
       return null;
     }
   }
 }
 
-// Export a singleton instance
+// Create and export a singleton instance
 export const authBridge = new AuthBridgeImpl();

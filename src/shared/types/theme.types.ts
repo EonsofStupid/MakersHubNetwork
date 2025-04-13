@@ -16,6 +16,32 @@ export interface Theme {
   isCustom?: boolean;
   version: number;
   meta?: Record<string, any>;
+  tokens?: ThemeToken[];
+  components?: ThemeComponent[];
+  variables?: Record<string, string>;
+}
+
+/**
+ * Theme token interface
+ */
+export interface ThemeToken {
+  id: string;
+  token_name: string;
+  token_value: string;
+  type: string;
+  category: string;
+  description?: string;
+  keyframes?: string;
+  value?: string;
+}
+
+/**
+ * Theme component interface
+ */
+export interface ThemeComponent {
+  id: string;
+  component_name: string;
+  styles: Record<string, any>;
 }
 
 /**
@@ -155,8 +181,8 @@ export interface ComponentTokens {
  */
 export interface ThemeEffectSettings {
   activeEffects: ThemeEffect[];
-  intensity: Record<ThemeEffect, number>;
-  options: Record<ThemeEffect, Record<string, any>>;
+  intensity: Record<string, number>;
+  options: Record<string, Record<string, any>>;
 }
 
 /**
@@ -168,6 +194,7 @@ export interface ThemeState {
   componentTokens: ComponentTokens;
   isLoading: boolean;
   error: string | null;
+  designTokens?: DesignTokens;
 }
 
 /**
@@ -177,4 +204,49 @@ export interface TokenObject {
   key: string;
   value: string;
   description?: string;
+}
+
+/**
+ * Theme log details
+ */
+export interface ThemeLogDetails {
+  themeId: string;
+  userId?: string;
+  action: string;
+  component?: string;
+  previousValue?: any;
+  newValue?: any;
+  timestamp: Date;
+}
+
+/**
+ * Theme effect type
+ */
+export enum ThemeEffectType {
+  NONE = 'none',
+  GLOW = 'glow',
+  GRADIENT = 'gradient',
+  PARTICLE = 'particle',
+  BLUR = 'blur',
+  NEON = 'neon',
+  SHADOW = 'shadow',
+  PULSE = 'pulse'
+}
+
+/**
+ * Theme context
+ */
+export enum ThemeContext {
+  SITE = 'site',
+  ADMIN = 'admin',
+  APP = 'app',
+}
+
+/**
+ * Theme status
+ */
+export enum ThemeStatus {
+  ACTIVE = 'active',
+  DRAFT = 'draft',
+  ARCHIVED = 'archived',
 }

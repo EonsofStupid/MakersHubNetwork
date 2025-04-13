@@ -1,95 +1,56 @@
 
-/**
- * UI Components Export
- * 
- * This file re-exports all shadcn UI components from their proper locations.
- * Use this as a central point for importing UI components to ensure consistency.
- */
+// Re-export UI components from their source files
+// This provides a centralized way to import UI components
 
-// Button components
-export { Button, buttonVariants } from '@/shared/ui/button';
+// Basic components
+export { Button, buttonVariants } from './button';
+export { Input } from './input';
+export { Textarea } from './textarea';
+export { Label } from './label';
+export { Checkbox } from './checkbox';
+export { Switch } from './switch';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';
+export { Badge, badgeVariants } from './badge';
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
+export { Avatar, AvatarFallback, AvatarImage } from './avatar';
+export { Spinner } from './spinner';
+export { Skeleton } from './skeleton';
+export { Progress } from './progress';
+export { Separator } from './separator';
 
-// Card components
-export { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardContent, 
-  CardFooter 
-} from '@/shared/ui/card';
+// Dialog components
+export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
+export { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './alert-dialog';
+export { Popover, PopoverContent, PopoverTrigger } from './popover';
+export { HoverCard, HoverCardContent, HoverCardTrigger } from './hover-card';
+export { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from './sheet';
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
 
 // Form components
-export { Input } from '@/shared/ui/input';
-export { Label } from '@/shared/ui/label';
-export { Textarea } from '@/shared/ui/textarea';
-export { Checkbox } from '@/shared/ui/checkbox';
-export { Switch } from '@/shared/ui/switch';
-export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/shared/ui/select';
-export { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group';
-
-// Navigation components
-export { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/ui/tabs';
-
-// Display components
-export { Avatar, AvatarImage, AvatarFallback } from '@/shared/ui/avatar';
-export { Badge, badgeVariants } from '@/shared/ui/badge';
-export { Skeleton } from '@/shared/ui/skeleton';
-export { Spinner } from '@/shared/ui/spinner';
-
-// Feedback components
-export { Alert, AlertTitle, AlertDescription } from '@/shared/ui/alert';
-export { 
-  AlertDialog, 
-  AlertDialogTrigger, 
-  AlertDialogContent, 
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel
-} from '@/shared/ui/alert-dialog';
+export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from './select';
+export { RadioGroup, RadioGroupItem } from './radio-group';
+export { Slider } from './slider';
+export { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from './form';
+export { Calendar } from './calendar';
 
 // Layout components
-export { ScrollArea, ScrollBar } from '@/shared/ui/scroll-area';
-export { Separator } from '@/shared/ui/separator';
-export { 
-  Dialog, 
-  DialogTrigger, 
-  DialogContent, 
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter 
-} from '@/shared/ui/dialog';
+export { ScrollArea, ScrollBar } from './scroll-area';
+export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './table';
+export { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './accordion';
+export { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from './navigation-menu';
+export { AspectRatio } from './aspect-ratio';
+export { Collapsible, CollapsibleContent, CollapsibleTrigger } from './collapsible';
+export { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from './breadcrumb';
 
-// Overlay components
-export { 
-  Tooltip, 
-  TooltipTrigger, 
-  TooltipContent, 
-  TooltipProvider 
-} from '@/shared/ui/tooltip';
-export { 
-  Popover, 
-  PopoverTrigger, 
-  PopoverContent 
-} from '@/shared/ui/popover';
+// Data display components
+export { DataTable } from './data-table';
+export { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './pagination';
 
-// Table components
-export { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption
-} from '@/shared/ui/table';
-
-// Toast notifications
-export { Toaster } from '@/shared/ui/toaster';
-export { toast, useToast } from '@/shared/ui/use-toast';
-export type { ToastProps, ToastActionElement } from '@/shared/ui/toast';
+// Feedback components
+export { Alert, AlertDescription, AlertTitle } from './alert';
+export { Toaster } from './toaster';
+export { useToast, toast } from './use-toast';
+export { Sonner } from './sonner';
+export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from './command';
+export { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './resizable';
+export { Steps, StepsContent, StepsItem } from './steps';

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
+import { Button } from "@/shared/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Badge } from "@/shared/ui/badge";
 import { Search, UserPlus, Filter, MoreHorizontal, Trash2, UserCog, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { UserRole } from "@/shared/types/auth.types";
+import { useToast } from "@/shared/ui/use-toast";
+import { UserRole } from "@/shared/types/shared.types";
 
 interface UserData {
   id: string;
@@ -25,7 +25,7 @@ const mockUsers: UserData[] = [
     id: "1",
     email: "john@example.com",
     name: "John Doe",
-    role: "admin",
+    role: "admin" as UserRole,
     status: "active",
     createdAt: "2023-04-15T10:30:00Z",
     lastLogin: "2023-05-10T08:45:00Z"
@@ -34,7 +34,7 @@ const mockUsers: UserData[] = [
     id: "2",
     email: "jane@example.com",
     name: "Jane Smith",
-    role: "builder",
+    role: "builder" as UserRole,
     status: "active",
     createdAt: "2023-03-22T14:20:00Z",
     lastLogin: "2023-05-09T16:30:00Z"
@@ -43,7 +43,7 @@ const mockUsers: UserData[] = [
     id: "3",
     email: "sam@example.com",
     name: "Sam Wilson",
-    role: "super_admin",
+    role: "superadmin" as UserRole,
     status: "active",
     createdAt: "2023-02-10T09:15:00Z",
     lastLogin: "2023-05-11T11:20:00Z"
@@ -52,7 +52,7 @@ const mockUsers: UserData[] = [
     id: "4",
     email: "alex@example.com",
     name: "Alex Johnson",
-    role: "builder",
+    role: "builder" as UserRole,
     status: "pending",
     createdAt: "2023-05-05T16:45:00Z",
     lastLogin: null
@@ -61,7 +61,7 @@ const mockUsers: UserData[] = [
     id: "5",
     email: "taylor@example.com",
     name: "Taylor Brown",
-    role: "builder",
+    role: "builder" as UserRole,
     status: "suspended",
     createdAt: "2023-01-18T13:10:00Z",
     lastLogin: "2023-04-28T10:05:00Z"
@@ -70,7 +70,7 @@ const mockUsers: UserData[] = [
 
 const getRoleBadgeStyle = (role: UserRole) => {
   switch (role) {
-    case "super_admin":
+    case "superadmin":
       return "bg-red-500/20 text-red-500 hover:bg-red-500/30";
     case "admin":
       return "bg-purple-500/20 text-purple-500 hover:bg-purple-500/30";
@@ -236,7 +236,7 @@ export default function UsersManagement() {
                             </td>
                             <td className="p-4">
                               <Badge variant="outline" className={getRoleBadgeStyle(user.role)}>
-                                {user.role === "super_admin" && <Shield className="mr-1 h-3 w-3" />}
+                                {user.role === "superadmin" && <Shield className="mr-1 h-3 w-3" />}
                                 {user.role.replace('_', ' ')}
                               </Badge>
                             </td>

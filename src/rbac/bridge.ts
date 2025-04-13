@@ -8,6 +8,7 @@ import * as rbac from '@/auth/rbac/rbac';
  */
 class RBACBridgeImpl {
   private roles: UserRole[] = [];
+  private permissions: string[] = [];
 
   // Role management
   public setRoles(roles: UserRole[]): void {
@@ -20,6 +21,19 @@ class RBACBridgeImpl {
 
   public clearRoles(): void {
     this.roles = [];
+  }
+
+  // Permission management
+  public setPermissions(permissions: string[]): void {
+    this.permissions = permissions;
+  }
+
+  public getPermissions(): string[] {
+    return this.permissions;
+  }
+
+  public hasPermission(permission: string): boolean {
+    return this.permissions.includes(permission);
   }
 
   // Role checks
@@ -43,14 +57,26 @@ class RBACBridgeImpl {
     return rbac.isBuilder(this.roles);
   }
 
-  // Admin section access
+  // Route and section access
   public canAccessAdminSection(section: string): boolean {
     return rbac.canAccessAdminSection(this.roles, section);
+  }
+
+  public canAccessRoute(route: string): boolean {
+    return this.hasAdminAccess(); // Default implementation, enhance as needed
+  }
+
+  public isAdmin(): boolean {
+    return this.hasAdminAccess();
   }
 
   // Helper methods
   public getHighestRole(): UserRole {
     return rbac.getHighestRole(this.roles);
+  }
+
+  public can(permission: string): boolean {
+    return this.hasPermission(permission);
   }
 }
 
