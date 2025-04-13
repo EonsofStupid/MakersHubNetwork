@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
-import { ChevronsLeft, ChevronsRight, UserRound } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Shield, UserRound } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/shared/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { cn } from "@/shared/utils/cn";
@@ -11,8 +11,9 @@ import { useAuthStore } from "@/auth/store/auth.store";
 import { Badge } from "@/shared/ui/badge";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/shared/types/shared.types";
+import { LogCategory, UserRole } from "@/shared/types/shared.types";
 import { UserMenu } from '@/auth/components/UserMenu';
+import { useHasRole } from "@/auth/hooks/useHasRole";
 
 export const AuthSection = () => {
   const { toast } = useToast();
@@ -20,11 +21,14 @@ export const AuthSection = () => {
   const [open, setOpen] = useState(false);
   
   // Get auth status from centralized store
-  const { user, status, profile } = useAuthStore(state => ({
+  const { user, status, profile, roles } = useAuthStore(state => ({
     user: state.user,
     status: state.status,
     profile: state.profile,
+    roles: state.roles
   }));
+  
+  const { hasAdminAccess } = useHasRole();
   
   const isAuthenticated = status === 'AUTHENTICATED';
   const isLoading = status === 'LOADING';
@@ -58,19 +62,16 @@ export const AuthSection = () => {
       };
       
       return (
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full w-9 h-9 p-0 overflow-hidden border border-primary/20 hover:border-primary/50 hover:bg-primary/5"
-          >
-            <Avatar>
-              <AvatarImage src={avatarUrl || undefined} />
-              <AvatarFallback className="text-xs">
-                {getInitials()}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
+        <div className="flex items-center gap-2">
+          {/* Admin badge if user has admin role */}
+          {hasAdminAccess() && (
+            <Link to="/admin" className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
+              <Shield size={12} />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
+          )}
+          
+          <UserMenu />
         </div>
       );
     }
@@ -82,73 +83,24 @@ export const AuthSection = () => {
             variant="ghost" 
             className={cn(
               "rounded-full w-9 h-9 p-2",
-              "hover:bg-primary/10 hover:border-primary/30"
+              "bg-primary/10 hover:bg-primary/20 text-primary"
             )}
           >
-            <UserRound className="h-4 w-4" />
+            <UserRound className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-[320px] sm:w-[400px]">
-          <div className="px-2 py-4 h-full flex flex-col">
-            <div className="flex items-start justify-between mb-8">
-              <div>
-                <h3 className="text-lg font-bold">Welcome</h3>
-                <p className="text-muted-foreground text-sm">
-                  Sign in to access your account
-                </p>
-              </div>
-              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                Guest
-              </Badge>
-            </div>
+        <SheetContent className="w-full sm:max-w-md">
+          <div className="space-y-4 py-4">
+            <h2 className="text-2xl font-bold text-center">Welcome</h2>
+            <p className="text-center text-muted-foreground">Sign in to access all features</p>
             
-            <div className="space-y-4 flex flex-col flex-grow">
-              <div className="space-y-2">
-                <Button 
-                  asChild
-                  className="w-full justify-center"
-                >
-                  <Link to="/auth/login">Login</Link>
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  asChild
-                  className="w-full justify-center"
-                >
-                  <Link to="/auth/register">Create Account</Link>
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between my-6">
-                <div className="h-px bg-border flex-grow" />
-                <span className="px-4 text-xs text-muted-foreground">OR</span>
-                <div className="h-px bg-border flex-grow" />
-              </div>
-              
-              <div className="flex-grow space-y-4">
-                <Button 
-                  variant="ghost"
-                  className="justify-between w-full"
-                  onClick={() => {
-                    // Handle guest navigation
-                  }}
-                >
-                  <span>Browse as Guest</span>
-                  <ChevronsRight className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  className="justify-between w-full"
-                  onClick={() => {
-                    // Navigate to support
-                  }}
-                >
-                  <span>Help / Support</span>
-                  <ChevronsRight className="h-4 w-4" />
-                </Button>
-              </div>
+            <div className="flex flex-col space-y-2 mt-6">
+              <Button asChild>
+                <Link to="/login">Sign In</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/register">Create Account</Link>
+              </Button>
             </div>
           </div>
         </SheetContent>
@@ -156,5 +108,5 @@ export const AuthSection = () => {
     );
   };
   
-  return isAuthenticated ? <UserMenu /> : userElement();
+  return userElement();
 };

@@ -17,9 +17,7 @@ export function MainNav() {
   const logger = useLogger("MainNav", LogCategory.UI);
   const dataStreamRef = useRef<HTMLDivElement>(null);
   const glitchParticlesRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuthStore(state => ({ 
-    isAuthenticated: state.status === 'AUTHENTICATED'
-  }));
+  const { isAuthenticated } = useAuthStore();
   
   // Get MainNav styles from theme
   const styles = componentStyles?.MainNav || {
