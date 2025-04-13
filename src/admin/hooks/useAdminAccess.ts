@@ -1,9 +1,9 @@
-
 import { useEffect } from 'react';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useAuthStore } from '@/stores/auth/auth.store';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 import { authBridge } from '@/auth/bridge';
+import { UserRoleEnum } from '@/shared/types/shared.types';
 
 /**
  * Hook for checking and managing admin access
@@ -11,15 +11,14 @@ import { authBridge } from '@/auth/bridge';
  * Provides comprehensive data about user's admin status and permissions
  */
 export function useAdminAccess() {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const user = useAuthStore(state => state.user);
-  const roles = useAuthStore(state => state.roles);
-  const status = useAuthStore(state => state.status);
+  const { user, roles } = useAuthStore();
   const logger = useLogger('AdminAccess', LogCategory.ADMIN);
   
-  const isAdmin = authBridge.isAdmin();
-  const isSuperAdmin = authBridge.isSuperAdmin();
+  const isAuthenticated = !!user;
+  const isAdmin = roles.includes(UserRoleEnum.ADMIN);
+  const isSuperAdmin = roles.includes(UserRoleEnum.SUPERADMIN);
   const hasAdminAccess = isAdmin || isSuperAdmin;
+  const hasSuperAdminAccess = isSuperAdmin;
   
   // Log admin access check
   useEffect(() => {
@@ -47,8 +46,9 @@ export function useAdminAccess() {
     isAdmin,
     isSuperAdmin,
     hasAdminAccess,
+    hasSuperAdminAccess,
     roles,
-    isLoading: status === 'loading',
+    isLoading: false,
     user
   };
 }
