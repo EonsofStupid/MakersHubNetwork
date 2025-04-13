@@ -1,9 +1,8 @@
+import { AuthStatus, UserRole, UserProfile as SharedUserProfile, UserRoleEnum, User, AuthEvent as SharedAuthEvent, AuthEventType as SharedAuthEventType } from '@/shared/types/SharedTypes';
 
-import { AuthStatus, UserRole, UserProfile as SharedUserProfile, UserRoleEnum } from '@/shared/types/shared.types';
-
-// Re-export AuthStatus for consistency
+// Re-export shared types
 export { AuthStatus, UserRoleEnum };
-export type { UserRole };
+export type { User, UserRole };
 
 // UserProfile with auth-specific fields
 export interface UserProfile extends SharedUserProfile {
@@ -19,24 +18,21 @@ export interface AuthSession {
   last_active_at?: string;
 }
 
-// Authentication event types
-export enum AuthEventType {
-  SIGNED_IN = 'SIGNED_IN',
-  SIGNED_OUT = 'SIGNED_OUT',
-  USER_UPDATED = 'USER_UPDATED',
-  USER_DELETED = 'USER_DELETED',
-  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
-  PASSWORD_RESET = 'PASSWORD_RESET',
-  TOKEN_REFRESHED = 'TOKEN_REFRESHED',
-  MFA_CHALLENGE = 'MFA_CHALLENGE',
-  MFA_VERIFIED = 'MFA_VERIFIED'
-}
+// Authentication event types - extend shared enum
+export const AuthEventType = {
+  ...SharedAuthEventType,
+  PASSWORD_RESET: 'PASSWORD_RESET',
+  MFA_CHALLENGE: 'MFA_CHALLENGE',
+  MFA_VERIFIED: 'MFA_VERIFIED'
+} as const;
+
+export type AuthEventType = typeof AuthEventType[keyof typeof AuthEventType];
 
 // Auth event payload interface
-export interface AuthEvent {
+export interface AuthEvent extends Omit<SharedAuthEvent, 'type'> {
   type: AuthEventType;
   user: UserProfile | null;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Auth provider option
@@ -51,7 +47,7 @@ export interface IAuthBridge {
   // Authentication methods
   signInWithEmail: (credentials: { email: string; password: string }) => Promise<void>;
   signInWithOAuth: (provider: string) => Promise<void>;
-  signUp: (credentials: { email: string; password: string; options?: any }) => Promise<void>;
+  signUp: (credentials: { email: string; password: string; options?: Record<string, unknown> }) => Promise<void>;
   signOut: () => Promise<void>;
   
   // User management
@@ -68,4 +64,4 @@ export interface IAuthBridge {
   // Role checking helpers
   hasPermission: (permission: string) => boolean;
   hasRole: (role: UserRole | UserRole[]) => boolean;
-}
+} 

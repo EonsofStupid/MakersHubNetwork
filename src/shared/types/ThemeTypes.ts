@@ -1,4 +1,3 @@
-
 import { ThemeLogDetails } from '@/shared/types/shared.types';
 
 // Theme status enum
@@ -15,16 +14,70 @@ export enum ThemeContext {
   APP = 'APP'
 }
 
+// Theme effect type enum
+export enum ThemeEffectType {
+  NONE = 'none',
+  GLOW = 'glow',
+  GRADIENT = 'gradient',
+  PARTICLE = 'particle',
+  BLUR = 'blur',
+  NEON = 'neon',
+  SHADOW = 'shadow',
+  PULSE = 'pulse'
+}
+
+// Theme variables interface
+export interface ThemeVariables {
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  primary: string;
+  primaryForeground: string;
+  secondary: string;
+  secondaryForeground: string;
+  muted: string;
+  mutedForeground: string;
+  accent: string;
+  accentForeground: string;
+  destructive: string;
+  destructiveForeground: string;
+  border: string;
+  input: string;
+  ring: string;
+
+  // Effect-specific colors
+  effectColor: string;
+  effectSecondary: string;
+  effectTertiary: string;
+
+  // Transition times
+  transitionFast: string;
+  transitionNormal: string;
+  transitionSlow: string;
+  animationFast: string;
+  animationNormal: string;
+  animationSlow: string;
+
+  // Border radii
+  radiusSm: string;
+  radiusMd: string;
+  radiusLg: string;
+  radiusFull: string;
+}
+
 // Theme base interface
 export interface Theme {
   id: string;
   name: string;
+  label: string;
   description?: string;
+  isDark: boolean;
   status: ThemeStatus;
   context: ThemeContext;
+  variables: ThemeVariables;
   designTokens: DesignTokens;
   componentTokens: ComponentTokens;
-  variables?: Record<string, string>;
   metadata?: Record<string, any>;
   createdAt?: string;
   updatedAt?: string;
@@ -58,6 +111,15 @@ export interface DesignTokens {
 // Component tokens interface
 export interface ComponentTokens {
   [componentName: string]: Record<string, string>;
+}
+
+// Theme effect interface
+export interface ThemeEffect {
+  type: ThemeEffectType;
+  intensity: number;
+  color?: string;
+  selector?: string;
+  config?: Record<string, any>;
 }
 
 // Theme state interface
