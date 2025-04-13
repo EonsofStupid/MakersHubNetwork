@@ -7,7 +7,7 @@ import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { Separator } from "@/shared/ui/separator";
 import { Badge } from "@/shared/ui/badge";
 import { cn } from "@/shared/utils/cn";
-import { UserRole } from "@/shared/types/SharedTypes";
+import { UserRole } from "@/shared/types/shared.types";
 import { useNavigate } from "react-router-dom";
 import { RBACBridge } from "@/rbac/bridge";
 

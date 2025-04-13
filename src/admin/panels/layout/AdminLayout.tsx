@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 import { useLogger } from '@/hooks/use-logger';
-import { LOG_CATEGORY } from '@/shared/types/shared.types';
+import { LogCategory } from '@/shared/types/shared.types';
 import AdminTopNav from '../../components/navigation/AdminTopNav';
 
 interface AdminLayoutProps {
@@ -17,7 +17,7 @@ interface AdminLayoutProps {
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const user = useAuthStore(state => state.user);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const logger = useLogger('AdminLayout', LOG_CATEGORY.ADMIN);
+  const logger = useLogger('AdminLayout', LogCategory.ADMIN);
   
   // Check admin access
   const hasAdminAccess = RBACBridge.hasAdminAccess();
