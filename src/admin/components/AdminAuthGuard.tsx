@@ -1,9 +1,9 @@
-
 import React, { useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { useAuthStore } from '@/stores/auth/auth.store';
+import { useRbac } from '@/auth/rbac/use-rbac';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory, AuthStatus, UserRoleEnum } from '@/shared/types/shared.types';
+import { LogCategory, AuthStatus, ROLES } from '@/shared/types/shared.types';
 import { AccessDenied } from './auth/AccessDenied';
 
 interface AdminAuthGuardProps {
@@ -21,9 +21,9 @@ export function AdminAuthGuard({
     status, 
     user, 
     initialize,
-    initialized,
-    hasRole
+    initialized
   } = useAuthStore();
+  const { hasAdminAccess } = useRbac();
   const navigate = useNavigate();
   const logger = useLogger('AdminAuthGuard', LogCategory.AUTH);
   
@@ -66,16 +66,20 @@ export function AdminAuthGuard({
     );
   }
   
-  // Check if user has admin role
-  if (!hasRole(UserRoleEnum.ADMIN)) {
-    logger.warn(`Access denied: User ${user?.id} is not an admin`);
+  // Check if user has admin access
+  if (!hasAdminAccess()) {
+    logger.warn(`Access denied: User ${user?.id} does not have admin access`);
     return <AccessDenied message="You need administrator privileges to access this area." />;
   }
   
   // If a specific permission is required, check for it
-  if (requirePermission && !hasRole(UserRoleEnum.ADMIN)) {
-    logger.warn(`Access denied: User ${user?.id} lacks required permission: ${requirePermission}`);
-    return <AccessDenied message={`You don't have the required permission: ${requirePermission}`} />;
+  if (requirePermission) {
+    // For now, we'll just check for admin access
+    // In a real app, you would have a more granular permission system
+    if (!hasAdminAccess()) {
+      logger.warn(`Access denied: User ${user?.id} lacks required permission: ${requirePermission}`);
+      return <AccessDenied message={`You don't have the required permission: ${requirePermission}`} />;
+    }
   }
   
   // All checks passed, render children

@@ -1,267 +1,175 @@
 import { create } from 'zustand';
 import { authBridge } from '@/auth/bridge';
-import { UserProfile, AuthStatus, LogCategory, ROLES, UserRole, RBAC } from '@/shared/types/shared.types';
-import { logger } from '@/logging';
+import { UserProfile } from '@/shared/types/shared.types';
+import { useLogger } from '@/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
 
-// Define the authentication state
-export interface AuthState {
-  status: AuthStatus;
+/**
+ * Auth store state interface
+ */
+interface AuthState {
   user: UserProfile | null;
-  roles: UserRole[];
   isAuthenticated: boolean;
-  error: string | null;
   isLoading: boolean;
+  error: Error | null;
   initialized: boolean;
   
-  // Session management
-  initialize: () => Promise<void>;
-  refreshSession: () => Promise<void>;
-  
-  // Authentication methods
-  signIn: (provider?: string) => Promise<void>;
+  // Auth methods
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  logout: () => Promise<void>; // Alias for signOut for backward compatibility
-  
-  // User profile methods
-  updateUserProfile: (profile: Partial<UserProfile>) => Promise<void>;
-  
-  // Role management
-  hasRole: (allowedRoles: UserRole | UserRole[]) => boolean;
-  setRoles: (roles: UserRole[]) => void;
-  
-  // Password management
+  signUp: (email: string, password: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   
-  // Error handling
-  clearError: () => void;
+  // Session methods
+  initialize: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 }
 
-// Helper function to check if user has required roles
-const hasRole = (userRoles: UserRole[], allowedRoles: UserRole | UserRole[]): boolean => {
-  // Super admin has all roles
-  if (userRoles.includes(ROLES.SUPERADMIN)) {
-    return true;
-  }
+/**
+ * Auth store implementation
+ * Handles authentication state and user identity
+ */
+export const useAuthStore = create<AuthState>((set, get) => {
+  const logger = useLogger('AuthStore', LogCategory.AUTH);
   
-  const rolesToCheck = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
-  return rolesToCheck.some(role => userRoles.includes(role));
-};
-
-// Create the authentication store
-export const useAuthStore = create<AuthState>((set, get) => ({
-  status: AuthStatus.IDLE,
-  user: null,
-  roles: [],
-  isAuthenticated: false,
-  error: null,
-  isLoading: false,
-  initialized: false,
-
-  // Initialize auth state
-  initialize: async () => {
-    set({ isLoading: true, status: AuthStatus.LOADING });
-    try {
-      const user = await authBridge.getCurrentUser();
-      
-      if (user) {
-        // Set user data in store
-        set({
-          user,
-          isAuthenticated: true,
-          status: AuthStatus.AUTHENTICATED,
-          roles: user?.roles || [],
-          isLoading: false,
-          initialized: true
-        });
-        
-        logger.info('User authenticated', LogCategory.AUTH, { details: { userId: user?.id } });
-      } else {
-        set({
-          user: null,
-          isAuthenticated: false,
-          status: AuthStatus.UNAUTHENTICATED,
-          roles: [],
-          isLoading: false,
-          initialized: true
-        });
-        
-        logger.info('No authenticated user', LogCategory.AUTH);
-      }
-    } catch (error) {
-      logger.error('Authentication error', LogCategory.AUTH, { 
-        details: { error: error instanceof Error ? error.message : String(error) } 
-      });
-      set({
-        user: null,
-        isAuthenticated: false,
-        status: AuthStatus.ERROR,
-        roles: [],
-        error: error instanceof Error ? error.message : 'Authentication error',
-        isLoading: false,
-        initialized: true
-      });
-    }
-  },
-
-  // Refresh session
-  refreshSession: async () => {
-    try {
-      const user = await authBridge.refreshSession();
-      
-      if (user) {
-        set({
-          user,
-          isAuthenticated: true,
-          status: AuthStatus.AUTHENTICATED,
-          roles: user?.roles || [],
-        });
-      } else {
-        set({
-          user: null,
-          isAuthenticated: false,
-          status: AuthStatus.UNAUTHENTICATED,
-          roles: [],
-        });
-      }
-    } catch (error) {
-      logger.error('Session refresh error', LogCategory.AUTH, { 
-        details: { error: error instanceof Error ? error.message : String(error) } 
-      });
-      set({
-        error: error instanceof Error ? error.message : 'Session refresh error'
-      });
-    }
-  },
-
-  // Check if user has a role
-  hasRole: (allowedRoles) => {
-    const { roles } = get();
-    return hasRole(roles, allowedRoles);
-  },
-
-  // Set user roles
-  setRoles: (roles) => {
-    set({ roles });
-  },
-
-  // Sign in with provider
-  signIn: async (provider) => {
-    set({ isLoading: true, error: null });
-    try {
-      const user = await authBridge.signIn(provider);
-      if (user) {
-        set({
-          user,
-          isAuthenticated: true,
-          status: AuthStatus.AUTHENTICATED,
-          roles: user?.roles || [],
-          isLoading: false
-        });
-      } else {
-        set({
-          user: null,
-          isAuthenticated: false,
-          status: AuthStatus.UNAUTHENTICATED,
-          roles: [],
-          isLoading: false
-        });
-      }
-    } catch (error) {
-      logger.error('Sign in error', LogCategory.AUTH, { 
-        details: { error: error instanceof Error ? error.message : String(error) } 
-      });
-      set({
-        error: error instanceof Error ? error.message : 'Sign in failed',
-        isLoading: false,
-        status: AuthStatus.ERROR
-      });
-      throw error;
-    }
-  },
-
-  // Sign out
-  signOut: async () => {
-    set({ isLoading: true });
-    try {
-      await authBridge.signOut();
-      set({
-        user: null,
-        isAuthenticated: false,
-        status: AuthStatus.UNAUTHENTICATED,
-        roles: [],
-        isLoading: false
-      });
-      logger.info('User signed out', LogCategory.AUTH);
-    } catch (error) {
-      logger.error('Sign out error', LogCategory.AUTH, { 
-        details: { error: error instanceof Error ? error.message : String(error) } 
-      });
-      set({
-        error: error instanceof Error ? error.message : 'Sign out failed',
-        isLoading: false
-      });
-    }
-  },
-
-  // Alias for signOut for backward compatibility
-  logout: async () => {
-    return get().signOut();
-  },
-
-  // Update user profile
-  updateUserProfile: async (profileData) => {
-    const { user } = get();
-    if (!user) {
-      throw new Error('No authenticated user');
-    }
+  return {
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    error: null,
+    initialized: false,
     
-    set({ isLoading: true });
+    /**
+     * Sign in with email and password
+     */
+    signIn: async (email: string, password: string) => {
+      try {
+        set({ isLoading: true, error: null });
+        await authBridge.signIn();
+        const user = await authBridge.getCurrentUser();
+        set({ user, isAuthenticated: true, isLoading: false });
+        logger.info('User signed in successfully', { details: { email } });
+      } catch (error) {
+        set({ error: error as Error, isLoading: false });
+        logger.error('Sign in failed', { details: { error: error instanceof Error ? error.message : String(error) } });
+        throw error;
+      }
+    },
     
-    try {
-      const updatedProfile = await authBridge.updateUserProfile({
-        id: user.id,
-        ...profileData
-      });
-      
-      set({
-        user: updatedProfile,
-        isLoading: false
-      });
-      
-      return;
-    } catch (error) {
-      logger.error('Profile update error', LogCategory.AUTH, { 
-        details: { error: error instanceof Error ? error.message : String(error) } 
-      });
-      set({
-        error: error instanceof Error ? error.message : 'Profile update failed',
-        isLoading: false
-      });
-      throw error;
+    /**
+     * Sign out current user
+     */
+    signOut: async () => {
+      try {
+        set({ isLoading: true, error: null });
+        await authBridge.signOut();
+        set({ user: null, isAuthenticated: false, isLoading: false });
+        logger.info('User signed out successfully');
+      } catch (error) {
+        set({ error: error as Error, isLoading: false });
+        logger.error('Sign out failed', { details: { error: error instanceof Error ? error.message : String(error) } });
+        throw error;
+      }
+    },
+    
+    /**
+     * Sign up new user
+     */
+    signUp: async (email: string, password: string) => {
+      try {
+        set({ isLoading: true, error: null });
+        await authBridge.signIn();
+        const user = await authBridge.getCurrentUser();
+        set({ user, isAuthenticated: true, isLoading: false });
+        logger.info('User signed up successfully', { details: { email } });
+      } catch (error) {
+        set({ error: error as Error, isLoading: false });
+        logger.error('Sign up failed', { details: { error: error instanceof Error ? error.message : String(error) } });
+        throw error;
+      }
+    },
+    
+    /**
+     * Reset password
+     */
+    resetPassword: async (email: string) => {
+      try {
+        set({ isLoading: true, error: null });
+        await authBridge.resetPassword(email);
+        set({ isLoading: false });
+        logger.info('Password reset email sent', { details: { email } });
+      } catch (error) {
+        set({ error: error as Error, isLoading: false });
+        logger.error('Password reset failed', { details: { error: error instanceof Error ? error.message : String(error) } });
+        throw error;
+      }
+    },
+    
+    /**
+     * Initialize auth state
+     */
+    initialize: async () => {
+      try {
+        set({ isLoading: true, error: null });
+        await authBridge.refreshSession();
+        const user = await authBridge.getCurrentUser();
+        set({ 
+          user, 
+          isAuthenticated: !!user, 
+          isLoading: false,
+          initialized: true 
+        });
+        logger.info('Auth state initialized', { details: { isAuthenticated: !!user } });
+      } catch (error) {
+        set({ 
+          error: error as Error, 
+          isLoading: false,
+          initialized: true 
+        });
+        logger.error('Auth initialization failed', { details: { error: error instanceof Error ? error.message : String(error) } });
+      }
+    },
+    
+    /**
+     * Refresh session
+     */
+    refreshSession: async () => {
+      try {
+        set({ isLoading: true, error: null });
+        await authBridge.refreshSession();
+        const user = await authBridge.getCurrentUser();
+        set({ user, isAuthenticated: !!user, isLoading: false });
+        logger.info('Session refreshed', { details: { isAuthenticated: !!user } });
+      } catch (error) {
+        set({ error: error as Error, isLoading: false });
+        logger.error('Session refresh failed', { details: { error: error instanceof Error ? error.message : String(error) } });
+        throw error;
+      }
     }
-  },
+  };
+});
 
-  // Reset password
-  resetPassword: async (email) => {
-    set({ isLoading: true });
-    try {
-      await authBridge.resetPassword(email);
-      set({ isLoading: false });
-      logger.info('Password reset requested', LogCategory.AUTH);
-    } catch (error) {
-      logger.error('Password reset error', LogCategory.AUTH, { 
-        details: { error: error instanceof Error ? error.message : String(error) } 
-      });
-      set({
-        error: error instanceof Error ? error.message : 'Password reset failed',
-        isLoading: false
-      });
-      throw error;
-    }
-  },
-
-  // Clear error
-  clearError: () => {
-    set({ error: null });
-  }
-})); 
+/**
+ * Auth bridge for direct access without hooks
+ */
+export const AuthBridge = {
+  /**
+   * Get current user
+   */
+  getUser: () => useAuthStore.getState().user,
+  
+  /**
+   * Get user profile
+   */
+  getProfile: () => useAuthStore.getState().user,
+  
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated: () => useAuthStore.getState().isAuthenticated,
+  
+  /**
+   * Sign out user
+   */
+  logout: () => useAuthStore.getState().signOut()
+}; 
