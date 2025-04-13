@@ -2,7 +2,7 @@
 // Main shared types file for the application
 
 // User Role types
-export type UserRole = 'guest' | 'user' | 'moderator' | 'admin' | 'superadmin' | 'builder';
+export type UserRoleString = 'guest' | 'user' | 'moderator' | 'admin' | 'superadmin' | 'builder';
 
 // Enum representation of UserRole for type safety
 export enum UserRoleEnum {
@@ -13,6 +13,10 @@ export enum UserRoleEnum {
   SUPERADMIN = 'superadmin',
   BUILDER = 'builder'
 }
+
+// Export UserRole as both type and enum for backwards compatibility
+export const UserRole = UserRoleEnum;
+export type UserRole = UserRoleString;
 
 // Authentication Status
 export enum AuthStatus {
@@ -50,7 +54,7 @@ export enum LogCategory {
   STORE = 'store',
   DEFAULT = 'default',
   CHAT = 'chat',
-  CONTENT = 'content'  // Adding missing CONTENT category
+  CONTENT = 'content'  
 }
 
 // Log Level enumeration
@@ -66,15 +70,15 @@ export enum LogLevel {
 }
 
 // Log level values for filtering
-export const LOG_LEVEL_VALUES = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3,
-  critical: 4,
-  trace: 0, // Added to match the LogLevel enum
-  success: 1, // Added to match the LogLevel enum
-  fatal: 4 // Added to match the LogLevel enum
+export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+  [LogLevel.DEBUG]: 0,
+  [LogLevel.INFO]: 1,
+  [LogLevel.WARN]: 2,
+  [LogLevel.ERROR]: 3,
+  [LogLevel.CRITICAL]: 4,
+  [LogLevel.TRACE]: 0,
+  [LogLevel.SUCCESS]: 1,
+  [LogLevel.FATAL]: 4
 };
 
 // Review Status enumeration
@@ -125,7 +129,7 @@ export interface LogDetails {
 
 export interface LogEntry {
   id: string;
-  timestamp: string; // Changed to string for consistency
+  timestamp: string; // Use string for consistency
   level: LogLevel;
   message: string;
   category: LogCategory;
@@ -159,12 +163,12 @@ export interface User {
 export interface UserProfile {
   id: string;
   email?: string;
-  display_name?: string | null;
-  avatar_url?: string | null;
-  bio?: string | null;
-  theme_preference?: string | null;
-  motion_enabled?: boolean | null;
-  roles?: UserRole[];
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  theme_preference?: string;
+  motion_enabled?: boolean;
+  roles?: UserRoleString[];
   location?: string;
   website?: string;
   social_links?: Record<string, string>;
@@ -210,6 +214,7 @@ export interface BuildPart {
   quantity: number;
   part_id: string;
   notes?: string;
+  build_id?: string; // Added this field to resolve type mismatch
 }
 
 export interface BuildMod {
@@ -217,6 +222,7 @@ export interface BuildMod {
   name: string;
   description?: string;
   complexity?: number;
+  build_id?: string; // Added this field to resolve type mismatch
 }
 
 export interface Build {
@@ -254,4 +260,24 @@ export interface BuildReview {
   image_urls?: string[];
   user?: UserInfo;
   is_verified_purchase?: boolean;
+}
+
+// Add ReviewFilters interface to fix missing approvedOnly property
+export interface ReviewFilters {
+  sortBy?: string;
+  approvedOnly?: boolean;
+  rating?: number;
+  search?: string;
+  page?: number;
+  perPage?: number;
+}
+
+// Add ReviewAdminState interface to fix missing properties
+export interface ReviewAdminState {
+  reviews: BuildReview[];
+  isLoading: boolean;
+  error: string | null;
+  filters: ReviewFilters;
+  pendingReviews: BuildReview[];
+  stats: ReviewStats;
 }

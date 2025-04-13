@@ -7,20 +7,22 @@ import { useAdminAuth } from '../hooks/useAdminAuth';
 import { useAdminPermissions } from '../hooks/useAdminPermissions';
 import { Spinner } from '@/shared/ui/spinner';
 import { UserRoleEnum } from '@/shared/types/shared.types';
+import { hasRole } from '@/auth/utils/hasRole';
 
 const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading } = useAdminAuth();
+  const { isAuthenticated, isLoading, roles } = useAdminAuth();
   const { hasPermission } = useAdminPermissions();
   
   useEffect(() => {
     // Redirect if not authenticated or doesn't have admin role
     if (!isLoading && !isAuthenticated) {
       navigate('/auth/login?redirect=/admin');
-    } else if (!isLoading && isAuthenticated && !hasPermission([UserRoleEnum.ADMIN, UserRoleEnum.SUPERADMIN])) {
+    } else if (!isLoading && isAuthenticated && 
+               !hasRole(roles || [], [UserRoleEnum.ADMIN, UserRoleEnum.SUPERADMIN])) {
       navigate('/admin/unauthorized');
     }
-  }, [isAuthenticated, isLoading, navigate, hasPermission]);
+  }, [isAuthenticated, isLoading, navigate, hasPermission, roles]);
 
   if (isLoading) {
     return (

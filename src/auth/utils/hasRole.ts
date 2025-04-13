@@ -15,7 +15,7 @@ export function hasRole(
   if (!userRoles || userRoles.length === 0) return false;
   
   // Superadmin has all roles
-  if (userRoles.includes('superadmin')) return true;
+  if (userRoles.includes(UserRoleEnum.SUPERADMIN)) return true;
   
   // Check for specific roles
   if (Array.isArray(requiredRole)) {

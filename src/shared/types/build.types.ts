@@ -1,49 +1,31 @@
 
-// Re-export types from shared module for backwards compatibility
-import { 
-  BuildStatus
-} from './shared.types';
+import { BuildStatus, BuildPart, BuildMod, UserInfo } from './shared.types';
 
 export interface Build {
   id: string;
   title: string;
   description: string;
   status: BuildStatus;
-  created_at: string;
-  updated_at?: string;
+  complexity_score: number;
+  parts_count: number;
+  mods_count: number;
   submitted_by: string;
-  complexity?: number;
+  created_at: string;
+  updated_at: string;
+  images?: string[];
+  user?: UserInfo;
   parts?: BuildPart[];
   mods?: BuildMod[];
-  images?: string[];
-  user?: {
-    displayName?: string;
-    avatarUrl?: string;
-  };
-}
-
-export interface BuildPart {
-  id: string;
-  build_id: string;
-  part_id: string;
-  quantity: number;
-  notes?: string;
-  name?: string;
-}
-
-export interface BuildMod {
-  id: string;
-  build_id: string;
-  name: string;
-  description?: string;
   complexity?: number;
+  image_urls?: string[];
 }
 
 export interface BuildFilters {
   status?: BuildStatus | 'all';
-  userId?: string;
   search?: string;
-  complexity?: 'low' | 'medium' | 'high' | 'all';
+  sortBy?: 'newest' | 'oldest' | 'complexity_high' | 'complexity_low';
+  page: number;
+  perPage: number;
 }
 
 export interface BuildPagination {
@@ -58,17 +40,16 @@ export interface BuildAdminStore {
   selectedBuild: Build | null;
   isLoading: boolean;
   error: string | null;
-  filters: BuildFilters;
   pagination: BuildPagination;
+  filters: BuildFilters;
   
   fetchBuilds: () => Promise<void>;
-  fetchBuildById: (id: string) => Promise<void>;
-  updateFilters: (filters: Partial<BuildFilters>) => void;
-  updatePagination: (pagination: Partial<BuildPagination>) => void;
-  approveBuild: (id: string) => Promise<void>;
+  fetchBuild: (id: string) => Promise<void>;
+  approveBuild: (id: string, comment: string) => Promise<void>;
   rejectBuild: (id: string, reason: string) => Promise<void>;
-  requestRevisions: (id: string, feedback: string) => Promise<void>;
+  requestRevision: (id: string, feedback: string) => Promise<void>;
+  clearError: () => void;
 }
 
-// Re-export the status enum
-export { BuildStatus };
+// Re-export important types and enums
+export { BuildStatus } from './shared.types';

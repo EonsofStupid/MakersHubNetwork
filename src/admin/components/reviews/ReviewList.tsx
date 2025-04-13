@@ -57,6 +57,10 @@ export function ReviewList({
   // Handle rejecting a review
   const handleReject = async (reviewId: string) => {
     await rejectReview(reviewId, "Rejected during review");
+    fetchReviews(buildId);
+    if (showStats) {
+      fetchReviewStats(buildId);
+    }
   };
   
   if (isLoading && reviews.length === 0) {
