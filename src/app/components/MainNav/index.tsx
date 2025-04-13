@@ -6,15 +6,17 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/shared
 import { Button } from '@/shared/ui/button';
 import { UserMenu } from '@/auth/components/UserMenu';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { LoginSheet } from './components/LoginSheet';
+import { LoginSheet } from '@/auth/components/LoginSheet';
 import { useAdminNavigation } from '@/admin/hooks/useAdminNavigation';
 import { Shield } from 'lucide-react';
+import { RBACBridge } from '@/rbac/bridge';
 
 export function MainNav() {
   const navigate = useNavigate();
   const { status, isAuthenticated } = useAuthStore();
   const isLoading = status === 'loading';
-  const { navigateToAdmin, hasAdminAccess } = useAdminNavigation();
+  const { navigateToAdmin } = useAdminNavigation();
+  const hasAdminAccess = RBACBridge.hasAdminAccess();
   
   return (
     <div className="flex justify-between items-center py-3">
@@ -64,7 +66,7 @@ export function MainNav() {
               </Button>
             </NavigationMenuItem>
           )}
-          {isAuthenticated && hasAdminAccess() && (
+          {isAuthenticated && hasAdminAccess && (
             <NavigationMenuItem>
               <Button 
                 variant="ghost"

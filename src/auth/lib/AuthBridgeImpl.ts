@@ -1,6 +1,7 @@
 
-import { AuthBridge } from '../AuthBridge';
+import { AuthBridge } from '../bridge';
 import { UserProfile, UserRole } from '@/shared/types/SharedTypes';
+import { RBACBridge } from '@/rbac/bridge';
 
 /**
  * Implementation of the AuthBridge interface
@@ -12,39 +13,52 @@ export class AuthBridgeImpl implements AuthBridge {
    * @returns boolean indicating if the user has any of the specified roles
    */
   public hasRole(role: UserRole | UserRole[]): boolean {
-    // Get the current user's roles from the auth store
-    const userRoles = this.getCurrentUserRoles();
-    
-    // If no roles or no user, return false
-    if (!userRoles || userRoles.length === 0) {
-      return false;
-    }
-    
-    // Check if the user has any of the specified roles
-    if (Array.isArray(role)) {
-      return role.some(r => userRoles.includes(r));
-    }
-    
-    return userRoles.includes(role);
+    return RBACBridge.hasRole(role);
   }
   
   /**
-   * Get the current user's roles
-   * @returns Array of user roles
+   * Get current session
    */
-  private getCurrentUserRoles(): UserRole[] {
-    // This would normally come from your auth store
-    // For now, return an empty array as placeholder
-    // Implementation depends on how your auth store is structured
-    return [];
+  public async getCurrentSession(): Promise<{ user: UserProfile } | null> {
+    // This would normally come from an actual auth provider
+    // For now, return a mock implementation
+    return null;
   }
-
+  
   /**
    * Sign in with email and password
    */
   public async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    // Placeholder implementation
-    return { user: null, error: null };
+    // Simple mock implementation for demonstration
+    if (email && password) {
+      // For testing: make any email with "admin" be an admin
+      const isAdmin = email.includes('admin');
+      const isSuperAdmin = email.includes('super');
+      
+      const roles: UserRole[] = ['user'];
+      if (isAdmin) roles.push('admin');
+      if (isSuperAdmin) roles.push('superadmin');
+      
+      const mockUser: UserProfile = {
+        id: '123',
+        email,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_metadata: {
+          full_name: email.split('@')[0],
+          roles
+        }
+      };
+      
+      // Update RBAC store with roles
+      import('@/rbac/store').then(module => {
+        module.useRbacStore.getState().setRoles(roles);
+      });
+      
+      return { user: mockUser, error: null };
+    }
+    
+    return { user: null, error: new Error('Invalid credentials') };
   }
 
   /**
@@ -59,7 +73,10 @@ export class AuthBridgeImpl implements AuthBridge {
    * Sign out the current user
    */
   public async signOut(): Promise<void> {
-    // Placeholder implementation
+    // Clear RBAC store on sign out
+    import('@/rbac/store').then(module => {
+      module.useRbacStore.getState().clear();
+    });
   }
 
   /**
@@ -85,6 +102,3 @@ export class AuthBridgeImpl implements AuthBridge {
     return null;
   }
 }
-
-// Create a singleton instance of the auth bridge
-export const authBridge = new AuthBridgeImpl();

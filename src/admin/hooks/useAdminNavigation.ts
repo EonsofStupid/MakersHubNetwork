@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authBridge } from '@/auth/bridge';
+import { RBACBridge } from '@/rbac/bridge';
 
 /**
  * Hook for handling admin navigation with role-based checks
@@ -13,7 +13,7 @@ export function useAdminNavigation() {
    * Check if user has admin access
    */
   const hasAdminAccess = useCallback(() => {
-    return authBridge.hasRole(['admin', 'superadmin']);
+    return RBACBridge.hasAdminAccess();
   }, []);
 
   /**

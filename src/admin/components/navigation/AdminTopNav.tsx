@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserMenu } from '@/auth/components/UserMenu';
 import { TopNavItem } from './TopNavItem';
-import { authBridge } from '@/auth/bridge';
+import { RBACBridge } from '@/rbac/bridge';
 import { Button } from '@/shared/ui/button';
 import { Shield, ArrowLeft } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
@@ -14,6 +14,9 @@ const AdminTopNav: React.FC = () => {
   const handleBackToMain = () => {
     navigate('/');
   };
+
+  // Check if user is a super admin
+  const isSuperAdmin = RBACBridge.isSuperAdmin();
 
   return (
     <nav className={cn(
@@ -42,7 +45,7 @@ const AdminTopNav: React.FC = () => {
           <TopNavItem to="/admin/dashboard" label="Dashboard" />
           <TopNavItem to="/admin/users" label="Users" />
           <TopNavItem to="/admin/content" label="Content" />
-          <TopNavItem to="/admin/settings" label="Settings" />
+          {isSuperAdmin && <TopNavItem to="/admin/settings" label="Settings" />}
         </div>
         
         <UserMenu />
