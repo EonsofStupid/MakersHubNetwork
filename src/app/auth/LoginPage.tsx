@@ -2,55 +2,58 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card';
 import { useToast } from '@/shared/ui/use-toast';
+import { AuthStatus } from '@/shared/types/shared.types';
 
-export default function LoginPage() {
+const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuthStore();
-  const { toast } = useToast();
+  const { login, isAuthenticated, status } = useAuthStore();
   const navigate = useNavigate();
-  
+  const { toast } = useToast();
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/admin');
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
     try {
       await login(email, password);
-      
       toast({
-        title: "Login successful",
-        description: "You have been successfully logged in",
+        title: 'Login successful',
+        description: 'You have been successfully logged in',
       });
-      
-      navigate('/admin');
     } catch (error) {
       toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: 'Login failed',
+        description: (error as Error)?.message || 'Invalid credentials',
+        variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-[350px]">
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to access the admin area</CardDescription>
+          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardDescription>
+            Enter your credentials to access the admin dashboard
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
+              </label>
               <Input
                 id="email"
                 type="email"
@@ -59,34 +62,40 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                For admin access, use: admin@example.com / admin123
+              </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
               <Input
                 id="password"
                 type="password"
-                placeholder="•••••••••"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Use admin@example.com / admin123 for admin access
+                For superadmin access, use: superadmin@example.com / super123
               </p>
             </div>
-          </form>
-        </CardContent>
-        <CardFooter>
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
-            onClick={handleSubmit}
-          >
-            {isLoading ? "Logging in..." : "Login"}
-          </Button>
-        </CardFooter>
+          </CardContent>
+          <CardFooter>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={status === AuthStatus.LOADING}
+            >
+              {status === AuthStatus.LOADING ? 'Logging in...' : 'Login'}
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );
-}
+};
+
+export default LoginPage;

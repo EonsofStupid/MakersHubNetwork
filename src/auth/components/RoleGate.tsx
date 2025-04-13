@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UserRole, ROLES } from '@/shared/types/shared.types';
-import { useRbac } from '@/auth/rbac/use-rbac';
+import { RBACBridge } from '@/rbac/bridge';
 
 interface RoleGateProps {
   allowedRoles: UserRole | UserRole[];
@@ -20,9 +20,7 @@ export const RoleGate: React.FC<RoleGateProps> = ({
   fallback = null,
   children
 }) => {
-  const { hasRole } = useRbac();
-  
-  if (!hasRole(allowedRoles)) {
+  if (!RBACBridge.hasRole(allowedRoles)) {
     return <>{fallback}</>;
   }
   

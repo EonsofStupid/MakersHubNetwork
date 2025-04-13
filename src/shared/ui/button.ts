@@ -1,5 +1,4 @@
 
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/shared/ui/button/button.component';
 
 export { Button, buttonVariants };
-export default Button;

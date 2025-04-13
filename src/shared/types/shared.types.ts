@@ -1,5 +1,9 @@
 
 /**
+ * Shared type definitions for the entire application
+ */
+
+/**
  * Role definitions
  */
 export const ROLES = {
@@ -11,36 +15,53 @@ export const ROLES = {
   GUEST: 'guest',
 } as const;
 
-export type UserRole = 'user' | 'admin' | 'superadmin' | 'moderator' | 'builder' | 'guest';
+export type UserRole = typeof ROLES[keyof typeof ROLES];
 
 /**
  * Permission definitions
  */
-export type Permission =
-  | 'create_project'
-  | 'edit_project'
-  | 'delete_project'
-  | 'submit_build'
-  | 'access_admin'
-  | 'manage_api_keys'
-  | 'manage_users'
-  | 'manage_roles'
-  | 'manage_permissions'
-  | 'view_analytics';
+export const PERMISSIONS = {
+  // Access permissions
+  ADMIN_ACCESS: 'admin:access',
+  
+  // Content management
+  VIEW_CONTENT: 'content:view',
+  CREATE_CONTENT: 'content:create',
+  EDIT_CONTENT: 'content:edit',
+  DELETE_CONTENT: 'content:delete',
+  
+  // User management
+  VIEW_USERS: 'users:view',
+  EDIT_USERS: 'users:edit',
+  DELETE_USERS: 'users:delete',
+  
+  // System management
+  SYSTEM_VIEW: 'system:view',
+  SYSTEM_EDIT: 'system:edit',
+  
+  // Settings
+  SETTINGS_VIEW: 'settings:view',
+  SETTINGS_EDIT: 'settings:edit',
+  
+  // Super admin permission
+  SUPER_ADMIN: 'super:admin',
+} as const;
+
+export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
 
 /**
  * RBAC route policies
  */
 export const RBAC_POLICIES: Record<string, UserRole[]> = {
-  '/admin': ['admin', 'superadmin'],
-  '/admin/users': ['admin', 'superadmin'],
-  '/admin/roles': ['superadmin'],
-  '/admin/permissions': ['superadmin'],
-  '/admin/keys': ['superadmin'],
-  '/admin/analytics': ['admin', 'superadmin'],
-  '/projects/create': ['builder', 'admin', 'superadmin'],
-  '/projects/edit': ['builder', 'admin', 'superadmin'],
-  '/projects/delete': ['admin', 'superadmin'],
+  '/admin': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  '/admin/users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  '/admin/roles': [ROLES.SUPER_ADMIN],
+  '/admin/permissions': [ROLES.SUPER_ADMIN],
+  '/admin/keys': [ROLES.SUPER_ADMIN],
+  '/admin/analytics': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  '/projects/create': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  '/projects/edit': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
 };
 
 /**
@@ -54,15 +75,6 @@ export enum AuthStatus {
   ERROR = 'error',
 }
 
-// For backward compatibility
-export const AUTH_STATUS = {
-  IDLE: AuthStatus.IDLE,
-  LOADING: AuthStatus.LOADING,
-  AUTHENTICATED: AuthStatus.AUTHENTICATED,
-  UNAUTHENTICATED: AuthStatus.UNAUTHENTICATED,
-  ERROR: AuthStatus.ERROR,
-} as const;
-
 /**
  * User profile type
  */
@@ -75,13 +87,6 @@ export interface UserProfile {
   updated_at: string;
   last_sign_in_at?: string;
   user_metadata?: Record<string, unknown>;
-  app_metadata?: Record<string, unknown>;
-  display_name?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  theme_preference?: string;
-  motion_enabled?: boolean;
 }
 
 /**
@@ -92,9 +97,7 @@ export enum LogCategory {
   RBAC = 'rbac',
   API = 'api',
   UI = 'ui',
-  APP = 'app',
   SYSTEM = 'system',
-  CHAT = 'chat',
   ADMIN = 'admin',
 }
 
@@ -102,81 +105,182 @@ export enum LogCategory {
  * Log levels
  */
 export enum LogLevel {
+  TRACE = 'trace',
   DEBUG = 'debug',
   INFO = 'info',
   WARN = 'warn',
   ERROR = 'error',
-  SUCCESS = 'success',
-  TRACE = 'trace',
   FATAL = 'fatal',
-  CRITICAL = 'critical',
-  SILENT = 'silent',
 }
 
 /**
- * Log entry interface
+ * Log entry type
  */
 export interface LogEntry {
-  id?: string;
   level: LogLevel;
   category: LogCategory;
   message: string;
   timestamp: Date;
   source?: string;
   details?: Record<string, any>;
-  tags?: string[];
 }
 
 /**
- * Log event interface
+ * Log event type
  */
 export interface LogEvent {
   entry: LogEntry;
 }
 
 /**
- * Theme context
+ * Log filter type
  */
-export enum ThemeContext {
-  SITE = 'site',
-  ADMIN = 'admin',
-  APP = 'app',
+export interface LogFilter {
+  level?: LogLevel;
+  category?: LogCategory;
+  source?: string;
 }
 
 /**
- * Theme status
+ * Log level values for comparison
  */
-export enum ThemeStatus {
-  ACTIVE = 'active',
-  DRAFT = 'draft',
-  ARCHIVED = 'archived',
-}
-
-/**
- * Theme log details
- */
-export interface ThemeLogDetails {
-  themeId: string;
-  userId?: string;
-  action: string;
-  component?: string;
-  previousValue?: any;
-  newValue?: any;
-  timestamp: Date;
-}
-
-// RBAC helpers for backward compatibility
-export const RBAC = {
-  roles: ROLES,
-  superAdmins: ['superadmin'] as UserRole[],
-  admins: ['admin', 'superadmin'] as UserRole[],
-  moderators: ['moderator', 'admin', 'superadmin'] as UserRole[],
-  builders: ['builder', 'admin', 'superadmin'] as UserRole[],
-  users: ['user', 'builder', 'moderator', 'admin', 'superadmin'] as UserRole[],
-  guests: ['guest'] as UserRole[],
-  authenticated: ['user', 'builder', 'moderator', 'admin', 'superadmin'] as UserRole[],
-  adminOnly: ['admin', 'superadmin'] as UserRole[],
+export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+  [LogLevel.TRACE]: 0,
+  [LogLevel.DEBUG]: 1,
+  [LogLevel.INFO]: 2,
+  [LogLevel.WARN]: 3,
+  [LogLevel.ERROR]: 4,
+  [LogLevel.FATAL]: 5,
 };
 
-// Path policies for backward compatibility
-export const PATH_POLICIES = RBAC_POLICIES;
+/**
+ * Auth event types
+ */
+export enum AuthEventType {
+  SIGNED_IN = 'SIGNED_IN',
+  SIGNED_OUT = 'SIGNED_OUT',
+  USER_UPDATED = 'USER_UPDATED',
+  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
+}
+
+/**
+ * Theme-related types
+ */
+export interface Theme {
+  id: string;
+  name: string;
+  description?: string;
+  designTokens: DesignTokens;
+  componentTokens: ComponentTokens;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DesignTokens {
+  colors: ColorTokens;
+  spacing: SpacingTokens;
+  typography: TypographyTokens;
+  effects: EffectTokens;
+  radius: RadiusTokens;
+  shadows: ShadowTokens;
+}
+
+export interface ColorTokens {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  foreground: string;
+  muted: string;
+  'muted-foreground': string;
+  popover: string;
+  'popover-foreground': string;
+  card: string;
+  'card-foreground': string;
+  border: string;
+  input: string;
+  ring: string;
+}
+
+export interface SpacingTokens {
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
+  xxl: string;
+}
+
+export interface TypographyTokens {
+  fontFamily: string;
+  fontSize: Record<string, string>;
+  fontWeight: Record<string, string>;
+  lineHeight: Record<string, string>;
+}
+
+export interface EffectTokens {
+  blur: Record<string, string>;
+  glow: Record<string, string>;
+}
+
+export interface RadiusTokens {
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
+  full: string;
+}
+
+export interface ShadowTokens {
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
+}
+
+export interface ComponentTokens {
+  button: Record<string, string>;
+  card: Record<string, string>;
+  input: Record<string, string>;
+  badge: Record<string, string>;
+  alert: Record<string, string>;
+}
+
+export interface ThemeState {
+  themes: Theme[];
+  designTokens: DesignTokens;
+  componentTokens: ComponentTokens;
+  activeThemeId: string;
+  error: Error | null;
+  isLoading: boolean;
+}
+
+export enum ThemeEffect {
+  NONE = 'none',
+  GRADIENT = 'gradient',
+  GLOW = 'glow',
+  BLUR = 'blur',
+  NOISE = 'noise',
+  GRID = 'grid',
+  DOTS = 'dots',
+  WAVES = 'waves',
+}
+
+export interface ThemeLogDetails {
+  themeId: string;
+  action: string;
+  timestamp: string;
+}
+
+export type ThemeToken = {
+  name: string;
+  value: string;
+  type: string;
+  description?: string;
+};
+
+/**
+ * Layout types
+ */
+export interface LayoutComponentProps {
+  children: React.ReactNode;
+}

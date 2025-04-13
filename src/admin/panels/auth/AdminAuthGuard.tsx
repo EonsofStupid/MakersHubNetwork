@@ -38,7 +38,7 @@ export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({
   }
 
   // Check if user is authenticated and has admin role
-  const hasRequiredRole = isAuthenticated && RBACBridge.hasRole(requiredRole);
+  const hasRequiredRole = isAuthenticated && RBACBridge.hasRole(requiredRole as UserRole[]);
 
   logger.debug('Access check result', { 
     details: { 
