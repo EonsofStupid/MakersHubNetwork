@@ -1,85 +1,58 @@
 
-import { useCallback, useEffect, useMemo } from 'react';
-import { UserProfile } from '@/shared/types/auth.types';
-import { AuthStatus } from '@/shared/types/auth.types';
-import { UserRole } from '@/shared/types/shared.types';
+import { useCallback } from 'react';
 import { useAuthStore } from '../store/auth.store';
-import { authBridge } from '../bridge';
+import { UserRole } from '@/shared/types/shared.types';
 
 export function useAuth() {
   const {
     user,
     status,
     roles,
-    error,
+    isLoading,
     isAuthenticated,
-    isAdmin,
-    hasAdminAccess,
-    
-    setUser,
-    setStatus,
-    setRoles,
-    setError,
-    signIn,
-    signOut,
-    signUp,
+    error,
+    login,
+    logout,
+    register,
     resetPassword,
-    updateUserProfile
+    updateProfile,
   } = useAuthStore();
 
-  // Check if user has a specific role or an array of roles
-  const hasRole = useCallback((requiredRole: UserRole | UserRole[]) => {
-    if (!roles.length) return false;
+  // Check if the user has a specific role
+  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+    if (!roles || roles.length === 0) return false;
     
-    if (Array.isArray(requiredRole)) {
-      return requiredRole.some(role => roles.includes(role));
+    if (Array.isArray(role)) {
+      return role.some(r => roles.includes(r));
     }
     
-    return roles.includes(requiredRole);
+    return roles.includes(role);
   }, [roles]);
 
-  // Check if user is authenticated with specific roles
-  const isAuthenticatedWithRole = useCallback((role: UserRole | UserRole[]) => {
-    return isAuthenticated && hasRole(role);
-  }, [isAuthenticated, hasRole]);
+  // Check if user is admin or superadmin
+  const isAdmin = useCallback(() => {
+    return hasRole([UserRole.ADMIN, UserRole.SUPERADMIN]);
+  }, [hasRole]);
 
-  // Check if user is a super admin
-  const isSuperAdmin = useMemo(() => {
-    return roles.includes(UserRole.SUPERADMIN);
-  }, [roles]);
-
-  // Check if user has elevated permissions
-  const hasElevatedPermissions = useMemo(() => {
-    return isAdmin || hasAdminAccess || isSuperAdmin;
-  }, [isAdmin, hasAdminAccess, isSuperAdmin]);
-
-  // Check if current status is loading
-  const isLoading = useMemo(() => {
-    return status === AuthStatus.LOADING;
-  }, [status]);
+  // Check if user is superadmin
+  const isSuperAdmin = useCallback(() => {
+    return hasRole(UserRole.SUPERADMIN);
+  }, [hasRole]);
 
   return {
-    // State
     user,
     status,
     roles,
-    error,
-    isAuthenticated,
-    isAdmin,
-    hasAdminAccess,
-    isSuperAdmin,
-    hasElevatedPermissions,
     isLoading,
-    
-    // Role utilities
-    hasRole,
-    isAuthenticatedWithRole,
-    
-    // Actions
-    signIn,
-    signOut,
-    signUp,
+    isAuthenticated,
+    error,
+    login,
+    logout,
+    register,
     resetPassword,
-    updateUserProfile
+    updateProfile,
+    hasRole,
+    isAdmin,
+    isSuperAdmin
   };
 }
