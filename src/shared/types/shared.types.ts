@@ -1,4 +1,3 @@
-
 // Main shared types file for the application
 
 // User Role types
@@ -16,7 +15,8 @@ export enum UserRoleEnum {
 
 // Export UserRole as both type and enum for backwards compatibility
 export const UserRole = UserRoleEnum;
-export type UserRole = UserRoleString;
+// Using a different name to avoid redeclaration
+export type UserRoleType = UserRoleString;
 
 // Authentication Status
 export enum AuthStatus {
@@ -157,9 +157,47 @@ export interface User {
   email: string;
   created_at: string;
   updated_at: string;
-  user_metadata: Record<string, any>;
+  user_metadata: Record<string, unknown>;
 }
 
+// RBAC Constants
+export const ROLES = {
+  GUEST: 'guest',
+  USER: 'user',
+  MODERATOR: 'moderator',
+  ADMIN: 'admin',
+  SUPERADMIN: 'superadmin',
+  BUILDER: 'builder'
+} as const;
+
+// Define UserRole as a string literal union type from ROLES
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+
+// RBAC Policies
+export const RBAC = {
+  adminOnly: [ROLES.ADMIN, ROLES.SUPERADMIN],
+  superAdmins: [ROLES.SUPERADMIN],
+  moderators: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPERADMIN],
+  builders: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPERADMIN],
+  everyone: [ROLES.USER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.BUILDER],
+  authenticated: [ROLES.USER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPERADMIN, ROLES.BUILDER]
+} satisfies Record<string, UserRole[]>;
+
+// RBAC Policy Type
+export type RbacPolicy = {
+  [path: string]: UserRole[];
+};
+
+// Path-based RBAC Policies
+export const PATH_POLICIES: RbacPolicy = {
+  '/admin': RBAC.adminOnly,
+  '/admin/settings': RBAC.superAdmins,
+  '/moderate': RBAC.moderators,
+  '/build': RBAC.builders,
+  '/profile': RBAC.authenticated
+};
+
+// Update UserProfile to use UserRole type
 export interface UserProfile {
   id: string;
   email?: string;
@@ -168,11 +206,11 @@ export interface UserProfile {
   bio?: string;
   theme_preference?: string;
   motion_enabled?: boolean;
-  roles?: UserRoleString[];
+  roles?: UserRole[];
   location?: string;
   website?: string;
   social_links?: Record<string, string>;
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
   last_login?: string;
 }
 
@@ -198,7 +236,7 @@ export enum AuthEventType {
 export interface AuthEvent {
   type: AuthEventType;
   user: UserProfile | null;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Build related interfaces
