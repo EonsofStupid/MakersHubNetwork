@@ -522,6 +522,25 @@
     "useWorkflowStore": true,
     "useWorkflows": true,
     "workflowKeys": true,
-    "AuthUser": true
+    "AuthUser": true,
+    "CircuitBreaker": true,
+    "DesignTokens": true,
+    "TYPE_PATHS": true,
+    "ThemeEffect": true,
+    "ThemeEffects": true,
+    "ThemeLogDetails": true,
+    "TypographyTokens": true,
+    "UI_PATHS": true,
+    "formatCurrency": true,
+    "formatDate": true,
+    "getNewImportPath": true,
+    "use-mobile": true,
+    "useAuth": true,
+    "useAuthAtoms": true,
+    "useDebounce": true,
+    "useLogger": true,
+    "useMobile": true,
+    "useThemeEffects": true,
+    "useThemeVariables": true
   }
 }

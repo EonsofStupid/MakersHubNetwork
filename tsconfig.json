@@ -13,7 +13,6 @@
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": false,
     "jsx": "react-jsx",
 
     /* Linting */
@@ -31,6 +30,5 @@
       "@/components/*": ["./src/shared/ui/*"]
     }
   },
-  "include": ["src"],
-  // Remove references
+  "include": ["src"]
 }

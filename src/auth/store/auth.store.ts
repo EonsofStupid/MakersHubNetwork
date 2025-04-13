@@ -1,6 +1,5 @@
-
 import { create } from 'zustand';
-import { AuthBridge } from '../bridge';
+import { authBridge } from '../bridge';
 import { UserProfile, AuthStatus, UserRoleEnum } from '@/shared/types/shared.types';
 import { logger } from '@/logging';
 
@@ -51,10 +50,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     set({ isLoading: true, status: AuthStatus.LOADING });
     try {
-      const session = await AuthBridge.getCurrentSession();
+      const session = await authBridge.getCurrentSession();
       
       if (session) {
-        const user = await AuthBridge.getUserProfile();
+        const user = await authBridge.getUserProfile();
         
         // Set user data in store
         set({
@@ -93,10 +92,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Refresh session
   refreshSession: async () => {
     try {
-      const session = await AuthBridge.getCurrentSession();
+      const session = await authBridge.getCurrentSession();
       
       if (session) {
-        const user = await AuthBridge.getUserProfile();
+        const user = await authBridge.getUserProfile();
         
         set({
           user,
@@ -145,7 +144,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      await AuthBridge.signInWithEmail({ email, password });
+      await authBridge.signInWithEmail({ email, password });
       get().initialize();
     } catch (error) {
       logger.error('Sign in error', { error: error instanceof Error ? error.message : String(error) });
@@ -162,7 +161,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signInWithProvider: async (provider) => {
     set({ isLoading: true, error: null });
     try {
-      await AuthBridge.signInWithOAuth(provider);
+      await authBridge.signInWithOAuth(provider);
       // Auth bridge will handle the redirect, no need to update state
     } catch (error) {
       logger.error('OAuth sign in error', { error: error instanceof Error ? error.message : String(error), provider });
@@ -179,13 +178,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUp: async (email, password, metadata) => {
     set({ isLoading: true, error: null });
     try {
-      await AuthBridge.signUp({
+      await authBridge.signUp({
         email,
         password,
         options: { data: metadata }
       });
       
-      const session = await AuthBridge.getCurrentSession();
+      const session = await authBridge.getCurrentSession();
       
       if (session) {
         get().initialize();
@@ -210,7 +209,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     set({ isLoading: true });
     try {
-      await AuthBridge.signOut();
+      await authBridge.signOut();
       set({
         user: null,
         isAuthenticated: false,
@@ -238,7 +237,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     
     try {
-      const updatedProfile = await AuthBridge.updateUserProfile({
+      const updatedProfile = await authBridge.updateUserProfile({
         id: user.id,
         ...profileData
       });
@@ -263,7 +262,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   resetPassword: async (email) => {
     set({ isLoading: true });
     try {
-      await AuthBridge.resetPassword(email);
+      await authBridge.resetPassword(email);
       set({ isLoading: false });
       logger.info('Password reset requested');
     } catch (error) {
@@ -285,7 +284,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw new Error('User not authenticated');
       }
       
-      await AuthBridge.updatePassword(oldPassword, newPassword);
+      await authBridge.updatePassword(oldPassword, newPassword);
       set({ isLoading: false });
       logger.info('Password updated');
     } catch (error) {
