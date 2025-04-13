@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { RBACBridge } from '@/rbac/bridge';
-import { UserRole, LOG_CATEGORY } from '@/shared/types/shared.types';
+import { UserRole, LogCategory } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
 
 /**
@@ -9,7 +9,7 @@ import { useLogger } from '@/hooks/use-logger';
  * Provides role-checking utilities specific to admin functionality
  */
 export const useAdminRoles = () => {
-  const logger = useLogger('useAdminRoles', LOG_CATEGORY.RBAC);
+  const logger = useLogger('useAdminRoles', LogCategory.RBAC);
   const roles = RBACBridge.getRoles();
   
   // Check if user has specific role

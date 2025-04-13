@@ -1,6 +1,6 @@
 
 import { useState, memo, useCallback } from "react";
-import { useToast } from "@/shared/hooks/use-toast";
+import { useToast } from "@/shared/ui/use-toast";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/shared/types/shared.types";

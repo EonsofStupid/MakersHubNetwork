@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/shared/ui/sheet';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
-import { useToast } from '@/shared/hooks/use-toast';
+import { useToast } from '@/shared/ui/use-toast';
 import { Shield } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import { motion } from 'framer-motion';
@@ -10,7 +11,7 @@ import { authBridge } from '@/auth/bridge';
 import { RBACBridge } from '@/rbac/bridge';
 import { useNavigate } from 'react-router-dom';
 import { useLogger } from '@/hooks/use-logger';
-import { LOG_CATEGORY } from '@/shared/types/shared.types';
+import { LogCategory } from '@/shared/types/shared.types';
 
 type AuthMode = 'login' | 'signup';
 
@@ -24,7 +25,7 @@ export function AuthSheet() {
   
   const { toast } = useToast();
   const navigate = useNavigate();
-  const logger = useLogger("AuthSheet", LOG_CATEGORY.AUTH);
+  const logger = useLogger("AuthSheet", LogCategory.AUTH);
 
   const toggleMode = () => {
     setMode(mode === 'login' ? 'signup' : 'login');

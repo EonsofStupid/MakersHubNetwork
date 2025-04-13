@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
-import { UserRole, LOG_CATEGORY, AUTH_STATUS } from '@/shared/types/shared.types';
+import { UserRole, LogCategory } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
 
 /**
@@ -13,17 +13,17 @@ export const useAdminAuth = () => {
   const user = useAuthStore(state => state.user);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const status = useAuthStore(state => state.status);
-  const logger = useLogger('useAdminAuth', LOG_CATEGORY.ADMIN);
+  const logger = useLogger('useAdminAuth', LogCategory.ADMIN);
   
   // Check if user has admin access
   const hasAdminAccess = useCallback((): boolean => {
-    const result = RBACBridge.hasRole(['admin', 'superadmin']);
+    const result = RBACBridge.hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
     return result;
   }, []);
   
   // Check if user is super admin
   const isSuperAdmin = useCallback((): boolean => {
-    return RBACBridge.hasRole('superadmin');
+    return RBACBridge.hasRole(ROLES.SUPER_ADMIN);
   }, []);
   
   // Get user roles
@@ -43,7 +43,7 @@ export const useAdminAuth = () => {
   return {
     user,
     isAuthenticated,
-    isLoading: status === AUTH_STATUS.LOADING,
+    isLoading: status === 'loading',
     status,
     roles,
     hasAdminAccess,

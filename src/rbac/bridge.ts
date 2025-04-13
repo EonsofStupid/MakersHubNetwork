@@ -1,11 +1,10 @@
 
 import { useAuthStore } from '@/auth/store/auth.store';
-import { UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserRole, ROLES, LogCategory } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
-import { LOG_CATEGORY } from '@/shared/types/shared.types';
 
 class RBACBridgeImpl {
-  private logger = useLogger('RBACBridge', LOG_CATEGORY.RBAC);
+  private logger = useLogger('RBACBridge', LogCategory.RBAC);
 
   /**
    * Check if user has the specified role(s)
@@ -38,6 +37,31 @@ class RBACBridgeImpl {
     }
     
     return storageRoles;
+  }
+
+  /**
+   * Set user roles
+   */
+  setRoles(roles: UserRole[]): void {
+    try {
+      // Store roles in session storage
+      sessionStorage.setItem('user_roles', JSON.stringify(roles));
+      this.logger.info('User roles set', { details: { roles } });
+    } catch (error) {
+      this.logger.error('Failed to set roles in storage', { details: { error } });
+    }
+  }
+
+  /**
+   * Clear user roles
+   */
+  clearRoles(): void {
+    try {
+      sessionStorage.removeItem('user_roles');
+      this.logger.info('User roles cleared');
+    } catch (error) {
+      this.logger.error('Failed to clear roles from storage', { details: { error } });
+    }
   }
 
   /**
@@ -108,6 +132,15 @@ class RBACBridgeImpl {
 
     const requiredRoles = sectionPermissions[section] || [ROLES.SUPER_ADMIN];
     return this.hasRole(requiredRoles);
+  }
+
+  /**
+   * Check if user has a specific permission
+   */
+  hasPermission(permission: string): boolean {
+    // In a real app, this would check against a permissions store
+    // For now, we'll just check if the user is a super_admin
+    return this.isSuperAdmin();
   }
 }
 

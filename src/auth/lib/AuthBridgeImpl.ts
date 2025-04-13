@@ -1,6 +1,5 @@
-
 import { AuthBridge } from '../bridge';
-import { UserProfile, UserRole } from '@/shared/types/shared.types';
+import { UserProfile, UserRole, ROLES } from '@/shared/types/shared.types';
 import { RBACBridge } from '@/rbac/bridge';
 import { useAuthStore } from '@/auth/store/auth.store';
 
@@ -22,75 +21,90 @@ export class AuthBridgeImpl implements AuthBridge {
    * Sign in with email and password
    */
   public async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    // Simple mock implementation for demonstration
-    if (email && password) {
-      // For testing: make any email with "admin" be an admin
-      const isAdmin = email.includes('admin');
-      const isSuperAdmin = email.includes('super');
-      
-      const roles: UserRole[] = ['user'];
-      if (isAdmin) roles.push('admin');
-      if (isSuperAdmin) roles.push('superadmin');
-      
-      const mockUser: UserProfile = {
-        id: '123',
-        email,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_metadata: {
-          full_name: email.split('@')[0],
-        }
-      };
+    try {
+      // Simple mock implementation for demonstration
+      if (email && password) {
+        // For testing: make any email with "admin" be an admin
+        const isAdmin = email.includes('admin');
+        const isSuperAdmin = email.includes('super');
+        
+        const roles: UserRole[] = ['user'];
+        if (isAdmin) roles.push(ROLES.ADMIN);
+        if (isSuperAdmin) roles.push(ROLES.SUPER_ADMIN);
+        
+        const mockUser: UserProfile = {
+          id: '123',
+          email,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user_metadata: {
+            full_name: email.split('@')[0],
+          }
+        };
 
-      // Update auth store with user
-      useAuthStore.getState().setUser(mockUser);
+        // Update auth store with user
+        const authStore = useAuthStore.getState();
+        authStore.login(email, password);
+        
+        // Update RBAC store with roles
+        RBACBridge.setRoles(roles);
+        
+        return { user: mockUser, error: null };
+      }
       
-      // Update RBAC store with roles
-      RBACBridge.setRoles(roles);
-      
-      return { user: mockUser, error: null };
+      return { user: null, error: new Error('Invalid credentials') };
+    } catch (error) {
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
-    
-    return { user: null, error: new Error('Invalid credentials') };
   }
 
   /**
    * Sign up with email and password
    */
   public async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    // For demo, implementation is similar to sign in
-    if (email && password) {
-      const mockUser: UserProfile = {
-        id: '123',
-        email,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_metadata: {
-          full_name: email.split('@')[0],
-        }
-      };
+    try {
+      // For demo, implementation is similar to sign in
+      if (email && password) {
+        const mockUser: UserProfile = {
+          id: '123',
+          email,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user_metadata: {
+            full_name: email.split('@')[0],
+          }
+        };
+        
+        // Update auth store with user
+        const authStore = useAuthStore.getState();
+        authStore.signup(email, password);
+        
+        // Set default role as 'user'
+        RBACBridge.setRoles([ROLES.USER]);
+        
+        return { user: mockUser, error: null };
+      }
       
-      // Update auth store with user
-      useAuthStore.getState().setUser(mockUser);
-      
-      // Set default role as 'user'
-      RBACBridge.setRoles(['user']);
-      
-      return { user: mockUser, error: null };
+      return { user: null, error: new Error('Invalid credentials') };
+    } catch (error) {
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
-    
-    return { user: null, error: new Error('Invalid credentials') };
   }
 
   /**
    * Sign out the current user
    */
   public async signOut(): Promise<void> {
-    // Clear auth store
-    useAuthStore.getState().clearUser();
-    
-    // Clear RBAC store on sign out
-    RBACBridge.clearRoles();
+    try {
+      // Clear auth store
+      const authStore = useAuthStore.getState();
+      authStore.logout();
+      
+      // Clear RBAC store on sign out
+      RBACBridge.clearRoles();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   }
 
   /**
@@ -128,26 +142,31 @@ export class AuthBridgeImpl implements AuthBridge {
    * Implementation for GoogleLoginButton
    */
   public async signInWithOAuth(provider: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    // Mock implementation
-    if (provider === 'google') {
-      const mockUser: UserProfile = {
-        id: '456',
-        email: 'google.user@example.com',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_metadata: {
-          full_name: 'Google User',
-          avatar_url: 'https://api.dicebear.com/6.x/avataaars/svg?seed=google'
-        }
-      };
+    try {
+      // Mock implementation
+      if (provider === 'google') {
+        const mockUser: UserProfile = {
+          id: '456',
+          email: 'google.user@example.com',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user_metadata: {
+            full_name: 'Google User',
+            avatar_url: 'https://api.dicebear.com/6.x/avataaars/svg?seed=google'
+          }
+        };
+        
+        const authStore = useAuthStore.getState();
+        authStore.login('google.user@example.com', 'oauth-login');
+        RBACBridge.setRoles([ROLES.USER]);
+        
+        return { user: mockUser, error: null };
+      }
       
-      useAuthStore.getState().setUser(mockUser);
-      RBACBridge.setRoles(['user']);
-      
-      return { user: mockUser, error: null };
+      return { user: null, error: new Error(`OAuth provider ${provider} not supported`) };
+    } catch (error) {
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
-    
-    return { user: null, error: new Error(`OAuth provider ${provider} not supported`) };
   }
 
   /**
