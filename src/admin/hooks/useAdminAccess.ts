@@ -35,6 +35,7 @@ export function useAdminAccess() {
   return {
     hasAdminAccess,
     hasSuperAdminAccess,
-    canAccessSection
+    canAccessSection,
+    isAdmin: hasAdminAccess
   };
 }

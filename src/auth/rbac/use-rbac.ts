@@ -1,8 +1,7 @@
 
 import { useCallback } from 'react';
-import { UserRole } from '@/shared/types/shared.types';
+import { UserRole, Permission } from '@/shared/types/shared.types';
 import { useAuthStore } from '@/auth/store/auth.store';
-import * as rbac from './rbac';
 import { RBACBridge } from '@/rbac/bridge';
 
 /**
@@ -35,10 +34,14 @@ export function useRbac() {
     return RBACBridge.isBuilder();
   }, []);
   
+  // Get the hasPermission function
+  const hasPermission = useCallback((permission: Permission) => {
+    return RBACBridge.hasPermission(permission);
+  }, []);
+  
   // Get the getHighestRole function
   const getHighestRole = useCallback(() => {
-    const roles = RBACBridge.getRoles();
-    return rbac.getHighestRole(roles);
+    return RBACBridge.getHighestRole();
   }, []);
   
   // Get the hasElevatedPrivileges function
@@ -47,13 +50,21 @@ export function useRbac() {
   }, [hasAdminAccess]);
   
   // Get the canAccessAdminSection function
-  const canAccessAdminSection = useCallback((section: string) => {
+  const canAccessSection = useCallback((section: string) => {
     return RBACBridge.canAccessAdminSection(section);
   }, []);
   
   // Get the getRoleLabels function
   const getRoleLabels = useCallback(() => {
-    return rbac.getRoleLabels();
+    const roles = {
+      [UserRole.USER]: "User",
+      [UserRole.ADMIN]: "Admin",
+      [UserRole.SUPER_ADMIN]: "Super Admin",
+      [UserRole.MODERATOR]: "Moderator",
+      [UserRole.BUILDER]: "Builder",
+      [UserRole.GUEST]: "Guest"
+    };
+    return roles;
   }, []);
   
   // Get the roles from the RBAC bridge
@@ -65,9 +76,10 @@ export function useRbac() {
     isSuperAdmin,
     isModerator,
     isBuilder,
+    hasPermission,
     getHighestRole,
     hasElevatedPrivileges,
-    canAccessAdminSection,
+    canAccessSection,
     getRoleLabels,
     roles
   };

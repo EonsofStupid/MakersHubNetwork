@@ -1,45 +1,48 @@
 
-import { LogCategory, LogLevel, LogDetails, LogEntry as SharedLogEntry, LogEvent as SharedLogEvent, LogFilter as SharedLogFilter } from '@/shared/types/shared.types';
+import { 
+  LogCategory, 
+  LogLevel, 
+  LogEntry as SharedLogEntry, 
+  LogEvent as SharedLogEvent, 
+  LogFilter 
+} from '@/shared/types/shared.types';
 
-// Re-export shared types with a more specific naming
-export { LogCategory, LogLevel, LogDetails };
+// Re-export the shared types for convenience
+export type { LogCategory, LogLevel, LogFilter };
 
-// Extend the LogEntry for logging-specific functionality
-export interface LogEntry extends SharedLogEntry {
-  timestamp: string; // Ensure consistent timestamp type (string)
+// Extend the shared LogEntry with additional fields specific to this implementation
+export interface LogEntry extends Omit<SharedLogEntry, 'timestamp'> {
+  // Override timestamp to allow string format for serialization
+  timestamp: Date | string;
 }
 
-export interface LogEvent extends SharedLogEvent {
-  type: string;
+// Extend the shared LogEvent if needed
+export interface LogEvent extends Omit<SharedLogEvent, 'entry'> {
   entry: LogEntry;
 }
 
-export type LogFilter = SharedLogFilter;
-
-export interface LogOptions {
-  timestamp?: string; // Ensure consistent timestamp type (string)
-  details?: LogDetails;
-  source?: string;
-}
-
-export interface LoggerOptions {
-  minLevel?: LogLevel;
-  defaultCategory?: LogCategory;
-  includeSource?: boolean;
-  enableConsole?: boolean;
-  enableStorage?: boolean;
-  maxEntries?: number;
-}
-
-export interface Transport {
+// Transport interface for log output destinations
+export interface LogTransport {
+  name: string;
   log(entry: LogEntry): void;
   setMinLevel(level: LogLevel): void;
   getMinLevel(): LogLevel;
+  enable(): void;
+  disable(): void;
+  isEnabled(): boolean;
 }
 
-export type LogTransport = Transport; // Alias for backward compatibility
+// Configuration for logger
+export interface LoggerConfig {
+  minLevel: LogLevel;
+  enabledCategories?: LogCategory[];
+  disabledCategories?: LogCategory[];
+  transports?: LogTransport[];
+}
 
-export interface TransportOptions {
-  minLevel?: LogLevel;
-  maxEntries?: number;
+// Stats for log monitoring
+export interface LogStats {
+  totalLogs: number;
+  byLevel: Record<LogLevel, number>;
+  byCategory: Record<LogCategory, number>;
 }

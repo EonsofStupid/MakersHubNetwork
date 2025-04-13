@@ -9,7 +9,7 @@
 export const ROLES = {
   USER: 'user',
   ADMIN: 'admin',
-  SUPER_ADMIN: 'superadmin',
+  SUPER_ADMIN: 'super_admin',
   MODERATOR: 'moderator',
   BUILDER: 'builder',
   GUEST: 'guest',
@@ -47,7 +47,7 @@ export const PERMISSIONS = {
   SUPER_ADMIN: 'super:admin',
 } as const;
 
-export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
+export type Permission = keyof typeof PERMISSIONS;
 
 /**
  * RBAC route policies
@@ -65,7 +65,7 @@ export const RBAC_POLICIES: Record<string, UserRole[]> = {
 };
 
 /**
- * Auth status types
+ * Auth status enum
  */
 export enum AuthStatus {
   IDLE = 'idle',
@@ -90,6 +90,16 @@ export interface UserProfile {
 }
 
 /**
+ * Auth event types
+ */
+export enum AuthEventType {
+  SIGNED_IN = 'SIGNED_IN',
+  SIGNED_OUT = 'SIGNED_OUT',
+  USER_UPDATED = 'USER_UPDATED',
+  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
+}
+
+/**
  * Log categories
  */
 export enum LogCategory {
@@ -99,6 +109,7 @@ export enum LogCategory {
   UI = 'ui',
   SYSTEM = 'system',
   ADMIN = 'admin',
+  DEBUG = 'debug',
 }
 
 /**
@@ -108,21 +119,26 @@ export enum LogLevel {
   TRACE = 'trace',
   DEBUG = 'debug',
   INFO = 'info',
+  SUCCESS = 'success',
   WARN = 'warn',
   ERROR = 'error',
   FATAL = 'fatal',
+  CRITICAL = 'critical',
+  SILENT = 'silent',
 }
 
 /**
  * Log entry type
  */
 export interface LogEntry {
+  id?: string;
   level: LogLevel;
   category: LogCategory;
   message: string;
   timestamp: Date;
   source?: string;
   details?: Record<string, any>;
+  tags?: string[];
 }
 
 /**
@@ -139,6 +155,9 @@ export interface LogFilter {
   level?: LogLevel;
   category?: LogCategory;
   source?: string;
+  search?: string;
+  from?: Date;
+  to?: Date;
 }
 
 /**
@@ -148,20 +167,13 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.TRACE]: 0,
   [LogLevel.DEBUG]: 1,
   [LogLevel.INFO]: 2,
-  [LogLevel.WARN]: 3,
-  [LogLevel.ERROR]: 4,
-  [LogLevel.FATAL]: 5,
+  [LogLevel.SUCCESS]: 3,
+  [LogLevel.WARN]: 4,
+  [LogLevel.ERROR]: 5,
+  [LogLevel.FATAL]: 6,
+  [LogLevel.CRITICAL]: 7,
+  [LogLevel.SILENT]: 8,
 };
-
-/**
- * Auth event types
- */
-export enum AuthEventType {
-  SIGNED_IN = 'SIGNED_IN',
-  SIGNED_OUT = 'SIGNED_OUT',
-  USER_UPDATED = 'USER_UPDATED',
-  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
-}
 
 /**
  * Theme-related types
@@ -174,6 +186,26 @@ export interface Theme {
   componentTokens: ComponentTokens;
   created_at?: string;
   updated_at?: string;
+  version: number;
+  tokens?: ThemeToken[];
+  components?: ThemeComponent[];
+  variables?: Record<string, string>;
+}
+
+export interface ThemeToken {
+  name: string;
+  token_name?: string;
+  token_value?: string;
+  value: string;
+  type: string;
+  description?: string;
+  keyframes?: string;
+}
+
+export interface ThemeComponent {
+  id: string;
+  component_name: string;
+  styles: Record<string, any>;
 }
 
 export interface DesignTokens {
@@ -247,13 +279,16 @@ export interface ComponentTokens {
 
 export interface ThemeState {
   themes: Theme[];
-  designTokens: DesignTokens;
-  componentTokens: ComponentTokens;
   activeThemeId: string;
-  error: Error | null;
+  designTokens?: DesignTokens;
+  componentTokens: ComponentTokens;
   isLoading: boolean;
+  error: string | null;
 }
 
+/**
+ * Theme effect
+ */
 export enum ThemeEffect {
   NONE = 'none',
   GRADIENT = 'gradient',
@@ -263,24 +298,53 @@ export enum ThemeEffect {
   GRID = 'grid',
   DOTS = 'dots',
   WAVES = 'waves',
+  NEON = 'neon',
+  SHADOW = 'shadow',
+  PULSE = 'pulse',
+  PARTICLE = 'particle',
 }
 
+/**
+ * Theme log details
+ */
 export interface ThemeLogDetails {
   themeId: string;
   action: string;
   timestamp: string;
+  theme?: string;
+  cssVarsCount?: number;
+  error?: string;
+  userId?: string;
+  previousValue?: any;
+  newValue?: any;
+  component?: string;
 }
-
-export type ThemeToken = {
-  name: string;
-  value: string;
-  type: string;
-  description?: string;
-};
 
 /**
  * Layout types
  */
 export interface LayoutComponentProps {
   children: React.ReactNode;
+}
+
+/**
+ * User type
+ */
+export interface User {
+  id: string;
+  email: string;
+  app_metadata?: {
+    provider?: string;
+    [key: string]: any;
+  };
+  user_metadata?: {
+    name?: string;
+    full_name?: string;
+    avatar_url?: string;
+    [key: string]: any;
+  };
+  created_at: string;
+  updated_at: string;
+  role?: UserRole;
+  roles?: UserRole[];
 }

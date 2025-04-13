@@ -1,5 +1,5 @@
 
-import { UserProfile, LogLevel, LogCategory, UserRole } from '@/shared/types/shared.types';
+import { User, UserProfile, LogLevel, LogCategory } from '@/shared/types/shared.types';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { logger } from '@/logging/logger.service';
 
@@ -8,23 +8,23 @@ import { logger } from '@/logging/logger.service';
  * without exposing direct access to the underlying store or provider
  */
 class AuthBridgeImpl {
-  getUser() {
+  getUser(): User | null {
     return useAuthStore.getState().user;
   }
 
-  getProfile() {
+  getProfile(): UserProfile | null {
     return useAuthStore.getState().profile;
   }
 
-  getRoles() {
+  getRoles(): string[] {
     return useAuthStore.getState().roles;
   }
 
-  isAuthenticated() {
+  isAuthenticated(): boolean {
     return useAuthStore.getState().isAuthenticated;
   }
 
-  getStatus() {
+  getStatus(): string {
     return useAuthStore.getState().status;
   }
 
@@ -99,6 +99,21 @@ class AuthBridgeImpl {
       return { user_id: user.id };
     }
     return null;
+  }
+
+  // Error handling
+  getError(): Error | null {
+    return useAuthStore.getState().error;
+  }
+
+  // Loading state
+  isLoading(): boolean {
+    return useAuthStore.getState().isLoading;
+  }
+
+  // Initialization state
+  isInitialized(): boolean {
+    return useAuthStore.getState().initialized;
   }
 }
 

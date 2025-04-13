@@ -1,10 +1,9 @@
 
 import { useState, memo, useCallback } from "react";
-import { useToast } from "@/shared/ui/use-toast";
-import { UserAvatar } from "@/shared/ui/UserAvatar";
-import { useLogger } from "@/hooks/use-logger";
+import { useToast } from "@/hooks/use-toast";
+import { useLogger } from "@/logging/hooks/use-logger";
 import { LogCategory, LogLevel } from "@/shared/types/shared.types";
-import { authBridge } from "@/auth/bridge";
+import { AuthBridge } from "@/auth/bridge";
 import { RBACBridge } from "@/rbac/bridge";
 import { Button } from "@/shared/ui/button";
 import { UserMenuSheet } from "./UserMenuSheet";
@@ -39,7 +38,7 @@ export function UserMenu() {
   const handleLogout = useCallback(async () => {
     try {
       logger.log(LogLevel.INFO, LogCategory.AUTH, "User logging out", { source: 'UserMenu' });
-      await authBridge.signOut();
+      await AuthBridge.signOut();
       logger.log(LogLevel.INFO, LogCategory.AUTH, "User logged out successfully", { source: 'UserMenu' });
       toast({
         title: "Logged out",
@@ -66,7 +65,7 @@ export function UserMenu() {
   // Get display name and email from user
   const displayName = user.user_metadata?.full_name as string || user.email?.split('@')[0] || 'User';
   const userEmail = user.email || '';
-  const userAvatar = user.user_metadata?.avatar_url as string | undefined;
+  const userAvatar = user.user_metadata?.avatar_url as string || '';
 
   return (
     <>
@@ -76,7 +75,10 @@ export function UserMenu() {
         className="rounded-full p-1 transition hover:bg-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label="User menu"
       >
-        <UserAvatar user={user} size="sm" />
+        {/* Placeholder for UserAvatar component */}
+        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+          {displayName.charAt(0).toUpperCase()}
+        </div>
       </Button>
       
       <UserMenuSheet
