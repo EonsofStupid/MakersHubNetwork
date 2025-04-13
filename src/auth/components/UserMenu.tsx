@@ -7,6 +7,7 @@ import { useLogger } from "@/hooks/use-logger"
 import { LogCategory } from "@/shared/types/SharedTypes"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar"
 import { authBridge } from "@/auth/bridge"
+import { RBACBridge } from "@/rbac/bridge"
 
 export const UserMenu = memo(() => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -15,7 +16,7 @@ export const UserMenu = memo(() => {
   
   // Get auth data from centralized store
   const user = useAuthStore(state => state.user)
-  const roles = useAuthStore(state => state.roles || [])
+  const roles = RBACBridge.getRoles()
   
   // Handle opening the user menu
   const handleOpenUserMenu = useCallback(() => {

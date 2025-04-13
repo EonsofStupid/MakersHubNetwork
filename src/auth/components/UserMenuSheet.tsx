@@ -1,7 +1,7 @@
 
 import React from "react"
 import { LogOut, Settings, User, Shield } from "lucide-react"
-import { Sheet, SheetContent, SheetHeader } from "@/shared/ui/sheet"
+import { Sheet, SheetContent } from "@/shared/ui/sheet"
 import { Button } from "@/shared/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar"
 import { Separator } from "@/shared/ui/separator"
@@ -9,7 +9,7 @@ import { Badge } from "@/shared/ui/badge"
 import { cn } from "@/shared/utils/cn"
 import { UserRole } from "@/shared/types/SharedTypes"
 import { useNavigate } from "react-router-dom"
-import { authBridge } from "@/auth/bridge"
+import { RBACBridge } from "@/rbac/bridge"
 
 interface UserMenuSheetProps {
   isOpen: boolean
@@ -47,9 +47,7 @@ export function UserMenuSheet({
       .substring(0, 2)
   }
 
-  const hasAdminAccess = () => {
-    return authBridge.hasRole(['admin', 'superadmin']);
-  };
+  const hasAdminAccess = RBACBridge.hasAdminAccess();
 
   const handleAdminClick = () => {
     navigate('/admin');
@@ -60,19 +58,12 @@ export function UserMenuSheet({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent 
         className={cn(
-          "sm:max-w-sm backdrop-blur-xl bg-background/80 border-primary/20",
-          "shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu",
-          "before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r",
-          "before:from-primary/5 before:to-secondary/5 before:pointer-events-none"
+          "trapezoid-sheet sm:max-w-sm backdrop-blur-xl bg-background/80 border-primary/20",
+          "shadow-[0_0_20px_rgba(0,240,255,0.15)] transform-gpu"
         )}
-        style={{
-          clipPath: "polygon(20px 0, 100% 0, 100% 100%, 0 95%)",
-          transform: "translateX(0) skew(-5deg)",
-          transformOrigin: "100% 50%",
-        }}
       >
-        <div className="transform skew-x-[5deg] origin-top-right">
-          <SheetHeader className="text-left">
+        <div className="transform">
+          <div className="text-left">
             <div className="flex items-center gap-3 pb-4">
               <Avatar className="h-12 w-12 ring-2 ring-primary/30">
                 <AvatarImage src={userAvatar || undefined} alt={userDisplayName || "User"} />
@@ -85,7 +76,7 @@ export function UserMenuSheet({
                 )}
               </div>
             </div>
-          </SheetHeader>
+          </div>
 
           {/* User roles badges */}
           {roles && roles.length > 0 && (
@@ -123,7 +114,7 @@ export function UserMenuSheet({
             </Button>
           </div>
 
-          {hasAdminAccess() && (
+          {hasAdminAccess && (
             <>
               <Separator className="my-4" />
               <div className="flex flex-col gap-2 py-4">
