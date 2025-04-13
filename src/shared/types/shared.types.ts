@@ -1,31 +1,15 @@
 
 /**
- * Core shared types used across the application
+ * Role definitions
  */
-
-/**
- * Role definitions - using enum for strong typing
- */
-export enum UserRoleEnum {
-  USER = 'user',
-  ADMIN = 'admin',
-  SUPER_ADMIN = 'super_admin',
-  MODERATOR = 'moderator',
-  BUILDER = 'builder',
-  GUEST = 'guest',
-}
-
-// Export as const for runtime access
 export const ROLES = {
-  USER: UserRoleEnum.USER,
-  ADMIN: UserRoleEnum.ADMIN,
-  SUPER_ADMIN: UserRoleEnum.SUPER_ADMIN,
-  MODERATOR: UserRoleEnum.MODERATOR,
-  BUILDER: UserRoleEnum.BUILDER,
-  GUEST: UserRoleEnum.GUEST,
+  USER: 'user',
+  ADMIN: 'admin',
+  SUPER_ADMIN: 'superadmin',
+  MODERATOR: 'moderator',
+  BUILDER: 'builder',
 } as const;
 
-// Type alias for UserRole - the string literal union type
 export type UserRole = typeof ROLES[keyof typeof ROLES];
 
 /**
@@ -58,11 +42,8 @@ export const RBAC_POLICIES: Record<string, UserRole[]> = {
   '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
 };
 
-// Export for use in RBAC system
-export const PATH_POLICIES = RBAC_POLICIES;
-
 /**
- * Auth status enum
+ * Auth status types
  */
 export enum AuthStatus {
   IDLE = 'idle',
@@ -71,8 +52,6 @@ export enum AuthStatus {
   UNAUTHENTICATED = 'unauthenticated',
   ERROR = 'error',
 }
-
-export const AUTH_STATUS = AuthStatus;
 
 /**
  * User profile type
@@ -86,34 +65,21 @@ export interface UserProfile {
   updated_at: string;
   last_sign_in_at?: string;
   user_metadata?: Record<string, unknown>;
-  app_metadata?: Record<string, unknown>;
   roles?: UserRole[];
 }
 
 /**
- * Auth Event Type
- */
-export enum AuthEventType {
-  SIGNED_IN = 'SIGNED_IN',
-  SIGNED_OUT = 'SIGNED_OUT',
-  TOKEN_REFRESHED = 'TOKEN_REFRESHED',
-  USER_UPDATED = 'USER_UPDATED',
-  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
-  USER_DELETED = 'USER_DELETED',
-}
-
-/**
- * Log categories - using enum for strong typing
+ * Log categories
  */
 export enum LogCategory {
-  APP = 'app',
   AUTH = 'auth',
   RBAC = 'rbac',
   API = 'api',
   UI = 'ui',
+  APP = 'app',
   SYSTEM = 'system',
-  ADMIN = 'admin',
   CHAT = 'chat',
+  ADMIN = 'admin',
 }
 
 /**
@@ -124,156 +90,24 @@ export enum LogLevel {
   INFO = 'info',
   WARN = 'warn',
   ERROR = 'error',
-  CRITICAL = 'critical',
-  TRACE = 'trace',
-  SUCCESS = 'success',
-  FATAL = 'fatal',
-  SILENT = 'silent',
 }
-
-// Log level values for sorting/filtering
-export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  [LogLevel.DEBUG]: 0,
-  [LogLevel.TRACE]: 1,
-  [LogLevel.INFO]: 2,
-  [LogLevel.SUCCESS]: 3,
-  [LogLevel.WARN]: 4,
-  [LogLevel.ERROR]: 5,
-  [LogLevel.CRITICAL]: 6,
-  [LogLevel.FATAL]: 7,
-  [LogLevel.SILENT]: 8,
-};
 
 /**
  * Log entry interface
  */
-export interface LogDetails {
-  source?: string;
-  [key: string]: any;
-}
-
 export interface LogEntry {
-  id: string;
   level: LogLevel;
   category: LogCategory;
-  message: string | Record<string, unknown>;
-  details?: LogDetails;
-  timestamp: string;
-  source: string;
+  message: string;
+  timestamp: Date;
+  source?: string;
+  details?: Record<string, any>;
+  tags?: string[];
 }
 
+/**
+ * Log event interface
+ */
 export interface LogEvent {
   entry: LogEntry;
-  type?: string;
 }
-
-export interface LogFilter {
-  level?: LogLevel;
-  category?: LogCategory;
-  source?: string;
-  search?: string;
-}
-
-/**
- * Theme log details
- */
-export interface ThemeLogDetails extends LogDetails {
-  themeName?: string;
-  cssVarsCount?: number;
-  error?: string;
-  [key: string]: any;
-}
-
-/**
- * Build status, types for build system
- */
-export enum BuildStatus {
-  DRAFT = 'draft',
-  PENDING = 'pending',
-  IN_REVIEW = 'in_review',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  PUBLISHED = 'published',
-  ARCHIVED = 'archived',
-}
-
-export interface BuildPart {
-  id: string;
-  name: string;
-  quantity: number;
-}
-
-export interface BuildMod {
-  id: string;
-  name: string;
-  complexity: number;
-}
-
-export interface UserInfo {
-  id: string;
-  name: string;
-  avatar?: string;
-  email: string;
-}
-
-// Base entity for shared types
-export interface BaseEntity {
-  id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-// User interface
-export interface User {
-  id: string;
-  email: string;
-  user_metadata?: Record<string, any>;
-  app_metadata?: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-}
-
-// RBAC helper
-export const RBAC = {
-  superAdmins: [ROLES.SUPER_ADMIN],
-  admins: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  moderators: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  builders: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  normalUsers: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  guests: [ROLES.GUEST],
-  
-  // Common role checks
-  adminOnly: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  authenticated: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-};
-
-// Theme related types
-export enum ThemeContext {
-  SITE = 'site',
-  ADMIN = 'admin',
-  CHAT = 'chat',
-}
-
-export enum ThemeStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
-  ARCHIVED = 'archived',
-  ACTIVE = 'active',
-}
-
-// Theme effect type
-export enum ThemeEffect {
-  NONE = 'none',
-  BLUR = 'blur',
-  GRAIN = 'grain',
-  NOISE = 'noise',
-  GLOW = 'glow',
-  GLITCH = 'glitch',
-  GRADIENT = 'gradient',
-  CYBER = 'cyber',
-  PULSE = 'pulse',
-  PARTICLE = 'particle',
-}
-
-// Make TS aware this is a module
-export const __SHARED_TYPES__ = true;
