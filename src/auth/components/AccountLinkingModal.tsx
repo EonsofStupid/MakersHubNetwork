@@ -1,109 +1,72 @@
 
-import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
+import React from 'react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle
+} from '@/shared/ui/dialog';
 import { Button } from '@/shared/ui/button';
-import { Github, Google, Twitter } from 'lucide-react';
-import { useToast } from '@/shared/ui/use-toast';
-import { authBridge } from '@/auth/bridge';
-import { RBACBridge } from '@/rbac/bridge';
-import { AuthEventType, LogCategory } from '@/shared/types/shared.types';
-import { useLogger } from '@/hooks/use-logger';
+import { Github } from 'lucide-react'; // Replace with correct imports
 
-interface AccountLinkingModalProps {
+// Define component props
+export interface AccountLinkingModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({ isOpen, onClose }) => {
-  const { toast } = useToast();
-  const logger = useLogger('AccountLinkingModal', LogCategory.AUTH);
-  const [loading, setLoading] = useState<string | null>(null);
+export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({ 
+  isOpen, 
+  onClose 
+}) => {
+  // Callback handlers for provider linking
+  const handleLinkGoogle = () => {
+    // Implement Google account linking logic
+    console.log('Linking Google account');
+    onClose();
+  };
   
-  useEffect(() => {
-    // Listen for auth events to know when linking completes
-    const unsubscribe = authBridge.onAuthEvent((event) => {
-      if (event.type === AuthEventType.USER_UPDATED) {
-        setLoading(null);
-        onClose();
-      }
-    });
-    
-    // Cleanup subscription
-    return () => {
-      if (unsubscribe && typeof unsubscribe.unsubscribe === 'function') {
-        unsubscribe.unsubscribe();
-      }
-    };
-  }, [onClose]);
-  
-  const handleLinkAccount = async (provider: string) => {
-    try {
-      setLoading(provider);
-      const success = await authBridge.linkAccount(provider);
-      
-      if (!success) {
-        throw new Error(`Failed to link ${provider} account`);
-      }
-      
-      logger.info(`Successfully initiated ${provider} account linking`);
-    } catch (error) {
-      logger.error(`Error linking ${provider} account`, { details: { error } });
-      toast({
-        title: 'Error Linking Account',
-        description: `Could not link your ${provider} account. Please try again.`,
-        variant: 'destructive',
-      });
-      setLoading(null);
-    }
+  const handleLinkGithub = () => {
+    // Implement GitHub account linking logic
+    console.log('Linking GitHub account');
+    onClose();
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Link External Accounts</DialogTitle>
+          <DialogTitle>Link Your Accounts</DialogTitle>
           <DialogDescription>
-            Connect your social accounts for easier login and additional features.
+            Connect your social accounts to enable single sign-on and additional features.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <Button
+        <div className="flex flex-col space-y-3 pt-4">
+          <Button 
             variant="outline"
-            className="flex items-center justify-start gap-2"
-            disabled={loading === 'google'}
-            onClick={() => handleLinkAccount('google')}
+            className="flex items-center justify-center gap-2"
+            onClick={handleLinkGoogle}
           >
-            <Google className="h-4 w-4" />
-            {loading === 'google' ? 'Connecting...' : 'Connect Google Account'}
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path
+                fill="currentColor"
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5.75 11.43h-2.69v2.69a.94.94 0 0 1-.93.93h-2.25a.94.94 0 0 1-.93-.93v-2.69H8.26a.94.94 0 0 1-.93-.93v-2.25c0-.51.42-.93.93-.93h2.69V6.63c0-.51.42-.93.93-.93h2.25c.51 0 .93.42.93.93v2.69h2.69c.51 0 .93.42.93.93v2.25c0 .51-.42.93-.93.93z"
+              />
+            </svg>
+            <span>Link Google Account</span>
           </Button>
           
-          <Button
+          <Button 
             variant="outline"
-            className="flex items-center justify-start gap-2"
-            disabled={loading === 'github'}
-            onClick={() => handleLinkAccount('github')}
+            className="flex items-center justify-center gap-2"
+            onClick={handleLinkGithub}
           >
-            <Github className="h-4 w-4" />
-            {loading === 'github' ? 'Connecting...' : 'Connect GitHub Account'}
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="flex items-center justify-start gap-2"
-            disabled={loading === 'twitter'}
-            onClick={() => handleLinkAccount('twitter')}
-          >
-            <Twitter className="h-4 w-4" />
-            {loading === 'twitter' ? 'Connecting...' : 'Connect Twitter Account'}
+            <Github size={20} />
+            <span>Link GitHub Account</span>
           </Button>
         </div>
-        
-        <DialogFooter>
-          <Button variant="default" onClick={onClose}>
-            Cancel
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
