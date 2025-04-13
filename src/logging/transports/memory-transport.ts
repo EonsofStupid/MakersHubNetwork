@@ -1,104 +1,93 @@
 
-import { LogEntry, LogLevel, LOG_LEVEL_VALUES } from '@/shared/types/shared.types';
+import { LogEntry, LogLevel } from '@/shared/types/shared.types';
 import { Transport } from './transport.interface';
+import { TransportOptions } from '../types';
 
-/**
- * In-memory transport for storing logs, useful for debugging
- * and displaying logs in the UI
- */
-class MemoryTransport implements Transport {
+export class MemoryTransport implements Transport {
   private logs: LogEntry[] = [];
-  private maxLogs: number = 1000;
-  private minLevel: LogLevel = LogLevel.DEBUG;
-
-  constructor(maxLogs: number = 1000, minLevel: LogLevel = LogLevel.DEBUG) {
-    this.maxLogs = maxLogs;
-    this.minLevel = minLevel;
+  private minLevel: LogLevel;
+  private maxEntries: number;
+  
+  constructor(options?: TransportOptions | LogLevel) {
+    if (typeof options === 'object') {
+      this.minLevel = options.minLevel || LogLevel.INFO;
+      this.maxEntries = options.maxEntries || 1000;
+    } else {
+      this.minLevel = options || LogLevel.INFO;
+      this.maxEntries = 1000;
+    }
   }
-
-  /**
-   * Set the minimum log level to capture
-   */
-  setMinLevel(level: LogLevel): void {
-    this.minLevel = level;
+  
+  log(entry: LogEntry): void {
+    this.logs.unshift(entry); // Add to the beginning for most recent first
+    
+    // Trim the logs if we exceed the max entries
+    if (this.logs.length > this.maxEntries) {
+      this.logs = this.logs.slice(0, this.maxEntries);
+    }
   }
-
-  /**
-   * Get the current minimum log level
-   */
+  
+  getLogs(): LogEntry[] {
+    return [...this.logs];
+  }
+  
   getMinLevel(): LogLevel {
     return this.minLevel;
   }
-
-  /**
-   * Log an entry to memory
-   */
-  log(entry: LogEntry): void {
-    if (LOG_LEVEL_VALUES[entry.level] < LOG_LEVEL_VALUES[this.minLevel]) {
-      return;
-    }
-    
-    // Add to beginning for most recent first
-    this.logs.unshift(entry);
-    
-    // Trim if exceeding the max logs
-    if (this.logs.length > this.maxLogs) {
-      this.logs = this.logs.slice(0, this.maxLogs);
-    }
+  
+  setMinLevel(level: LogLevel): void {
+    this.minLevel = level;
   }
-
-  /**
-   * Get all stored logs
-   */
-  getLogs(): LogEntry[] {
-    return this.logs;
-  }
-
-  /**
-   * Clear all stored logs
-   */
-  clearLogs(): void {
+  
+  clear(): void {
     this.logs = [];
   }
-
-  /**
-   * Get logs filtered by criteria
-   */
-  getFilteredLogs(filter: { 
-    level?: LogLevel, 
-    category?: string, 
-    search?: string 
+  
+  getLog(id: string): LogEntry | undefined {
+    return this.logs.find(log => log.id === id);
+  }
+  
+  getFilteredLogs(filter: {
+    level?: LogLevel;
+    search?: string;
+    category?: string;
+    from?: Date;
+    to?: Date;
   }): LogEntry[] {
     return this.logs.filter(log => {
-      // Filter by level
       if (filter.level && log.level !== filter.level) {
         return false;
       }
-
-      // Filter by category
+      
       if (filter.category && log.category !== filter.category) {
         return false;
       }
-
-      // Search in message
-      if (filter.search && !log.message.toLowerCase().includes(filter.search.toLowerCase())) {
-        return false;
+      
+      if (filter.search) {
+        const searchLower = filter.search.toLowerCase();
+        const matchesMessage = log.message.toLowerCase().includes(searchLower);
+        const matchesSource = log.source.toLowerCase().includes(searchLower);
+        if (!matchesMessage && !matchesSource) {
+          return false;
+        }
       }
-
+      
+      if (filter.from || filter.to) {
+        const logDate = new Date(log.timestamp);
+        
+        if (filter.from && logDate < filter.from) {
+          return false;
+        }
+        
+        if (filter.to && logDate > filter.to) {
+          return false;
+        }
+      }
+      
       return true;
     });
-  }
-
-  /**
-   * Get logs by specific category
-   */
-  getLogsByCategory(category: string): LogEntry[] {
-    return this.logs.filter(log => log.category === category);
   }
 }
 
 // Export a singleton instance
 export const memoryTransport = new MemoryTransport();
-
-// Export for type usage
-export type { MemoryTransport };

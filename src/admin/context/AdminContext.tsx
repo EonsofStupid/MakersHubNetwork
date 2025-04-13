@@ -12,7 +12,12 @@ import { useLogger } from '@/logging/hooks/use-logger';
 import { LogCategory } from '@/logging/types';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { hasAdminPermission } from '../utils/permissions';
-import { ADMIN_PERMISSIONS } from '../constants/permissions';
+
+// Define admin permissions
+const ADMIN_PERMISSIONS = {
+  VIEW_ADMIN_PANEL: 'view_admin_panel',
+  EDIT_ADMIN_SETTINGS: 'edit_admin_settings'
+};
 
 interface AdminContextValue {
   isInitialized: boolean;
