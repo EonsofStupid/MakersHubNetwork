@@ -1,108 +1,82 @@
 
-import { UserRole, ROLES, Permission } from '@/shared/types/shared.types';
+import { UserRole, Permission } from '@/shared/types/shared.types';
+import { hasPermission, canAccessAdmin, canAccessDevFeatures } from './rbac/enforce';
 
 /**
  * RBAC Bridge Implementation
- * Provides a clean abstraction for role-based access control
+ * 
+ * This is an implementation of the RBAC interface that
+ * provides role-based access control functionality.
  */
 class RBACBridgeImpl {
-  private roles: UserRole[] = [];
-  private permissions: string[] = [];
+  private userRoles: UserRole[] = [];
 
-  // Role management
-  public setRoles(roles: UserRole[]): void {
-    this.roles = roles;
+  /**
+   * Get the current user roles
+   */
+  getRoles(): UserRole[] {
+    return [...this.userRoles];
   }
 
-  public getRoles(): UserRole[] {
-    return this.roles;
+  /**
+   * Set user roles
+   */
+  setRoles(roles: UserRole[]): void {
+    this.userRoles = [...roles];
   }
 
-  public clearRoles(): void {
-    this.roles = [];
+  /**
+   * Clear user roles
+   */
+  clearRoles(): void {
+    this.userRoles = [];
   }
 
-  // Permission management
-  public setPermissions(permissions: string[]): void {
-    this.permissions = permissions;
+  /**
+   * Check if user has a specific role
+   */
+  hasRole(role: UserRole | UserRole[]): boolean {
+    if (Array.isArray(role)) {
+      return role.some(r => this.userRoles.includes(r));
+    }
+    return this.userRoles.includes(role);
   }
 
-  public getPermissions(): string[] {
-    return this.permissions;
+  /**
+   * Check if user has a specific permission
+   */
+  hasPermission(permission: Permission): boolean {
+    return hasPermission(this.userRoles, permission);
   }
 
-  public hasPermission(permission: Permission): boolean {
-    return this.permissions.includes(permission);
+  /**
+   * Check if user has admin access
+   */
+  hasAdminAccess(): boolean {
+    return canAccessAdmin(this.userRoles);
   }
 
-  // Role checks
-  public hasRole(role: UserRole | UserRole[]): boolean {
-    const rolesToCheck = Array.isArray(role) ? role : [role];
-    
-    // Super admin has all roles
-    if (this.roles.includes(ROLES.SUPER_ADMIN)) return true;
-    
-    // Check for specific roles
-    return rolesToCheck.some(r => this.roles.includes(r));
+  /**
+   * Check if user is a super admin
+   */
+  isSuperAdmin(): boolean {
+    return this.hasRole('super_admin');
   }
 
-  public hasAdminAccess(): boolean {
-    return this.hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+  /**
+   * Check if user is a moderator
+   */
+  isModerator(): boolean {
+    return this.hasRole(['moderator', 'admin', 'super_admin']);
   }
 
-  public isSuperAdmin(): boolean {
-    return this.hasRole(ROLES.SUPER_ADMIN);
-  }
-
-  public isModerator(): boolean {
-    return this.hasRole([ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
-  }
-
-  public isBuilder(): boolean {
-    return this.hasRole([ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
-  }
-
-  // Route and section access
-  public canAccessAdminSection(section: string): boolean {
-    // Super admin can access all sections
-    if (this.isSuperAdmin()) return true;
-    
-    // Define section permissions
-    const sectionPermissions: Record<string, UserRole[]> = {
-      dashboard: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-      users: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-      content: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MODERATOR],
-      settings: [ROLES.SUPER_ADMIN]
-    };
-    
-    const allowedRoles = sectionPermissions[section];
-    if (!allowedRoles) return false;
-    
-    return this.hasRole(allowedRoles);
-  }
-
-  public canAccessRoute(route: string): boolean {
-    return this.hasAdminAccess(); // Default implementation, enhance as needed
-  }
-
-  public isAdmin(): boolean {
-    return this.hasAdminAccess();
-  }
-
-  // Helper methods
-  public getHighestRole(): UserRole {
-    if (this.hasRole(ROLES.SUPER_ADMIN)) return ROLES.SUPER_ADMIN;
-    if (this.hasRole(ROLES.ADMIN)) return ROLES.ADMIN;
-    if (this.hasRole(ROLES.MODERATOR)) return ROLES.MODERATOR;
-    if (this.hasRole(ROLES.BUILDER)) return ROLES.BUILDER;
-    if (this.hasRole(ROLES.USER)) return ROLES.USER;
-    return ROLES.GUEST;
-  }
-
-  public can(permission: Permission): boolean {
-    return this.hasPermission(permission);
+  /**
+   * Check if user is a builder
+   */
+  isBuilder(): boolean {
+    return this.hasRole(['builder', 'admin', 'super_admin']);
   }
 }
 
-// Create a singleton instance
+// Create and export a singleton instance
 export const RBACBridge = new RBACBridgeImpl();

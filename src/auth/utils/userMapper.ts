@@ -1,60 +1,39 @@
 
-import { User as SupabaseUser } from '@supabase/supabase-js';
-import { User, UserProfile } from '@/shared/types/shared.types';
+import { UserProfile } from "@/shared/types/shared.types";
 
 /**
- * Maps a Supabase User to our application User type
- * This provides a clear boundary between external auth provider types and our app types
+ * Maps raw user data from different auth providers to a standard UserProfile format
  */
-export function mapSupabaseUserToAppUser(supabaseUser: SupabaseUser | null): User | null {
-  if (!supabaseUser) return null;
-  
-  return {
-    id: supabaseUser.id,
-    email: supabaseUser.email || '', // Handle potential undefined with empty string
-    created_at: supabaseUser.created_at || new Date().toISOString(),
-    updated_at: supabaseUser.updated_at || new Date().toISOString(),
-    user_metadata: supabaseUser.user_metadata || {},
-    // Profile will be fetched separately
+export function mapUserToProfile(userData: any): UserProfile {
+  // Handle null or undefined data
+  if (!userData) {
+    return null as unknown as UserProfile;
+  }
+
+  // Supabase auth user mapping
+  if (userData.user) {
+    userData = userData.user;
+  }
+
+  // Handle different user data structures based on provider
+  const profile: UserProfile = {
+    id: userData.id || userData.uid || '',
+    email: userData.email || '',
+    name: userData.name || userData.user_name || userData.displayName || userData.email?.split('@')[0] || '',
+    avatar_url: userData.avatar_url || userData.avatarUrl || userData.photoURL || '',
+    created_at: userData.created_at || userData.createdAt || new Date().toISOString(),
+    updated_at: userData.updated_at || userData.updatedAt || new Date().toISOString(),
+    last_sign_in_at: userData.last_sign_in || userData.lastSignInAt || new Date().toISOString(),
+    user_metadata: userData.user_metadata || userData.userMetadata || {},
+    app_metadata: userData.app_metadata || userData.appMetadata || {}
   };
-}
 
-/**
- * Updates user app_metadata field from raw user data 
- */
-export function getUserRolesFromMetadata(metadata: Record<string, any> | null): string[] {
-  if (!metadata || !metadata.roles) {
-    return ['user']; // Default role
+  // Map roles if they are present in any metadata field
+  if (userData.app_metadata?.roles) {
+    profile.roles = userData.app_metadata.roles;
+  } else if (userData.user_metadata?.roles) {
+    profile.roles = userData.user_metadata.roles;
   }
-  
-  // Ensure we always return an array of roles
-  if (Array.isArray(metadata.roles)) {
-    return metadata.roles;
-  }
-  
-  // If roles is a string, convert to array
-  if (typeof metadata.roles === 'string') {
-    return [metadata.roles];
-  }
-  
-  return ['user']; // Fallback
-}
 
-/**
- * Convert user profile from database to app format
- */
-export function formatUserProfile(profile: any): UserProfile {
-  return {
-    id: profile.id,
-    user_id: profile.user_id,
-    username: profile.username || '',
-    display_name: profile.display_name || '',
-    avatar_url: profile.avatar_url || null,
-    bio: profile.bio || '',
-    theme_preference: profile.theme_preference || 'dark',
-    motion_enabled: profile.motion_enabled !== false,
-    website: profile.website || null,
-    location: profile.location || null,
-    roles: profile.roles || ['user'],
-  };
+  return profile;
 }

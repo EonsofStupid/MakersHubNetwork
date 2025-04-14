@@ -1,4 +1,3 @@
-
 import { IAuthBridge } from '@/auth/bridge';
 import { UserProfile, LogLevel, LogCategory } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
@@ -20,8 +19,6 @@ class AuthBridgeImpl implements IAuthBridge {
   // Session management
   async getCurrentSession(): Promise<{ user: UserProfile } | null> {
     try {
-      // In a real implementation, this would check for an existing session
-      // in localStorage or via an API call
       const storedUser = localStorage.getItem('auth_user');
       if (storedUser) {
         this._isAuthenticated = true;
@@ -40,7 +37,6 @@ class AuthBridgeImpl implements IAuthBridge {
 
   async refreshSession(): Promise<{ user_id: string } | null> {
     try {
-      // In a real implementation, this would refresh the auth token
       const storedUser = localStorage.getItem('auth_user');
       if (storedUser) {
         const user = JSON.parse(storedUser) as UserProfile;
@@ -61,7 +57,6 @@ class AuthBridgeImpl implements IAuthBridge {
   // Authentication methods
   async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      // For demo purposes
       const user: UserProfile = {
         id: 'demo-user-id',
         email,
@@ -90,7 +85,6 @@ class AuthBridgeImpl implements IAuthBridge {
 
   async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     try {
-      // For demo purposes
       const user: UserProfile = {
         id: 'demo-user-id',
         email,
@@ -130,6 +124,41 @@ class AuthBridgeImpl implements IAuthBridge {
         details: { errorMessage: error instanceof Error ? error.message : String(error) }
       });
     }
+  }
+
+  async signInWithOAuth(provider: string, options?: any): Promise<{ user: UserProfile | null; error: Error | null }> {
+    try {
+      logger.log(LogLevel.INFO, LogCategory.AUTH, `Attempting OAuth sign in with ${provider}`, { 
+        details: { provider, options } 
+      });
+
+      if (provider === 'google') {
+        const mockUser: UserProfile = {
+          id: 'google-user-id',
+          email: 'google-user@example.com',
+          name: 'Google User',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        localStorage.setItem('auth_user', JSON.stringify(mockUser));
+        localStorage.setItem('auth_token', 'google-oauth-token');
+        this._isAuthenticated = true;
+
+        return { user: mockUser, error: null };
+      }
+
+      throw new Error(`OAuth provider ${provider} not supported`);
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, `Failed to sign in with ${provider}`, { 
+        details: { provider, error: error instanceof Error ? error.message : String(error) } 
+      });
+      return { user: null, error: error instanceof Error ? error : new Error(`Unknown error with ${provider} login`) };
+    }
+  }
+
+  async signIn(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
+    return this.signInWithEmail(email, password);
   }
 
   subscribeToEvent(event: string, callback: (event: any) => void): { unsubscribe: () => void } {
@@ -184,6 +213,10 @@ class AuthBridgeImpl implements IAuthBridge {
   }
 
   getProfile(): UserProfile | null {
+    return this.getUser();
+  }
+
+  getUserProfile(): UserProfile | null {
     return this.getUser();
   }
 }

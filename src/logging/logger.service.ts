@@ -1,4 +1,3 @@
-
 import { LogLevel, LogCategory, LogEntry, LogDetails } from '@/shared/types/shared.types';
 import { ConsoleTransport } from './transports/console-transport';
 import { MemoryTransport } from './transports/memory-transport';
@@ -16,7 +15,7 @@ export interface LogTransport {
 /**
  * Core logger service for the application
  */
-class LoggerService {
+export class LoggerService {
   private transports: LogTransport[] = [];
   private defaultLevel: LogLevel = LogLevel.INFO;
   
@@ -45,18 +44,21 @@ class LoggerService {
    * Log a message at the specified level
    */
   public log(level: LogLevel, category: LogCategory, message: string, details?: LogDetails): void {
-    const entry: LogEntry = {
+    const source = details?.source;
+    const tags = details?.tags;
+    const logEntry: LogEntry = {
+      id: this.generateId(),
       level,
       category,
       message,
       timestamp: new Date(),
-      source: details?.source,
-      details: details,
-      tags: details?.tags
+      source,
+      details,
+      tags
     };
     
     // Send the entry to all transports
-    this.transports.forEach(transport => transport.log(entry));
+    this.transports.forEach(transport => transport.log(logEntry));
   }
   
   /**
@@ -99,6 +101,20 @@ class LoggerService {
    */
   public fatal(category: LogCategory, message: string, details?: LogDetails): void {
     this.log(LogLevel.FATAL, category, message, details);
+  }
+
+  /**
+   * Helper method to generate unique IDs for log entries
+   */
+  private generateId(): string {
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
+  }
+
+  /**
+   * Public accessor for transports to fix private property access
+   */
+  public getTransports(): LogTransport[] {
+    return this.transports;
   }
 }
 

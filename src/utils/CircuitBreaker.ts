@@ -1,27 +1,34 @@
-
 /**
- * CircuitBreaker - A simple circuit breaker implementation to prevent 
- * repeated calls to a failing resource
+ * Circuit Breaker implementation to prevent cascading failures
  */
 export class CircuitBreaker {
-  private name: string;
-  private maxFailures: number;
-  private resetTimeout: number;
-  private failureCount: number = 0;
-  private lastFailureTime: number | null = null;
-  private isOpen: boolean = false;
+  // Make properties public instead of private
+  public isOpen: boolean = false;
+  public failureCount: number = 0;
+  public successCount: number = 0;
+  public lastFailureTime: number = 0;
+  public count: number = 0;
+  
+  constructor(
+    public name: string,
+    public maxFailures: number = 5,
+    public resetTimeout: number = 30000,
+    public halfOpenAttemptsAllowed: number = 1,
+  ) {}
 
-  /**
-   * Creates a new CircuitBreaker
-   * 
-   * @param name Name of the circuit for identification
-   * @param maxFailures Number of failures before opening the circuit
-   * @param resetTimeout Time in ms before resetting the circuit
-   */
-  constructor(name: string, maxFailures = 3, resetTimeout = 5000) {
-    this.name = name;
-    this.maxFailures = maxFailures;
-    this.resetTimeout = resetTimeout;
+  // Static factory method for convenience
+  static init(name: string, options?: Partial<{
+    maxFailures: number;
+    resetTimeout: number;
+    halfOpenAttemptsAllowed: number;
+  }>): CircuitBreaker {
+    const { maxFailures, resetTimeout, halfOpenAttemptsAllowed } = options || {};
+    return new CircuitBreaker(
+      name,
+      maxFailures,
+      resetTimeout,
+      halfOpenAttemptsAllowed
+    );
   }
 
   /**
@@ -83,7 +90,8 @@ export class CircuitBreaker {
   reset(): void {
     this.failureCount = 0;
     this.isOpen = false;
-    this.lastFailureTime = null;
+    this.lastFailureTime = 0;
+    this.count = 0;
   }
   
   /**
@@ -101,9 +109,23 @@ export class CircuitBreaker {
   }
   
   /**
+   * Get the current success count
+   */
+  getSuccessCount(): number {
+    return this.successCount;
+  }
+  
+  /**
+   * Get the current count
+   */
+  getCount(): number {
+    return this.count;
+  }
+  
+  /**
    * Check if the circuit is currently open
    */
-  isCircuitOpen(): boolean {
+  getIsOpen(): boolean {
     // If circuit was open, check if it's time to reset
     if (this.isOpen && this.lastFailureTime) {
       const now = Date.now();

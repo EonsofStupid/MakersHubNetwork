@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { UserProfile, AuthStatus, LogCategory, LogLevel, UserRole, ROLES } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
@@ -35,6 +34,17 @@ export interface AuthState {
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
 }
+
+// Create error handling helper
+const handleError = (error: unknown): Error => {
+  if (error instanceof Error) {
+    return error;
+  }
+  if (typeof error === 'string') {
+    return new Error(error);
+  }
+  return new Error('Unknown error occurred');
+};
 
 // Create the auth store
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -96,7 +106,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       set({ 
         status: AuthStatus.ERROR, 
-        error: error as Error,
+        error: handleError(error),
         initialized: true,
         isLoading: false,
         roles: [],
@@ -159,7 +169,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       set({ 
         status: AuthStatus.ERROR,
-        error: error as Error,
+        error: handleError(error),
         isAuthenticated: false,
         isLoading: false,
         roles: [],
@@ -201,7 +211,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       set({
         status: AuthStatus.ERROR,
-        error: error as Error,
+        error: handleError(error),
         isLoading: false
       });
       
@@ -251,7 +261,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       set({
         status: AuthStatus.ERROR,
-        error: error as Error,
+        error: handleError(error),
         isLoading: false
       });
       
@@ -280,7 +290,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: false });
     } catch (error) {
       set({
-        error: error as Error,
+        error: handleError(error),
         isLoading: false
       });
       
@@ -323,7 +333,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
     } catch (error) {
       set({
-        error: error as Error,
+        error: handleError(error),
         isLoading: false
       });
       
@@ -333,3 +343,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   }
 }));
+
+// Export helpers for accessing specific parts of the auth state
+export const selectUser = (state: AuthState) => state.user;
+export const selectIsAuthenticated = (state: AuthState) => state.isAuthenticated;
+export const selectStatus = (state: AuthState) => state.status;
+export const selectError = (state: AuthState) => state.error;
+export const selectIsLoading = (state: AuthState) => state.isLoading;
+export const selectUserRoles = (state: AuthState) => state.roles;

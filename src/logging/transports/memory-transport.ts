@@ -1,93 +1,87 @@
+import { LogTransport, LogEntry, LogLevel, LogFilter } from '../logger.service';
 
-import { LogEntry, LogLevel } from '@/shared/types/shared.types';
-import { Transport } from './transport.interface';
-import { TransportOptions } from '../types';
+export interface TransportOptions {
+  maxEntries?: number;
+  minLevel?: LogLevel;
+}
 
-export class MemoryTransport implements Transport {
+export class MemoryTransport implements LogTransport {
+  name = 'memory';
   private logs: LogEntry[] = [];
-  private minLevel: LogLevel;
-  private maxEntries: number;
+  private listeners: ((event: any) => void)[] = [];
   
-  constructor(options?: TransportOptions | LogLevel) {
-    if (typeof options === 'object') {
-      this.minLevel = options.minLevel || LogLevel.INFO;
-      this.maxEntries = options.maxEntries || 1000;
-    } else {
-      this.minLevel = options || LogLevel.INFO;
-      this.maxEntries = 1000;
-    }
-  }
+  constructor(private options: TransportOptions = {}) {}
   
   log(entry: LogEntry): void {
-    this.logs.unshift(entry); // Add to the beginning for most recent first
+    this.logs.push(entry);
     
-    // Trim the logs if we exceed the max entries
-    if (this.logs.length > this.maxEntries) {
-      this.logs = this.logs.slice(0, this.maxEntries);
+    // Limit the number of entries
+    if (this.options.maxEntries && this.logs.length > this.options.maxEntries) {
+      this.logs.shift();
     }
+    
+    this.notifyListeners({
+      type: 'new-log',
+      data: entry
+    });
+  }
+  
+  subscribe(listener: (event: any) => void): () => void {
+    this.listeners.push(listener);
+    
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+  
+  private notifyListeners(event: any): void {
+    this.listeners.forEach(listener => listener(event));
   }
   
   getLogs(): LogEntry[] {
     return [...this.logs];
   }
   
-  getMinLevel(): LogLevel {
-    return this.minLevel;
+  filter(options?: Partial<LogFilter>): LogEntry[] {
+    let entries = [...this.logs];
+    
+    if (options?.level) {
+      entries = entries.filter(log => log.level === options.level);
+    }
+    
+    if (options?.category) {
+      entries = entries.filter(log => log.category === options.category);
+    }
+
+    if (options?.source) {
+      entries = entries.filter(log => log.source && log.source.includes(options.source as string));
+    }
+    
+    if (options?.search) {
+      const searchTerm = options.search.toLowerCase();
+      entries = entries.filter(log =>
+        log.message.toLowerCase().includes(searchTerm) ||
+        (log.source && log.source.toLowerCase().includes(searchTerm)) ||
+        (log.details && JSON.stringify(log.details).toLowerCase().includes(searchTerm))
+      );
+    }
+    
+    if (options?.from) {
+      entries = entries.filter(log => log.timestamp >= options.from!);
+    }
+    
+    if (options?.to) {
+      entries = entries.filter(log => log.timestamp <= options.to!);
+    }
+    
+    return entries;
   }
-  
-  setMinLevel(level: LogLevel): void {
-    this.minLevel = level;
-  }
-  
-  clear(): void {
+
+  clearLogs(): void {
     this.logs = [];
-  }
-  
-  getLog(id: string): LogEntry | undefined {
-    return this.logs.find(log => log.id === id);
-  }
-  
-  getFilteredLogs(filter: {
-    level?: LogLevel;
-    search?: string;
-    category?: string;
-    from?: Date;
-    to?: Date;
-  }): LogEntry[] {
-    return this.logs.filter(log => {
-      if (filter.level && log.level !== filter.level) {
-        return false;
-      }
-      
-      if (filter.category && log.category !== filter.category) {
-        return false;
-      }
-      
-      if (filter.search) {
-        const searchLower = filter.search.toLowerCase();
-        const matchesMessage = log.message.toLowerCase().includes(searchLower);
-        const matchesSource = log.source.toLowerCase().includes(searchLower);
-        if (!matchesMessage && !matchesSource) {
-          return false;
-        }
-      }
-      
-      if (filter.from || filter.to) {
-        const logDate = new Date(log.timestamp);
-        
-        if (filter.from && logDate < filter.from) {
-          return false;
-        }
-        
-        if (filter.to && logDate > filter.to) {
-          return false;
-        }
-      }
-      
-      return true;
+    this.notifyListeners({
+      type: 'logs-cleared',
+      data: null
     });
   }
 }
-
-// Export a singleton instance
-export const memoryTransport = new MemoryTransport();
