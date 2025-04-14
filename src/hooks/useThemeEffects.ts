@@ -1,123 +1,71 @@
 
-import { useCallback } from 'react';
-import { useThemeEffect } from '@/shared/theme/effects/ThemeEffectProvider';
-import { ThemeEffect, GlitchEffect, CyberEffect, GradientEffect, PulseEffect } from '@/theme/types/effects';
+import { useState, useEffect, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { ThemeEffectType } from '@/shared/types/shared.types';
+import { ThemeEffect } from '@/shared/types/theme/effects.types';
 
-interface EffectOptions {
-  types?: string[];
-  colors?: string[];
-  duration?: number;
-}
-
+/**
+ * Hook for managing theme effects
+ */
 export function useThemeEffects() {
-  const { addEffect, removeEffect } = useThemeEffect();
-
-  const applyEffect = useCallback((
-    elementId: string, 
-    effect: ThemeEffect
-  ) => {
-    // Generate a unique ID for this effect
-    const effectId = `${elementId}-${effect.type}`;
+  const [effects, setEffects] = useState<Record<string, ThemeEffect>>({});
+  
+  // Add a new effect
+  const addEffect = useCallback((elementId: string, effect: Partial<ThemeEffect>) => {
+    const id = `${elementId}-${Date.now()}`;
+    const newEffect: ThemeEffect = {
+      type: effect.type || ThemeEffectType.NONE,
+      enabled: effect.enabled !== undefined ? effect.enabled : true,
+      ...effect
+    };
     
-    // Add effect with its ID
-    addEffect(elementId, {
-      ...effect,
-      id: effectId,
-      enabled: true
+    setEffects(prev => ({
+      ...prev,
+      [id]: newEffect
+    }));
+    
+    return id;
+  }, []);
+  
+  // Remove an effect by ID
+  const removeEffect = useCallback((effectId: string) => {
+    setEffects(prev => {
+      const { [effectId]: _, ...rest } = prev;
+      return rest;
     });
-    
-    // If duration is specified, remove effect after duration
-    if ('duration' in effect && effect.duration) {
-      setTimeout(() => {
-        removeEffect(effectId);
-      }, effect.duration);
-    }
-    
-    // Return a cleanup function
-    return () => removeEffect(effectId);
-  }, [addEffect, removeEffect]);
-
-  const applyRandomEffect = useCallback((
-    elementId: string, 
-    options: EffectOptions = {}
-  ) => {
-    // Default options
-    const { 
-      types = ['glitch', 'cyber', 'gradient', 'pulse'],
-      colors = ['#00F0FF', '#FF2D6E', '#8B5CF6'],
-      duration = 2000
-    } = options;
-
-    // Pick a random effect type from available types
-    const type = types[Math.floor(Math.random() * types.length)];
-    // Pick a random color
-    const color = colors[Math.floor(Math.random() * colors.length)];
-
-    // Create effect based on type
-    let effect: ThemeEffect;
-    switch (type) {
-      case 'glitch':
-        effect = {
-          id: `${elementId}-glitch`,
-          type: 'glitch',
-          enabled: true,
-          color,
-          frequency: Math.random() * 0.5 + 0.3,
-          amplitude: Math.random() * 0.5 + 0.3,
-          duration
-        } as GlitchEffect;
-        break;
-
-      case 'cyber':
-        effect = {
-          id: `${elementId}-cyber`,
-          type: 'cyber',
-          enabled: true,
-          glowColor: color,
-          textShadow: true,
-          scanLines: Math.random() > 0.7,
-          duration
-        } as CyberEffect;
-        break;
-
-      case 'gradient':
-        effect = {
-          id: `${elementId}-gradient`,
-          type: 'gradient',
-          enabled: true,
-          colors: [color, colors[(colors.indexOf(color) + 1) % colors.length]],
-          speed: Math.random() * 3 + 1,
-          duration
-        } as GradientEffect;
-        break;
-
-      case 'pulse':
-        effect = {
-          id: `${elementId}-pulse`,
-          type: 'pulse',
-          enabled: true,
-          color,
-          minOpacity: 0.2,
-          maxOpacity: 0.8,
-          duration
-        } as PulseEffect;
-        break;
-
-      default:
-        effect = {
-          id: `${elementId}-default`,
-          type: 'default',
-          enabled: true,
-          duration
-        };
-    }
-
-    return applyEffect(elementId, effect);
-  }, [applyEffect]);
-
+  }, []);
+  
+  // Get effects as an array
+  const getEffects = useCallback(() => {
+    return Object.values(effects);
+  }, [effects]);
+  
+  // Get a specific effect by ID
+  const getEffect = useCallback((effectId: string) => {
+    return effects[effectId];
+  }, [effects]);
+  
+  // Update an existing effect
+  const updateEffect = useCallback((effectId: string, updates: Partial<ThemeEffect>) => {
+    setEffects(prev => {
+      if (!prev[effectId]) return prev;
+      
+      return {
+        ...prev,
+        [effectId]: {
+          ...prev[effectId],
+          ...updates
+        }
+      };
+    });
+  }, []);
+  
   return {
-    applyEffect,
-    applyRandomEffect,
-    removeEffect
+    addEffect,
+    removeEffect,
+    getEffects,
+    getEffect,
+    updateEffect,
+    effects
   };
 }

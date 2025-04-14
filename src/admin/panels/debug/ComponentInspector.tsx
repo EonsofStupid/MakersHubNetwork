@@ -21,7 +21,12 @@ export function ComponentInspector() {
 
   if (!isVisible || !inspectedComponent) return null;
 
-  const handleTabChange = (value: string) => {
+  // Ensure inspectorTab is one of the valid values
+  const validTab = ['styles', 'props', 'state'].includes(inspectorTab) 
+    ? inspectorTab 
+    : 'props';
+
+  const handleTabChange = (value: 'props' | 'styles' | 'state') => {
     setInspectorTab(value);
   };
 
@@ -45,7 +50,7 @@ export function ComponentInspector() {
         </Button>
       </div>
 
-      <Tabs defaultValue={inspectorTab} onValueChange={handleTabChange}>
+      <Tabs defaultValue={validTab} onValueChange={handleTabChange as any}>
         <TabsList className="w-full">
           <TabsTrigger value="styles" className="flex-1">Styles</TabsTrigger>
           <TabsTrigger value="props" className="flex-1">Props</TabsTrigger>

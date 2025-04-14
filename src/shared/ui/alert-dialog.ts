@@ -1,13 +1,3 @@
 
-// Re-export from shadcn
-export {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from '@/components/ui/alert-dialog';
+// Re-export from alert-dialog.tsx
+export * from '@/shared/ui/alert-dialog.tsx';
