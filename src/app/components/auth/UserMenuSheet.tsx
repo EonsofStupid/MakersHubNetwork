@@ -1,6 +1,7 @@
 
 import React from "react";
-import { UserRole } from "@/shared/types/shared.types";
+import { UserRole, ROLE_LABELS } from "@/rbac/constants/roles";
+import { RBACBridge } from "@/rbac/bridge";
 import {
   Sheet,
   SheetContent,
@@ -16,7 +17,8 @@ import {
   Users, 
   Shield, 
   FileText, 
-  Database 
+  Database,
+  LayoutDashboard
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -42,46 +44,45 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   roles,
 }) => {
   const navigate = useNavigate();
-  const isAdmin = roles.includes('admin') || roles.includes('super_admin');
-  const isSuperAdmin = roles.includes('super_admin');
-  const isModerator = roles.includes('moderator');
+  const isAdmin = RBACBridge.hasAdminAccess();
+  const isSuperAdmin = RBACBridge.isSuperAdmin();
+  const isModerator = RBACBridge.isModerator();
 
   const adminLinks = [
     { 
       label: "Dashboard", 
-      icon: <Shield className="w-4 h-4" />, 
+      icon: <LayoutDashboard className="w-4 h-4" />, 
       path: "/admin",
-      roles: ['admin', 'super_admin']
+      roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
     },
     { 
       label: "Users", 
       icon: <Users className="w-4 h-4" />, 
       path: "/admin/users",
-      roles: ['admin', 'super_admin']
+      roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
     },
     { 
       label: "Content", 
       icon: <FileText className="w-4 h-4" />, 
       path: "/admin/content",
-      roles: ['admin', 'super_admin', 'moderator']
+      roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MODERATOR]
     },
     { 
       label: "Database", 
       icon: <Database className="w-4 h-4" />, 
       path: "/admin/database",
-      roles: ['super_admin']
+      roles: [UserRole.SUPER_ADMIN]
     },
     { 
       label: "Settings", 
       icon: <Settings className="w-4 h-4" />, 
       path: "/admin/settings",
-      roles: ['super_admin']
+      roles: [UserRole.SUPER_ADMIN]
     }
   ];
 
   const hasAccess = (requiredRoles: UserRole[]) => {
-    if (roles.includes('super_admin')) return true;
-    return requiredRoles.some(role => roles.includes(role));
+    return RBACBridge.hasRole(requiredRoles);
   };
 
   return (
@@ -114,7 +115,7 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
                   key={role}
                   className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
                 >
-                  {role}
+                  {ROLE_LABELS[role] || role}
                 </span>
               ))}
             </div>
