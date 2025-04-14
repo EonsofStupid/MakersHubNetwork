@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build:dev": "vite build --mode development"
+    "build:dev": "vite build --mode development",
     "dev": "npm run dev --workspace=packages/main-app",
     "dev:chat": "npm run dev --workspace=packages/chat-app",
     "build": "npm run build --workspaces",
