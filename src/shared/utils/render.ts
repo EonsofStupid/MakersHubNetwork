@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 /**
@@ -43,24 +42,26 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
     return String(value);
   }
   
-  // Handle arrays by mapping each item through renderUnknownAsNode
+  // Handle arrays
   if (Array.isArray(value)) {
     return (
       <span className="array-value">
-        {value.map((item, index) => (
-          <React.Fragment key={index}>
-            {renderUnknownAsNode(item)}
-            {index < value.length - 1 && ', '}
-          </React.Fragment>
-        ))}
+        {value.map((item, index) => {
+          return (
+            <React.Fragment key={index}>
+              {renderUnknownAsNode(item)}
+              {index < value.length - 1 ? ', ' : ''}
+            </React.Fragment>
+          );
+        })}
       </span>
     );
   }
   
-  // Handle objects with safe stringification
+  // Handle objects
   if (typeof value === 'object') {
     try {
-      // Use a replacer function to handle circular references
+      // Handle circular references
       const seen = new WeakSet();
       const safeString = JSON.stringify(value, (key, val) => {
         if (typeof val === 'object' && val !== null) {
@@ -78,7 +79,7 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
     }
   }
   
-  // Default fallback for any other types
+  // Default fallback
   return String(value);
 }
 
@@ -120,4 +121,4 @@ export function nodeToSearchableString(value: unknown): string {
   }
   
   return String(value);
-}
+} 
