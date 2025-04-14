@@ -1,3 +1,4 @@
+
 import { useAuthStore } from '@/stores/auth/auth.store';
 import { UserRole, RBAC, PATH_POLICIES } from '@/shared/types/shared.types';
 import { useRbac } from '@/auth/rbac/use-rbac';
@@ -89,10 +90,10 @@ export const useCanAccessPath = (path: string): boolean => {
  */
 export const hasRole = (userRoles: UserRole[], allowedRoles: UserRole | UserRole[]): boolean => {
   // Super admin has all roles
-  if (userRoles.includes(RBAC.superAdmins[0])) {
+  if (userRoles.includes(RBAC.SUPER_ADMINS[0])) {
     return true;
   }
   
   const rolesToCheck = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   return rolesToCheck.some(role => userRoles.includes(role));
-}; 
+};

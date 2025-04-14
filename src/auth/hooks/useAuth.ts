@@ -1,58 +1,66 @@
 
-import { useCallback } from 'react';
-import { useAuthStore } from '../store/auth.store';
-import { UserRole } from '@/shared/types/shared.types';
+import { useCallback, useState } from 'react';
+import { AuthBridge } from '@/bridges/AuthBridge';
+import { UserProfile, UserRole, ROLES } from '@/shared/types/shared.types';
+import { RBACBridge } from '@/bridges/RBACBridge';
 
-export function useAuth() {
-  const {
-    user,
-    status,
-    roles,
-    isLoading,
-    isAuthenticated,
-    error,
-    login,
-    logout,
-    register,
-    resetPassword,
-    updateProfile,
-  } = useAuthStore();
+export interface UseAuthReturn {
+  user: UserProfile | null;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  hasRole: (roleOrRoles: UserRole | UserRole[]) => boolean;
+  roles: UserRole[];
+}
 
-  // Check if the user has a specific role
-  const hasRole = useCallback((role: UserRole | UserRole[]) => {
-    if (!roles || roles.length === 0) return false;
-    
-    if (Array.isArray(role)) {
-      return role.some(r => roles.includes(r));
+export function useAuth(): UseAuthReturn {
+  const [isLoading, setIsLoading] = useState(false);
+  const user = AuthBridge.getUser();
+  
+  const signIn = useCallback(async (email: string, password: string): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await AuthBridge.signInWithEmail(email, password);
+    } finally {
+      setIsLoading(false);
     }
-    
-    return roles.includes(role);
-  }, [roles]);
-
-  // Check if user is admin or superadmin
-  const isAdmin = useCallback(() => {
-    return hasRole([UserRole.ADMIN, UserRole.SUPERADMIN]);
-  }, [hasRole]);
-
-  // Check if user is superadmin
-  const isSuperAdmin = useCallback(() => {
-    return hasRole(UserRole.SUPERADMIN);
-  }, [hasRole]);
-
+  }, []);
+  
+  const signOut = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await AuthBridge.signOut();
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  
+  const signUp = useCallback(async (email: string, password: string): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await AuthBridge.signUp(email, password);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  
+  const hasRole = useCallback((roleOrRoles: UserRole | UserRole[]): boolean => {
+    return RBACBridge.hasRole(roleOrRoles);
+  }, []);
+  
+  // Get roles from RBAC bridge
+  const roles = RBACBridge.getRoles();
+  
   return {
     user,
-    status,
-    roles,
+    signIn,
+    signOut,
+    signUp,
+    isAuthenticated: AuthBridge.isAuthenticated,
     isLoading,
-    isAuthenticated,
-    error,
-    login,
-    logout,
-    register,
-    resetPassword,
-    updateProfile,
     hasRole,
-    isAdmin,
-    isSuperAdmin
+    roles
   };
 }

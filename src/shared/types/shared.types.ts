@@ -1,3 +1,4 @@
+
 /**
  * Shared type definitions for the entire application
  */
@@ -100,6 +101,10 @@ export interface UserProfile {
   user_metadata?: Record<string, unknown>;
   bio?: string;
   roles?: UserRole[];
+  app_metadata?: {
+    provider?: string;
+    [key: string]: any;
+  };
 }
 
 /**
@@ -199,7 +204,7 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.SILENT]: 8,
 };
 
-// Re-export for backward compatibility
+// Exports for backward compatibility
 export const LOG_LEVEL = LogLevel;
 export const LOG_CATEGORY = LogCategory;
 export const AUTH_STATUS = AuthStatus;
@@ -309,28 +314,14 @@ export interface ComponentTokens {
   alert: Record<string, string>;
 }
 
-export interface ThemeState {
-  themes: Theme[];
-  activeThemeId: string;
-  designTokens?: DesignTokens;
-  componentTokens: ComponentTokens;
-  isLoading: boolean;
-  error: string | null;
-  theme?: Theme;
-  variables?: Record<string, string>;
-  componentStyles?: Record<string, any>;
-  isLoaded?: boolean;
-  tokens?: ThemeToken[];
-}
-
 /**
- * Theme effect
+ * Theme effect type
  */
 export enum ThemeEffectType {
   NONE = 'none',
   GRADIENT = 'gradient',
   GLOW = 'glow',
-  BLUR = 'blur',
+  BLUR = 'blur', 
   NOISE = 'noise',
   GRID = 'grid',
   DOTS = 'dots',
@@ -339,11 +330,11 @@ export enum ThemeEffectType {
   SHADOW = 'shadow',
   PULSE = 'pulse',
   PARTICLE = 'particle',
+  GLITCH = 'glitch', // Added for backward compatibility
+  CYBER = 'cyber',    // Added for backward compatibility
+  MORPH = 'morph',    // Added for backward compatibility
 }
 
-/**
- * Theme log details
- */
 export interface ThemeLogDetails {
   themeId: string;
   action: string;
@@ -426,9 +417,3 @@ export interface BaseEntity {
   created_at: string;
   updated_at: string;
 }
-
-// Re-export for backward compatibility
-export const AUTH_STATUS = AuthStatus;
-export const RBAC = {
-  POLICIES: RBAC_POLICIES
-};
