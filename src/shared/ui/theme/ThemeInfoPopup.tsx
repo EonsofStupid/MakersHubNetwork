@@ -1,10 +1,9 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
-import { useThemeStore } from '@/shared/stores/theme/store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import ThemeInfoTab from './info/ThemeInfoTab';
 import { Theme } from '@/types/theme';
+import ThemeInfoTab from './info/ThemeInfoTab';
 
 interface ThemeInfoPopupProps {
   open: boolean;
@@ -46,7 +45,7 @@ export const ThemeInfoPopup: React.FC<ThemeInfoPopupProps> = ({
                   <div key={key} className="flex items-center gap-2">
                     <div 
                       className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: value }}
+                      style={{ backgroundColor: value as string }}
                     />
                     <span className="text-sm">{key}</span>
                   </div>

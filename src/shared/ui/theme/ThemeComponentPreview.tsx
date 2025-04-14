@@ -1,6 +1,15 @@
 
 import React from 'react';
-import { ThemeComponent } from '@/shared/types/theme.types';
+
+// Define ThemeComponent interface locally to avoid import issues
+interface ThemeComponent {
+  id?: string;
+  name: string;
+  component_name?: string;
+  tokens: Record<string, string>;
+  styles?: Record<string, string>;
+  variants?: Record<string, Record<string, string>>;
+}
 
 interface ThemeComponentPreviewProps {
   component?: ThemeComponent;

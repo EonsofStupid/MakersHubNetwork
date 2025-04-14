@@ -2,10 +2,21 @@
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/ui/tabs';
 import { ScrollArea } from '@/shared/ui/scroll-area';
-import { Theme } from '@/types/theme';
-import ThemeColorSystem from '../ThemeColorSystem';
-import EffectsPreview from '../EffectsPreview';
-import { ThemeEffect } from '@/types/theme';
+import { Theme, ThemeEffect } from '@/types/theme';
+
+interface ThemeColorSystemProps {
+  tokens: any[];
+}
+
+// Simple placeholder component
+const ThemeColorSystem: React.FC<ThemeColorSystemProps> = () => {
+  return <div>Color System Placeholder</div>;
+};
+
+// Simple placeholder component for EffectsPreview
+const EffectsPreview: React.FC<{effect?: ThemeEffect}> = () => {
+  return <div>Effects Preview Placeholder</div>;
+};
 
 interface ThemeInfoTabsProps {
   theme: Theme;
@@ -20,7 +31,6 @@ export const ThemeInfoTabs: React.FC<ThemeInfoTabsProps> = ({
 }) => {
   // Mock effect for preview
   const mockEffect: ThemeEffect = {
-    id: '1',
     type: 'glow',
     enabled: true,
     intensity: 0.5

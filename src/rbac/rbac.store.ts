@@ -1,6 +1,33 @@
+
 import { create } from 'zustand';
-import { UserRole, Permission, ROLES, LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { UserRole, Permission, ROLES } from '@/shared/types/shared.types';
+import { LogCategory, LogLevel } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
+
+// Define default permissions map for initialization
+const DEFAULT_PERMISSIONS: Record<Permission, boolean> = {
+  'create_project': false,
+  'edit_project': false,
+  'delete_project': false,
+  'submit_build': false,
+  'access_admin': false,
+  'manage_api_keys': false,
+  'manage_users': false,
+  'manage_roles': false,
+  'manage_permissions': false,
+  'view_analytics': false,
+  'admin:view': false,
+  'admin:edit': false,
+  'admin:delete': false,
+  'user:view': false,
+  'user:edit': false,
+  'user:delete': false,
+  'content:view': false,
+  'content:edit': false,
+  'content:delete': false,
+  'settings:view': false,
+  'settings:edit': false
+};
 
 // RBAC State interface
 interface RBACState {
@@ -95,7 +122,7 @@ export const rbacStore = create<RBACState>((set, get) => ({
     set({ roles: newRoles, permissions });
     
     logger.log(LogLevel.INFO, LogCategory.RBAC, 'Role removed', { 
-      details: { role, remainingRoles: newRoles } 
+        details: { role, remainingRoles: newRoles } 
     });
   },
   

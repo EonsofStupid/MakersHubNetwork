@@ -4,6 +4,11 @@ import { ThemeEffectType } from '../shared.types';
 export interface ThemeEffect {
   type: ThemeEffectType;
   enabled: boolean;
+  intensity: number;
+  color?: string;
+  selector?: string;
+  config?: Record<string, any>;
+  id?: string;
   [key: string]: any;
 }
 
@@ -41,7 +46,7 @@ export interface ParticleEffect extends ThemeEffect {
 
 export interface MorphEffect extends ThemeEffect {
   type: ThemeEffectType.MORPH | ThemeEffectType.BLUR; // Support both new and old naming
-  intensity?: number;
+  intensity?: number; // Make optional to match base interface
   speed?: number;
 }
 
