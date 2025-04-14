@@ -15,7 +15,7 @@ export const authStatusAtom = atom<AuthStatus>((get) => {
   return AuthBridge.isAuthenticated ? AuthStatus.AUTHENTICATED : AuthStatus.UNAUTHENTICATED;
 });
 
-export const isAuthenticatedAtom = atom<boolean>(() => AuthBridge.isAuthenticated);
+export const isAuthenticatedAtom = atom<boolean>(() => !!AuthBridge.isAuthenticated);
 
 export const isInitializedAtom = atom<boolean>(() => true); // Simplified for compatibility
 

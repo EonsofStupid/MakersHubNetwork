@@ -1,4 +1,6 @@
 
+import { UserRole } from './shared.types';
+
 /**
  * Core permission definitions
  * Single source of truth for permission types in the application
@@ -54,9 +56,9 @@ export const DEFAULT_PERMISSIONS: Record<Permission, boolean> =
   );
 
 // Permission mapping to roles
-export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
-  super_admin: Object.values(Permission),
-  admin: [
+export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  [UserRole.SUPER_ADMIN]: Object.values(Permission),
+  [UserRole.ADMIN]: [
     Permission.ADMIN_ACCESS,
     Permission.ADMIN_VIEW,
     Permission.ADMIN_EDIT,
@@ -71,21 +73,22 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     Permission.PROJECT_EDIT,
     Permission.ANALYTICS_VIEW
   ],
-  moderator: [
+  [UserRole.MODERATOR]: [
     Permission.CONTENT_VIEW,
     Permission.CONTENT_EDIT,
     Permission.USER_VIEW
   ],
-  builder: [
+  [UserRole.BUILDER]: [
     Permission.PROJECT_CREATE,
     Permission.PROJECT_EDIT,
     Permission.PROJECT_SUBMIT,
     Permission.PROJECT_VIEW
   ],
-  user: [
+  [UserRole.USER]: [
     Permission.CONTENT_VIEW,
     Permission.PROJECT_VIEW
-  ]
+  ],
+  [UserRole.GUEST]: []
 };
 
 /**

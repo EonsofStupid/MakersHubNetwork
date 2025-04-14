@@ -3,8 +3,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from './bridge';
 import { useLogger } from '@/logging/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
-import type { UserRole } from '@/shared/types/shared.types';
+import { LogCategory, UserRole } from '@/shared/types/shared.types';
 
 export const RBACInitializer = () => {
   const { isAuthenticated, user } = useAuthStore();

@@ -1,6 +1,6 @@
 
 import { RBACBridge as RBACBridgeImpl } from '@/rbac/bridge';
-import { UserRole } from '@/rbac/constants/roles';
+import { UserRole } from '@/shared/types/shared.types';
 import { Permission } from '@/shared/types/permissions';
 
 /**
@@ -19,7 +19,7 @@ class RBACBridgeExport {
    * Check if user has a specific permission
    */
   hasPermission(permission: Permission): boolean {
-    return RBACBridgeImpl.hasPermission(permission);
+    return RBACBridgeImpl.hasPermission(permission as any);
   }
   
   /**
@@ -61,14 +61,14 @@ class RBACBridgeExport {
    * Set user roles
    */
   setRoles(roles: UserRole[]): void {
-    return RBACBridgeImpl.setRoles(roles);
+    RBACBridgeImpl.setRoles(roles);
   }
   
   /**
    * Clear user roles
    */
   clearRoles(): void {
-    return RBACBridgeImpl.clearRoles();
+    RBACBridgeImpl.clearRoles();
   }
   
   /**

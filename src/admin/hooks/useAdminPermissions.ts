@@ -13,7 +13,7 @@ export function useAdminPermissions() {
   
   const hasPermission = useCallback((permission: Permission) => {
     // Check for direct permission
-    const hasDirectPermission = RBACBridge.hasPermission(permission);
+    const hasDirectPermission = RBACBridge.hasPermission(permission as any);
     
     // Super admin has all permissions
     const isSuperAdmin = RBACBridge.isSuperAdmin();

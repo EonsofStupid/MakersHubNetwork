@@ -18,6 +18,7 @@ export const AppInitializer: React.FC<AppInitializerProps> = ({ children }) => {
       try {
         logger.info('Initializing application');
         await initialize();
+        logger.info('Auth initialization complete');
       } catch (error) {
         logger.error('Failed to initialize application', {
           error: error instanceof Error ? error.message : String(error)

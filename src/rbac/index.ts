@@ -11,22 +11,8 @@ export { RBACBridge } from './bridge';
 export { RBACInitializer } from './RBACInitializer';
 
 // Export types and constants
-export { UserRole, ROLES, ROLE_GROUPS, ROLE_LABELS, ROLE_PRIORITY } from './constants/roles';
+export { UserRole, ROLES, RBAC } from '@/shared/types/shared.types';
 export { Permission } from '@/shared/types/permissions';
-export { PATH_POLICIES, ADMIN_SECTION_POLICIES } from './constants/policies';
-
-// Export components
-export { RoleGuard, AdminGuard, SuperAdminGuard, ModeratorGuard, BuilderGuard, AuthGuard } from './components/RoleGuard';
-export { RouteGuard, withRoleProtection } from './components/withRoleProtection';
 
 // Export hooks
 export { useRbac } from './hooks/useRbac';
-
-// Export store for advanced usage
-export { useRbacStore } from './store/rbac.store';
-
-// Initialize the RBAC system on import
-import { RBACBridge } from './bridge';
-setTimeout(() => {
-  RBACBridge.initialize();
-}, 0);

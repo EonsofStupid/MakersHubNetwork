@@ -1,4 +1,5 @@
-import { UserRole, Permission } from '@/shared/types/shared.types';
+
+import { UserRole, Permission, ROLES } from '@/shared/types/shared.types';
 import { rbacStore } from './store/rbac.store';
 import { logger } from '@/logging/logger.service';
 import { LogCategory, LogLevel } from '@/shared/types/shared.types';
@@ -24,7 +25,7 @@ class RBACBridgeImpl {
     const userRoles = rbacStore.getState().roles;
     
     // Super admin always has all roles
-    if (userRoles.includes('super_admin')) {
+    if (userRoles.includes(UserRole.SUPER_ADMIN)) {
       return true;
     }
     
@@ -69,7 +70,7 @@ class RBACBridgeImpl {
    * Check if user is a super admin
    */
   isSuperAdmin(): boolean {
-    return rbacStore.getState().roles.includes('super_admin');
+    return rbacStore.getState().roles.includes(UserRole.SUPER_ADMIN);
   }
   
   /**
@@ -77,21 +78,21 @@ class RBACBridgeImpl {
    */
   hasAdminAccess(): boolean {
     const roles = rbacStore.getState().roles;
-    return roles.includes('admin') || roles.includes('super_admin');
+    return roles.includes(UserRole.ADMIN) || roles.includes(UserRole.SUPER_ADMIN);
   }
   
   /**
    * Check if user is a moderator
    */
   isModerator(): boolean {
-    return rbacStore.getState().roles.includes('moderator');
+    return rbacStore.getState().roles.includes(UserRole.MODERATOR);
   }
   
   /**
    * Check if user is a builder
    */
   isBuilder(): boolean {
-    return rbacStore.getState().roles.includes('builder');
+    return rbacStore.getState().roles.includes(UserRole.BUILDER);
   }
   
   /**
@@ -120,12 +121,12 @@ class RBACBridgeImpl {
    */
   getHighestRole(): UserRole {
     const roles = this.getRoles();
-    if (roles.includes('super_admin')) return 'super_admin';
-    if (roles.includes('admin')) return 'admin';
-    if (roles.includes('moderator')) return 'moderator';
-    if (roles.includes('builder')) return 'builder';
-    if (roles.includes('user')) return 'user';
-    return 'guest';
+    if (roles.includes(UserRole.SUPER_ADMIN)) return UserRole.SUPER_ADMIN;
+    if (roles.includes(UserRole.ADMIN)) return UserRole.ADMIN;
+    if (roles.includes(UserRole.MODERATOR)) return UserRole.MODERATOR;
+    if (roles.includes(UserRole.BUILDER)) return UserRole.BUILDER;
+    if (roles.includes(UserRole.USER)) return UserRole.USER;
+    return UserRole.GUEST;
   }
 
   /**
@@ -135,13 +136,13 @@ class RBACBridgeImpl {
    */
   canAccessRoute(route: string): boolean {
     const userRoles = this.getRoles();
-    if (userRoles.includes('super_admin')) return true;
+    if (userRoles.includes(UserRole.SUPER_ADMIN)) return true;
     
     const routeRoles: Record<string, UserRole[]> = {
-      '/admin': ['admin', 'super_admin'],
-      '/admin/users': ['admin', 'super_admin'],
-      '/admin/roles': ['super_admin'],
-      '/admin/settings': ['super_admin']
+      '/admin': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      '/admin/users': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      '/admin/roles': [UserRole.SUPER_ADMIN],
+      '/admin/settings': [UserRole.SUPER_ADMIN]
     };
     
     const requiredRoles = routeRoles[route];
@@ -157,13 +158,13 @@ class RBACBridgeImpl {
    */
   canAccessAdminSection(section: string): boolean {
     const userRoles = this.getRoles();
-    if (userRoles.includes('super_admin')) return true;
+    if (userRoles.includes(UserRole.SUPER_ADMIN)) return true;
     
     const sectionRoles: Record<string, UserRole[]> = {
-      users: ['admin', 'super_admin'],
-      roles: ['super_admin'],
-      settings: ['super_admin'],
-      content: ['admin', 'super_admin', 'moderator']
+      users: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+      roles: [UserRole.SUPER_ADMIN],
+      settings: [UserRole.SUPER_ADMIN],
+      content: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MODERATOR]
     };
     
     const requiredRoles = sectionRoles[section];
