@@ -1,3 +1,4 @@
+
 import { UserRole, Permission, ROLES } from '@/shared/types/shared.types';
 import { rbacStore } from './rbac.store';
 
@@ -13,7 +14,7 @@ export class RBACBridgeImpl {
     const userRoles = rbacStore.getState().roles;
     
     // Super admin always has all roles
-    if (userRoles.includes(UserRole.SUPER_ADMIN)) {
+    if (userRoles.includes(ROLES.SUPER_ADMIN)) {
       return true;
     }
     
@@ -37,14 +38,14 @@ export class RBACBridgeImpl {
       return true;
     }
     
-    return permissions.includes(permission);
+    return permissions[permission] === true;
   }
   
   /**
    * Check if user is a super admin
    */
   isSuperAdmin(): boolean {
-    return rbacStore.getState().roles.includes(UserRole.SUPER_ADMIN);
+    return rbacStore.getState().roles.includes(ROLES.SUPER_ADMIN);
   }
   
   /**
@@ -52,21 +53,21 @@ export class RBACBridgeImpl {
    */
   hasAdminAccess(): boolean {
     const roles = rbacStore.getState().roles;
-    return roles.includes(UserRole.ADMIN) || roles.includes(UserRole.SUPER_ADMIN);
+    return roles.includes(ROLES.ADMIN) || roles.includes(ROLES.SUPER_ADMIN);
   }
   
   /**
    * Check if user is a moderator
    */
   isModerator(): boolean {
-    return rbacStore.getState().roles.includes(UserRole.MODERATOR);
+    return rbacStore.getState().roles.includes(ROLES.MODERATOR);
   }
   
   /**
    * Check if user is a builder
    */
   isBuilder(): boolean {
-    return rbacStore.getState().roles.includes(UserRole.BUILDER);
+    return rbacStore.getState().roles.includes(ROLES.BUILDER);
   }
   
   /**
@@ -91,17 +92,28 @@ export class RBACBridgeImpl {
   }
   
   /**
-   * Get user permissions
+   * Check if user can access a specific route
    */
-  getPermissions(): Permission[] {
-    return rbacStore.getState().permissions;
-  }
-  
-  /**
-   * Set user permissions
-   */
-  setPermissions(permissions: Permission[]): void {
-    rbacStore.getState().setPermissions(permissions);
+  canAccessRoute(route: string): boolean {
+    // Super admin can access all routes
+    if (this.isSuperAdmin()) {
+      return true;
+    }
+    
+    // Define route access permissions
+    const routeAccessMap: Record<string, UserRole[]> = {
+      '/admin': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      '/admin/users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      '/admin/content': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+      '/admin/settings': [ROLES.SUPER_ADMIN],
+    };
+    
+    const allowedRoles = routeAccessMap[route];
+    if (!allowedRoles) {
+      return true; // If no specific permissions, allow access
+    }
+    
+    return this.hasRole(allowedRoles);
   }
   
   /**

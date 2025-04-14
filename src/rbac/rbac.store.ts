@@ -1,10 +1,12 @@
 
 import { create } from 'zustand';
-import { UserRole, Permission } from '@/shared/types/shared.types';
+import { UserRole, Permission, ROLES, LogCategory } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
 
+// RBAC State interface
 interface RBACState {
   roles: UserRole[];
-  permissions: Permission[];
+  permissions: Record<Permission, boolean>;
   isLoading: boolean;
   error: string | null;
   
@@ -12,54 +14,154 @@ interface RBACState {
   setRoles: (roles: UserRole[]) => void;
   addRole: (role: UserRole) => void;
   removeRole: (role: UserRole) => void;
-  setPermissions: (permissions: Permission[]) => void;
-  addPermission: (permission: Permission) => void;
-  removePermission: (permission: Permission) => void;
+  setPermissions: (permissions: Record<Permission, boolean>) => void;
+  setPermission: (permission: Permission, value: boolean) => void;
   setError: (error: string | null) => void;
-  setIsLoading: (loading: boolean) => void;
-  reset: () => void;
+  setLoading: (isLoading: boolean) => void;
 }
 
-export const rbacStore = create<RBACState>((set) => ({
+const DEFAULT_PERMISSIONS: Record<Permission, boolean> = {
+  'create_project': false,
+  'edit_project': false,
+  'delete_project': false,
+  'submit_build': false,
+  'access_admin': false,
+  'manage_api_keys': false,
+  'manage_users': false,
+  'manage_roles': false,
+  'manage_permissions': false,
+  'view_analytics': false,
+  'admin:view': false,
+  'admin:edit': false,
+  'admin:delete': false,
+  'user:view': false,
+  'user:edit': false,
+  'user:delete': false,
+  'content:view': false,
+  'content:edit': false,
+  'content:delete': false,
+  'settings:view': false,
+  'settings:edit': false
+};
+
+// Helper function to map roles to permissions
+const mapRolesToPermissions = (roles: UserRole[]): Record<Permission, boolean> => {
+  // Create a copy of default permissions
+  const permissions = { ...DEFAULT_PERMISSIONS };
+  
+  // Define role-based permissions
+  if (roles.includes(ROLES.SUPER_ADMIN)) {
+    // Super admin has all permissions
+    Object.keys(permissions).forEach(key => {
+      permissions[key as Permission] = true;
+    });
+  } else if (roles.includes(ROLES.ADMIN)) {
+    // Admin permissions
+    permissions['access_admin'] = true;
+    permissions['admin:view'] = true;
+    permissions['admin:edit'] = true;
+    permissions['user:view'] = true;
+    permissions['user:edit'] = true;
+    permissions['content:view'] = true;
+    permissions['content:edit'] = true;
+    permissions['content:delete'] = true;
+    permissions['manage_users'] = true;
+    permissions['view_analytics'] = true;
+  } else if (roles.includes(ROLES.MODERATOR)) {
+    // Moderator permissions
+    permissions['content:view'] = true;
+    permissions['content:edit'] = true;
+    permissions['user:view'] = true;
+  } else if (roles.includes(ROLES.BUILDER)) {
+    // Builder permissions
+    permissions['create_project'] = true;
+    permissions['edit_project'] = true;
+    permissions['submit_build'] = true;
+  } else if (roles.includes(ROLES.USER)) {
+    // Basic user permissions
+    permissions['create_project'] = true;
+  }
+  
+  return permissions;
+};
+
+// Create the store with initial state and actions
+export const rbacStore = create<RBACState>((set, get) => ({
   roles: [],
-  permissions: [],
+  permissions: { ...DEFAULT_PERMISSIONS },
   isLoading: false,
   error: null,
   
-  setRoles: (roles) => set(() => ({ roles })),
+  setRoles: (roles) => {
+    const permissions = mapRolesToPermissions(roles);
+    logger.info('RBAC roles updated', { 
+      category: LogCategory.RBAC,
+      details: { roles, permissionsCount: Object.values(permissions).filter(Boolean).length } 
+    });
+    set({ roles, permissions });
+  },
   
-  addRole: (role) => set((state) => {
-    if (state.roles.includes(role)) {
-      return state;
+  addRole: (role) => {
+    const currentRoles = get().roles;
+    if (!currentRoles.includes(role)) {
+      const newRoles = [...currentRoles, role];
+      const permissions = mapRolesToPermissions(newRoles);
+      set({ roles: newRoles, permissions });
+      
+      logger.info('RBAC role added', { 
+        category: LogCategory.RBAC,
+        details: { role, allRoles: newRoles } 
+      });
     }
-    return { roles: [...state.roles, role] };
-  }),
+  },
   
-  removeRole: (role) => set((state) => ({
-    roles: state.roles.filter((r) => r !== role)
-  })),
+  removeRole: (role) => {
+    const currentRoles = get().roles;
+    const newRoles = currentRoles.filter(r => r !== role);
+    const permissions = mapRolesToPermissions(newRoles);
+    set({ roles: newRoles, permissions });
+    
+    logger.info('RBAC role removed', { 
+      category: LogCategory.RBAC,
+      details: { role, remainingRoles: newRoles } 
+    });
+  },
   
-  setPermissions: (permissions) => set(() => ({ permissions })),
+  setPermissions: (permissions) => {
+    set({ permissions });
+    
+    logger.info('RBAC permissions updated', { 
+      category: LogCategory.RBAC,
+      details: { permissionsCount: Object.values(permissions).filter(Boolean).length } 
+    });
+  },
   
-  addPermission: (permission) => set((state) => {
-    if (state.permissions.includes(permission)) {
-      return state;
+  setPermission: (permission, value) => {
+    set(state => ({
+      permissions: {
+        ...state.permissions,
+        [permission]: value
+      }
+    }));
+    
+    logger.info('RBAC permission changed', { 
+      category: LogCategory.RBAC,
+      details: { permission, value } 
+    });
+  },
+  
+  setError: (error) => {
+    set({ error });
+    
+    if (error) {
+      logger.error('RBAC error', { 
+        category: LogCategory.RBAC,
+        details: { error } 
+      });
     }
-    return { permissions: [...state.permissions, permission] };
-  }),
+  },
   
-  removePermission: (permission) => set((state) => ({
-    permissions: state.permissions.filter((p) => p !== permission)
-  })),
-  
-  setError: (error) => set(() => ({ error })),
-  
-  setIsLoading: (isLoading) => set(() => ({ isLoading })),
-  
-  reset: () => set(() => ({
-    roles: [],
-    permissions: [],
-    isLoading: false,
-    error: null
-  }))
+  setLoading: (isLoading) => {
+    set({ isLoading });
+  }
 }));

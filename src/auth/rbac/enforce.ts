@@ -1,5 +1,6 @@
+
 import { AuthPermissionValue, AUTH_PERMISSIONS } from "../constants/permissions";
-import { UserRole } from "@/shared/types/shared.types";
+import { UserRole, ROLES } from "@/shared/types/shared.types";
 import { mapRolesToPermissions } from "./roles";
 
 /**
@@ -38,12 +39,12 @@ export const createPermissionChecker = (userRoles: UserRole[] = []) => {
  * Check if user has admin access
  */
 export const canAccessAdmin = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes(UserRole.ADMIN) || userRoles.includes(UserRole.SUPER_ADMIN);
+  return userRoles.includes(ROLES.ADMIN) || userRoles.includes(ROLES.SUPER_ADMIN);
 };
 
 /**
  * Check if user can use development features
  */
 export const canAccessDevFeatures = (userRoles: UserRole[] = []): boolean => {
-  return userRoles.includes(UserRole.ADMIN) || userRoles.includes(UserRole.SUPER_ADMIN);
+  return userRoles.includes(ROLES.ADMIN) || userRoles.includes(ROLES.SUPER_ADMIN);
 };
