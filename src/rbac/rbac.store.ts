@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { UserRole, Permission, ROLES, LogCategory } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
@@ -94,7 +93,7 @@ export const rbacStore = create<RBACState>((set, get) => ({
   
   setRoles: (roles) => {
     const permissions = mapRolesToPermissions(roles);
-    logger.info('RBAC roles updated', { 
+    logger.info('Roles updated', { 
       category: LogCategory.RBAC,
       details: { roles, permissionsCount: Object.values(permissions).filter(Boolean).length } 
     });
@@ -108,7 +107,7 @@ export const rbacStore = create<RBACState>((set, get) => ({
       const permissions = mapRolesToPermissions(newRoles);
       set({ roles: newRoles, permissions });
       
-      logger.info('RBAC role added', { 
+      logger.info('Role added', { 
         category: LogCategory.RBAC,
         details: { role, allRoles: newRoles } 
       });
@@ -121,7 +120,7 @@ export const rbacStore = create<RBACState>((set, get) => ({
     const permissions = mapRolesToPermissions(newRoles);
     set({ roles: newRoles, permissions });
     
-    logger.info('RBAC role removed', { 
+    logger.info('Role removed', { 
       category: LogCategory.RBAC,
       details: { role, remainingRoles: newRoles } 
     });
@@ -129,8 +128,7 @@ export const rbacStore = create<RBACState>((set, get) => ({
   
   setPermissions: (permissions) => {
     set({ permissions });
-    
-    logger.info('RBAC permissions updated', { 
+    logger.info('Permissions updated', { 
       category: LogCategory.RBAC,
       details: { permissionsCount: Object.values(permissions).filter(Boolean).length } 
     });
@@ -144,7 +142,7 @@ export const rbacStore = create<RBACState>((set, get) => ({
       }
     }));
     
-    logger.info('RBAC permission changed', { 
+    logger.info('Permission changed', { 
       category: LogCategory.RBAC,
       details: { permission, value } 
     });
@@ -152,9 +150,8 @@ export const rbacStore = create<RBACState>((set, get) => ({
   
   setError: (error) => {
     set({ error });
-    
     if (error) {
-      logger.error('RBAC error', { 
+      logger.error('Error occurred', { 
         category: LogCategory.RBAC,
         details: { error } 
       });
