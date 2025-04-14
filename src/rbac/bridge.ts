@@ -1,4 +1,3 @@
-
 import { UserRole, Permission, ROLES } from '@/shared/types/shared.types';
 import { rbacStore } from './rbac.store';
 
@@ -82,6 +81,13 @@ export class RBACBridgeImpl {
    */
   setRoles(roles: UserRole[]): void {
     rbacStore.getState().setRoles(roles);
+  }
+  
+  /**
+   * Clear user roles
+   */
+  clearRoles(): void {
+    rbacStore.getState().setRoles([]);
   }
   
   /**
