@@ -1,44 +1,48 @@
 
+import { ThemeEffectType } from '@/shared/types/shared.types';
+
 export interface ThemeEffect {
-  type: 'glitch' | 'gradient' | 'cyber' | 'pulse' | 'particle' | 'morph';
+  type: ThemeEffectType;
   enabled: boolean;
   [key: string]: any;
 }
 
 export interface GlitchEffect extends ThemeEffect {
-  type: 'glitch';
+  type: ThemeEffectType.NOISE;
   color?: string;
   frequency?: string;
   amplitude?: string;
 }
 
 export interface GradientEffect extends ThemeEffect {
-  type: 'gradient';
+  type: ThemeEffectType.GRADIENT;
   colors?: string[];
   speed?: number; 
 }
 
 export interface CyberEffect extends ThemeEffect {
-  type: 'cyber';
+  type: ThemeEffectType.NEON;
   glowColor?: string;
   scanLines?: boolean;
 }
 
 export interface PulseEffect extends ThemeEffect {
-  type: 'pulse';
+  type: ThemeEffectType.PULSE;
   color?: string;
   minOpacity?: number;
   maxOpacity?: number;
 }
 
 export interface ParticleEffect extends ThemeEffect {
-  type: 'particle';
+  type: ThemeEffectType.PARTICLE;
   color?: string;
   count?: number;
 }
 
 export interface MorphEffect extends ThemeEffect {
-  type: 'morph';
+  type: ThemeEffectType.BLUR;
   intensity?: number;
   speed?: number;
 }
+
+// Export these types to shared.types.ts as well

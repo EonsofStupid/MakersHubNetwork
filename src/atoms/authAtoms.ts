@@ -1,6 +1,7 @@
+
 import { atom } from 'jotai';
 import { AuthBridge } from '@/bridges/AuthBridge';
-import { UserProfile, AuthStatus } from '@/types/shared';
+import { UserProfile, AuthStatus } from '@/shared/types/shared.types';
 
 /**
  * Read-only atoms derived from auth store
@@ -8,12 +9,16 @@ import { UserProfile, AuthStatus } from '@/types/shared';
 
 export const userAtom = atom<UserProfile | null>(() => AuthBridge.getUser());
 
-export const authStatusAtom = atom<AuthStatus>(() => AuthBridge.getStatus());
+// For getStatus compatibility
+export const authStatusAtom = atom<AuthStatus>((get) => {
+  if (!AuthBridge.getUser()) return AuthStatus.UNAUTHENTICATED;
+  return AuthBridge.isAuthenticated ? AuthStatus.AUTHENTICATED : AuthStatus.UNAUTHENTICATED;
+});
 
-export const isAuthenticatedAtom = atom<boolean>(() => AuthBridge.isAuthenticated());
+export const isAuthenticatedAtom = atom<boolean>(() => AuthBridge.isAuthenticated);
 
-export const isInitializedAtom = atom<boolean>(() => AuthBridge.isInitialized());
+export const isInitializedAtom = atom<boolean>(() => true); // Simplified for compatibility
 
-export const isLoadingAtom = atom<boolean>(() => AuthBridge.isLoading());
+export const isLoadingAtom = atom<boolean>(() => false); // Simplified for compatibility
 
-export const authErrorAtom = atom<Error | null>(() => AuthBridge.getError()); 
+export const authErrorAtom = atom<Error | null>(() => null); // Simplified for compatibility

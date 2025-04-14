@@ -1,4 +1,4 @@
 
-// Re-export from hooks
-export { useToast, toast } from '@/hooks/use-toast';
-export type { ToastActionElement, ToastProps, ToastVariant } from '@/hooks/use-toast';
+// Re-export from shared hooks
+export { useToast, toast } from '@/shared/hooks/use-toast';
+export type { ToastActionElement, ToastProps, ToastVariant } from '@/shared/hooks/use-toast';

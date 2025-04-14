@@ -1,9 +1,9 @@
 
 import { useState, memo, useCallback } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/shared/hooks/use-toast";
 import { useLogger } from "@/logging/hooks/use-logger";
 import { LogCategory, LogLevel } from "@/shared/types/shared.types";
-import { AuthBridge } from "@/auth/bridge";
+import { AuthBridge, authBridge } from "@/bridges/AuthBridge";
 import { RBACBridge } from "@/rbac/bridge";
 import { Button } from "@/shared/ui/button";
 import { UserMenuSheet } from "./UserMenuSheet";
@@ -38,7 +38,7 @@ export function UserMenu() {
   const handleLogout = useCallback(async () => {
     try {
       logger.log(LogLevel.INFO, LogCategory.AUTH, "User logging out", { source: 'UserMenu' });
-      await AuthBridge.signOut();
+      await authBridge.signOut();
       logger.log(LogLevel.INFO, LogCategory.AUTH, "User logged out successfully", { source: 'UserMenu' });
       toast({
         title: "Logged out",

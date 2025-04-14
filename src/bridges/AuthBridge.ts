@@ -1,5 +1,5 @@
 
-import { UserProfile } from '@/shared/types/shared.types';
+import { UserProfile, AuthStatus } from '@/shared/types/shared.types';
 import { authBridge as impl } from '@/auth/lib/AuthBridgeImpl';
 
 /**
@@ -7,6 +7,9 @@ import { authBridge as impl } from '@/auth/lib/AuthBridgeImpl';
  * without exposing direct access to the underlying store or provider
  */
 export const AuthBridge = impl;
+
+// Export the authBridge as well for compatibility
+export { impl as authBridge };
 
 export interface IAuthBridge {
   // Status
@@ -30,4 +33,10 @@ export interface IAuthBridge {
   // User profile
   getUser: () => UserProfile | null;
   getProfile: () => UserProfile | null;
+  
+  // Additional methods for compatibility with atoms
+  getStatus?: () => AuthStatus;
+  getError?: () => Error | null;
+  isLoading?: boolean;
+  isInitialized?: boolean;
 }
