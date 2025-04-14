@@ -1,97 +1,94 @@
 
-import { useEffect, useState, useCallback } from 'react';
-import { authBridge } from '@/bridges/AuthBridge';
-import { User, UserRole } from '@/shared/types';
+import { useState, useEffect } from 'react';
+import { AuthBridge } from '@/bridges/AuthBridge';
+import { RBACBridge } from '@/bridges/RBACBridge';
+import { UserProfile, UserRole, ROLES, AuthStatus } from '@/shared/types/shared.types';
 
-interface AuthState {
-  user: User | null;
+interface UseAuthStateReturn {
+  user: UserProfile | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  status: AuthStatus;
   roles: UserRole[];
+  error: Error | null;
 }
 
-export function useAuthState() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-    roles: [],
-  });
+/**
+ * Hook to get the current authentication state
+ */
+export const useAuthState = (): UseAuthStateReturn => {
+  const [user, setUser] = useState<UserProfile | null>(AuthBridge.getUser());
+  const [status, setStatus] = useState<AuthStatus>(
+    user ? AuthStatus.AUTHENTICATED : AuthStatus.UNAUTHENTICATED
+  );
+  const [error, setError] = useState<Error | null>(null);
+  const [roles, setRoles] = useState<UserRole[]>(RBACBridge.getRoles());
 
   useEffect(() => {
     // Initialize auth state
-    const initAuth = async () => {
+    const init = async () => {
       try {
-        const session = await authBridge.getCurrentSession();
+        setStatus(AuthStatus.LOADING);
+        
+        // Get session from AuthBridge
+        const session = await AuthBridge.getCurrentSession();
         
         if (session?.user) {
-          // Extract roles from user metadata
-          const userRoles = session.user.app_metadata?.roles || [];
+          setUser(session.user);
+          setStatus(AuthStatus.AUTHENTICATED);
           
-          setState({
-            user: session.user,
-            isAuthenticated: true,
-            isLoading: false,
-            roles: Array.isArray(userRoles) ? userRoles as UserRole[] : [],
-          });
+          // Assign roles based on metadata
+          let userRoles: UserRole[] = [ROLES.USER];
+          
+          if (session.user.app_metadata?.roles) {
+            userRoles = session.user.app_metadata.roles as UserRole[];
+          }
+          
+          // For demo purpose, assign admin role for specific emails
+          if (session.user.email === 'admin@example.com') {
+            userRoles.push(ROLES.ADMIN);
+          }
+          
+          if (session.user.email === 'superadmin@example.com') {
+            userRoles.push(ROLES.SUPER_ADMIN);
+          }
+          
+          // Update RBAC bridge
+          RBACBridge.setRoles(userRoles);
+          setRoles(userRoles);
         } else {
-          setState({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            roles: [],
-          });
+          setUser(null);
+          setStatus(AuthStatus.UNAUTHENTICATED);
+          RBACBridge.setRoles([]);
+          setRoles([]);
         }
-      } catch (error) {
-        console.error('Auth state initialization error:', error);
-        setState(prev => ({ ...prev, isLoading: false }));
+      } catch (err) {
+        setStatus(AuthStatus.ERROR);
+        setError(err as Error);
+        setUser(null);
+        RBACBridge.setRoles([]);
+        setRoles([]);
       }
     };
-
-    // Subscribe to auth changes
-    const unsubscribe = authBridge.subscribeToEvent('AUTH_STATE_CHANGE', (event) => {
-      if (event?.type === 'SIGNED_IN' && event.data?.user) {
-        const userRoles = event.data.user.app_metadata?.roles || [];
-        
-        setState({
-          user: event.data.user,
-          isAuthenticated: true,
-          isLoading: false,
-          roles: Array.isArray(userRoles) ? userRoles as UserRole[] : [],
-        });
-      } else if (event?.type === 'SIGNED_OUT') {
-        setState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          roles: [],
-        });
-      }
+    
+    init();
+    
+    // Set up auth state listener
+    const subscription = AuthBridge.onAuthEvent((event) => {
+      init(); // Refresh auth state when auth event occurs
     });
-
-    initAuth();
-
+    
     return () => {
-      unsubscribe();
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
     };
   }, []);
-
-  // Check if user has a specific role
-  const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
-    if (!state.roles.length) return false;
-    
-    // Superadmin has all roles
-    if (state.roles.includes('superadmin')) return true;
-    
-    if (Array.isArray(role)) {
-      return role.some(r => state.roles.includes(r));
-    }
-    
-    return state.roles.includes(role);
-  }, [state.roles]);
-
+  
   return {
-    ...state,
-    hasRole,
+    user,
+    isAuthenticated: !!user,
+    status,
+    roles,
+    error
   };
-}
+};

@@ -1,86 +1,79 @@
 
-import { useCallback } from 'react';
-import { UserRole, Permission } from '@/shared/types/shared.types';
-import { useAuthStore } from '@/auth/store/auth.store';
-import { RBACBridge } from '@/rbac/bridge';
+import { useEffect, useCallback, useState } from 'react';
+import { RBACBridge } from '@/bridges/RBACBridge';
+import { UserRole, ROLES, Permission } from '@/shared/types/shared.types';
+import { useAuthStore } from '@/stores/auth/auth.store';
 
 /**
- * Hook for role-based access control
- * This hook provides a clean interface to RBAC functionality
+ * Hook to use RBAC (Role-Based Access Control) functionality
  */
 export function useRbac() {
-  // Get the hasRole function from RBACBridge
-  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+  // Get the roles from the RBAC bridge
+  const [roles, setRoles] = useState<UserRole[]>(RBACBridge.getRoles());
+  
+  // Get auth state from auth store
+  const authUser = useAuthStore(state => state.user);
+  const userRoles = useAuthStore(state => state.roles);
+  
+  // Sync roles from auth store to RBAC bridge
+  useEffect(() => {
+    if (userRoles.length > 0) {
+      RBACBridge.setRoles(userRoles);
+      setRoles(userRoles);
+    } else if (authUser && authUser.roles) {
+      RBACBridge.setRoles(authUser.roles);
+      setRoles(authUser.roles);
+    }
+  }, [authUser, userRoles]);
+  
+  // Check if user has a specific role
+  const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
     return RBACBridge.hasRole(role);
   }, []);
   
-  // Get the hasAdminAccess function from RBACBridge
-  const hasAdminAccess = useCallback(() => {
-    return RBACBridge.hasAdminAccess();
-  }, []);
-  
-  // Get the isSuperAdmin function from RBACBridge
-  const isSuperAdmin = useCallback(() => {
-    return RBACBridge.isSuperAdmin();
-  }, []);
-  
-  // Get the isModerator function from RBACBridge
-  const isModerator = useCallback(() => {
-    return RBACBridge.isModerator();
-  }, []);
-  
-  // Get the isBuilder function from RBACBridge
-  const isBuilder = useCallback(() => {
-    return RBACBridge.isBuilder();
-  }, []);
-  
-  // Get the hasPermission function
-  const hasPermission = useCallback((permission: Permission) => {
+  // Check if user has a specific permission
+  const can = useCallback((permission: Permission): boolean => {
     return RBACBridge.hasPermission(permission);
   }, []);
   
-  // Get the getHighestRole function
-  const getHighestRole = useCallback(() => {
-    return RBACBridge.getHighestRole();
+  // Check if user has admin access
+  const hasAdminAccess = useCallback((): boolean => {
+    return RBACBridge.hasAdminAccess();
   }, []);
   
-  // Get the hasElevatedPrivileges function
-  const hasElevatedPrivileges = useCallback(() => {
-    return hasAdminAccess();
-  }, [hasAdminAccess]);
-  
-  // Get the canAccessAdminSection function
-  const canAccessSection = useCallback((section: string) => {
-    return RBACBridge.canAccessAdminSection(section);
+  // Check if user is a super admin
+  const isSuperAdmin = useCallback((): boolean => {
+    return RBACBridge.isSuperAdmin();
   }, []);
   
-  // Get the getRoleLabels function
-  const getRoleLabels = useCallback(() => {
-    const roles = {
-      [UserRole.USER]: "User",
-      [UserRole.ADMIN]: "Admin",
-      [UserRole.SUPER_ADMIN]: "Super Admin",
-      [UserRole.MODERATOR]: "Moderator",
-      [UserRole.BUILDER]: "Builder",
-      [UserRole.GUEST]: "Guest"
-    };
-    return roles;
+  // Check if user is a moderator
+  const isModerator = useCallback((): boolean => {
+    return RBACBridge.isModerator();
   }, []);
   
-  // Get the roles from the RBAC bridge
-  const roles = RBACBridge.getRoles();
+  // Check if user is a builder
+  const isBuilder = useCallback((): boolean => {
+    return RBACBridge.isBuilder();
+  }, []);
+  
+  // Map of role constants
+  const ROLE_CONSTANTS = {
+    USER: ROLES.USER,
+    ADMIN: ROLES.ADMIN,
+    SUPER_ADMIN: ROLES.SUPER_ADMIN,
+    MODERATOR: ROLES.MODERATOR,
+    BUILDER: ROLES.BUILDER,
+    GUEST: ROLES.GUEST,
+  };
   
   return {
+    roles,
     hasRole,
+    can,
     hasAdminAccess,
     isSuperAdmin,
     isModerator,
     isBuilder,
-    hasPermission,
-    getHighestRole,
-    hasElevatedPrivileges,
-    canAccessSection,
-    getRoleLabels,
-    roles
+    ROLES: ROLE_CONSTANTS
   };
 }

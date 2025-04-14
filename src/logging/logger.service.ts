@@ -1,92 +1,113 @@
 
-import { LogLevel, LogCategory, LogEntry } from '@/shared/types/shared.types';
+import { LogLevel, LogCategory, LogEntry, LogDetails } from '@/shared/types/shared.types';
+import { ConsoleTransport } from './transports/console-transport';
+import { MemoryTransport } from './transports/memory-transport';
 
-// Basic logger interface
-interface Logger {
-  log: (level: LogLevel, category: LogCategory, message: string, details?: Record<string, any>) => void;
-  debug: (category: LogCategory, message: string, details?: Record<string, any>) => void;
-  info: (category: LogCategory, message: string, details?: Record<string, any>) => void;
-  warn: (category: LogCategory, message: string, details?: Record<string, any>) => void;
-  error: (category: LogCategory, message: string, details?: Record<string, any>) => void;
+export interface LoggerOptions {
+  defaultLevel?: LogLevel;
+  transports?: LogTransport[];
+  maxLogEntries?: number;
 }
 
-// Simple implementation of the logger
-class LoggerService implements Logger {
-  private logs: LogEntry[] = [];
+export interface LogTransport {
+  log(entry: LogEntry): void;
+}
+
+/**
+ * Core logger service for the application
+ */
+class LoggerService {
+  private transports: LogTransport[] = [];
+  private defaultLevel: LogLevel = LogLevel.INFO;
   
-  // Main logging method
-  log(level: LogLevel, category: LogCategory, message: string, details?: Record<string, any>): void {
-    const logEntry: LogEntry = {
+  constructor(options?: LoggerOptions) {
+    this.defaultLevel = options?.defaultLevel || LogLevel.INFO;
+    
+    // Set up default transports if none provided
+    if (options?.transports) {
+      this.transports = options.transports;
+    } else {
+      this.transports = [
+        new ConsoleTransport(),
+        new MemoryTransport({ maxEntries: options?.maxLogEntries || 1000 })
+      ];
+    }
+  }
+  
+  /**
+   * Add a transport to the logger
+   */
+  public addTransport(transport: LogTransport): void {
+    this.transports.push(transport);
+  }
+  
+  /**
+   * Log a message at the specified level
+   */
+  public log(level: LogLevel, category: LogCategory, message: string, details?: LogDetails): void {
+    const entry: LogEntry = {
       level,
       category,
       message,
       timestamp: new Date(),
       source: details?.source,
       details: details,
+      tags: details?.tags
     };
     
-    this.logs.push(logEntry);
-    
-    // Also log to console in development
-    this.logToConsole(logEntry);
+    // Send the entry to all transports
+    this.transports.forEach(transport => transport.log(entry));
   }
   
-  // Helper methods for specific log levels
-  debug(category: LogCategory, message: string, details?: Record<string, any>): void {
+  /**
+   * Log debug level message
+   */
+  public debug(category: LogCategory, message: string, details?: LogDetails): void {
     this.log(LogLevel.DEBUG, category, message, details);
   }
   
-  info(category: LogCategory, message: string, details?: Record<string, any>): void {
+  /**
+   * Log info level message
+   */
+  public info(category: LogCategory, message: string, details?: LogDetails): void {
     this.log(LogLevel.INFO, category, message, details);
   }
   
-  warn(category: LogCategory, message: string, details?: Record<string, any>): void {
+  /**
+   * Log success level message
+   */
+  public success(category: LogCategory, message: string, details?: LogDetails): void {
+    this.log(LogLevel.SUCCESS, category, message, details);
+  }
+  
+  /**
+   * Log warn level message
+   */
+  public warn(category: LogCategory, message: string, details?: LogDetails): void {
     this.log(LogLevel.WARN, category, message, details);
   }
   
-  error(category: LogCategory, message: string, details?: Record<string, any>): void {
+  /**
+   * Log error level message
+   */
+  public error(category: LogCategory, message: string, details?: LogDetails): void {
     this.log(LogLevel.ERROR, category, message, details);
   }
   
-  // Console logging helper
-  private logToConsole(log: LogEntry): void {
-    const prefix = `[${log.category}]`;
-    
-    switch (log.level) {
-      case LogLevel.DEBUG:
-        console.debug(prefix, log.message, log.details || '');
-        break;
-      case LogLevel.INFO:
-      case LogLevel.SUCCESS:
-        console.info(prefix, log.message, log.details || '');
-        break;
-      case LogLevel.WARN:
-        console.warn(prefix, log.message, log.details || '');
-        break;
-      case LogLevel.ERROR:
-      case LogLevel.FATAL:
-      case LogLevel.CRITICAL:
-        console.error(prefix, log.message, log.details || '');
-        break;
-      default:
-        console.log(prefix, log.message, log.details || '');
-        break;
-    }
-  }
-  
-  // Get all logs
-  getLogs(): LogEntry[] {
-    return this.logs;
-  }
-  
-  // Clear logs
-  clearLogs(): void {
-    this.logs = [];
+  /**
+   * Log fatal level message
+   */
+  public fatal(category: LogCategory, message: string, details?: LogDetails): void {
+    this.log(LogLevel.FATAL, category, message, details);
   }
 }
 
-// Create a singleton instance
+// Singleton instance
 export const logger = new LoggerService();
 
-// Export a function to get the logger instance
-export const getLogger = () => logger;
+// Convenient export for memory transport accessor
+export const getMemoryTransport = (): MemoryTransport | undefined => {
+  return logger.transports.find(
+    transport => transport instanceof MemoryTransport
+  ) as MemoryTransport | undefined;
+};
