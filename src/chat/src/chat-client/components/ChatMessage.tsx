@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
 import { ChatMessage as ChatMessageType } from '../types';
 import { chatTheme } from '../styles/theme';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { User, Bot, Info, Copy, Check } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
 
 interface ChatMessageProps {
   message: ChatMessageType;

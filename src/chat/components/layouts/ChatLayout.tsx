@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { AuthGuard } from '@/components/AuthGuard';
-import { Button } from '@/components/ui/button';
+import { AuthGuard } from '@/auth/components/AuthGuard';
+import { Button } from '@/shared/ui/button';
 import { Home, Settings } from 'lucide-react';
 
 export default function ChatLayout() {

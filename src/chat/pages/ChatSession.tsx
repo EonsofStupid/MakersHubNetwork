@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { useChatSession } from '../hooks/useChatSession';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/shared/ui/textarea';
 import { Send, ArrowLeft } from 'lucide-react';
 
 export default function ChatSession() {
@@ -12,9 +11,7 @@ export default function ChatSession() {
   const params = useParams<{ sessionId: string }>();
   const sessionId = params.sessionId || '';
   const [inputMessage, setInputMessage] = React.useState('');
-  const { messages, sendMessage, isLoading } = useChatSession({ 
-    sessionId 
-  });
+  const { messages, sendMessage, isLoading } = useChatSession();
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   
   // Scroll to bottom when messages change

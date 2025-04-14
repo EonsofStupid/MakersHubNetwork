@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ChatMode } from '../types';
 import { chatTheme } from '../styles/theme';
@@ -14,7 +13,7 @@ import {
   Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
 
 interface ChatTabsProps {
   activeMode: ChatMode;

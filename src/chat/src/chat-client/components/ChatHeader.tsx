@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChatMode } from '../types';
 import { chatTheme } from '../styles/theme';
@@ -15,8 +14,8 @@ import {
   Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
+import { Button } from '@/shared/ui/button';
 import { useChatStore } from '../state/chatStore';
 
 interface ModeOption {
