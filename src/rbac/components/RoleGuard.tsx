@@ -1,23 +1,26 @@
 
 import React from 'react';
 import { UserRole } from '../constants/roles';
-import { RBACBridge } from '../bridge';
+import { useRbac } from '../hooks/useRbac';
 
 interface RoleGuardProps {
-  allowedRoles: UserRole | UserRole[];
-  fallback?: React.ReactNode;
   children: React.ReactNode;
+  role: UserRole | UserRole[];
+  fallback?: React.ReactNode;
 }
 
 /**
- * Component that conditionally renders content based on user roles
+ * Generic RoleGuard component
+ * Only renders children if user has the specified role(s)
  */
-export const RoleGuard: React.FC<RoleGuardProps> = ({
-  allowedRoles,
-  fallback = null,
-  children
+export const RoleGuard: React.FC<RoleGuardProps> = ({ 
+  children, 
+  role, 
+  fallback = null 
 }) => {
-  if (!RBACBridge.hasRole(allowedRoles)) {
+  const { hasRole } = useRbac();
+  
+  if (!hasRole(role)) {
     return <>{fallback}</>;
   }
   
@@ -25,37 +28,87 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
 };
 
 /**
- * Component that only renders content for admin users
+ * AdminGuard component
+ * Only renders children if user has admin access
  */
-export const AdminGuard: React.FC<Omit<RoleGuardProps, 'allowedRoles'>> = (props) => {
-  return <RoleGuard allowedRoles={[UserRole.ADMIN, UserRole.SUPER_ADMIN]} {...props} />;
+export const AdminGuard: React.FC<{ 
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}> = ({ children, fallback = null }) => {
+  const { hasAdminAccess } = useRbac();
+  
+  if (!hasAdminAccess()) {
+    return <>{fallback}</>;
+  }
+  
+  return <>{children}</>;
 };
 
 /**
- * Component that only renders content for super admin users
+ * SuperAdminGuard component
+ * Only renders children if user is a super admin
  */
-export const SuperAdminGuard: React.FC<Omit<RoleGuardProps, 'allowedRoles'>> = (props) => {
-  return <RoleGuard allowedRoles={UserRole.SUPER_ADMIN} {...props} />;
+export const SuperAdminGuard: React.FC<{ 
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}> = ({ children, fallback = null }) => {
+  const { isSuperAdmin } = useRbac();
+  
+  if (!isSuperAdmin()) {
+    return <>{fallback}</>;
+  }
+  
+  return <>{children}</>;
 };
 
 /**
- * Component that only renders content for moderator users or higher
+ * ModeratorGuard component
+ * Only renders children if user is a moderator or higher
  */
-export const ModeratorGuard: React.FC<Omit<RoleGuardProps, 'allowedRoles'>> = (props) => {
-  return <RoleGuard allowedRoles={[UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]} {...props} />;
+export const ModeratorGuard: React.FC<{ 
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}> = ({ children, fallback = null }) => {
+  const { isModerator } = useRbac();
+  
+  if (!isModerator()) {
+    return <>{fallback}</>;
+  }
+  
+  return <>{children}</>;
 };
 
 /**
- * Component that only renders content for builder users or higher
+ * BuilderGuard component
+ * Only renders children if user is a builder or higher
  */
-export const BuilderGuard: React.FC<Omit<RoleGuardProps, 'allowedRoles'>> = (props) => {
-  return <RoleGuard allowedRoles={[UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN]} {...props} />;
+export const BuilderGuard: React.FC<{ 
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}> = ({ children, fallback = null }) => {
+  const { isBuilder } = useRbac();
+  
+  if (!isBuilder()) {
+    return <>{fallback}</>;
+  }
+  
+  return <>{children}</>;
 };
 
 /**
- * Component that only renders content for authenticated users
+ * AuthGuard component
+ * Only renders children if user is authenticated
  */
-export const AuthGuard: React.FC<Omit<RoleGuardProps, 'allowedRoles'>> = (props) => {
-  const authenticatedRoles = [UserRole.USER, UserRole.BUILDER, UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN];
-  return <RoleGuard allowedRoles={authenticatedRoles} {...props} />;
+export const AuthGuard: React.FC<{ 
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}> = ({ children, fallback = null }) => {
+  const { roles } = useRbac();
+  const isAuthenticated = roles.length > 0 && !roles.includes(UserRole.GUEST);
+  
+  if (!isAuthenticated) {
+    return <>{fallback}</>;
+  }
+  
+  return <>{children}</>;
 };

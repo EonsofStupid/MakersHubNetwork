@@ -34,7 +34,7 @@ export enum Permission {
   PROJECT_EDIT = 'project:edit',
   PROJECT_DELETE = 'project:delete',
   PROJECT_SUBMIT = 'project:submit',
-  PROJECT_VIEW = 'project:view',  // Add the missing PROJECT_VIEW
+  PROJECT_VIEW = 'project:view',
   
   // API permissions
   API_KEY_MANAGE = 'api:keys:manage',

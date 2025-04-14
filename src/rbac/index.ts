@@ -6,7 +6,6 @@
 
 // Export core bridge as the main API
 export { RBACBridge } from './bridge';
-export { default as RBACBridge } from './bridge';
 
 // Export RBAC initializer
 export { RBACInitializer } from './RBACInitializer';

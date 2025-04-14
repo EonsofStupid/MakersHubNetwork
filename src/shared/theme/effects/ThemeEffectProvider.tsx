@@ -1,11 +1,22 @@
 
 import React from 'react';
-import { ThemeEffectType } from '@/shared/types/shared.types';
-import { ThemeEffect } from '@/shared/types/theme/effects.types';
+import { ThemeEffectType } from '@/shared/types';
 
 interface ThemeEffectProviderProps {
   children: React.ReactNode;
-  effect?: ThemeEffect | null;
+  effect?: {
+    type: ThemeEffectType;
+    enabled: boolean;
+    intensity?: number;
+    color?: string;
+    colors?: string[];
+    speed?: number;
+    glowColor?: string;
+    scanLines?: boolean;
+    minOpacity?: number;
+    maxOpacity?: number;
+    [key: string]: any;
+  } | null;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -68,7 +79,7 @@ export const ThemeEffectProvider: React.FC<ThemeEffectProviderProps> = ({
       );
 
     case ThemeEffectType.GRADIENT:
-      const colors = (effect.colors as string[]) || [
+      const colors = effect.colors || [
         'rgba(131,58,180,1)', 
         'rgba(253,29,29,1)', 
         'rgba(252,176,69,1)'

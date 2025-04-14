@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useState } from 'react';
 import { RBACBridge } from '@/rbac';
 import { UserRole, ROLES } from '@/rbac/constants/roles';
@@ -23,7 +24,7 @@ export function useRbac() {
       RBACBridge.setRoles(userRoles);
       setRoles(userRoles);
     } else if (authUser?.app_metadata?.roles) {
-      const metadataRoles = authUser.app_metadata.roles;
+      const metadataRoles = authUser.app_metadata.roles as UserRole[];
       RBACBridge.setRoles(metadataRoles);
       setRoles(metadataRoles);
     }
