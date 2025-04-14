@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuthStore } from '../store/auth.store';
-import { AUTH_STATUS, UserProfile, AuthStatus } from '@/shared/types';
+import { AuthStatus, UserProfile } from '@/shared/types/shared.types';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   isLoading: false,
-  status: AUTH_STATUS.IDLE,
+  status: AuthStatus.IDLE,
   error: null,
   login: async () => {},
   logout: async () => {},

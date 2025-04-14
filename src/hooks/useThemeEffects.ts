@@ -1,74 +1,74 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { ThemeEffectType, ThemeEffect } from '@/shared/types/shared.types';
+import { ThemeEffect, ThemeEffectType } from '@/shared/types/shared.types';
 
 /**
- * Hook for managing theme effects
+ * Hook to manage theme effects
  */
 export function useThemeEffects() {
-  const [effects, setEffects] = useState<Record<string, ThemeEffect>>({});
+  const [effects, setEffects] = useState<ThemeEffect[]>([]);
   
-  // Add a new effect
-  const addEffect = useCallback((elementId: string, effect: Partial<ThemeEffect>) => {
-    const id = `${elementId}-${Date.now()}`;
-    const newEffect: ThemeEffect = {
-      id,
-      type: effect.type || ThemeEffectType.NONE,
-      enabled: effect.enabled !== undefined ? effect.enabled : true,
-      intensity: effect.intensity || 1,
-      selector: effect.selector,
-      config: effect.config,
-      color: effect.color
-    };
-    
-    setEffects(prev => ({
-      ...prev,
-      [id]: newEffect
-    }));
-    
-    return id;
+  /**
+   * Add a new effect
+   */
+  const addEffect = useCallback((effect: ThemeEffect) => {
+    setEffects(prevEffects => [...prevEffects, effect]);
+    return effect.id || Math.random().toString(36).substring(7);
   }, []);
   
-  // Remove an effect by ID
+  /**
+   * Remove an effect by id
+   */
   const removeEffect = useCallback((effectId: string) => {
-    setEffects(prev => {
-      const { [effectId]: _, ...rest } = prev;
-      return rest;
-    });
+    setEffects(prevEffects => prevEffects.filter(e => e.id !== effectId));
   }, []);
   
-  // Get effects as an array
-  const getEffects = useCallback(() => {
-    return Object.values(effects);
-  }, [effects]);
-  
-  // Get a specific effect by ID
-  const getEffect = useCallback((effectId: string) => {
-    return effects[effectId];
-  }, [effects]);
-  
-  // Update an existing effect
+  /**
+   * Update an existing effect
+   */
   const updateEffect = useCallback((effectId: string, updates: Partial<ThemeEffect>) => {
-    setEffects(prev => {
-      if (!prev[effectId]) return prev;
-      
-      return {
-        ...prev,
-        [effectId]: {
-          ...prev[effectId],
-          ...updates
-        }
-      };
-    });
+    setEffects(prevEffects => 
+      prevEffects.map(e => e.id === effectId ? { ...e, ...updates } : e)
+    );
+  }, []);
+  
+  /**
+   * Toggle an effect's enabled state
+   */
+  const toggleEffect = useCallback((effectId: string) => {
+    setEffects(prevEffects => 
+      prevEffects.map(e => e.id === effectId ? { ...e, enabled: !e.enabled } : e)
+    );
+  }, []);
+  
+  /**
+   * Get all effects of a specific type
+   */
+  const getEffectsByType = useCallback((type: ThemeEffectType) => {
+    return effects.filter(e => e.type === type);
+  }, [effects]);
+  
+  /**
+   * Clear all effects
+   */
+  const clearEffects = useCallback(() => {
+    setEffects([]);
+  }, []);
+  
+  // Clean up effects on unmount
+  useEffect(() => {
+    return () => {
+      // Any cleanup logic for effects if needed
+    };
   }, []);
   
   return {
+    effects,
     addEffect,
     removeEffect,
-    getEffects,
-    getEffect,
     updateEffect,
-    effects
+    toggleEffect,
+    getEffectsByType,
+    clearEffects
   };
 }

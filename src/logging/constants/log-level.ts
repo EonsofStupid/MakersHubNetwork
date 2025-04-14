@@ -1,16 +1,6 @@
 
-/**
- * Log level enum representing different levels of logging
- */
-export enum LogLevel {
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  CRITICAL = 'critical',
-  TRACE = 'trace',     // Adding missing TRACE level
-  SUCCESS = 'success', // Adding missing SUCCESS level
-  FATAL = 'fatal'      // Adding missing FATAL level
-}
+import { LogLevel } from '@/shared/types/shared.types';
 
+// Re-export LogLevel for backwards compatibility
+export { LogLevel };
 export default LogLevel;

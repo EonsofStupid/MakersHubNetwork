@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/auth.store';
-import { AUTH_STATUS, UserProfile, AuthStatus } from '@/shared/types';
+import { UserProfile, AuthStatus } from '@/shared/types/shared.types';
 
 /**
  * Hook to access auth state with auto-initialization
@@ -37,7 +37,7 @@ export const useAuthState = () => {
     user,
     isAuthenticated,
     isAuthReady: initialized && !isInitializing,
-    isLoading: status === AUTH_STATUS.LOADING || isInitializing,
+    isLoading: status === AuthStatus.LOADING || isInitializing,
     error,
     login,
     logout,

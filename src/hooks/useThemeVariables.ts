@@ -1,46 +1,53 @@
 
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useThemeStore } from '@/shared/stores/theme/store';
-import { ThemeToken } from '@/types/theme';
+import { useLogger } from '@/logging/hooks/use-logger';
+import { LogCategory } from '@/shared/types/shared.types';
 
 /**
- * Hook for accessing theme variables
- * @returns {Object} Theme variables and component-specific tokens
+ * Hook to access theme variables, with fallback for missing values
  */
 export function useThemeVariables() {
-  const variables = useThemeStore(state => state.variables);
-  const componentTokens = useThemeStore(state => state.componentTokens);
-  const theme = useThemeStore(state => state.theme);
-  // Add tokens from the store
-  const tokens = useThemeStore(state => (state as any).tokens as ThemeToken[] | undefined);
+  const themeStore = useThemeStore();
+  const variables = themeStore.variables || {};
+  const activeTheme = themeStore.themes.find(t => t.id === themeStore.activeThemeId);
+  const logger = useLogger('useThemeVariables', LogCategory.THEME);
+  const [loaded, setLoaded] = useState(false);
+  
+  useEffect(() => {
+    if (variables && Object.keys(variables).length > 0) {
+      setLoaded(true);
+    } else if (activeTheme?.variables) {
+      setLoaded(true);
+    }
+  }, [variables, activeTheme]);
 
-  const cssVariables = useMemo(() => {
-    // Create a dictionary of CSS variables from theme tokens
-    const cssVars: Record<string, string> = {};
-    if (tokens && Array.isArray(tokens)) {
-      tokens.forEach((token: any) => {
-        if (token && typeof token.token_name === 'string') {
-          cssVars[token.token_name] = token.token_value as string;
-        }
-      });
+  /**
+   * Get a CSS variable with fallbacks
+   */
+  const getVar = (name: string, fallback?: string): string => {
+    try {
+      if (variables && variables[name]) {
+        return variables[name];
+      }
+      
+      if (activeTheme?.variables && name in activeTheme.variables) {
+        return activeTheme.variables[name] || fallback || '';
+      }
+      
+      // Try getting from CSS if not found in theme store
+      const cssVarValue = getComputedStyle(document.documentElement)
+        .getPropertyValue(`--${name}`).trim();
+        
+      if (cssVarValue) {
+        return cssVarValue;
+      }
+    } catch (e) {
+      logger.debug(`Error retrieving theme variable ${name}`, { error: e });
     }
     
-    // Add component-specific styles
-    if (componentTokens && Array.isArray(componentTokens)) {
-      componentTokens.forEach((component: any) => {
-        if (component && typeof component.component_name === 'string') {
-          // Component-specific variables would be prefixed with component name
-          Object.entries(component.styles || {}).forEach(([key, value]) => {
-            cssVars[`${component.component_name}-${key}`] = value as string;
-          });
-        }
-      });
-    }
-    
-    return cssVars;
-  }, [tokens, componentTokens]);
+    return fallback || '';
+  };
 
-  return { theme, variables, cssVariables };
+  return { getVar, variables, loaded };
 }
-
-export default useThemeVariables;

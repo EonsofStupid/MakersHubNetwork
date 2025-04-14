@@ -36,7 +36,7 @@ export interface UserProfile {
   roles?: UserRole[];
   user_metadata?: Record<string, unknown>;
   app_metadata?: Record<string, unknown>;
-  bio?: string; // Add this as it's referenced in profile components
+  bio?: string;
 }
 
 // Auth status
@@ -47,6 +47,15 @@ export enum AuthStatus {
   UNAUTHENTICATED = 'unauthenticated',
   ERROR = 'error'
 }
+
+// For backwards compatibility
+export const AUTH_STATUS = {
+  IDLE: AuthStatus.IDLE,
+  LOADING: AuthStatus.LOADING,
+  AUTHENTICATED: AuthStatus.AUTHENTICATED,
+  UNAUTHENTICATED: AuthStatus.UNAUTHENTICATED,
+  ERROR: AuthStatus.ERROR
+} as const;
 
 // Auth event types
 export enum AuthEventType {
@@ -68,16 +77,35 @@ export enum LogCategory {
   APP = 'app',
   ADMIN = 'admin',
   CHAT = 'chat',
-  THEME = 'theme'
+  THEME = 'theme',
+  DEBUG = 'debug'
 }
 
 // Log levels  
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
-  WARN = 2,
-  ERROR = 3
+  SUCCESS = 2,
+  WARN = 3,
+  ERROR = 4,
+  CRITICAL = 5,
+  FATAL = 6,
+  TRACE = -1,
+  SILENT = 100
 }
+
+// Add log level values for easy comparison
+export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+  [LogLevel.TRACE]: -1,
+  [LogLevel.DEBUG]: 0,
+  [LogLevel.INFO]: 1,
+  [LogLevel.SUCCESS]: 2,
+  [LogLevel.WARN]: 3,
+  [LogLevel.ERROR]: 4,
+  [LogLevel.CRITICAL]: 5,
+  [LogLevel.FATAL]: 6,
+  [LogLevel.SILENT]: 100
+};
 
 // Permission type
 export type Permission =
@@ -101,8 +129,6 @@ export type Permission =
   | 'project:delete'
   | 'project:submit'
   | 'project:view'
-  | 'manage_api_keys'
-  | 'view_analytics'
   | 'api:keys:manage'
   | 'analytics:view'
   | 'create_project'
@@ -112,7 +138,9 @@ export type Permission =
   | 'access_admin'
   | 'manage_users'
   | 'manage_roles'
-  | 'manage_permissions';
+  | 'manage_permissions'
+  | 'manage_api_keys'
+  | 'view_analytics';
 
 // RBAC role groupings for easier checks
 export const RBAC = {
@@ -123,9 +151,39 @@ export const RBAC = {
   AUTHENTICATED: [UserRole.USER, UserRole.MODERATOR, UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[]
 };
 
-// Logger interface
+// Logging interfaces
 export interface LogDetails {
   [key: string]: unknown;
+}
+
+export interface LogEntry {
+  id: string;
+  level: LogLevel;
+  category: LogCategory;
+  message: string;
+  timestamp: number;
+  details?: LogDetails;
+  source?: string;
+}
+
+export interface LogEvent {
+  entry: LogEntry;
+}
+
+export interface LogFilter {
+  level?: LogLevel;
+  category?: LogCategory | LogCategory[];
+  from?: number | Date;
+  to?: number | Date;
+  search?: string;
+  limit?: number;
+  source?: string;
+}
+
+export interface LogTransport {
+  log: (entry: LogEntry) => void;
+  clear?: () => void;
+  setMinLevel: (level: LogLevel) => void;
 }
 
 // Theme related types
@@ -140,7 +198,21 @@ export enum ThemeEffectType {
   NEON = 'neon',
   PULSE = 'pulse',
   PARTICLE = 'particle',
-  MORPH = 'morph'
+  MORPH = 'morph',
+  GLOW = 'glow',
+  SHADOW = 'shadow'
+}
+
+export interface ThemeEffect {
+  id?: string;
+  type: ThemeEffectType;
+  enabled: boolean;
+  intensity?: number;
+  color?: string;
+  duration?: number;
+  delay?: number;
+  selector?: string;
+  config?: Record<string, unknown>;
 }
 
 export interface Theme {
@@ -237,7 +309,7 @@ export interface ComponentTokens {
   [key: string]: Record<string, any> | undefined;
 }
 
-export interface ThemeLogDetails extends Record<string, unknown> {
+export interface ThemeLogDetails extends LogDetails {
   success?: boolean;
   error?: boolean;
   theme?: string;
@@ -246,7 +318,7 @@ export interface ThemeLogDetails extends Record<string, unknown> {
 }
 
 // Theme store state
-export interface ThemeState {
+export interface ThemeStoreState {
   themes: Theme[];
   activeThemeId: string;
   isDark: boolean;
@@ -257,4 +329,8 @@ export interface ThemeState {
   componentTokens: ComponentTokens;
   isLoading: boolean;
   error: string | null;
+  variables?: Record<string, string>;
+  theme?: Theme;
+  componentStyles?: Record<string, Record<string, string>>;
+  animations?: Record<string, string>;
 }

@@ -1,8 +1,8 @@
 
 import React, { createContext, useContext, useMemo, useEffect, useState } from "react";
-import { Theme, ThemeToken, ThemeComponent, LogLevel, LogCategory, ThemeLogDetails } from "@/shared/types";
+import { Theme, ThemeToken, ThemeComponent, LogLevel, LogCategory, ThemeLogDetails, TokenWithKeyframes } from "@/shared/types/shared.types";
 import { useThemeStore } from "@/shared/stores/theme/store";
-import { useLogger } from "@/hooks/use-logger";
+import { useLogger } from "@/logging/hooks/use-logger";
 import { logger } from "@/logging/logger.service";
 
 export interface SiteThemeContextType {
@@ -23,7 +23,7 @@ interface SiteThemeProviderProps {
 }
 
 export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: SiteThemeProviderProps) {
-  const log = useLogger("SiteThemeProvider", LogCategory.SYSTEM);
+  const log = useLogger("SiteThemeProvider", LogCategory.THEME);
   const [theme, setTheme] = useState<Theme | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [themeError, setThemeError] = useState<Error | null>(null);
@@ -80,7 +80,7 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
           activeTheme.tokens.forEach(token => {
             if (token.type === 'css') {
               variables[token.name || token.token_name] = token.value || token.token_value;
-            } else if (token.type === 'animation' && token.keyframes) {
+            } else if (token.type === 'animation' && 'keyframes' in token) {
               cssAnimations[token.name || token.token_name] = token.keyframes;
             }
           });
@@ -100,7 +100,10 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
           const styles: Record<string, Record<string, string>> = {};
           
           activeTheme.components.forEach(component => {
-            styles[component.component_name || component.name] = component.styles || component.tokens;
+            const componentName = component.component_name || component.name || '';
+            if (componentName) {
+              styles[componentName] = component.styles || component.tokens || {};
+            }
           });
           
           setComponentStyles(styles);
@@ -133,8 +136,10 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
         
       } catch (error) {
         // Log error
+        const errorMessage = error instanceof Error ? error.message : String(error);
         logger.log(LogLevel.ERROR, LogCategory.THEME, "Failed to apply theme CSS variables", {
-          error: error instanceof Error ? error.message : String(error)
+          errorMessage,
+          error: true
         } as ThemeLogDetails);
         
         setThemeError(error instanceof Error ? error : new Error("Failed to apply CSS variables"));
@@ -156,7 +161,7 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
         
         // Combine animations into CSS
         const animationsCSS = Object.entries(animations)
-          .map(([name, keyframes]) => `@keyframes ${name} { ${keyframes} }`)
+          .map(([name, keyframesValue]) => `@keyframes ${name} { ${keyframesValue} }`)
           .join("\n");
         
         styleTag.textContent = animationsCSS;

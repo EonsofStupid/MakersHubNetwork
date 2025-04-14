@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { UserProfile, UserRole, AuthStatus } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
@@ -89,7 +90,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         name: email.split('@')[0],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        roles: ['user']
+        roles: [UserRole.USER]  // Fixed: Using enum value instead of string literal
       };
       
       localStorage.setItem('auth_user', JSON.stringify(user));
@@ -158,7 +159,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         name: email.split('@')[0],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        roles: ['user']
+        roles: [UserRole.USER]  // Fixed: Using enum value instead of string literal
       };
       
       localStorage.setItem('auth_user', JSON.stringify(user));

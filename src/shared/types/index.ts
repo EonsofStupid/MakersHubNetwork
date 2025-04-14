@@ -1,12 +1,33 @@
+
 /**
- * Main types barrel file
- * Simplified exports to avoid naming conflicts
+ * Master barrel file for all types in the application
  */
 
-// Export shared types directly, which contains most of the common types
+// Core types
 export * from './shared.types';
 
-// Export feature-specific types that don't overlap with shared types
-export * from './features/review.types';
-export * from './features/layout.types';
-export * from './features/chat.types';
+// Auth types
+export { AUTH_STATUS, AuthStatus } from './shared.types';
+export type { UserProfile } from './shared.types';
+
+// RBAC types
+export { UserRole, ROLES, RBAC } from './shared.types';
+export type { Permission } from './shared.types';
+
+// Logging types
+export { LogLevel, LogCategory } from './shared.types';
+export type { LogEntry, LogEvent, LogFilter, LogTransport, LogDetails } from './shared.types';
+
+// Theme types
+export { ThemeEffectType } from './shared.types';
+export type { 
+  Theme, 
+  ThemeEffect, 
+  ThemeToken, 
+  TokenWithKeyframes,
+  ThemeComponent,
+  DesignTokens,
+  ComponentTokens,
+  ThemeLogDetails,
+  ThemeStoreState
+} from './shared.types';
