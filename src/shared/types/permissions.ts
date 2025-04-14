@@ -1,6 +1,7 @@
 
 /**
  * Core permission definitions
+ * Single source of truth for permission types in the application
  */
 export enum Permission {
   // Content permissions
@@ -26,7 +27,19 @@ export enum Permission {
   
   // Settings permissions
   SETTINGS_VIEW = 'settings:view',  
-  SETTINGS_EDIT = 'settings:edit'
+  SETTINGS_EDIT = 'settings:edit',
+  
+  // Project permissions
+  PROJECT_CREATE = 'project:create',
+  PROJECT_EDIT = 'project:edit',
+  PROJECT_DELETE = 'project:delete',
+  PROJECT_SUBMIT = 'project:submit',
+  
+  // API permissions
+  API_KEY_MANAGE = 'api:keys:manage',
+  
+  // Analytics permissions
+  ANALYTICS_VIEW = 'analytics:view'
 }
 
 // Export values array for dev tools and iteration
@@ -44,19 +57,42 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
   super_admin: Object.values(Permission),
   admin: [
     Permission.ADMIN_ACCESS,
+    Permission.ADMIN_VIEW,
+    Permission.ADMIN_EDIT,
     Permission.CONTENT_VIEW,
     Permission.CONTENT_CREATE,
     Permission.CONTENT_EDIT,
     Permission.USER_VIEW,
     Permission.USER_EDIT,
-    Permission.SYSTEM_VIEW
+    Permission.SYSTEM_VIEW,
+    Permission.SETTINGS_VIEW,
+    Permission.PROJECT_VIEW,
+    Permission.PROJECT_EDIT,
+    Permission.ANALYTICS_VIEW
   ],
   moderator: [
     Permission.CONTENT_VIEW,
     Permission.CONTENT_EDIT,
     Permission.USER_VIEW
   ],
+  builder: [
+    Permission.PROJECT_CREATE,
+    Permission.PROJECT_EDIT,
+    Permission.PROJECT_SUBMIT
+  ],
   user: [
-    Permission.CONTENT_VIEW
+    Permission.CONTENT_VIEW,
+    Permission.PROJECT_VIEW
   ]
+};
+
+/**
+ * Permission aliases to support legacy code
+ */
+export const PROJECT_PERMISSIONS = {
+  CREATE: Permission.PROJECT_CREATE,
+  EDIT: Permission.PROJECT_EDIT,
+  DELETE: Permission.PROJECT_DELETE,
+  SUBMIT: Permission.PROJECT_SUBMIT,
+  VIEW: Permission.PROJECT_VIEW
 };

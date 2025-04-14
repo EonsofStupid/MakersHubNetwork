@@ -10,7 +10,7 @@ export { RBACBridge } from './bridge';
 
 // Export types and constants
 export { UserRole, ROLES, ROLE_GROUPS, ROLE_LABELS } from './constants/roles';
-export { Permission } from './constants/permissions';
+export { Permission } from '@/shared/types/permissions';
 export { PATH_POLICIES } from './constants/policies';
 
 // Export store for advanced usage

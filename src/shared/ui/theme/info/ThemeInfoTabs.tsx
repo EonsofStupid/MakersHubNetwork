@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/ui/tabs';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Theme, ThemeEffect } from '@/types/theme';
+import { ThemeEffectType } from '@/shared/types/shared.types';
 
 interface ThemeColorSystemProps {
   tokens: any[];
@@ -31,7 +31,7 @@ export const ThemeInfoTabs: React.FC<ThemeInfoTabsProps> = ({
 }) => {
   // Mock effect for preview
   const mockEffect: ThemeEffect = {
-    type: 'glow',
+    type: ThemeEffectType.GLOW,
     enabled: true,
     intensity: 0.5
   };

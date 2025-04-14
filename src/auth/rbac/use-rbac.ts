@@ -1,8 +1,9 @@
 
 import { useEffect, useCallback, useState } from 'react';
-import { RBACBridge } from '@/bridges/RBACBridge';
-import { UserRole, ROLES, Permission } from '@/shared/types';
-import { useAuthStore } from '@/stores/auth/auth.store';
+import { RBACBridge } from '@/rbac';
+import { UserRole, ROLES } from '@/rbac/constants/roles';
+import { Permission } from '@/shared/types/permissions';
+import { useAuthStore } from '@/auth/store/auth.store';
 
 /**
  * Hook to use RBAC (Role-Based Access Control) functionality

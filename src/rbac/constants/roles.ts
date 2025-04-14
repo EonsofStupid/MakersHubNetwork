@@ -26,11 +26,11 @@ export const ROLES = {
 
 // Role groupings for convenient access checks
 export const ROLE_GROUPS = {
-  ADMIN_ONLY: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
-  SUPER_ADMINS: [UserRole.SUPER_ADMIN],
-  MODERATORS: [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
-  BUILDERS: [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
-  AUTHENTICATED: [UserRole.USER, UserRole.MODERATOR, UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  ADMIN_ONLY: [UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
+  SUPER_ADMINS: [UserRole.SUPER_ADMIN] as UserRole[],
+  MODERATORS: [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
+  BUILDERS: [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
+  AUTHENTICATED: [UserRole.USER, UserRole.MODERATOR, UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
 };
 
 // Role priorities (higher number = higher priority)

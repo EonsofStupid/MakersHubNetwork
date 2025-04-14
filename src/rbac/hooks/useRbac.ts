@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useRbacStore } from '../store/rbac.store';
 import { UserRole } from '../constants/roles';
-import { Permission } from '../constants/permissions';
+import { Permission } from '@/shared/types/permissions';
 import { RBACBridge } from '../bridge';
 
 /**
