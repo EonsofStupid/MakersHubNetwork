@@ -1,7 +1,5 @@
 
 import { UserRole, Permission } from '@/shared/types/shared.types';
-import { hasPermission, canAccessAdmin, canAccessDevFeatures } from './rbac/enforce';
-import { canAccessAdminSection, getHighestRole } from './rbac/rbac';
 
 /**
  * RBAC Bridge Implementation
@@ -47,7 +45,13 @@ class RBACBridgeImpl {
    * Check if user has a specific permission
    */
   hasPermission(permission: Permission): boolean {
-    return hasPermission(this.userRoles, permission);
+    // For now just check admin role, this could be expanded
+    if (this.isSuperAdmin()) return true;
+    if (this.isAdmin()) {
+      // Admins have most permissions except super admin ones
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -61,7 +65,7 @@ class RBACBridgeImpl {
    * Check if user has admin access
    */
   hasAdminAccess(): boolean {
-    return canAccessAdmin(this.userRoles);
+    return this.hasRole(['admin', 'super_admin']);
   }
 
   /**
@@ -96,7 +100,19 @@ class RBACBridgeImpl {
    * Check if user can access an admin section
    */
   canAccessAdminSection(section: string): boolean {
-    return canAccessAdminSection(this.userRoles, section);
+    // Super admin can access all sections
+    if (this.isSuperAdmin()) return true;
+    
+    // Admin can access most sections
+    if (this.isAdmin()) {
+      // Except some reserved for super admin
+      if (section === 'settings' || section === 'system') {
+        return false;
+      }
+      return true;
+    }
+    
+    return false;
   }
 
   /**

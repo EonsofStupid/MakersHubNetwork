@@ -33,3 +33,38 @@ export interface AdminLayoutConfig {
     show: boolean;
   };
 }
+
+export interface Layout {
+  id: string;
+  name: string;
+  description?: string;
+  components: {
+    [key: string]: {
+      id: string;
+      type: string;
+      props: Record<string, any>;
+    }
+  };
+  layout: Array<{
+    id: string;
+    parentId?: string;
+    position: number;
+    componentId: string;
+  }>;
+  meta?: Record<string, any>;
+}
+
+export interface LayoutSkeleton {
+  id: string;
+  name: string;
+  description?: string;
+  type: string;
+  scope: string;
+  layout_json: any;
+  is_locked: boolean;
+  version: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+}

@@ -1,493 +1,302 @@
 
 import { create } from 'zustand';
 import { Theme, ThemeState, ComponentTokens, DesignTokens } from '@/shared/types/shared.types';
+import { devtools, persist } from 'zustand/middleware';
 import { logger } from '@/logging/logger.service';
 import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
-// Define initial component tokens to avoid type errors
-const initialComponentTokens: ComponentTokens = {
-  button: {},
-  card: {},
-  input: {},
-  badge: {},
-  alert: {}
-};
-
-// Initial state
-const initialState: ThemeState = {
-  themes: [],
-  activeThemeId: '',
+// Default theme to use when no theme is loaded
+const defaultTheme: Theme = {
+  id: 'default',
+  name: 'Default Theme',
+  label: 'Default',
+  description: 'Default theme',
   isDark: false,
-  primaryColor: '#8B5CF6',
-  backgroundColor: '#0F1729',
-  textColor: '#F8FAFC',
-  accentColor: '#F97316',
-  borderColor: '#334155',
-  fontFamily: 'Inter, sans-serif',
-  cornerRadius: 8,
-  animations: true,
-  componentTokens: initialComponentTokens,
-  isLoading: false,
-  error: null
+  status: 'active' as any,
+  context: 'site' as any,
+  variables: {
+    background: '#ffffff',
+    foreground: '#000000',
+    card: '#f7f7f7',
+    cardForeground: '#000000',
+    primary: '#3b82f6',
+    primaryForeground: '#ffffff',
+    secondary: '#f3f4f6',
+    secondaryForeground: '#000000',
+    muted: '#f1f5f9',
+    mutedForeground: '#64748b',
+    accent: '#f59e0b',
+    accentForeground: '#000000',
+    destructive: '#ef4444',
+    destructiveForeground: '#ffffff',
+    border: '#e2e8f0',
+    input: '#e2e8f0',
+    ring: '#3b82f6',
+    effectColor: '#3b82f6',
+    effectSecondary: '#f59e0b',
+    effectTertiary: '#10b981',
+    transitionFast: '150ms',
+    transitionNormal: '300ms',
+    transitionSlow: '500ms',
+    animationFast: '300ms',
+    animationNormal: '500ms',
+    animationSlow: '1000ms',
+    radiusSm: '0.125rem',
+    radiusMd: '0.25rem',
+    radiusLg: '0.5rem',
+    radiusFull: '9999px'
+  },
+  designTokens: {
+    colors: {
+      primary: '#3b82f6',
+      secondary: '#f3f4f6',
+      background: '#ffffff',
+      foreground: '#000000',
+    },
+    typography: {
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: {
+        xs: '0.75rem',
+        sm: '0.875rem',
+        md: '1rem',
+        lg: '1.125rem',
+        xl: '1.25rem',
+      }
+    }
+  },
+  componentTokens: {
+    button: {
+      padding: '0.5rem 1rem',
+      borderRadius: '0.25rem',
+      fontWeight: '500',
+    },
+    card: {
+      padding: '1rem',
+      borderRadius: '0.5rem',
+      shadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+    }
+  }
 };
 
-// Create the store
-export const useThemeStore = create<ThemeState & {
+// Default component tokens
+const defaultComponentTokens = {
+  button: {
+    padding: '0.5rem 1rem',
+    borderRadius: '0.25rem',
+    fontWeight: '500',
+  },
+  card: {
+    padding: '1rem',
+    borderRadius: '0.5rem',
+    shadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+  },
+  input: {
+    height: '2.5rem',
+    padding: '0.5rem 0.75rem',
+    borderRadius: '0.25rem',
+  },
+  badge: {
+    padding: '0.25rem 0.5rem',
+    borderRadius: '9999px',
+    fontSize: '0.75rem',
+  },
+  alert: {
+    padding: '1rem',
+    borderRadius: '0.5rem',
+    fontWeight: '500',
+  },
+};
+
+// Theme store interface with CRUD operations
+interface ThemeStoreActions {
   setThemes: (themes: Theme[]) => void;
   setActiveTheme: (themeId: string) => void;
   setDesignTokens: (tokens: DesignTokens) => void;
   setComponentTokens: (tokens: ComponentTokens) => void;
-  setIsLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
-  applyTheme: (themeId: string) => void;
-  loadThemes: () => Promise<void>;
-  loadTheme: (themeId: string) => Promise<void>;
+  fetchThemes: () => Promise<void>;
+  createTheme: (theme: Theme) => Promise<void>;
+  updateTheme: (theme: Theme) => Promise<void>;
+  deleteTheme: (themeId: string) => Promise<void>;
   resetTheme: () => void;
-}>((set, get) => ({
-  ...initialState,
+}
 
-  setThemes: (themes) => {
-    set({ themes });
-  },
-
-  setActiveTheme: (themeId) => {
-    set({ activeThemeId: themeId });
-  },
-
-  setDesignTokens: (tokens) => {
-    set((state) => {
-      const activeTheme = state.themes.find(theme => theme.id === state.activeThemeId);
-      if (activeTheme) {
-        const updatedThemes = state.themes.map(theme => {
-          if (theme.id === state.activeThemeId) {
-            return { ...theme, designTokens: tokens };
+// Create the theme store
+export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        themes: [defaultTheme],
+        activeThemeId: defaultTheme.id,
+        isDark: defaultTheme.isDark,
+        primaryColor: defaultTheme.variables.primary,
+        backgroundColor: defaultTheme.variables.background,
+        textColor: defaultTheme.variables.foreground,
+        designTokens: defaultTheme.designTokens,
+        componentTokens: defaultComponentTokens,
+        isLoading: false,
+        error: null,
+        
+        // Set all themes
+        setThemes: (themes) => {
+          set({ themes });
+          logger.log(LogLevel.INFO, LogCategory.THEME, 'Themes updated', { 
+            details: { themesCount: themes.length } 
+          });
+        },
+        
+        // Set active theme by ID
+        setActiveTheme: (themeId) => {
+          const { themes } = get();
+          const theme = themes.find((t) => t.id === themeId);
+          
+          if (!theme) {
+            logger.log(LogLevel.ERROR, LogCategory.THEME, 'Theme not found', {
+              details: { themeId }
+            });
+            return;
           }
-          return theme;
-        });
-        return { themes: updatedThemes, designTokens: tokens };
+          
+          set({
+            activeThemeId: themeId,
+            isDark: theme.isDark,
+            primaryColor: theme.variables.primary,
+            backgroundColor: theme.variables.background,
+            textColor: theme.variables.foreground,
+            designTokens: theme.designTokens,
+            componentTokens: theme.componentTokens || defaultComponentTokens,
+          });
+          
+          logger.log(LogLevel.INFO, LogCategory.THEME, 'Active theme changed', {
+            details: { themeId, themeName: theme.name }
+          });
+        },
+        
+        // Set design tokens
+        setDesignTokens: (tokens) => {
+          set({ designTokens: tokens });
+        },
+        
+        // Set component tokens
+        setComponentTokens: (tokens) => {
+          set({ componentTokens: tokens });
+        },
+        
+        // Fetch themes from API
+        fetchThemes: async () => {
+          try {
+            set({ isLoading: true });
+            
+            // TODO: Replace with API call when backend is available
+            // For now we'll just use a mock
+            const mockThemes: Theme[] = [defaultTheme];
+            
+            set({ themes: mockThemes, isLoading: false });
+            logger.log(LogLevel.INFO, LogCategory.THEME, 'Themes fetched', {
+              details: { themesCount: mockThemes.length }
+            });
+          } catch (error) {
+            set({ isLoading: false, error: (error as Error).message });
+            logger.log(LogLevel.ERROR, LogCategory.THEME, 'Error fetching themes', {
+              details: { error }
+            });
+          }
+        },
+        
+        // Create a new theme
+        createTheme: async (theme) => {
+          try {
+            set({ isLoading: true });
+            
+            // TODO: Replace with API call
+            const newTheme = { ...theme, id: Date.now().toString() };
+            const { themes } = get();
+            
+            set({ themes: [...themes, newTheme], isLoading: false });
+            logger.log(LogLevel.INFO, LogCategory.THEME, 'Theme created', {
+              details: { themeId: newTheme.id, themeName: newTheme.name }
+            });
+          } catch (error) {
+            set({ isLoading: false, error: (error as Error).message });
+            logger.log(LogLevel.ERROR, LogCategory.THEME, 'Error creating theme', {
+              details: { error }
+            });
+          }
+        },
+        
+        // Update an existing theme
+        updateTheme: async (theme) => {
+          try {
+            set({ isLoading: true });
+            
+            // TODO: Replace with API call
+            const { themes } = get();
+            const updatedThemes = themes.map((t) => (t.id === theme.id ? theme : t));
+            
+            set({ themes: updatedThemes, isLoading: false });
+            logger.log(LogLevel.INFO, LogCategory.THEME, 'Theme updated', {
+              details: { themeId: theme.id, themeName: theme.name }
+            });
+          } catch (error) {
+            set({ isLoading: false, error: (error as Error).message });
+            logger.log(LogLevel.ERROR, LogCategory.THEME, 'Error updating theme', {
+              details: { error }
+            });
+          }
+        },
+        
+        // Delete a theme
+        deleteTheme: async (themeId) => {
+          try {
+            set({ isLoading: true });
+            
+            // TODO: Replace with API call
+            const { themes, activeThemeId } = get();
+            const updatedThemes = themes.filter((t) => t.id !== themeId);
+            
+            // If the active theme is being deleted, switch to default
+            const newActiveId = activeThemeId === themeId 
+              ? defaultTheme.id 
+              : activeThemeId;
+            
+            set({ 
+              themes: updatedThemes, 
+              activeThemeId: newActiveId,
+              isLoading: false 
+            });
+            
+            logger.log(LogLevel.INFO, LogCategory.THEME, 'Theme deleted', {
+              details: { themeId }
+            });
+          } catch (error) {
+            set({ isLoading: false, error: (error as Error).message });
+            logger.log(LogLevel.ERROR, LogCategory.THEME, 'Error deleting theme', {
+              details: { error }
+            });
+          }
+        },
+        
+        // Reset to default theme
+        resetTheme: () => {
+          set({
+            activeThemeId: defaultTheme.id,
+            isDark: defaultTheme.isDark,
+            primaryColor: defaultTheme.variables.primary,
+            backgroundColor: defaultTheme.variables.background,
+            textColor: defaultTheme.variables.foreground,
+            designTokens: defaultTheme.designTokens,
+            componentTokens: defaultComponentTokens,
+          });
+          
+          logger.log(LogLevel.INFO, LogCategory.THEME, 'Theme reset to default');
+        },
+      }),
+      {
+        name: 'theme-store',
+        partialize: (state) => ({
+          activeThemeId: state.activeThemeId,
+          isDark: state.isDark,
+        }),
       }
-      return { themes: state.themes, designTokens: tokens };
-    });
-  },
-
-  setComponentTokens: (tokens) => {
-    set({ componentTokens: tokens });
-  },
-
-  setIsLoading: (isLoading) => {
-    set({ isLoading });
-  },
-
-  setError: (error) => {
-    set({ error });
-  },
-
-  applyTheme: (themeId) => {
-    set((state) => {
-      const theme = state.themes.find(t => t.id === themeId);
-      if (theme) {
-        return {
-          activeThemeId: themeId,
-          designTokens: theme.designTokens,
-          componentTokens: theme.componentTokens
-        };
-      }
-      return state;
-    });
-
-    logger.log(LogLevel.INFO, LogCategory.SYSTEM, `Theme applied: ${themeId}`);
-  },
-
-  loadTheme: async (themeId) => {
-    set({ isLoading: true, error: null });
-    
-    try {
-      // Mock theme loading for a specific theme
-      setTimeout(() => {
-        const mockTheme: Theme = {
-          id: themeId,
-          name: 'Impulsivity',
-          label: 'Impulsivity',
-          description: 'Default theme for the Makers IMPULSE system',
-          isDark: true,
-          status: 'ACTIVE',
-          context: 'SITE',
-          version: 1,
-          variables: {
-            background: '#0F1729',
-            foreground: '#F8FAFC',
-            card: '#1E293B',
-            cardForeground: '#F8FAFC',
-            primary: '#8B5CF6',
-            primaryForeground: '#FFFFFF',
-            secondary: '#EC4899',
-            secondaryForeground: '#FFFFFF',
-            muted: '#334155',
-            mutedForeground: '#94A3B8',
-            accent: '#F97316',
-            accentForeground: '#FFFFFF',
-            destructive: '#EF4444',
-            destructiveForeground: '#FFFFFF',
-            border: '#334155',
-            input: '#334155',
-            ring: '#8B5CF6',
-            effectColor: '#8B5CF6',
-            effectSecondary: '#EC4899',
-            effectTertiary: '#F97316',
-            transitionFast: '0.15s',
-            transitionNormal: '0.3s',
-            transitionSlow: '0.5s',
-            animationFast: '0.5s',
-            animationNormal: '1s',
-            animationSlow: '2s',
-            radiusSm: '0.25rem',
-            radiusMd: '0.5rem',
-            radiusLg: '0.75rem',
-            radiusFull: '9999px'
-          },
-          designTokens: {
-            colors: {
-              primary: '#8B5CF6',
-              secondary: '#EC4899',
-              accent: '#F97316',
-              background: '#0F1729',
-              foreground: '#F8FAFC',
-              muted: '#334155',
-              'muted-foreground': '#94A3B8',
-              popover: '#1E293B',
-              'popover-foreground': '#F8FAFC',
-              card: '#1E293B',
-              'card-foreground': '#F8FAFC', 
-              border: '#334155',
-              input: '#334155',
-              ring: '#8B5CF6'
-            },
-            spacing: {
-              sm: '0.5rem',
-              md: '1rem',
-              lg: '1.5rem',
-              xl: '2rem',
-              xxl: '4rem'
-            },
-            typography: {
-              fontFamily: "'Inter', sans-serif",
-              fontSize: {
-                xs: '0.75rem',
-                sm: '0.875rem',
-                base: '1rem',
-                lg: '1.125rem',
-                xl: '1.25rem',
-                '2xl': '1.5rem',
-                '3xl': '1.875rem',
-                '4xl': '2.25rem',
-                '5xl': '3rem',
-              },
-              fontWeight: {
-                light: '300',
-                normal: '400',
-                medium: '500',
-                semibold: '600',
-                bold: '700',
-              },
-              lineHeight: {
-                none: '1',
-                tight: '1.25',
-                snug: '1.375',
-                normal: '1.5',
-                relaxed: '1.625',
-                loose: '2',
-              }
-            },
-            effects: {
-              blur: {
-                sm: '4px',
-                md: '8px',
-                lg: '12px'
-              },
-              glow: {
-                sm: '0 0 4px',
-                md: '0 0 8px',
-                lg: '0 0 16px'
-              }
-            },
-            radius: {
-              none: '0',
-              sm: '0.25rem',
-              md: '0.5rem',
-              lg: '0.75rem',
-              xl: '1rem',
-              full: '9999px'
-            },
-            shadows: {
-              inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-              sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-              md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-              lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-              xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-            }
-          },
-          componentTokens: {
-            button: {
-              backgroundColor: 'var(--primary)',
-              textColor: 'var(--foreground)',
-              borderRadius: '0.5rem',
-              padding: '0.5rem 1rem'
-            },
-            card: {
-              backgroundColor: 'var(--card)',
-              textColor: 'var(--card-foreground)',
-              borderRadius: '0.5rem',
-              padding: '1rem'
-            },
-            input: {
-              backgroundColor: 'var(--background)',
-              textColor: 'var(--foreground)',
-              borderColor: 'var(--border)',
-              borderRadius: '0.5rem',
-              padding: '0.5rem'
-            },
-            badge: {
-              backgroundColor: 'var(--primary)',
-              textColor: 'var(--primary-foreground)',
-              borderRadius: '9999px',
-              padding: '0.25rem 0.5rem'
-            },
-            alert: {
-              backgroundColor: 'var(--muted)',
-              textColor: 'var(--foreground)',
-              borderRadius: '0.5rem',
-              padding: '1rem'
-            }
-          },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        set(state => ({
-          themes: [...state.themes.filter(t => t.id !== themeId), mockTheme],
-          activeThemeId: mockTheme.id,
-          isDark: mockTheme.isDark,
-          primaryColor: mockTheme.designTokens.colors?.primary || '#8B5CF6',
-          backgroundColor: mockTheme.designTokens.colors?.background || '#0F1729',
-          textColor: mockTheme.designTokens.colors?.foreground || '#F8FAFC',
-          accentColor: mockTheme.designTokens.colors?.accent || '#F97316',
-          borderColor: mockTheme.designTokens.colors?.border || '#334155',
-          designTokens: mockTheme.designTokens,
-          componentTokens: mockTheme.componentTokens,
-          theme: mockTheme,
-          isLoading: false,
-          isLoaded: true,
-        }));
-        
-        logger.log(LogLevel.INFO, LogCategory.SYSTEM, `Theme loaded: ${themeId}`);
-      }, 100);
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load theme';
-      logger.log(LogLevel.ERROR, LogCategory.SYSTEM, 'Failed to load theme', { error: errorMessage });
-      set({ 
-        isLoading: false,
-        error: errorMessage
-      });
-    }
-  },
-
-  loadThemes: async () => {
-    set({ isLoading: true, error: null });
-    
-    try {
-      // Mock theme loading for now
-      setTimeout(() => {
-        const mockTheme: Theme = {
-          id: 'impulsivity',
-          name: 'Impulsivity',
-          label: 'Impulsivity',
-          description: 'Default theme for the Makers IMPULSE system',
-          isDark: true,
-          status: 'ACTIVE',
-          context: 'SITE',
-          version: 1,
-          variables: {
-            background: '#0F1729',
-            foreground: '#F8FAFC',
-            card: '#1E293B',
-            cardForeground: '#F8FAFC',
-            primary: '#8B5CF6',
-            primaryForeground: '#FFFFFF',
-            secondary: '#EC4899',
-            secondaryForeground: '#FFFFFF',
-            muted: '#334155',
-            mutedForeground: '#94A3B8',
-            accent: '#F97316',
-            accentForeground: '#FFFFFF',
-            destructive: '#EF4444',
-            destructiveForeground: '#FFFFFF',
-            border: '#334155',
-            input: '#334155',
-            ring: '#8B5CF6',
-            effectColor: '#8B5CF6',
-            effectSecondary: '#EC4899',
-            effectTertiary: '#F97316',
-            transitionFast: '0.15s',
-            transitionNormal: '0.3s',
-            transitionSlow: '0.5s',
-            animationFast: '0.5s',
-            animationNormal: '1s',
-            animationSlow: '2s',
-            radiusSm: '0.25rem',
-            radiusMd: '0.5rem',
-            radiusLg: '0.75rem',
-            radiusFull: '9999px'
-          },
-          designTokens: {
-            colors: {
-              primary: '#8B5CF6',
-              secondary: '#EC4899',
-              accent: '#F97316',
-              background: '#0F1729',
-              foreground: '#F8FAFC',
-              muted: '#334155',
-              'muted-foreground': '#94A3B8',
-              popover: '#1E293B',
-              'popover-foreground': '#F8FAFC',
-              card: '#1E293B',
-              'card-foreground': '#F8FAFC', 
-              border: '#334155',
-              input: '#334155',
-              ring: '#8B5CF6'
-            },
-            spacing: {
-              sm: '0.5rem',
-              md: '1rem',
-              lg: '1.5rem',
-              xl: '2rem',
-              xxl: '4rem'
-            },
-            typography: {
-              fontFamily: "'Inter', sans-serif",
-              fontSize: {
-                xs: '0.75rem',
-                sm: '0.875rem',
-                base: '1rem',
-                lg: '1.125rem',
-                xl: '1.25rem',
-                '2xl': '1.5rem',
-                '3xl': '1.875rem',
-                '4xl': '2.25rem',
-                '5xl': '3rem',
-              },
-              fontWeight: {
-                light: '300',
-                normal: '400',
-                medium: '500',
-                semibold: '600',
-                bold: '700',
-              },
-              lineHeight: {
-                none: '1',
-                tight: '1.25',
-                snug: '1.375',
-                normal: '1.5',
-                relaxed: '1.625',
-                loose: '2',
-              }
-            },
-            effects: {
-              blur: {
-                sm: '4px',
-                md: '8px',
-                lg: '12px'
-              },
-              glow: {
-                sm: '0 0 4px',
-                md: '0 0 8px',
-                lg: '0 0 16px'
-              }
-            },
-            radius: {
-              none: '0',
-              sm: '0.25rem',
-              md: '0.5rem',
-              lg: '0.75rem',
-              xl: '1rem',
-              full: '9999px'
-            },
-            shadows: {
-              inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-              sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-              md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-              lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-              xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-            }
-          },
-          componentTokens: {
-            button: {
-              backgroundColor: 'var(--primary)',
-              textColor: 'var(--foreground)',
-              borderRadius: '0.5rem',
-              padding: '0.5rem 1rem'
-            },
-            card: {
-              backgroundColor: 'var(--card)',
-              textColor: 'var(--card-foreground)',
-              borderRadius: '0.5rem',
-              padding: '1rem'
-            },
-            input: {
-              backgroundColor: 'var(--background)',
-              textColor: 'var(--foreground)',
-              borderColor: 'var(--border)',
-              borderRadius: '0.5rem',
-              padding: '0.5rem'
-            },
-            badge: {
-              backgroundColor: 'var(--primary)',
-              textColor: 'var(--primary-foreground)',
-              borderRadius: '9999px',
-              padding: '0.25rem 0.5rem'
-            },
-            alert: {
-              backgroundColor: 'var(--muted)',
-              textColor: 'var(--foreground)',
-              borderRadius: '0.5rem',
-              padding: '1rem'
-            }
-          },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        set({
-          themes: [mockTheme],
-          activeThemeId: mockTheme.id,
-          isDark: mockTheme.isDark,
-          primaryColor: mockTheme.designTokens.colors?.primary || '#8B5CF6',
-          backgroundColor: mockTheme.designTokens.colors?.background || '#0F1729',
-          textColor: mockTheme.designTokens.colors?.foreground || '#F8FAFC',
-          accentColor: mockTheme.designTokens.colors?.accent || '#F97316',
-          borderColor: mockTheme.designTokens.colors?.border || '#334155',
-          designTokens: mockTheme.designTokens,
-          componentTokens: mockTheme.componentTokens,
-          theme: mockTheme,
-          isLoading: false,
-          isLoaded: true
-        });
-        
-        logger.log(LogLevel.INFO, LogCategory.SYSTEM, 'Themes loaded', { count: 1 });
-      }, 100);
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load themes';
-      logger.log(LogLevel.ERROR, LogCategory.SYSTEM, 'Failed to load themes', { error: errorMessage });
-      set({ 
-        isLoading: false,
-        error: errorMessage
-      });
-    }
-  },
-
-  resetTheme: () => {
-    set(initialState);
-    logger.log(LogLevel.INFO, LogCategory.SYSTEM, 'Theme state reset');
-  }
-}));
+    )
+  )
+);

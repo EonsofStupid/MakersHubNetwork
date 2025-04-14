@@ -9,7 +9,7 @@ export function useSiteTheme() {
     primaryColor, 
     backgroundColor, 
     textColor, 
-    componentTokens, // Use componentTokens instead of componentStyles
+    componentTokens,
     isLoading 
   } = useThemeStore();
 
@@ -21,7 +21,7 @@ export function useSiteTheme() {
     primaryColor,
     backgroundColor,
     textColor,
-    componentTokens, // Return componentTokens
+    componentTokens,
     isLoading,
     activeThemeId
   };
