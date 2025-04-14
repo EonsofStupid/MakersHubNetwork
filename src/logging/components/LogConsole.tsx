@@ -1,188 +1,298 @@
 
-import React, { useState } from 'react';
-import { getMemoryTransport } from '@/logging/logger.service';
-import { LogLevel, LogCategory, LogEntry } from '@/shared/types/shared.types';
-import { useLogger } from '@/logging/hooks/use-logger';
+import React, { useState, useEffect, useRef } from 'react';
+import { logger } from '@/logging/logger.service';
+import { LogEntry, LogLevel, LogCategory } from '@/shared/types';
+import { X, Filter, Download, RefreshCw } from 'lucide-react';
 
 interface LogConsoleProps {
-  maxHeight?: string;
-  showFilters?: boolean;
+  initialVisible?: boolean;
+  onClose?: () => void;
 }
 
-/**
- * A component that displays logs from the memory transport
- */
-const LogConsole: React.FC<LogConsoleProps> = ({ 
-  maxHeight = '400px',
-  showFilters = true
+export const LogConsole: React.FC<LogConsoleProps> = ({ 
+  initialVisible = false, 
+  onClose 
 }) => {
-  const [selectedLevel, setSelectedLevel] = useState<LogLevel | 'all'>('all');
-  const [selectedCategory, setSelectedCategory] = useState<LogCategory | 'all'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const logger = useLogger('LogConsole', LogCategory.UI);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [visible, setVisible] = useState(initialVisible);
+  const [filter, setFilter] = useState({
+    level: 'info' as LogLevel,
+    category: '' as string,
+    search: ''
+  });
   
-  // Get logs from memory transport
-  const memoryTransport = getMemoryTransport();
-  const logs = memoryTransport?.getLogs() || [];
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const consoleRef = useRef<HTMLDivElement>(null);
   
-  // Filter logs
+  // Fetch initial logs and subscribe to new logs
+  useEffect(() => {
+    if (!visible) return;
+    
+    try {
+      // Get initial logs from memory transport if available
+      const memoryTransport = logger.getTransport('memory');
+      if (memoryTransport) {
+        const entries = memoryTransport.getEntries();
+        setLogs(entries);
+      }
+      
+      // Subscribe to new logs
+      const unsubscribe = logger.subscribe((entry: LogEntry) => {
+        setLogs(prev => [...prev, entry]);
+      });
+      
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    } catch (error) {
+      console.error('Error initializing LogConsole:', error);
+    }
+  }, [visible]);
+  
+  // Auto-scroll to bottom on new logs
+  useEffect(() => {
+    if (messagesEndRef.current && visible) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs, visible]);
+  
+  // Handle close
+  const handleClose = () => {
+    setVisible(false);
+    if (onClose) onClose();
+  };
+  
+  // Apply filters
   const filteredLogs = logs.filter(log => {
-    // Filter by level
-    if (selectedLevel !== 'all' && log.level !== selectedLevel) {
-      return false;
+    // Filter by level (show equal or higher severity)
+    if (filter.level && LogLevel[filter.level.toUpperCase() as keyof typeof LogLevel]) {
+      const minLevelValue = LogLevel[filter.level.toUpperCase() as keyof typeof LogLevel];
+      const logLevelValue = LogLevel[log.level.toUpperCase() as keyof typeof LogLevel];
+      if (logLevelValue < minLevelValue) return false;
     }
     
     // Filter by category
-    if (selectedCategory !== 'all' && log.category !== selectedCategory) {
+    if (filter.category && filter.category !== 'all' && log.category !== filter.category) {
       return false;
     }
     
-    // Filter by search query
-    if (searchQuery && !log.message.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+    // Filter by search text
+    if (filter.search) {
+      const searchLower = filter.search.toLowerCase();
+      const messageMatch = log.message.toLowerCase().includes(searchLower);
+      const detailsMatch = log.details ? 
+        JSON.stringify(log.details).toLowerCase().includes(searchLower) : false;
+        
+      if (!messageMatch && !detailsMatch) return false;
     }
     
     return true;
   });
   
-  // Get the CSS class for a log level
-  const getLevelClass = (level: LogLevel): string => {
-    switch (level) {
-      case LogLevel.DEBUG:
-        return 'text-gray-500';
-      case LogLevel.INFO:
-        return 'text-blue-500';
-      case LogLevel.SUCCESS:
-        return 'text-green-500';
-      case LogLevel.WARN:
-        return 'text-yellow-500';
-      case LogLevel.ERROR:
-        return 'text-red-500';
-      case LogLevel.FATAL:
-        return 'text-red-700 font-bold';
-      case LogLevel.CRITICAL:
-        return 'bg-red-600 text-white font-bold px-1 rounded';
-      default:
-        return '';
+  if (!visible) return null;
+  
+  // Get available categories from logs
+  const categories = Array.from(new Set(logs.map(log => log.category)));
+  
+  const downloadLogs = () => {
+    try {
+      const logsJson = JSON.stringify(logs, null, 2);
+      const blob = new Blob([logsJson], { type: 'application/json' });
+      const href = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = `logs-${new Date().toISOString()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Failed to download logs:', error);
     }
   };
   
-  // Get the display name for a log level
-  const getLevelName = (level: LogLevel): string => {
-    return level.toUpperCase();
-  };
-  
-  // Clear logs
-  const handleClearLogs = () => {
-    memoryTransport?.clearLogs();
-    logger.info('Logs cleared');
+  const clearLogs = () => {
+    setLogs([]);
   };
   
   return (
-    <div className="bg-gray-900 text-gray-200 rounded-md p-2 w-full">
-      {showFilters && (
-        <div className="mb-2 flex flex-wrap gap-2">
-          <div className="flex items-center space-x-2">
-            <label className="text-xs text-gray-400">Level:</label>
-            <select
-              className="bg-gray-800 border border-gray-700 rounded text-xs p-1"
-              value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value as LogLevel | 'all')}
-            >
-              <option value="all">All</option>
-              <option value={LogLevel.DEBUG}>{getLevelName(LogLevel.DEBUG)}</option>
-              <option value={LogLevel.INFO}>{getLevelName(LogLevel.INFO)}</option>
-              <option value={LogLevel.SUCCESS}>{getLevelName(LogLevel.SUCCESS)}</option>
-              <option value={LogLevel.WARN}>{getLevelName(LogLevel.WARN)}</option>
-              <option value={LogLevel.ERROR}>{getLevelName(LogLevel.ERROR)}</option>
-              <option value={LogLevel.FATAL}>{getLevelName(LogLevel.FATAL)}</option>
-            </select>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <label className="text-xs text-gray-400">Category:</label>
-            <select
-              className="bg-gray-800 border border-gray-700 rounded text-xs p-1"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value as LogCategory | 'all')}
-            >
-              <option value="all">All</option>
-              <option value={LogCategory.AUTH}>Auth</option>
-              <option value={LogCategory.RBAC}>RBAC</option>
-              <option value={LogCategory.API}>API</option>
-              <option value={LogCategory.UI}>UI</option>
-              <option value={LogCategory.SYSTEM}>System</option>
-              <option value={LogCategory.ADMIN}>Admin</option>
-              <option value={LogCategory.DEBUG}>Debug</option>
-              <option value={LogCategory.APP}>App</option>
-              <option value={LogCategory.CHAT}>Chat</option>
-            </select>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <label className="text-xs text-gray-400">Search:</label>
-            <input
-              type="text"
-              className="bg-gray-800 border border-gray-700 rounded text-xs p-1"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter logs..."
-            />
-          </div>
-          
-          <button
-            className="ml-auto bg-red-600 hover:bg-red-700 text-white text-xs rounded px-2 py-1"
-            onClick={handleClearLogs}
+    <div 
+      className="fixed bottom-0 left-0 right-0 bg-slate-900 text-slate-200 z-50 border-t border-slate-700"
+      ref={consoleRef}
+      style={{ height: '40vh', display: 'flex', flexDirection: 'column' }}
+    >
+      {/* Header */}
+      <div className="p-2 border-b border-slate-700 flex items-center justify-between bg-slate-800">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-mono font-bold">Log Console</h3>
+          <span className="text-xs bg-slate-700 px-2 py-0.5 rounded-md">{filteredLogs.length} entries</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={clearLogs}
+            className="text-xs bg-slate-700 px-2 py-1 rounded hover:bg-slate-600 flex items-center gap-1"
           >
-            Clear Logs
+            <RefreshCw size={12} />
+            Clear
+          </button>
+          
+          <button 
+            onClick={downloadLogs}
+            className="text-xs bg-slate-700 px-2 py-1 rounded hover:bg-slate-600 flex items-center gap-1"
+          >
+            <Download size={12} />
+            Download
+          </button>
+          
+          <button 
+            onClick={handleClose}
+            className="text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-700"
+          >
+            <X size={18} />
           </button>
         </div>
-      )}
+      </div>
       
-      <div 
-        className="font-mono text-xs overflow-auto" 
-        style={{ maxHeight }}
-      >
+      {/* Filters */}
+      <div className="p-2 border-b border-slate-700 bg-slate-800 flex flex-wrap gap-2 items-center">
+        <div className="flex items-center gap-1">
+          <Filter size={14} className="text-slate-400" />
+          <span className="text-xs text-slate-400">Filters:</span>
+        </div>
+        
+        <select
+          value={filter.level}
+          onChange={e => setFilter({...filter, level: e.target.value as LogLevel})}
+          className="text-xs bg-slate-700 border border-slate-600 rounded px-2 py-1"
+        >
+          <option value="debug">Debug & Above</option>
+          <option value="info">Info & Above</option>
+          <option value="warn">Warning & Above</option>
+          <option value="error">Error & Above</option>
+          <option value="critical">Critical & Above</option>
+        </select>
+        
+        <select
+          value={filter.category}
+          onChange={e => setFilter({...filter, category: e.target.value})}
+          className="text-xs bg-slate-700 border border-slate-600 rounded px-2 py-1"
+        >
+          <option value="">All Categories</option>
+          {categories.map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+          {/* Add standard categories that might not be in logs yet */}
+          {!categories.includes(LogCategory.AUTH) && <option value={LogCategory.AUTH}>{LogCategory.AUTH}</option>}
+          {!categories.includes(LogCategory.RBAC) && <option value={LogCategory.RBAC}>{LogCategory.RBAC}</option>}
+          {!categories.includes(LogCategory.API) && <option value={LogCategory.API}>{LogCategory.API}</option>}
+          {!categories.includes(LogCategory.UI) && <option value={LogCategory.UI}>{LogCategory.UI}</option>}
+          {!categories.includes(LogCategory.SYSTEM) && <option value={LogCategory.SYSTEM}>{LogCategory.SYSTEM}</option>}
+          {!categories.includes(LogCategory.ADMIN) && <option value={LogCategory.ADMIN}>{LogCategory.ADMIN}</option>}
+          {!categories.includes(LogCategory.THEME) && <option value={LogCategory.THEME}>{LogCategory.THEME}</option>}
+          {!categories.includes(LogCategory.DEBUG) && <option value={LogCategory.DEBUG}>{LogCategory.DEBUG}</option>}
+          {!categories.includes(LogCategory.APP) && <option value={LogCategory.APP}>{LogCategory.APP}</option>}
+          {!categories.includes(LogCategory.CHAT) && <option value={LogCategory.CHAT}>{LogCategory.CHAT}</option>}
+        </select>
+        
+        <input
+          type="text"
+          placeholder="Search..."
+          value={filter.search}
+          onChange={e => setFilter({...filter, search: e.target.value})}
+          className="text-xs bg-slate-700 border border-slate-600 rounded px-2 py-1 flex-1 min-w-[150px]"
+        />
+      </div>
+      
+      {/* Logs */}
+      <div className="flex-1 overflow-auto p-0 font-mono text-xs">
         {filteredLogs.length === 0 ? (
-          <div className="text-gray-500 italic p-2">No logs to display</div>
+          <div className="flex items-center justify-center h-full text-slate-500">
+            No logs to display
+          </div>
         ) : (
-          filteredLogs.map((log, index) => (
-            <LogEntry key={index} log={log} levelClass={getLevelClass(log.level)} />
-          ))
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0 bg-slate-800">
+              <tr>
+                <th className="p-1 text-left text-slate-400 border-b border-slate-700">Time</th>
+                <th className="p-1 text-left text-slate-400 border-b border-slate-700">Level</th>
+                <th className="p-1 text-left text-slate-400 border-b border-slate-700">Category</th>
+                <th className="p-1 text-left text-slate-400 border-b border-slate-700">Message</th>
+                <th className="p-1 text-left text-slate-400 border-b border-slate-700">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLogs.map((log, index) => (
+                <tr 
+                  key={log.id || index} 
+                  className={`
+                    border-b border-slate-800 hover:bg-slate-800/50
+                    ${log.level === LogLevel.ERROR || log.level === LogLevel.CRITICAL || log.level === LogLevel.FATAL ? 'bg-red-900/20' : ''}
+                    ${log.level === LogLevel.WARN ? 'bg-yellow-900/10' : ''}
+                    ${log.level === LogLevel.SUCCESS ? 'bg-green-900/10' : ''}
+                  `}
+                >
+                  <td className="p-1 text-slate-400 whitespace-nowrap">
+                    {new Date(log.timestamp).toLocaleTimeString()}
+                  </td>
+                  <td className={`p-1 whitespace-nowrap ${getLogLevelColor(log.level)}`}>
+                    {log.level.toUpperCase()}
+                  </td>
+                  <td className="p-1 text-slate-300 whitespace-nowrap">
+                    {log.category}
+                  </td>
+                  <td className="p-1 text-slate-100">
+                    {log.message}
+                  </td>
+                  <td className="p-1 text-slate-400 max-w-xs truncate">
+                    {log.details ? (
+                      <details>
+                        <summary className="cursor-pointer hover:text-slate-200">View details</summary>
+                        <pre className="mt-1 p-1 bg-slate-800 rounded overflow-auto max-h-40">
+                          {formatDetails(log.details)}
+                        </pre>
+                      </details>
+                    ) : '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
+        <div ref={messagesEndRef} />
       </div>
     </div>
   );
 };
 
-// Log entry component
-const LogEntry: React.FC<{ log: LogEntry; levelClass: string }> = ({ log, levelClass }) => {
-  const [expanded, setExpanded] = useState(false);
-  
-  const timestamp = log.timestamp instanceof Date
-    ? log.timestamp.toISOString().split('T')[1].slice(0, -1)
-    : 'unknown';
-  
-  return (
-    <div className="border-b border-gray-800 py-1 hover:bg-gray-800/30">
-      <div 
-        className="flex flex-wrap gap-1 cursor-pointer" 
-        onClick={() => setExpanded(!expanded)}
-      >
-        <span className="text-gray-400">[{timestamp}]</span>
-        <span className={levelClass}>[{log.level.toUpperCase()}]</span>
-        <span className="text-gray-300">[{log.category}]</span>
-        {log.source && <span className="text-gray-500">[{log.source}]</span>}
-        <span className="text-white">{log.message}</span>
-      </div>
-      
-      {expanded && log.details && Object.keys(log.details).length > 0 && (
-        <pre className="ml-4 mt-1 p-2 bg-gray-800 rounded text-gray-300 overflow-x-auto">
-          {JSON.stringify(log.details, null, 2)}
-        </pre>
-      )}
-    </div>
-  );
-};
+function getLogLevelColor(level: LogLevel): string {
+  switch (level) {
+    case LogLevel.DEBUG:
+      return 'text-blue-300';
+    case LogLevel.INFO:
+      return 'text-cyan-300';
+    case LogLevel.SUCCESS:
+      return 'text-green-300';
+    case LogLevel.WARN:
+      return 'text-yellow-300';
+    case LogLevel.ERROR:
+      return 'text-red-300';
+    case LogLevel.CRITICAL:
+    case LogLevel.FATAL:
+      return 'text-red-500 font-bold';
+    case LogLevel.TRACE:
+      return 'text-purple-300';
+    default:
+      return 'text-slate-300';
+  }
+}
+
+function formatDetails(details: any): string {
+  try {
+    if (typeof details === 'string') return details;
+    return JSON.stringify(details, null, 2);
+  } catch (error) {
+    return String(details);
+  }
+}
 
 export default LogConsole;

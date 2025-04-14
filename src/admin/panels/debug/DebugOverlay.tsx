@@ -2,7 +2,7 @@
 import React from 'react';
 import { useDebugOverlay } from '../../hooks/useDebugOverlay';
 import { useLogger } from '@/logging/hooks/use-logger';
-import { LogCategory, Permission } from '@/shared/types';
+import { LogCategory } from '@/shared/types';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 

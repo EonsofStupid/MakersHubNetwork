@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { Theme, ThemeState, ComponentTokens, DesignTokens } from '@/shared/types';
+import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeStoreActions } from '@/shared/types';
 
 // Utility functions
 const getDefaultDesignTokens = (): DesignTokens => ({
@@ -46,19 +46,41 @@ const initialState: ThemeState = {
   isLoading: false,
   error: null,
   componentStyles: {},
+  animations: {},
+  variables: {
+    background: '#ffffff',
+    foreground: '#000000',
+    card: '#ffffff',
+    cardForeground: '#000000',
+    primary: '#0070f3',
+    primaryForeground: '#ffffff',
+    secondary: '#7928ca',
+    secondaryForeground: '#ffffff',
+    muted: '#f5f5f5',
+    mutedForeground: '#6b7280',
+    accent: '#f5a623',
+    accentForeground: '#ffffff',
+    destructive: '#ff0000',
+    destructiveForeground: '#ffffff',
+    border: '#e2e8f0',
+    input: '#e2e8f0',
+    ring: '#0070f3',
+    effectColor: '#0070f3',
+    effectSecondary: '#7928ca',
+    effectTertiary: '#f5a623',
+    transitionFast: '150ms',
+    transitionNormal: '250ms',
+    transitionSlow: '500ms',
+    animationFast: '300ms',
+    animationNormal: '500ms',
+    animationSlow: '1000ms',
+    radiusSm: '0.125rem',
+    radiusMd: '0.25rem',
+    radiusLg: '0.5rem',
+    radiusFull: '9999px'
+  },
   isLoaded: false
 };
-
-// Interface for the store actions
-export interface ThemeStoreActions {
-  setThemes: (themes: Theme[]) => void;
-  setActiveTheme: (themeId: string) => void;
-  setDesignTokens: (tokens: DesignTokens) => void;
-  setComponentTokens: (tokens: ComponentTokens) => void;
-  setIsLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
-  loadTheme: (themeId: string) => Promise<void>;
-}
 
 // Create the store
 export const useThemeStore = create<ThemeState & ThemeStoreActions>((set, get) => ({
@@ -78,7 +100,9 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>((set, get) =
         backgroundColor: activeTheme.designTokens.colors?.background || '#ffffff',
         textColor: activeTheme.designTokens.colors?.foreground || '#000000',
         theme: activeTheme,
-        isLoaded: true
+        isLoaded: true,
+        variables: activeTheme.variables,
+        animations: activeTheme.designTokens.animations
       });
     }
   },
@@ -136,6 +160,8 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>((set, get) =
           designTokens: theme.designTokens,
           componentTokens: theme.componentTokens,
           theme,
+          variables: theme.variables,
+          animations: theme.designTokens.animations,
           isLoaded: true,
           isLoading: false
         });

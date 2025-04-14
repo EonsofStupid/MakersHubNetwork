@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
-import { UserRole, ROLES, LogCategory } from '@/shared/types';
+import { UserRole, LogCategory } from '@/shared/types';
 import { useLogger } from '@/logging/hooks/use-logger';
 
 /**
@@ -17,13 +17,13 @@ export const useAdminAuth = () => {
   
   // Check if user has admin access
   const hasAdminAccess = useCallback((): boolean => {
-    const result = RBACBridge.hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+    const result = RBACBridge.hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
     return result;
   }, []);
   
   // Check if user is super admin
   const isSuperAdmin = useCallback((): boolean => {
-    return RBACBridge.hasRole(ROLES.SUPER_ADMIN);
+    return RBACBridge.hasRole(UserRole.SUPER_ADMIN);
   }, []);
   
   // Get user roles

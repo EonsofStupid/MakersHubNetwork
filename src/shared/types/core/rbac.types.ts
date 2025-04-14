@@ -2,9 +2,9 @@
 /**
  * Role-Based Access Control (RBAC) types
  */
-import { UserRole, ROLES } from './auth.types';
+import { UserRole } from './auth.types';
 
-// Permission type
+// Permission type - consolidated all permissions into a single type 
 export type Permission =
   | 'create_project'
   | 'edit_project'
@@ -30,25 +30,25 @@ export type Permission =
 
 // Path-based access policies
 export const RBAC_POLICIES = {
-  '/admin': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/admin/users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/admin/roles': [ROLES.SUPER_ADMIN],
-  '/admin/permissions': [ROLES.SUPER_ADMIN],
-  '/admin/analytics': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/projects/create': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/projects/edit': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  '/admin': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/admin/users': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/admin/roles': [UserRole.SUPER_ADMIN],
+  '/admin/permissions': [UserRole.SUPER_ADMIN],
+  '/admin/analytics': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/projects/create': [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/projects/edit': [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/projects/delete': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
 } as const;
 
 export type PATH_POLICIES = typeof RBAC_POLICIES;
 
 // Common role groups
 export const RBAC = {
-  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  SUPER_ADMINS: [ROLES.SUPER_ADMIN],
-  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  AUTHENTICATED: [ROLES.USER, ROLES.MODERATOR, ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  ADMIN_ONLY: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  SUPER_ADMINS: [UserRole.SUPER_ADMIN],
+  MODERATORS: [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  BUILDERS: [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  AUTHENTICATED: [UserRole.USER, UserRole.MODERATOR, UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
 };
 
 // Admin section type
@@ -56,19 +56,20 @@ export type AdminSection = 'dashboard' | 'users' | 'content' | 'settings' | 'sys
 
 // Role labels for UI display
 export const ROLE_LABELS: Record<UserRole, string> = {
-  [ROLES.SUPER_ADMIN]: 'Super Admin',
-  [ROLES.ADMIN]: 'Admin',
-  [ROLES.MODERATOR]: 'Moderator',
-  [ROLES.BUILDER]: 'Builder',
-  [ROLES.USER]: 'User',
-  [ROLES.GUEST]: 'Guest',
+  [UserRole.SUPER_ADMIN]: 'Super Admin',
+  [UserRole.ADMIN]: 'Admin',
+  [UserRole.MODERATOR]: 'Moderator',
+  [UserRole.BUILDER]: 'Builder',
+  [UserRole.USER]: 'User',
+  [UserRole.GUEST]: 'Guest',
 };
 
 // Section permissions
 export const SECTION_PERMISSIONS: Record<AdminSection, UserRole[]> = {
-  dashboard: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  users: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  content: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MODERATOR],
-  settings: [ROLES.SUPER_ADMIN],
-  system: [ROLES.SUPER_ADMIN]
+  dashboard: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  users: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  content: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MODERATOR],
+  settings: [UserRole.SUPER_ADMIN],
+  system: [UserRole.SUPER_ADMIN]
 };
+
