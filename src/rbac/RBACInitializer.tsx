@@ -14,12 +14,7 @@ import { UserRole } from './constants/roles';
  * ensuring that roles and permissions are properly synchronized.
  */
 export const RBACInitializer: React.FC = () => {
-  const { isAuthenticated, user, roles } = useAuthStore(state => ({
-    isAuthenticated: state.isAuthenticated,
-    user: state.user,
-    roles: state.roles
-  }));
-  
+  const { isAuthenticated, user, roles } = useAuthStore();
   const logger = useLogger('RBACInitializer', LogCategory.RBAC);
   
   // Initialize RBAC when auth state changes
@@ -55,4 +50,3 @@ export const RBACInitializer: React.FC = () => {
   // This is a utility component, no UI is rendered
   return null;
 };
-

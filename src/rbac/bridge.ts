@@ -1,8 +1,7 @@
 
 import { UserRole } from './constants/roles';
-import { Permission } from '@/shared/types/permissions';
+import { Permission } from '@/shared/types/shared.types';
 import { rbacStore } from './store/rbac.store';
-import { PATH_POLICIES, ADMIN_SECTION_POLICIES } from './constants/policies';
 
 /**
  * RBAC Bridge - Clean interface for role-based access control
@@ -25,7 +24,7 @@ class RBACBridgeImpl {
     const userRoles = rbacStore.getState().roles;
     
     // Super admin always has all roles
-    if (userRoles.includes(UserRole.SUPER_ADMIN)) {
+    if (userRoles.includes('super_admin')) {
       return true;
     }
     
@@ -70,29 +69,29 @@ class RBACBridgeImpl {
    * Check if user is a super admin
    */
   isSuperAdmin(): boolean {
-    return rbacStore.getState().roles.includes(UserRole.SUPER_ADMIN);
+    return rbacStore.getState().roles.includes('super_admin');
   }
   
   /**
-   * Check if user is an admin (either admin or super_admin)
+   * Check if user has admin access
    */
   hasAdminAccess(): boolean {
     const roles = rbacStore.getState().roles;
-    return roles.includes(UserRole.ADMIN) || roles.includes(UserRole.SUPER_ADMIN);
+    return roles.includes('admin') || roles.includes('super_admin');
   }
   
   /**
    * Check if user is a moderator
    */
   isModerator(): boolean {
-    return rbacStore.getState().roles.includes(UserRole.MODERATOR);
+    return rbacStore.getState().roles.includes('moderator');
   }
   
   /**
    * Check if user is a builder
    */
   isBuilder(): boolean {
-    return rbacStore.getState().roles.includes(UserRole.BUILDER);
+    return rbacStore.getState().roles.includes('builder');
   }
   
   /**
@@ -115,69 +114,18 @@ class RBACBridgeImpl {
   clearRoles(): void {
     rbacStore.getState().clear();
   }
-
-  /**
-   * Check if user can access a specific route
-   */
-  canAccessRoute(route: string): boolean {
-    // Super admin can access all routes
-    if (this.isSuperAdmin()) {
-      return true;
-    }
-    
-    // Check if route has policy
-    const pathMatches = Object.keys(PATH_POLICIES).filter(path => {
-      // Exact match
-      if (path === route) return true;
-      
-      // Base path match (e.g. /admin/users/123 matches /admin/users policy)
-      if (route.startsWith(`${path}/`)) return true;
-      
-      return false;
-    });
-    
-    // If no policy matches, allow access
-    if (pathMatches.length === 0) {
-      return true;
-    }
-    
-    // Check all matching policies (user must have permission for all matching policies)
-    return pathMatches.every(path => {
-      const allowedRoles = PATH_POLICIES[path as keyof typeof PATH_POLICIES];
-      return allowedRoles.some(role => this.hasRole(role));
-    });
-  }
-  
-  /**
-   * Check if user can access admin section
-   */
-  canAccessAdminSection(section: string): boolean {
-    // Super admin can access all sections
-    if (this.isSuperAdmin()) {
-      return true;
-    }
-    
-    // Get allowed roles for section
-    const allowedRoles = ADMIN_SECTION_POLICIES[section as keyof typeof ADMIN_SECTION_POLICIES];
-    if (!allowedRoles) {
-      return false;
-    }
-    
-    // Check if user has any of the allowed roles
-    return allowedRoles.some(role => this.hasRole(role));
-  }
   
   /**
    * Get the highest role for the current user
    */
   getHighestRole(): UserRole {
     const roles = this.getRoles();
-    if (roles.includes(UserRole.SUPER_ADMIN)) return UserRole.SUPER_ADMIN;
-    if (roles.includes(UserRole.ADMIN)) return UserRole.ADMIN;
-    if (roles.includes(UserRole.MODERATOR)) return UserRole.MODERATOR;
-    if (roles.includes(UserRole.BUILDER)) return UserRole.BUILDER;
-    if (roles.includes(UserRole.USER)) return UserRole.USER;
-    return UserRole.GUEST;
+    if (roles.includes('super_admin')) return 'super_admin';
+    if (roles.includes('admin')) return 'admin';
+    if (roles.includes('moderator')) return 'moderator';
+    if (roles.includes('builder')) return 'builder';
+    if (roles.includes('user')) return 'user';
+    return 'guest';
   }
 }
 

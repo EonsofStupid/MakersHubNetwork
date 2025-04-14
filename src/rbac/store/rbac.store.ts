@@ -1,9 +1,34 @@
 
 import { create } from 'zustand';
-import { UserRole, ROLES } from '../constants/roles';
-import { Permission, DEFAULT_PERMISSIONS, ROLE_PERMISSIONS } from '@/shared/types/permissions';
+import { UserRole } from '@/shared/types/shared.types';
+import { Permission } from '@/shared/types/shared.types';
 import { LogCategory, LogLevel } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
+
+// Define default permissions
+const DEFAULT_PERMISSIONS: Record<Permission, boolean> = {
+  'create_project': false,
+  'edit_project': false,
+  'delete_project': false,
+  'submit_build': false,
+  'access_admin': false,
+  'manage_api_keys': false,
+  'manage_users': false,
+  'manage_roles': false,
+  'manage_permissions': false,
+  'view_analytics': false,
+  'admin:view': false,
+  'admin:edit': false,
+  'admin:delete': false,
+  'user:view': false,
+  'user:edit': false,
+  'user:delete': false,
+  'content:view': false,
+  'content:edit': false,
+  'content:delete': false,
+  'settings:view': false,
+  'settings:edit': false
+};
 
 // Define the RBAC state interface
 export interface RBACState {
@@ -26,13 +51,46 @@ export interface RBACState {
   initialize: () => void;
 }
 
+// Role-permission mappings
+const ROLE_PERMISSIONS: Record<string, Permission[]> = {
+  'super_admin': [
+    'create_project', 'edit_project', 'delete_project',
+    'submit_build', 'access_admin', 'manage_api_keys', 
+    'manage_users', 'manage_roles', 'manage_permissions',
+    'view_analytics', 'admin:view', 'admin:edit', 'admin:delete',
+    'user:view', 'user:edit', 'user:delete', 
+    'content:view', 'content:edit', 'content:delete',
+    'settings:view', 'settings:edit'
+  ],
+  'admin': [
+    'create_project', 'edit_project', 'delete_project',
+    'submit_build', 'access_admin', 
+    'view_analytics', 'admin:view', 'admin:edit',
+    'user:view', 'user:edit',
+    'content:view', 'content:edit', 'content:delete',
+    'settings:view', 'settings:edit'
+  ],
+  'moderator': [
+    'user:view', 'content:view', 'content:edit',
+    'access_admin'
+  ],
+  'builder': [
+    'create_project', 'edit_project', 'submit_build',
+    'content:view', 'content:edit'
+  ],
+  'user': [
+    'content:view'
+  ],
+  'guest': []
+};
+
 // Map roles to their corresponding permissions
 const mapRolesToPermissions = (roles: UserRole[]): Record<Permission, boolean> => {
   // Start with all permissions false
   const permissions = { ...DEFAULT_PERMISSIONS };
   
   // Super admin has all permissions
-  if (roles.includes(ROLES.SUPER_ADMIN)) {
+  if (roles.includes('super_admin')) {
     Object.keys(permissions).forEach(key => {
       permissions[key as Permission] = true;
     });
