@@ -1,8 +1,7 @@
-
 import { useState, useCallback } from 'react';
 import { useLogger } from '@/hooks/use-logger';
-import { useThemeStore } from '@/theme/store/theme.store';
-import { LogCategory } from '@/logging/constants/log-category';
+import { useThemeStore } from '@/shared/store/theme/store';
+import { LogCategory } from '@/shared/types/shared.types';
 
 interface UseImpulsivityThemeResult {
   applyTheme: () => Promise<boolean>;

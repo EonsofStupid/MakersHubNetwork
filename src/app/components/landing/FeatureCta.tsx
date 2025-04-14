@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Button } from '@/shared/ui/button';
 import { cn } from '@/lib/utils';
-import { ThemeEffectProvider } from '@/shared/theme/effects/ThemeEffectProvider';
+import { ThemeEffectProvider } from '@/shared/ui/theme/effects/ThemeEffectProvider';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import type { ThemeEffect } from '@/theme/types/effects';
+import type { ThemeEffect } from '@/app/theme/types/effects';
 
 export interface FeatureCtaProps {
   id: string;

@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { FeatureCta, FeatureCtaProps } from './FeatureCta';
 import { Sparkles, Code, Rocket, Globe, Zap, Gem } from 'lucide-react';
-import { useSiteTheme } from '@/components/theme/SiteThemeProvider';
+import { useSiteTheme } from '@/app/theme/SiteThemeProvider';
 import { cn } from '@/lib/utils';
 
 export const FeaturesSection = () => {

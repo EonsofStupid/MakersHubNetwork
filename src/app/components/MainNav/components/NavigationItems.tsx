@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useSiteTheme } from "@/components/theme/SiteThemeProvider";
+import { useSiteTheme } from "@/app/theme/SiteThemeProvider";
 import { motion } from "framer-motion";
 
 interface NavItem {
