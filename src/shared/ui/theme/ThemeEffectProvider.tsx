@@ -1,13 +1,29 @@
-
 import React from 'react';
-import { ThemeEffect, ThemeEffectProps, ThemeEffectProviderProps } from '@/shared/types';
+import { ThemeEffect, ThemeEffectType } from '@/shared/types';
+
+// Define the ThemeEffectProps interface
+interface ThemeEffectProps {
+  effect: ThemeEffect;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+  intensity?: number;
+}
+
+// Define ThemeEffectProviderProps interface
+interface ThemeEffectProviderProps {
+  children: React.ReactNode;
+  className?: string;
+  effect?: ThemeEffect;
+}
 
 /**
  * Default effect when none is provided
  */
 const DEFAULT_EFFECT: ThemeEffect = {
-  type: 'none',
-  enabled: false
+  type: ThemeEffectType.NONE,
+  enabled: false,
+  intensity: 1
 };
 
 /**
@@ -22,7 +38,7 @@ const EffectRenderer: React.FC<ThemeEffectProps> = ({
 }) => {
   // Apply appropriate effect based on type
   switch (effect.type) {
-    case 'blur':
+    case ThemeEffectType.BLUR:
       return (
         <div 
           className={`${className} backdrop-blur-sm`} 
@@ -35,7 +51,7 @@ const EffectRenderer: React.FC<ThemeEffectProps> = ({
         </div>
       );
       
-    case 'grain':
+    case ThemeEffectType.GRAIN:
       return (
         <div 
           className={`${className} relative before:absolute before:inset-0 before:opacity-30 before:z-[-1]`}
@@ -45,7 +61,7 @@ const EffectRenderer: React.FC<ThemeEffectProps> = ({
         </div>
       );
       
-    case 'glow':
+    case ThemeEffectType.GLOW:
       return (
         <div 
           className={`${className} relative shadow-lg`}

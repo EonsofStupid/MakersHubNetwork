@@ -216,7 +216,7 @@ class AuthBridgeImpl implements IAuthBridge {
     return this.getUser();
   }
 
-  getUserProfile(): UserProfile | null {
+  getUserProfile(user_id?: string): UserProfile | null {
     return this.getUser();
   }
 }
