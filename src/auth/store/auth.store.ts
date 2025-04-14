@@ -1,353 +1,118 @@
-import { create } from 'zustand';
-import { UserProfile, AUTH_STATUS, AuthStatus, LogCategory, LogLevel, UserRole, ROLES } from '@/shared/types';
-import { logger } from '@/logging/logger.service';
-import { RBACBridge } from '@/rbac/bridge';
 
-// Define the auth state interface
-export interface AuthState {
-  // User state
+import { create } from 'zustand';
+import { UserProfile, AUTH_STATUS, AuthStatus } from '@/shared/types';
+import { logger } from '@/logging/logger.service';
+import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+
+interface AuthState {
   user: UserProfile | null;
   isAuthenticated: boolean;
   status: AuthStatus;
-  
-  // Session state
-  sessionToken: string | null;
-  refreshToken: string | null;
-  
-  // Profile information
-  profile: UserProfile | null;
-
-  // Role information
-  roles: UserRole[];
-  
-  // Status and loading state
   error: Error | null;
   initialized: boolean;
-  isLoading: boolean;
-  
-  // Auth actions
+
   initialize: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
 }
 
-// Create error handling helper
-const handleError = (error: unknown): Error => {
-  if (error instanceof Error) {
-    return error;
-  }
-  if (typeof error === 'string') {
-    return new Error(error);
-  }
-  return new Error('Unknown error occurred');
-};
-
-// Create the auth store
-export const useAuthStore = create<AuthState>((set, get) => ({
-  // Initial state
+export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  profile: null,
   isAuthenticated: false,
   status: AUTH_STATUS.IDLE,
-  sessionToken: null,
-  refreshToken: null,
   error: null,
   initialized: false,
-  isLoading: false,
-  roles: [],
 
-  // Initialize the auth state from storage or server
   initialize: async () => {
     try {
-      set({ status: AUTH_STATUS.LOADING, isLoading: true });
+      set({ status: AUTH_STATUS.LOADING });
       
-      // Demo implementation - in a real app, verify the stored session
       const storedUser = localStorage.getItem('auth_user');
-      
       if (storedUser) {
-        const user = JSON.parse(storedUser) as UserProfile;
-        const rolesStr = localStorage.getItem('user_roles');
-        const roles = rolesStr ? JSON.parse(rolesStr) as UserRole[] : [ROLES.USER];
-        
-        // Set roles in RBAC bridge
-        RBACBridge.setRoles(roles);
-        
+        const user = JSON.parse(storedUser);
         set({ 
-          user,
-          profile: user,
-          roles,
+          user, 
           isAuthenticated: true,
           status: AUTH_STATUS.AUTHENTICATED,
-          sessionToken: localStorage.getItem('auth_token'),
-          initialized: true,
-          isLoading: false
+          initialized: true 
         });
         
-        logger.log(LogLevel.INFO, LogCategory.AUTH, 'User session restored', { 
-          userId: user.id,
-          email: user.email,
-          roles
-        });
+        logger.log(LogLevel.INFO, LogCategory.AUTH, 'Auth initialized with stored user');
       } else {
-        set({
-          isAuthenticated: false,
+        set({ 
           status: AUTH_STATUS.UNAUTHENTICATED,
-          initialized: true,
-          isLoading: false,
-          roles: [],
+          initialized: true 
         });
         
-        logger.log(LogLevel.INFO, LogCategory.AUTH, 'No user session found');
+        logger.log(LogLevel.INFO, LogCategory.AUTH, 'Auth initialized without user');
       }
     } catch (error) {
-      set({ 
-        status: AUTH_STATUS.ERROR, 
-        error: handleError(error),
-        initialized: true,
-        isLoading: false,
-        roles: [],
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Auth initialization failed', {
+        error: error instanceof Error ? error.message : String(error)
       });
       
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to initialize auth', { 
-        error: error instanceof Error ? error.message : String(error)
+      set({ 
+        status: AUTH_STATUS.ERROR,
+        error: error instanceof Error ? error : new Error('Failed to initialize auth'),
+        initialized: true
       });
     }
   },
 
-  // Login the user
   login: async (email: string, password: string) => {
     try {
-      set({ status: AUTH_STATUS.LOADING, isLoading: true });
+      set({ status: AUTH_STATUS.LOADING });
       
-      // Mock admin authentication for testing
-      let roles: UserRole[] = [ROLES.USER];
-      
-      // Admin testing credentials
-      if (email === 'admin@example.com' && password === 'admin123') {
-        roles = [ROLES.ADMIN];
-      } else if (email === 'superadmin@example.com' && password === 'super123') {
-        roles = [ROLES.SUPER_ADMIN];
-      }
-      
-      // Demo implementation - in a real app, call an API
-      const demoUser: UserProfile = {
-        id: '123',
+      // Demo implementation
+      const user: UserProfile = {
+        id: '1',
         email,
-        name: 'Demo User',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
       
-      // Store user in local storage for demo
-      localStorage.setItem('auth_user', JSON.stringify(demoUser));
-      localStorage.setItem('auth_token', 'demo_token');
-      localStorage.setItem('user_roles', JSON.stringify(roles));
+      localStorage.setItem('auth_user', JSON.stringify(user));
       
-      // Set roles in RBAC bridge
-      RBACBridge.setRoles(roles);
-      
-      set({
-        user: demoUser,
-        profile: demoUser,
-        roles,
+      set({ 
+        user,
         isAuthenticated: true,
         status: AUTH_STATUS.AUTHENTICATED,
-        sessionToken: 'demo_token',
-        error: null,
-        isLoading: false,
+        error: null
       });
       
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User logged in', { 
-        userId: demoUser.id, 
-        email: demoUser.email,
-        roles
-      });
+      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User logged in', { email });
     } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Login failed', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
       set({ 
         status: AUTH_STATUS.ERROR,
-        error: handleError(error),
-        isAuthenticated: false,
-        isLoading: false,
-        roles: [],
-      });
-      
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Login failed', { 
-        email, 
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error : new Error('Failed to login')
       });
     }
   },
 
-  // Logout the user
   logout: async () => {
     try {
-      set({ status: AUTH_STATUS.LOADING, isLoading: true });
-      
-      // Clear local storage
       localStorage.removeItem('auth_user');
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_roles');
-      
-      // Clear roles in RBAC bridge
-      RBACBridge.clearRoles();
-      
       set({
         user: null,
-        profile: null,
-        roles: [],
         isAuthenticated: false,
         status: AUTH_STATUS.UNAUTHENTICATED,
-        sessionToken: null,
-        refreshToken: null,
-        error: null,
-        isLoading: false,
+        error: null
       });
       
       logger.log(LogLevel.INFO, LogCategory.AUTH, 'User logged out');
     } catch (error) {
-      set({
+      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Logout failed', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
+      set({ 
         status: AUTH_STATUS.ERROR,
-        error: handleError(error),
-        isLoading: false
-      });
-      
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Logout failed', { 
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  },
-
-  // Sign up a new user
-  signup: async (email: string, password: string) => {
-    try {
-      set({ status: AUTH_STATUS.LOADING, isLoading: true });
-      
-      // Demo implementation - in a real app, call an API
-      const demoUser: UserProfile = {
-        id: '123',
-        email,
-        name: 'New User',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      
-      // Store user in local storage for demo
-      localStorage.setItem('auth_user', JSON.stringify(demoUser));
-      localStorage.setItem('auth_token', 'demo_token');
-      localStorage.setItem('user_roles', JSON.stringify([ROLES.USER]));
-      
-      // Set roles in RBAC bridge
-      RBACBridge.setRoles([ROLES.USER]);
-      
-      set({
-        user: demoUser,
-        profile: demoUser,
-        roles: [ROLES.USER],
-        isAuthenticated: true,
-        status: AUTH_STATUS.AUTHENTICATED,
-        sessionToken: 'demo_token',
-        error: null,
-        isLoading: false,
-      });
-      
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed up', { 
-        userId: demoUser.id, 
-        email: demoUser.email 
-      });
-    } catch (error) {
-      set({
-        status: AUTH_STATUS.ERROR,
-        error: handleError(error),
-        isLoading: false
-      });
-      
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Signup failed', { 
-        email, 
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  },
-  
-  // Register alias for signup
-  register: async (email: string, password: string) => {
-    return get().signup(email, password);
-  },
-  
-  // Reset password
-  resetPassword: async (email: string) => {
-    try {
-      set({ isLoading: true });
-      
-      // Demo implementation - in a real app, call an API
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Password reset email sent', { 
-        email 
-      });
-      
-      set({ isLoading: false });
-    } catch (error) {
-      set({
-        error: handleError(error),
-        isLoading: false
-      });
-      
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Password reset failed', { 
-        email, 
-        error: error instanceof Error ? error.message : String(error)
-      });
-    }
-  },
-  
-  // Update user profile
-  updateProfile: async (profile: Partial<UserProfile>) => {
-    try {
-      set({ isLoading: true });
-      
-      // Get current user
-      const { user } = get();
-      
-      if (!user) {
-        throw new Error('No user logged in');
-      }
-      
-      // Update user in storage
-      const updatedUser = {
-        ...user,
-        ...profile,
-        updated_at: new Date().toISOString()
-      };
-      
-      localStorage.setItem('auth_user', JSON.stringify(updatedUser));
-      
-      set({
-        user: updatedUser,
-        profile: updatedUser,
-        isLoading: false
-      });
-      
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User profile updated', { 
-        userId: user.id
-      });
-    } catch (error) {
-      set({
-        error: handleError(error),
-        isLoading: false
-      });
-      
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Profile update failed', { 
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error : new Error('Failed to logout')
       });
     }
   }
 }));
-
-// Export helpers for accessing specific parts of the auth state
-export const selectUser = (state: AuthState) => state.user;
-export const selectIsAuthenticated = (state: AuthState) => state.isAuthenticated;
-export const selectStatus = (state: AuthState) => state.status;
-export const selectError = (state: AuthState) => state.error;
-export const selectIsLoading = (state: AuthState) => state.isLoading;
-export const selectUserRoles = (state: AuthState) => state.roles;

@@ -1,21 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import Routes from './router/Routes';
-import { AppInitializer } from './app/initializer/AppInitializer';
-import { useAuthStore } from './auth/store/auth.store';
+import { AppInitializer } from './core/init/AppInitializer';
 import { Toaster } from './shared/ui/toaster';
 import MainNav from './app/components/MainNav';
-import { FloatingChat } from './components/FloatingChat';
 
 function App() {
-  const { initialize } = useAuthStore();
-  
-  // Initialize auth on app load
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
-  
   return (
     <BrowserRouter>
       <AppInitializer>
@@ -24,7 +15,6 @@ function App() {
           <main className="flex-1 mt-16">
             <Routes />
           </main>
-          <FloatingChat />
         </div>
         <Toaster />
       </AppInitializer>
