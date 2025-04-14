@@ -17,6 +17,12 @@ export interface LayoutComponentProps {
 
 export type LayoutComponent = React.ComponentType<LayoutComponentProps>;
 
+export interface Component {
+  id: string;
+  type: string;
+  props: Record<string, any>;
+}
+
 export interface AdminLayoutConfig {
   sidebar: {
     width: string;
@@ -43,11 +49,7 @@ export interface Layout {
   name: string;
   description?: string;
   components: {
-    [key: string]: {
-      id: string;
-      type: string;
-      props: Record<string, any>;
-    }
+    [key: string]: Component;
   };
   layout: Array<{
     id: string;
@@ -56,6 +58,8 @@ export interface Layout {
     componentId: string;
   }>;
   meta?: Record<string, any>;
+  type?: string; // Added to match usage
+  scope?: string; // Added to match usage
 }
 
 export interface LayoutSkeleton {

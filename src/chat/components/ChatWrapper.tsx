@@ -1,70 +1,74 @@
 
-import React, { ReactNode } from 'react';
+import React, { useState } from 'react';
 import { useChatSession } from '../hooks/useChatSession';
+import { Send } from 'lucide-react';
+import { Button } from '@/shared/ui';
 
-export interface ChatWrapperProps {
-  children?: ReactNode;
-}
+export const ChatWrapper: React.FC = () => {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage, isLoading } = useChatSession();
 
-export const ChatWrapper: React.FC<ChatWrapperProps> = ({ children }) => {
-  const { getCurrentSession, sessions, currentSessionId } = useChatSession();
-  const currentSession = getCurrentSession();
-  
+  const handleSendMessage = () => {
+    if (input.trim()) {
+      sendMessage(input);
+      setInput('');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
-      {children || (
-        <div className="flex-1 overflow-y-auto p-3">
-          {currentSession ? (
-            <div className="space-y-4">
-              {currentSession.messages?.map((message, index) => (
-                <div 
-                  key={message.id || index}
-                  className={`p-2 rounded-lg max-w-[80%] ${
-                    message.sender === 'user' 
-                      ? 'bg-primary text-primary-foreground ml-auto' 
-                      : 'bg-muted text-muted-foreground'
-                  }`}
-                >
-                  {message.content}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center text-muted-foreground">
-              No active chat session
-            </div>
-          )}
-        </div>
-      )}
-      
-      <div className="p-3 border-t">
-        <form className="flex gap-2" onSubmit={(e) => {
-          e.preventDefault();
-          const input = e.currentTarget.elements.namedItem('message') as HTMLInputElement;
-          if (input?.value) {
-            // Use saveMessage for now since we don't have sendMessage directly
-            const chatSession = useChatSession();
-            chatSession.saveMessage({
-              content: input.value,
-              sender: 'user',
-              timestamp: Date.now()
-            });
-            input.value = '';
-          }
-        }}>
-          <input 
-            type="text" 
-            name="message"
-            className="flex-1 rounded-md border px-3 py-2 text-sm"
-            placeholder="Type your message..."
+      {/* Messages area */}
+      <div className="flex-1 p-4 overflow-y-auto bg-gray-50 dark:bg-slate-800">
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-sm">
+            Start a conversation
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`max-w-[85%] p-3 rounded-lg ${
+                  message.sender === 'user'
+                    ? 'bg-blue-500 text-white ml-auto rounded-br-none'
+                    : 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-100 rounded-bl-none'
+                }`}
+              >
+                {message.content}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Input area */}
+      <div className="p-3 border-t dark:border-slate-700 bg-white dark:bg-slate-900">
+        <div className="flex items-end gap-2">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message..."
+            className="flex-1 p-2 border rounded-md resize-none h-10 max-h-24 focus:outline-none focus:ring-1 dark:bg-slate-800 dark:border-slate-700"
+            disabled={isLoading}
           />
-          <button 
-            type="submit"
-            className="bg-primary text-primary-foreground rounded-md px-3 py-2 text-sm"
+          <Button
+            onClick={handleSendMessage}
+            disabled={isLoading || !input.trim()}
+            className="h-10 w-10 p-2"
+            variant="default"
+            size="icon"
           >
-            Send
-          </button>
-        </form>
+            <Send size={18} />
+          </Button>
+        </div>
       </div>
     </div>
   );

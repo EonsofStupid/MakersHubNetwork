@@ -1,8 +1,8 @@
 
 import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ChatMessage, ChatSession, LogCategory } from '@/shared/types';
 import { useLogger } from '@/logging/hooks/use-logger';
+import { LogCategory, ChatMessage, ChatSession } from '@/shared/types';
 
 /**
  * Hook for managing chat sessions
@@ -11,36 +11,38 @@ export function useChatSession() {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const logger = useLogger('useChatSession', LogCategory.CHAT);
-
-  // Create a new session
+  
   const createSession = useCallback((title?: string) => {
     const sessionId = uuidv4();
     const newSession: ChatSession = {
       id: sessionId,
-      title: title || `New Chat ${sessions.length + 1}`,
+      title: title || `Chat ${new Date().toLocaleString()}`,
       messages: [],
       createdAt: Date.now(),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     setSessions(prev => [...prev, newSession]);
     setCurrentSessionId(sessionId);
-    logger.debug(`Created new chat session: ${sessionId}`);
+    logger.info('New chat session created', { details: { sessionId } });
     
     return sessionId;
-  }, [sessions.length, logger]);
-
-  // Save a message to the current session
+  }, [logger]);
+  
   const saveMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
     if (!currentSessionId) {
-      logger.warn('No active session to save message');
+      logger.warn('Attempted to save message but no active session');
       return null;
     }
     
     const newMessage: ChatMessage = {
-      ...message,
       id: uuidv4(),
-      timestamp: Date.now()
+      ...message,
+      timestamp: Date.now(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     setSessions(prev => 
@@ -49,28 +51,51 @@ export function useChatSession() {
           ? {
               ...session,
               messages: [...session.messages, newMessage],
-              updatedAt: Date.now()
+              updatedAt: Date.now(),
+              updated_at: new Date().toISOString()
             }
           : session
       )
     );
     
-    logger.debug(`Saved message to session: ${currentSessionId.substring(0, 6)}...`);
+    logger.debug('Message saved to session', { 
+      details: { 
+        sessionId: currentSessionId, 
+        messageId: newMessage.id,
+        sender: message.sender
+      } 
+    });
+    
     return newMessage;
   }, [currentSessionId, logger]);
-
-  // Get the current session
-  const getCurrentSession = useCallback(() => {
-    if (!currentSessionId) return null;
+  
+  const getCurrentSession = useCallback((): ChatSession | null => {
     return sessions.find(session => session.id === currentSessionId) || null;
-  }, [currentSessionId, sessions]);
-
+  }, [sessions, currentSessionId]);
+  
   return {
     sessions,
     currentSessionId,
     setCurrentSessionId,
     createSession,
     saveMessage,
-    getCurrentSession
+    getCurrentSession,
+    isChatEnabled: true, // Temporary - later will be from config
+    messages: getCurrentSession()?.messages || [],
+    sendMessage: async (content: string) => {
+      saveMessage({
+        content,
+        sender: 'user'
+      });
+      
+      // Mock AI response
+      setTimeout(() => {
+        saveMessage({
+          content: 'This is a mock response. Real AI implementation pending.',
+          sender: 'ai'
+        });
+      }, 1000);
+    },
+    isLoading: false
   };
 }

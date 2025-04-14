@@ -2,54 +2,39 @@
 /**
  * Theme system types
  */
-import { LogDetails } from '../core/logging.types';
 
-// Theme effect types
+// Theme status enum
+export enum ThemeStatus {
+  ACTIVE = 'ACTIVE',
+  DRAFT = 'DRAFT',
+  ARCHIVED = 'ARCHIVED'
+}
+
+// Theme context enum
+export enum ThemeContext {
+  SITE = 'SITE',
+  ADMIN = 'ADMIN',
+  APP = 'APP'
+}
+
+// Theme effect type enum
 export enum ThemeEffectType {
   NONE = 'none',
+  GLOW = 'glow',
+  GRADIENT = 'gradient',
+  PARTICLE = 'particle',
   BLUR = 'blur',
+  NEON = 'neon',
+  SHADOW = 'shadow',
+  PULSE = 'pulse',
   GRAIN = 'grain',
   NOISE = 'noise',
-  GLOW = 'glow',
   GLITCH = 'glitch',
-  GRADIENT = 'gradient',
   CYBER = 'cyber',
-  NEON = 'neon',
-  PULSE = 'pulse',
-  PARTICLE = 'particle',
-  MORPH = 'morph',
-  SHADOW = 'shadow'
+  MORPH = 'morph'
 }
 
-// Theme effect
-export interface ThemeEffect {
-  type: ThemeEffectType;
-  enabled: boolean;
-  intensity?: number;
-  color?: string;
-  duration?: number;
-  delay?: number;
-  selector?: string;
-  config?: Record<string, any>;
-  id?: string;
-  [key: string]: any;
-}
-
-// Theme status
-export enum ThemeStatus {
-  ACTIVE = 'active',
-  DRAFT = 'draft',
-  ARCHIVED = 'archived'
-}
-
-// Theme context
-export enum ThemeContext {
-  SITE = 'site',
-  ADMIN = 'admin',
-  APP = 'app'
-}
-
-// Theme variables
+// Theme variables interface
 export interface ThemeVariables {
   background: string;
   foreground: string;
@@ -68,12 +53,12 @@ export interface ThemeVariables {
   border: string;
   input: string;
   ring: string;
-  
+
   // Effect-specific colors
   effectColor: string;
   effectSecondary: string;
   effectTertiary: string;
-  
+
   // Transition times
   transitionFast: string;
   transitionNormal: string;
@@ -81,7 +66,7 @@ export interface ThemeVariables {
   animationFast: string;
   animationNormal: string;
   animationSlow: string;
-  
+
   // Border radii
   radiusSm: string;
   radiusMd: string;
@@ -89,80 +74,7 @@ export interface ThemeVariables {
   radiusFull: string;
 }
 
-// Design tokens
-export interface DesignTokens {
-  colors?: ColorTokens;
-  typography?: Record<string, any>;
-  spacing?: Record<string, string>;
-  borders?: Record<string, string>;
-  shadows?: ShadowTokens;
-  radii?: RadiusTokens;
-  zIndices?: Record<string, string>;
-  breakpoints?: Record<string, string>;
-  transitions?: Record<string, string>;
-  animations?: Record<string, any>;
-  [key: string]: any;
-}
-
-// Color tokens
-export interface ColorTokens {
-  primary: string;
-  secondary: string;
-  accent: string;
-  background: string;
-  foreground: string;
-  muted: string;
-  mutedForeground: string;
-  card: string;
-  cardForeground: string;
-  destructive: string;
-  destructiveForeground: string;
-  popover: string;
-  'popover-foreground': string;
-  'card-foreground': string;
-  'muted-foreground': string;
-  border: string;
-  input: string;
-  ring: string;
-  [key: string]: string;
-}
-
-// Shadow tokens
-export interface ShadowTokens {
-  inner: string;
-  sm: string;
-  md: string;
-  lg: string;
-  xl: string;
-  [key: string]: string;
-}
-
-// Radius tokens
-export interface RadiusTokens {
-  none: string;
-  sm: string;
-  md: string;
-  lg: string;
-  xl: string;
-  full: string;
-  [key: string]: string;
-}
-
-// Component tokens
-export interface ComponentTokens {
-  [componentName: string]: Record<string, string>;
-}
-
-// Theme component
-export interface ThemeComponent {
-  name: string;
-  tokens: Record<string, string>;
-  variants?: Record<string, Record<string, string>>;
-  component_name?: string;
-  styles?: Record<string, string>;
-}
-
-// Theme
+// Theme base interface
 export interface Theme {
   id: string;
   name: string;
@@ -178,64 +90,83 @@ export interface Theme {
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
-  tokens?: ThemeToken[];
-  components?: ThemeComponent[];
 }
 
-// Theme state
-export interface ThemeState {
-  themes: Theme[];
-  activeThemeId: string;
-  isDark: boolean;
-  primaryColor: string;
-  backgroundColor: string;
-  textColor: string;
-  accentColor?: string;
-  borderColor?: string;
-  fontFamily?: string;
-  cornerRadius?: number;
-  animations?: boolean;
-  designTokens: DesignTokens;
-  componentTokens: ComponentTokens;
-  isLoading: boolean;
-  error: string | null;
-  variables?: Record<string, string>;
-  isLoaded?: boolean;
-  theme?: Theme | null;
-  componentStyles?: any;
-}
-
-// Theme token
+// Theme token interface
 export interface ThemeToken {
   id: string;
   token_name: string;
   token_value: string;
   category: string;
   description?: string;
-  type?: string;
-  name?: string;
-  value?: string;
-  keyframes?: string;
 }
 
-// Theme log details
-export interface ThemeLogDetails extends LogDetails {
-  theme?: string;
-  themeId?: string;
-  success?: boolean;
-  error?: string | Error;
-  errorMessage?: string;
-  details?: Record<string, unknown>;
-  source?: string;
-  tags?: string[];
+// Design tokens interface
+export interface DesignTokens {
+  colors?: Record<string, string>;
+  typography?: Record<string, any>;
+  spacing?: Record<string, string>;
+  borders?: Record<string, string>;
+  shadows?: Record<string, string>;
+  radii?: Record<string, string>;
+  zIndices?: Record<string, string>;
+  breakpoints?: Record<string, string>;
+  transitions?: Record<string, string>;
+  animations?: Record<string, any>;
+  [key: string]: any;
 }
 
-// Theme effect types
-export interface GlitchEffect extends ThemeEffect {
-  type: ThemeEffectType.GLITCH | ThemeEffectType.NOISE;
+// Component tokens interface
+export interface ComponentTokens {
+  [componentName: string]: Record<string, string>;
+}
+
+// Theme effect interface
+export interface ThemeEffect {
+  type: ThemeEffectType;
+  intensity: number;
   color?: string;
-  frequency?: string | number;
-  amplitude?: string | number;
+  selector?: string;
+  config?: Record<string, any>;
+  enabled: boolean;
+  [key: string]: any;
+}
+
+// Theme state interface
+export interface ThemeState {
+  themes: Theme[];
+  activeThemeId: string | null;
+  theme?: Theme;
+  designTokens: DesignTokens;
+  componentTokens: ComponentTokens;
+  isLoading: boolean;
+  error: string | null;
+  isDark: boolean;
+  primaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  componentStyles?: Record<string, any>;
+  animations?: Record<string, any>;
+  variables?: ThemeVariables;
+  isLoaded?: boolean;
+}
+
+export interface ThemeStoreActions {
+  setThemes: (themes: Theme[]) => void;
+  setActiveTheme: (themeId: string) => void;
+  setDesignTokens: (tokens: DesignTokens) => void;
+  setComponentTokens: (tokens: ComponentTokens) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
+  loadTheme?: (themeId: string) => Promise<void>;
+}
+
+// Effects-specific types
+export interface GlitchEffect extends ThemeEffect {
+  type: ThemeEffectType.NOISE;
+  color?: string;
+  frequency?: string;
+  amplitude?: string;
 }
 
 export interface GradientEffect extends ThemeEffect {
@@ -245,7 +176,7 @@ export interface GradientEffect extends ThemeEffect {
 }
 
 export interface CyberEffect extends ThemeEffect {
-  type: ThemeEffectType.CYBER | ThemeEffectType.NEON;
+  type: ThemeEffectType.NEON;
   glowColor?: string;
   scanLines?: boolean;
 }
@@ -264,34 +195,13 @@ export interface ParticleEffect extends ThemeEffect {
 }
 
 export interface MorphEffect extends ThemeEffect {
-  type: ThemeEffectType.MORPH | ThemeEffectType.BLUR;
+  type: ThemeEffectType.BLUR;
   intensity?: number;
   speed?: number;
 }
 
-// Theme effect props
-export interface ThemeEffectProps {
-  effect: ThemeEffect;
-  children?: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-  intensity?: number;
-}
-
-// Theme effect provider props
 export interface ThemeEffectProviderProps {
   children: React.ReactNode;
   className?: string;
   effect?: ThemeEffect;
 }
-
-// Helper function to convert legacy effect types
-export const normalizeEffectType = (type: string): ThemeEffectType => {
-  const mappings: Record<string, ThemeEffectType> = {
-    'glitch': ThemeEffectType.NOISE,
-    'cyber': ThemeEffectType.NEON,
-    'morph': ThemeEffectType.BLUR
-  };
-  
-  return mappings[type as keyof typeof mappings] || (type as ThemeEffectType);
-};

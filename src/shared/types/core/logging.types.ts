@@ -13,34 +13,10 @@ export enum LogLevel {
   TRACE = 'trace',
   SUCCESS = 'success',
   FATAL = 'fatal',
-  SILENT = 'silent' // Added missing SILENT level
+  SILENT = 'silent'
 }
 
-export const LOG_LEVEL = {
-  DEBUG: LogLevel.DEBUG,
-  INFO: LogLevel.INFO,
-  WARN: LogLevel.WARN,
-  ERROR: LogLevel.ERROR,
-  CRITICAL: LogLevel.CRITICAL,
-  TRACE: LogLevel.TRACE,
-  SUCCESS: LogLevel.SUCCESS,
-  FATAL: LogLevel.FATAL,
-  SILENT: LogLevel.SILENT
-};
-
-export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  [LogLevel.DEBUG]: 0,
-  [LogLevel.INFO]: 1,
-  [LogLevel.SUCCESS]: 2,
-  [LogLevel.WARN]: 3,
-  [LogLevel.ERROR]: 4,
-  [LogLevel.CRITICAL]: 5,
-  [LogLevel.FATAL]: 6,
-  [LogLevel.TRACE]: -1,
-  [LogLevel.SILENT]: 100
-};
-
-// Log categories
+// Log categories - single source of truth
 export enum LogCategory {
   AUTH = 'auth',
   RBAC = 'rbac',
@@ -53,19 +29,6 @@ export enum LogCategory {
   APP = 'app',
   CHAT = 'chat'
 }
-
-export const LOG_CATEGORY = {
-  AUTH: LogCategory.AUTH,
-  RBAC: LogCategory.RBAC,
-  API: LogCategory.API,
-  UI: LogCategory.UI,
-  SYSTEM: LogCategory.SYSTEM,
-  ADMIN: LogCategory.ADMIN,
-  THEME: LogCategory.THEME,
-  DEBUG: LogCategory.DEBUG,
-  APP: LogCategory.APP,
-  CHAT: LogCategory.CHAT
-};
 
 // Log details
 export interface LogDetails {
@@ -108,3 +71,19 @@ export interface LogTransport {
   setMinLevel: (level: LogLevel) => void;
   name?: string;
 }
+
+// Legacy mappings for backward compatibility - to be removed post-migration
+export const LOG_LEVEL = LogLevel;
+export const LOG_CATEGORY = LogCategory;
+
+export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+  [LogLevel.DEBUG]: 0,
+  [LogLevel.INFO]: 1,
+  [LogLevel.SUCCESS]: 2,
+  [LogLevel.WARN]: 3,
+  [LogLevel.ERROR]: 4,
+  [LogLevel.CRITICAL]: 5,
+  [LogLevel.FATAL]: 6,
+  [LogLevel.TRACE]: -1,
+  [LogLevel.SILENT]: 100
+};

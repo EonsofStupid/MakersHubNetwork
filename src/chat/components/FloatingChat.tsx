@@ -9,8 +9,11 @@ export const FloatingChat: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const chatSession = useChatSession();
   
+  // Default to enabled chat for now since we don't have a flag
+  const isChatEnabled = true;
+  
   // If chat is not enabled, don't render anything
-  if (!chatSession.isChatEnabled) {
+  if (!isChatEnabled) {
     return null;
   }
   
