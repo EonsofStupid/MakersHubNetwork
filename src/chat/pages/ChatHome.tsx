@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { useChatSession } from '../hooks/useChatSession';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/shared/ui/textarea';
 import { Send, Plus } from 'lucide-react';
 import { useAuthState } from '@/auth/hooks/useAuthState';
 import { v4 as uuidv4 } from 'uuid';

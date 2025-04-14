@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CircuitBreaker } from '@/utils/CircuitBreaker';
 
@@ -8,7 +7,10 @@ const FloatingChatWrapper: React.FC = () => {
   // Initialize circuit breaker
   React.useEffect(() => {
     // Use static method to initialize the breaker
-    CircuitBreaker.init('floating-chat', 5, 1000);
+    CircuitBreaker.init('floating-chat', {
+      maxFailures: 5,
+      resetTimeout: 1000
+    });
   }, []);
 
   const toggleChat = () => {
