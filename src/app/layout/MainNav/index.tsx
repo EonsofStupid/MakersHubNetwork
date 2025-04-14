@@ -1,18 +1,22 @@
-
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/shared/utils/cn";
 import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
 import AuthSection from "./components/AuthSection";
 import { useAuthStore } from "@/auth/store/auth.store";
-import { useSiteTheme } from "@/shared/hooks/useSiteTheme";
+import { useSiteTheme } from "@/app/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
 import { LogCategory } from "@/shared/types/SharedTypes";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { componentStyles, animations, variables, isLoaded: themeIsLoaded } = useSiteTheme();
+  const siteTheme = useSiteTheme();
+  const componentStyles = siteTheme?.componentStyles || {};
+  const animations = siteTheme?.animations || {};
+  const variables = siteTheme?.variables || {};
+  const themeIsLoaded = siteTheme?.isLoaded || false;
+  
   const logger = useLogger("MainNav", LogCategory.UI);
   const dataStreamRef = useRef<HTMLDivElement>(null);
   const glitchParticlesRef = useRef<HTMLDivElement>(null);
@@ -20,10 +24,8 @@ export function MainNav() {
   
   // Get MainNav styles from theme
   const styles = componentStyles?.MainNav || {
-    container: {
-      base: 'fixed top-0 w-full z-50 transition-all duration-300',
-      animated: 'animate-morph-header'
-    },
+    container: 'fixed top-0 w-full z-50 transition-all duration-300',
+    containerAnimated: 'animate-morph-header',
     header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
     dataStream: 'relative',
     dataStreamEffect: 'mainnav-data-stream',
@@ -90,7 +92,7 @@ export function MainNav() {
         "mainnav-header",
         "mainnav-gradient",
         "fixed top-0 left-0 right-0 w-full z-50",
-        isLoaded && (styles.container?.animated || "animate-morph-header"),
+        isLoaded && (styles.containerAnimated || "animate-morph-header"),
         isScrolled && "mainnav-scrolled transform-gpu"
       )}
       style={{

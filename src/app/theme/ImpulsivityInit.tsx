@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { useLogger } from '@/logging/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
@@ -12,7 +11,7 @@ interface ImpulsivityInitProps {
 }
 
 export function ImpulsivityInit({ autoApply = true, children, showLoader = false }: ImpulsivityInitProps) {
-  const { loadTheme, isLoading } = useThemeStore();
+  const themeStore = useThemeStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isError, setIsError] = useState(false);
   const logger = useLogger('ImpulsivityInit', LogCategory.UI);
@@ -35,15 +34,22 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
     applyImmediateStyles();
     
     // Only initialize once to prevent infinite loops
-    if (autoApply && !isInitialized && !isLoading && !initAttempted.current) {
+    if (autoApply && !isInitialized && !themeStore.isLoading && !initAttempted.current) {
       const initTheme = async () => {
         try {
           initAttempted.current = true;
           logger.info('Initializing Impulsivity theme');
           setIsError(false);
           
-          // Load default theme
-          await loadTheme('cyberpunk');
+          // Use available store methods to initialize the theme
+          if (typeof themeStore.setThemes === 'function') {
+            await themeStore.setThemes([]);
+          }
+          
+          if (typeof themeStore.setActiveTheme === 'function') {
+            themeStore.setActiveTheme('cyberpunk');
+          }
+          
           setIsInitialized(true);
           logger.info('Impulsivity theme initialized successfully');
         } catch (error) {
@@ -76,10 +82,10 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
     }, 3000);
     
     return () => clearTimeout(timeout);
-  }, [autoApply, loadTheme, isInitialized, logger, isLoading]);
+  }, [autoApply, themeStore, isInitialized, logger]);
   
   // If showing loader and still initializing, render a loading indicator
-  if (showLoader && isLoading && !isInitialized) {
+  if (showLoader && themeStore.isLoading && !isInitialized) {
     return (
       <div className="fixed inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="bg-card p-6 rounded-lg shadow-lg border border-border flex flex-col items-center">

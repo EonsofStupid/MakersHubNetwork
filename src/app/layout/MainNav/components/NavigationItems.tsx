@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/shared/utils/cn";
-import { useSiteTheme } from "@/shared/hooks/useSiteTheme";
+import { cn } from "@/lib/utils";
+import { useSiteTheme } from "@/app/theme/SiteThemeProvider";
 import { motion } from "framer-motion";
 
 interface NavItem {
@@ -12,7 +11,8 @@ interface NavItem {
 
 export const NavigationItems = () => {
   const { pathname } = useLocation();
-  const { componentStyles } = useSiteTheme();
+  const siteTheme = useSiteTheme();
+  const componentStyles = siteTheme?.componentStyles || {};
   
   const styles = componentStyles?.MainNav || {
     nav: 'flex items-center gap-1 md:gap-2',

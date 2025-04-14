@@ -11,7 +11,7 @@ interface UseImpulsivityThemeResult {
 export function useImpulsivityTheme(): UseImpulsivityThemeResult {
   const [isSyncing, setIsSyncing] = useState(false);
   const logger = useLogger('useImpulsivityTheme', LogCategory.UI);
-  const { setTheme } = useThemeStore();
+  const { setActiveTheme } = useThemeStore();
   
   const applyTheme = useCallback(async () => {
     if (isSyncing) {
@@ -24,8 +24,8 @@ export function useImpulsivityTheme(): UseImpulsivityThemeResult {
       
       logger.debug('Applying Impulsivity theme');
       
-      // Apply the theme via the theme store
-      await setTheme('Impulsivity');
+      // Apply the theme via the theme store using setActiveTheme
+      await setActiveTheme('impulsivity');
       
       logger.debug('Impulsivity theme applied successfully');
       return true;
@@ -36,7 +36,7 @@ export function useImpulsivityTheme(): UseImpulsivityThemeResult {
     } finally {
       setIsSyncing(false);
     }
-  }, [isSyncing, logger, setTheme]);
+  }, [isSyncing, logger, setActiveTheme]);
   
   return { applyTheme, isSyncing };
 }
