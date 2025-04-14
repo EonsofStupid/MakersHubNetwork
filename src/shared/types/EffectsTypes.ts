@@ -1,6 +1,6 @@
 
 import { ReactNode } from 'react';
-import { ThemeEffectType } from './theme.types';
+import { ThemeEffectType } from './shared.types';
 
 export interface ThemeEffect {
   id: string;

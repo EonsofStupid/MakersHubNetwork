@@ -3,7 +3,12 @@
  * Core types barrel file
  * Re-exports all core type definitions
  */
-export * from './common.types';
+// Export common types explicitly to avoid ambiguity
+export { 
+  BaseEntity 
+} from './common.types';
+
+// Export other types
 export * from './auth.types';
 export * from './rbac.types';
 export * from './logging.types';

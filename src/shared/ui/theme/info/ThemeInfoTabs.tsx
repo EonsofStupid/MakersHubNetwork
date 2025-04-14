@@ -1,72 +1,79 @@
 
-import { Info, Palette, Box, Zap } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/ui/tabs";
-import { motion, AnimatePresence } from "framer-motion";
-import { ThemeInfoTab } from "./ThemeInfoTab";
-import { ThemeColorSystem } from "../ThemeColorSystem";
-import { ThemeComponentPreview } from "../ThemeComponentPreview";
-import { EffectsPreview } from "../EffectsPreview";
-import { Theme, ThemeToken, ComponentTokens } from "@/types/theme";
-import { useTokenConverters } from "@/hooks/useTokenConverters";
-import { useState } from "react";
+import React from 'react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/shared/ui/tabs';
+import { ScrollArea } from '@/shared/ui/scroll-area';
+import { Theme } from '@/types/theme';
+import ThemeColorSystem from '../ThemeColorSystem';
+import EffectsPreview from '../EffectsPreview';
+import { ThemeEffect } from '@/types/theme';
 
 interface ThemeInfoTabsProps {
-  currentTheme: Theme;
-  onTabChange: (value: string) => void;
+  theme: Theme;
+  activeTab?: string;
+  onTabChange?: (value: string) => void;
 }
 
-const TAB_ITEMS = [
-  { value: "info", icon: Info, label: "Info" },
-  { value: "colors", icon: Palette, label: "Colors" },
-  { value: "components", icon: Box, label: "Components" },
-  { value: "effects", icon: Zap, label: "Effects" },
-] as const;
-
-export function ThemeInfoTabs({ currentTheme, onTabChange }: ThemeInfoTabsProps) {
-  const { convertDesignTokensToArray, convertComponentTokensToArray } = useTokenConverters();
-  const [activeTab, setActiveTab] = useState("info");
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    onTabChange(value);
+export const ThemeInfoTabs: React.FC<ThemeInfoTabsProps> = ({
+  theme,
+  activeTab = 'details',
+  onTabChange
+}) => {
+  // Mock effect for preview
+  const mockEffect: ThemeEffect = {
+    id: '1',
+    type: 'glow',
+    enabled: true,
+    intensity: 0.5
   };
-
+  
   return (
-    <Tabs defaultValue="info" className="w-full relative z-10" onValueChange={handleTabChange}>
-      <TabsList className="w-full justify-start mb-6 bg-background/40 border border-primary/20">
-        {TAB_ITEMS.map(({ value, icon: Icon, label }) => (
-          <TabsTrigger key={value} value={value} className="data-[state=active]:bg-primary/20">
-            <Icon className="w-4 h-4 mr-2" />
-            {label}
-          </TabsTrigger>
-        ))}
+    <Tabs 
+      value={activeTab} 
+      onValueChange={value => onTabChange?.(value)}
+      className="w-full"
+    >
+      <TabsList className="grid grid-cols-4">
+        <TabsTrigger value="details">Details</TabsTrigger>
+        <TabsTrigger value="colors">Colors</TabsTrigger>
+        <TabsTrigger value="components">Components</TabsTrigger>
+        <TabsTrigger value="effects">Effects</TabsTrigger>
       </TabsList>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
-        >
-          <TabsContent value="info">
-            <ThemeInfoTab currentTheme={currentTheme} />
-          </TabsContent>
-
-          <TabsContent value="colors" className="space-y-4">
-            <ThemeColorSystem tokens={convertDesignTokensToArray(currentTheme?.design_tokens)} />
-          </TabsContent>
-
-          <TabsContent value="components" className="space-y-4">
-            <ThemeComponentPreview componentTokens={convertComponentTokensToArray(currentTheme?.component_tokens)} />
-          </TabsContent>
-
-          <TabsContent value="effects" className="space-y-4">
-            <EffectsPreview />
-          </TabsContent>
-        </motion.div>
-      </AnimatePresence>
+      
+      <TabsContent value="details" className="mt-4">
+        {/* Details content */}
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <span className="font-medium">Name:</span>
+            <span>{theme.name}</span>
+          </div>
+          {theme.description && (
+            <div className="grid grid-cols-2 gap-2">
+              <span className="font-medium">Description:</span>
+              <span>{theme.description}</span>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <span className="font-medium">Dark Mode:</span>
+            <span>{theme.isDark ? 'Yes' : 'No'}</span>
+          </div>
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="colors" className="mt-4">
+        <ScrollArea className="h-[400px]">
+          <ThemeColorSystem tokens={[]} />
+        </ScrollArea>
+      </TabsContent>
+      
+      <TabsContent value="components" className="mt-4">
+        <p className="text-sm text-center py-4">No component information available</p>
+      </TabsContent>
+      
+      <TabsContent value="effects" className="mt-4">
+        <EffectsPreview effect={mockEffect} />
+      </TabsContent>
     </Tabs>
   );
-}
+};
+
+export default ThemeInfoTabs;

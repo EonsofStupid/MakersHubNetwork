@@ -1,6 +1,7 @@
 
 import { useMemo } from 'react';
 import { useThemeStore } from '@/shared/stores/theme/store';
+import { ThemeToken } from '@/types/theme';
 
 /**
  * Hook for accessing theme variables
@@ -10,7 +11,8 @@ export function useThemeVariables() {
   const variables = useThemeStore(state => state.variables);
   const componentTokens = useThemeStore(state => state.componentTokens);
   const theme = useThemeStore(state => state.theme);
-  const tokens = useThemeStore(state => state.tokens);
+  // Add tokens from the store
+  const tokens = useThemeStore(state => (state as any).tokens as ThemeToken[] | undefined);
 
   const cssVariables = useMemo(() => {
     // Create a dictionary of CSS variables from theme tokens

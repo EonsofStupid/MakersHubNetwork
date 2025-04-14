@@ -1,64 +1,31 @@
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import type { ComponentTokens } from "@/shared/types/theme";
-import { Button } from "@/shared/ui/button";
+import React from 'react';
+import { ThemeComponent } from '@/shared/types/theme.types';
 
 interface ThemeComponentPreviewProps {
-  componentTokens: ComponentTokens[];
+  component?: ThemeComponent;
+  className?: string;
 }
 
-export function ThemeComponentPreview({ componentTokens }: ThemeComponentPreviewProps) {
-  const [activeComponent, setActiveComponent] = useState<string | null>(null);
+export const ThemeComponentPreview: React.FC<ThemeComponentPreviewProps> = ({
+  component,
+  className = ''
+}) => {
+  if (!component) return null;
   
-  // Ensure componentTokens is an array
-  const safeComponentTokens = Array.isArray(componentTokens) ? componentTokens : [];
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
-        {safeComponentTokens.map((component) => (
-          <Button
-            key={component.id}
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "relative",
-              activeComponent === component.component_name && "text-primary",
-              "mad-scientist-hover"
-            )}
-            onClick={() => setActiveComponent(
-              activeComponent === component.component_name ? null : component.component_name
-            )}
-          >
-            {component.component_name}
-          </Button>
+    <div className={`p-4 border rounded-md ${className}`}>
+      <h3 className="text-lg font-medium mb-2">{component.component_name || component.id}</h3>
+      <div className="text-sm">
+        {Object.entries(component.styles || {}).map(([key, value]) => (
+          <div key={key} className="grid grid-cols-2 gap-2">
+            <span className="text-gray-500">{key}:</span>
+            <span>{value}</span>
+          </div>
         ))}
       </div>
-
-      <AnimatePresence mode="wait">
-        {activeComponent && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className={cn(
-              "p-4 rounded-lg",
-              "bg-background/40 backdrop-blur-sm",
-              "border border-primary/20"
-            )}
-          >
-            <pre className="text-xs overflow-x-auto">
-              {JSON.stringify(
-                safeComponentTokens.find(c => c.component_name === activeComponent)?.styles,
-                null,
-                2
-              )}
-            </pre>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
-}
+};
+
+export default ThemeComponentPreview;

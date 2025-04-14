@@ -1,32 +1,22 @@
 
 import React from 'react';
-import { Terminal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useLoggingContext } from '../context/LoggingContext';
-import { cn } from '@/lib/utils';
+import { Terminal, X } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
 
-export const LogToggleButton: React.FC = () => {
-  const { showLogConsole, setShowLogConsole } = useLoggingContext();
-  
+interface LogToggleButtonProps {
+  isOpen: boolean;
+  onClick: () => void;
+}
+
+export const LogToggleButton: React.FC<LogToggleButtonProps> = ({ isOpen, onClick }) => {
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="icon"
-      className={cn(
-        "fixed bottom-4 right-4 z-20 rounded-full w-10 h-10 border-primary/30 shadow-md",
-        "hover:bg-primary/20 hover:border-primary/50 transition-all",
-        "group backdrop-blur-sm bg-background/60",
-        showLogConsole && "bg-primary/20 border-primary/50"
-      )}
-      onClick={() => setShowLogConsole(!showLogConsole)}
-      title={showLogConsole ? "Hide Log Console" : "Show Log Console"}
+      className="fixed bottom-4 right-4 z-50 rounded-full"
+      onClick={onClick}
     >
-      <Terminal 
-        className={cn(
-          "h-4 w-4 text-primary group-hover:animate-pulse",
-          showLogConsole && "animate-pulse"
-        )} 
-      />
+      {isOpen ? <X size={20} /> : <Terminal size={20} />}
     </Button>
   );
 };
