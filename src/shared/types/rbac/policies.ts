@@ -1,6 +1,10 @@
 
 import { UserRole } from '../shared.types';
 
+/**
+ * PATH_POLICIES object maps URL paths to allowed user roles
+ * Note: This is now a value, not just a type
+ */
 export const PATH_POLICIES = {
   '/admin': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
   '/admin/users': [UserRole.ADMIN, UserRole.SUPER_ADMIN],

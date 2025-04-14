@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
 import { cn } from "@/lib/utils"
@@ -17,14 +18,10 @@ const toggleVariants = {
 
 const ToggleGroup = React.forwardRef<
   React.ElementRef<typeof ToggleGroupPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & {
-    variant?: "default" | "outline",
-    size?: "default" | "sm" | "lg"
-  }
->(({ className, variant = "default", size = "default", children, type = "single", ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root>
+>(({ className, children, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
-    type={type}
     className={cn("flex items-center justify-center gap-1", className)}
     {...props}
   >
@@ -40,10 +37,9 @@ const ToggleGroupItem = React.forwardRef<
     variant?: "default" | "outline",
     size?: "default" | "sm" | "lg" 
   }
->(({ className, children, variant = "default", size = "default", value = "", ...props }, ref) => (
+>(({ className, children, variant = "default", size = "default", ...props }, ref) => (
   <ToggleGroupPrimitive.Item
     ref={ref}
-    value={value}
     className={cn(
       "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
       toggleVariants.variant[variant],
