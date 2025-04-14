@@ -1,187 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-@import './styles/effects/cyber-effects.css';
-/* Remove missing CSS imports */
-@import './theme/site-theme.css';
 
+@import './styles/cyberpunk.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Add base layer styles here */
+:root {
+  /* Base colors */
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --primary: 186 100% 50%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 334 82% 59%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 186 100% 50%;
+  --accent-foreground: 0 0% 0%;
+  --muted: 217 19% 27%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --card: 0 0% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 186 100% 50%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 186 100% 50%;
+}
+
 body {
+  background-color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255);
   font-family: 'Inter', sans-serif;
-  background-color: var(--background);
-  color: var(--foreground);
-  line-height: 1.6;
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  line-height: 1.2;
-  margin-bottom: 0.5rem;
+/* Add extra margin for fixed header */
+main {
+  margin-top: 4rem;
 }
 
-h1 {
-  font-size: 2.5rem;
-}
-
-h2 {
-  font-size: 2rem;
-}
-
-h3 {
-  font-size: 1.75rem;
-}
-
-h4 {
-  font-size: 1.5rem;
-}
-
-h5 {
-  font-size: 1.25rem;
-}
-
-h6 {
-  font-size: 1rem;
-}
-
-/* Links */
+/* Global link styling */
 a {
-  color: var(--primary);
-  text-decoration: none;
+  color: #00F0FF;
+  transition: color 0.3s ease;
 }
 
 a:hover {
-  text-decoration: underline;
+  color: #FF2D6E;
 }
-
-/* Form elements */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-textarea,
-select {
-  width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  background-color: var(--background);
-  color: var(--foreground);
-}
-
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-textarea:focus,
-select:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
-}
-
-/* Buttons */
-button {
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-}
-
-.primary-button {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  border: none;
-}
-
-.primary-button:hover {
-  background-color: var(--primary-hover);
-}
-
-.secondary-button {
-  background-color: var(--secondary);
-  color: var(--secondary-foreground);
-  border: none;
-}
-
-.secondary-button:hover {
-  background-color: var(--secondary-hover);
-}
-
-/* Cards */
-.card {
-  background-color: var(--card);
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-/* Lists */
-ul, ol {
-  margin-bottom: 1rem;
-}
-
-li {
-  margin-left: 1.5rem;
-}
-
-/* Code blocks */
-pre {
-  background-color: var(--muted);
-  color: var(--muted-foreground);
-  padding: 1rem;
-  border-radius: 0.375rem;
-  overflow-x: auto;
-}
-
-code {
-  font-family: monospace;
-}
-
-/* Tables */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
-}
-
-th, td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-
-th {
-  font-weight: 600;
-}
-
-/* Utility classes */
-.text-center {
-  text-align: center;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.mb-0 {
-  margin-bottom: 0;
-}
-
-.mt-0 {
-  margin-top: 0;
-}
-
-.bold {
-  font-weight: bold;
-}
-
-.italic {
-  font-style: italic;
-}
-
-/* Add more global styles as needed */

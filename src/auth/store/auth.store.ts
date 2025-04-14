@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { UserProfile, AUTH_STATUS, AuthStatus, LogCategory, LogLevel, UserRole, ROLES } from '@/shared/types';
 import { logger } from '@/logging/logger.service';

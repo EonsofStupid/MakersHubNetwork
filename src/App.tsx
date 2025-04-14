@@ -6,6 +6,7 @@ import { AppInitializer } from './app/initializer/AppInitializer';
 import { useAuthStore } from './auth/store/auth.store';
 import { Toaster } from './shared/ui/toaster';
 import MainNav from './app/components/MainNav';
+import { FloatingChat } from './components/FloatingChat';
 
 function App() {
   const { initialize } = useAuthStore();
@@ -18,11 +19,12 @@ function App() {
   return (
     <BrowserRouter>
       <AppInitializer>
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col bg-black text-white">
           <MainNav />
-          <main className="flex-1">
+          <main className="flex-1 mt-16">
             <Routes />
           </main>
+          <FloatingChat />
         </div>
         <Toaster />
       </AppInitializer>
