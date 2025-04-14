@@ -12,16 +12,20 @@ export const supabase = {
         data: null,
         error: null,
       }),
+      order: (column: string, { ascending }: { ascending: boolean }) => ({
+        data: [],
+        error: null,
+      }),
     }),
     insert: (data: any) => ({
       select: (columns: string) => ({
-        single: () => Promise.resolve({ data: null, error: null }),
+        single: () => Promise.resolve({ data: {}, error: null }),
       }),
     }),
     update: (data: any) => ({
       eq: (column: string, value: any) => ({
         select: (columns: string) => ({
-          single: () => Promise.resolve({ data: null, error: null }),
+          single: () => Promise.resolve({ data: {}, error: null }),
         }),
       }),
     }),

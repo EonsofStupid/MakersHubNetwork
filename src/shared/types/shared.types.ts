@@ -5,39 +5,47 @@
  */
 
 // ===== Role Definitions =====
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+  SUPER_ADMIN = 'super_admin',
+  MODERATOR = 'moderator',
+  BUILDER = 'builder',
+  GUEST = 'guest'
+}
+
+// For backwards compatibility
 export const ROLES = {
-  USER: 'user',
-  ADMIN: 'admin',
-  SUPER_ADMIN: 'super_admin',
-  MODERATOR: 'moderator',
-  BUILDER: 'builder',
-  GUEST: 'guest'
+  USER: UserRole.USER,
+  ADMIN: UserRole.ADMIN,
+  SUPER_ADMIN: UserRole.SUPER_ADMIN,
+  MODERATOR: UserRole.MODERATOR,
+  BUILDER: UserRole.BUILDER,
+  GUEST: UserRole.GUEST
 } as const;
 
-export type UserRole = (typeof ROLES)[keyof typeof ROLES];
-
 // Path policy definitions for RBAC
-export const RBAC_POLICIES: Record<string, UserRole[]> = {
-  '/admin': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/admin/users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/admin/roles': [ROLES.SUPER_ADMIN],
-  '/admin/permissions': [ROLES.SUPER_ADMIN],
-  '/admin/analytics': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/projects/create': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/projects/edit': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-};
+export const RBAC_POLICIES = {
+  '/admin': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/admin/users': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/admin/roles': [UserRole.SUPER_ADMIN],
+  '/admin/permissions': [UserRole.SUPER_ADMIN],
+  '/admin/analytics': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/projects/create': [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/projects/edit': [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/projects/delete': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+} as const;
+
+export type PATH_POLICIES = typeof RBAC_POLICIES;
 
 // RBAC helper constants
 export const RBAC = {
-  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  SUPER_ADMINS: [ROLES.SUPER_ADMIN],
-  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  AUTHENTICATED: [ROLES.USER, ROLES.MODERATOR, ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  ADMIN_ONLY: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  SUPER_ADMINS: [UserRole.SUPER_ADMIN],
+  MODERATORS: [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  BUILDERS: [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  AUTHENTICATED: [UserRole.USER, UserRole.MODERATOR, UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
 };
-
-export type PATH_POLICIES = typeof RBAC_POLICIES;
 
 // ===== Permission Definitions =====
 export type Permission =
@@ -50,18 +58,36 @@ export type Permission =
   | 'manage_users'
   | 'manage_roles'
   | 'manage_permissions'
-  | 'view_analytics';
+  | 'view_analytics'
+  | 'admin:view'
+  | 'admin:edit'
+  | 'admin:delete'
+  | 'user:view'
+  | 'user:edit'
+  | 'user:delete'
+  | 'content:view'
+  | 'content:edit'
+  | 'content:delete'
+  | 'settings:view'
+  | 'settings:edit';
 
 // ===== Auth Status =====
-export const AUTH_STATUS = {
-  IDLE: 'idle',
-  LOADING: 'loading',
-  AUTHENTICATED: 'authenticated',
-  UNAUTHENTICATED: 'unauthenticated',
-  ERROR: 'error',
-} as const;
+export enum AuthStatus {
+  IDLE = 'idle',
+  LOADING = 'loading',
+  AUTHENTICATED = 'authenticated',
+  UNAUTHENTICATED = 'unauthenticated',
+  ERROR = 'error'
+}
 
-export type AuthStatus = (typeof AUTH_STATUS)[keyof typeof AUTH_STATUS];
+// For backwards compatibility
+export const AUTH_STATUS = {
+  IDLE: AuthStatus.IDLE,
+  LOADING: AuthStatus.LOADING,
+  AUTHENTICATED: AuthStatus.AUTHENTICATED,
+  UNAUTHENTICATED: AuthStatus.UNAUTHENTICATED,
+  ERROR: AuthStatus.ERROR,
+} as const;
 
 export enum AuthEventType {
   SIGN_IN = 'SIGN_IN',
@@ -77,6 +103,7 @@ export interface UserProfile {
   email: string;
   name?: string;
   avatar_url?: string;
+  bio?: string;
   created_at: string;
   updated_at: string;
   last_sign_in_at?: string;
@@ -109,9 +136,24 @@ export enum LogLevel {
   CRITICAL = 'critical',
   TRACE = 'trace',
   SUCCESS = 'success',
-  FATAL = 'fatal'
+  FATAL = 'fatal',
+  SILENT = 'silent'
 }
 
+export enum LogCategory {
+  AUTH = 'auth',
+  RBAC = 'rbac',
+  API = 'api',
+  UI = 'ui',
+  SYSTEM = 'system',
+  ADMIN = 'admin',
+  THEME = 'theme',
+  DEBUG = 'debug',
+  APP = 'app',
+  CHAT = 'chat'
+}
+
+// For backwards compatibility
 export const LOG_LEVEL = {
   DEBUG: LogLevel.DEBUG,
   INFO: LogLevel.INFO,
@@ -120,7 +162,21 @@ export const LOG_LEVEL = {
   CRITICAL: LogLevel.CRITICAL,
   TRACE: LogLevel.TRACE,
   SUCCESS: LogLevel.SUCCESS,
-  FATAL: LogLevel.FATAL
+  FATAL: LogLevel.FATAL,
+  SILENT: LogLevel.SILENT
+};
+
+export const LOG_CATEGORY = {
+  AUTH: LogCategory.AUTH,
+  RBAC: LogCategory.RBAC,
+  API: LogCategory.API,
+  UI: LogCategory.UI,
+  SYSTEM: LogCategory.SYSTEM,
+  ADMIN: LogCategory.ADMIN,
+  THEME: LogCategory.THEME,
+  DEBUG: LogCategory.DEBUG,
+  APP: LogCategory.APP,
+  CHAT: LogCategory.CHAT
 };
 
 export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
@@ -131,29 +187,8 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.ERROR]: 4,
   [LogLevel.CRITICAL]: 5,
   [LogLevel.FATAL]: 6,
-  [LogLevel.TRACE]: -1
-};
-
-export enum LogCategory {
-  AUTH = 'auth',
-  RBAC = 'rbac',
-  API = 'api',
-  UI = 'ui',
-  SYSTEM = 'system',
-  ADMIN = 'admin',
-  THEME = 'theme',
-  DEBUG = 'debug'
-}
-
-export const LOG_CATEGORY = {
-  AUTH: LogCategory.AUTH,
-  RBAC: LogCategory.RBAC,
-  API: LogCategory.API,
-  UI: LogCategory.UI,
-  SYSTEM: LogCategory.SYSTEM,
-  ADMIN: LogCategory.ADMIN,
-  THEME: LogCategory.THEME,
-  DEBUG: LogCategory.DEBUG
+  [LogLevel.TRACE]: -1,
+  [LogLevel.SILENT]: 100
 };
 
 export interface LogDetails {
@@ -183,6 +218,15 @@ export interface LogFilter {
   startTime?: number;
   endTime?: number;
   source?: string;
+  from?: Date | number;
+  to?: Date | number;
+}
+
+export interface LogTransport {
+  log: (entry: LogEntry) => void;
+  setMinLevel: (level: LogLevel) => void;
+  name?: string;
+  clear?: () => void;
 }
 
 // ===== Theme System =====
@@ -215,7 +259,7 @@ export interface ThemeEffect {
   [key: string]: any;
 }
 
-export interface ThemeLogDetails {
+export interface ThemeLogDetails extends LogDetails {
   theme?: string;
   themeId?: string;
   success?: boolean;
@@ -302,7 +346,7 @@ export interface ColorTokens {
   card: string;
   cardForeground: string;
   destructive: string;
-  destructiveForeg: string;
+  destructiveForeground: string;
   border: string;
   input: string;
   ring: string;
@@ -323,8 +367,11 @@ export interface ComponentTokens {
 }
 
 export interface ThemeComponent {
+  id?: string;
   name: string;
+  component_name?: string;
   tokens: Record<string, string>;
+  styles?: Record<string, string>;
   variants?: Record<string, Record<string, string>>;
 }
 
@@ -343,27 +390,53 @@ export interface Theme {
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
+  tokens?: ThemeToken[];
+  components?: ThemeComponent[];
 }
 
 export interface ThemeState {
   themes: Theme[];
   activeThemeId: string | null;
+  theme?: Theme | null;
   isDark: boolean;
   primaryColor: string;
   backgroundColor: string;
   textColor: string;
+  accentColor?: string;
+  borderColor?: string;
+  fontFamily?: string;
+  cornerRadius?: number;
   designTokens: DesignTokens;
   componentTokens: ComponentTokens;
   isLoading: boolean;
   error: string | null;
+  componentStyles?: Record<string, any>;
+  animations?: Record<string, any>;
+  variables?: ThemeVariables | Record<string, string>;
+  isLoaded?: boolean;
+}
+
+export interface ThemeStoreActions {
+  setThemes: (themes: Theme[]) => void;
+  setActiveTheme: (themeId: string) => void;
+  setDesignTokens: (tokens: DesignTokens) => void;
+  setComponentTokens: (tokens: ComponentTokens) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
+  loadTheme?: (themeId: string) => Promise<void>;
 }
 
 export interface ThemeToken {
   id: string;
   token_name: string;
   token_value: string;
+  name?: string;
+  value?: string;
+  type?: string;
   category: string;
   description?: string;
+  keyframes?: string;
+  fallback_value?: string;
 }
 
 // ===== Build System =====

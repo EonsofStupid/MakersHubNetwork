@@ -1,169 +1,89 @@
 
-import { LogEntry, LogLevel, LOG_LEVEL_VALUES } from '@/shared/types';
-import { type LogTransport } from '../types';
+import { LogEntry, LogLevel } from '@/shared/types/shared.types';
 
-// Toast providers may vary across projects
-type ToastFunction = (options: any) => void;
-
-interface UiTransportConfig {
-  toastFn?: ToastFunction;
-  consoleEnabled?: boolean;
-}
-
-export class UiTransport implements LogTransport {
-  private toastFn?: ToastFunction;
-  private consoleEnabled: boolean;
+export class UiTransport {
   private minLevel: LogLevel = LogLevel.INFO;
+  private callback?: (entry: LogEntry) => void;
   
-  constructor(config: UiTransportConfig = {}) {
-    this.toastFn = config.toastFn;
-    this.consoleEnabled = config.consoleEnabled ?? true;
+  constructor(options: { callback?: (entry: LogEntry) => void } = {}) {
+    this.callback = options.callback;
   }
   
-  public log(entry: LogEntry): void {
-    if (!this.shouldLog(entry.level)) {
-      return;
-    }
-    
-    // Log to console if enabled
-    if (this.consoleEnabled) {
-      this.logToConsole(entry);
-    }
-    
-    // Show toast if toast function provided
-    if (this.toastFn) {
-      this.showToast(entry);
-    }
-  }
-  
-  public setMinLevel(level: LogLevel): void {
+  setMinLevel(level: LogLevel): void {
     this.minLevel = level;
   }
   
-  private shouldLog(level: LogLevel): boolean {
+  log(entry: LogEntry): void {
+    // Skip logs below minimum level
+    if (this.shouldSkipLog(entry.level)) {
+      return;
+    }
+    
+    // Call the provided callback if exists
+    if (this.callback) {
+      this.callback(entry);
+    }
+    
+    // Determine console method based on log level
+    let consoleMethod: keyof typeof console;
+    switch (entry.level) {
+      case LogLevel.DEBUG:
+        consoleMethod = 'debug';
+        break;
+      case LogLevel.INFO:
+        consoleMethod = 'info';
+        break;
+      case LogLevel.WARN:
+        consoleMethod = 'warn';
+        break;
+      case LogLevel.ERROR:
+      case LogLevel.CRITICAL:
+      case LogLevel.FATAL:
+        consoleMethod = 'error';
+        break;
+      case LogLevel.SUCCESS:
+        consoleMethod = 'log'; // No success in console, use log
+        break;
+      case LogLevel.TRACE:
+        consoleMethod = 'trace';
+        break;
+      default:
+        consoleMethod = 'log';
+    }
+    
+    // Format console output
+    const formattedDetails = entry.details 
+      ? Object.keys(entry.details).length > 0 
+        ? entry.details 
+        : '' 
+      : '';
+    
+    const prefix = `[${entry.category}]`;
+    console[consoleMethod](
+      `%c${prefix}%c ${entry.message}`, 
+      'font-weight: bold; color: #666;',
+      'color: inherit',
+      formattedDetails
+    );
+  }
+  
+  registerCallback(callback: (entry: LogEntry) => void): void {
+    this.callback = callback;
+  }
+  
+  private shouldSkipLog(level: LogLevel): boolean {
     const levelValues: Record<LogLevel, number> = {
-      debug: 0,
-      info: 1,
-      success: 2,
-      warn: 3,
-      error: 4,
-      critical: 5,
-      fatal: 6,
-      trace: -1,
-      silent: 100 // Adding silent level
+      [LogLevel.DEBUG]: 0,
+      [LogLevel.INFO]: 1,
+      [LogLevel.WARN]: 2,
+      [LogLevel.ERROR]: 3,
+      [LogLevel.CRITICAL]: 4,
+      [LogLevel.FATAL]: 5,
+      [LogLevel.TRACE]: -1,
+      [LogLevel.SUCCESS]: 2,
+      [LogLevel.SILENT]: 100,
     };
     
-    return levelValues[level] >= levelValues[this.minLevel];
-  }
-  
-  private logToConsole(entry: LogEntry): void {
-    const { level, message, details, timestamp, category } = entry;
-    const time = new Date(timestamp).toLocaleTimeString();
-    const prefix = `[${time}][${category}][${level}]`;
-    
-    switch (level) {
-      case LogLevel.DEBUG:
-        console.debug(`${prefix} ${message}`, details);
-        break;
-      case LogLevel.INFO:
-        console.info(`${prefix} ${message}`, details);
-        break;
-      case LogLevel.SUCCESS:
-        console.log(`%c${prefix} ${message}`, 'color: green', details);
-        break;
-      case LogLevel.WARN:
-        console.warn(`${prefix} ${message}`, details);
-        break;
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-      case LogLevel.FATAL:
-        console.error(`${prefix} ${message}`, details);
-        break;
-      case LogLevel.TRACE:
-        console.trace(`${prefix} ${message}`, details);
-        break;
-    }
-  }
-  
-  private showToast(entry: LogEntry): void {
-    if (!this.toastFn) return;
-    
-    const { level, message, details } = entry;
-    
-    const toastOptions: Record<string, any> = {
-      title: this.getToastTitle(level),
-      description: message,
-      duration: this.getToastDuration(level),
-    };
-    
-    // Add variant based on level
-    toastOptions.variant = this.getToastVariant(level);
-    
-    // Add action if there are details to show
-    if (details && Object.keys(details).length > 0) {
-      toastOptions.action = {
-        label: 'Details',
-        onClick: () => console.info('Log details:', details)
-      };
-    }
-    
-    this.toastFn(toastOptions);
-  }
-  
-  private getToastVariant(level: LogLevel): string {
-    switch (level) {
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-      case LogLevel.FATAL:
-        return 'destructive';
-      case LogLevel.WARN:
-        return 'warning';
-      case LogLevel.SUCCESS:
-        return 'success';
-      case LogLevel.INFO:
-        return 'info';
-      default:
-        return 'default';
-    }
-  }
-  
-  private getToastTitle(level: LogLevel): string {
-    switch (level) {
-      case LogLevel.ERROR:
-        return 'Error';
-      case LogLevel.CRITICAL:
-      case LogLevel.FATAL:
-        return 'Critical Error';
-      case LogLevel.WARN:
-        return 'Warning';
-      case LogLevel.SUCCESS:
-        return 'Success';
-      case LogLevel.INFO:
-        return 'Information';
-      case LogLevel.DEBUG:
-        return 'Debug';
-      case LogLevel.TRACE:
-        return 'Trace';
-      default:
-        return 'Log';
-    }
-  }
-  
-  private getToastDuration(level: LogLevel): number {
-    switch (level) {
-      case LogLevel.ERROR:
-      case LogLevel.CRITICAL:
-      case LogLevel.FATAL:
-        return 8000; // Errors shown longer
-      case LogLevel.WARN:
-        return 5000;
-      default:
-        return 3000;
-    }
-  }
-
-  // Expose name property for identification
-  public get name(): string {
-    return 'ui';
+    return levelValues[level] < levelValues[this.minLevel];
   }
 }
