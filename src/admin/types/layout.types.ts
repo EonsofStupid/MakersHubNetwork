@@ -1,50 +1,35 @@
 
-/**
- * Types for layout system
- */
+import { ReactNode } from 'react';
 
-/**
- * Layout component props
- */
 export interface LayoutComponentProps {
-  [key: string]: any;
+  id: string;
+  title: string;
+  icon?: ReactNode;
+  position: number;
+  children?: ReactNode;
+  requiresAuth?: boolean;
+  requiredRole?: string;
 }
 
-/**
- * Layout component
- */
-export interface Component {
-  id: string;
-  type: string;
-  props?: LayoutComponentProps;
-  children?: Component[];
-  permissions?: string[];
-}
+export type LayoutComponent = React.ComponentType<LayoutComponentProps>;
 
-/**
- * Complete layout
- */
-export interface Layout {
-  id: string;
-  name: string;
-  type: string;
-  scope: string;
-  components: Component[];
-  meta?: Record<string, any>;
-  version: number;
-}
-
-/**
- * Layout skeleton stored in the database
- */
-export interface LayoutSkeleton {
-  id: string;
-  name: string;
-  type: string;
-  scope: string;
-  description?: string;
-  layout_json: Record<string, any>;
-  is_active: boolean;
-  is_locked?: boolean;
-  version: number;
+export interface AdminLayoutConfig {
+  sidebar: {
+    width: string;
+    collapsed: boolean;
+    collapsible: boolean;
+  };
+  header: {
+    height: string;
+    fixed: boolean;
+    showLogo: boolean;
+  };
+  content: {
+    maxWidth: string;
+    padding: string;
+  };
+  footer: {
+    height: string;
+    show: boolean;
+  };
 }

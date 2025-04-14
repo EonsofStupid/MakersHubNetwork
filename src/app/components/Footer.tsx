@@ -11,8 +11,8 @@ interface FooterProps {
 }
 
 export function Footer({ className }: FooterProps) {
-  const { currentTheme } = useThemeStore();
-  const isImpulsivity = currentTheme?.name?.toLowerCase().includes('impulsivity');
+  const { activeThemeId } = useThemeStore();
+  const isImpulsivity = activeThemeId?.toLowerCase().includes('impulsivity');
   
   const currentYear = new Date().getFullYear();
   

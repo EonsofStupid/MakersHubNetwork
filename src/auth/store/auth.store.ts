@@ -113,7 +113,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to initialize auth', { 
-        error 
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   },
@@ -177,7 +177,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Login failed', { 
         email, 
-        error 
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   },
@@ -216,7 +216,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Logout failed', { 
-        error 
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   },
@@ -267,7 +267,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Signup failed', { 
         email, 
-        error 
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   },
@@ -296,7 +296,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Password reset failed', { 
         email, 
-        error 
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   },
@@ -338,7 +338,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       
       logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Profile update failed', { 
-        error 
+        error: error instanceof Error ? error.message : String(error)
       });
     }
   }

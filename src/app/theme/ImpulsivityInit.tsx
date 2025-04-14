@@ -1,10 +1,9 @@
 
 import { useEffect, useState, useRef } from 'react';
-import { useLogger } from '@/hooks/use-logger';
+import { useLogger } from '@/logging/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 import { Loader } from 'lucide-react';
-import { useThemeStore } from '@/shared/stores/theme/store';
-import { ThemeLogDetails } from '@/shared/types/theme.types';
+import { useThemeStore } from '@/shared/store/theme/store';
 
 interface ImpulsivityInitProps {
   autoApply?: boolean;
@@ -54,7 +53,7 @@ export function ImpulsivityInit({ autoApply = true, children, showLoader = false
             : 'Unknown error initializing theme';
           
           logger.error('Failed to initialize Impulsivity theme', {
-            details: { errorMessage }
+            error: errorMessage
           });
           
           // Still mark as initialized to avoid blocking the app

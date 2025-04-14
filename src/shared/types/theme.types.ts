@@ -2,7 +2,7 @@
 /**
  * Import base types from shared.types.ts
  */
-import { ThemeEffectType } from './shared.types';
+import { ThemeEffectType, LogDetails } from './shared.types';
 
 /**
  * Theme status enum
@@ -74,14 +74,15 @@ export interface ColorTokens {
   background: string;
   foreground: string;
   muted: string;
-  mutedForeground: string; // Required property
-  cardForeground: string; // Required property
-  destructive: string; // Required property
-  destructiveForeground: string; // Required property
+  mutedForeground: string; 
+  cardForeground: string; 
+  destructive: string; 
+  destructiveForeground: string; 
   popover: string;
   'popover-foreground': string;
   card: string;
   'card-foreground': string;
+  'muted-foreground': string;
   border: string;
   input: string;
   ring: string;
@@ -91,7 +92,7 @@ export interface ColorTokens {
  * Radius tokens interface
  */
 export interface RadiusTokens {
-  none: string; // Required property
+  none: string; 
   sm: string;
   md: string;
   lg: string;
@@ -103,7 +104,7 @@ export interface RadiusTokens {
  * Shadow tokens interface
  */
 export interface ShadowTokens {
-  inner: string; // Required property
+  inner: string; 
   sm: string;
   md: string;
   lg: string;
@@ -201,4 +202,15 @@ export interface ThemeState {
   variables?: Record<string, string>;
   isLoaded?: boolean;
   theme?: Theme | null;
+}
+
+/**
+ * Theme log details type for theme-related logs
+ */
+export interface ThemeLogDetails extends LogDetails {
+  theme?: string;
+  themeId?: string;
+  success?: boolean;
+  errorMessage?: string;
+  details?: Record<string, unknown>;
 }

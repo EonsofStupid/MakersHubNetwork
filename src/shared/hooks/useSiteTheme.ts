@@ -1,24 +1,28 @@
 
-import { useThemeStore } from '@/shared/stores/theme/store';
+import { useThemeStore } from "@/shared/store/theme/store";
 
 export function useSiteTheme() {
-  // Using optional chaining to handle potentially undefined properties
-  const theme = useThemeStore(state => state.theme);
-  const variables = useThemeStore(state => state.variables);
-  const componentStyles = useThemeStore(state => state.componentStyles);
-  const isLoaded = useThemeStore(state => state.isLoaded);
-  
-  // Handle animations specifically
-  let animations = {};
-  if (componentStyles && 'animations' in componentStyles) {
-    animations = componentStyles.animations || {};
-  }
+  const { 
+    activeThemeId, 
+    themes, 
+    isDark, 
+    primaryColor, 
+    backgroundColor, 
+    textColor, 
+    componentTokens, // Use componentTokens instead of componentStyles
+    isLoading 
+  } = useThemeStore();
+
+  const currentTheme = themes.find(t => t.id === activeThemeId);
 
   return {
-    theme,
-    variables,
-    componentStyles,
-    animations,
-    isLoaded
+    theme: currentTheme,
+    isDark,
+    primaryColor,
+    backgroundColor,
+    textColor,
+    componentTokens, // Return componentTokens
+    isLoading,
+    activeThemeId
   };
 }
