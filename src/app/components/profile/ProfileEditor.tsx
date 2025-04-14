@@ -8,7 +8,7 @@ import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/shared/hooks/use-toast';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { Loader2 } from 'lucide-react';
 
@@ -18,17 +18,19 @@ const profileSchema = z.object({
   }),
   bio: z.string().max(160, {
     message: "Bio must not be longer than 160 characters.",
-  }).optional(),
+  }).optional().or(z.literal('')),
   avatarUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
-  location: z.string().max(100).optional(),
+  location: z.string().max(100).optional().or(z.literal('')),
   website: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-export const ProfileEditor: React.FC<{
+export interface ProfileEditorProps {
   onClose: () => void;
-}> = ({ onClose }) => {
+}
+
+export const ProfileEditor: React.FC<ProfileEditorProps> = ({ onClose }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const user = useAuthStore(state => state.user);
@@ -37,11 +39,11 @@ export const ProfileEditor: React.FC<{
 
   // Extract values from profile or user_metadata safely
   const userMetadata = user?.user_metadata || {};
-  const displayName = profile?.name || userMetadata.full_name || '';
-  const bio = userMetadata.bio || '';
-  const avatarUrl = profile?.avatar_url || userMetadata.avatar_url || '';
-  const location = userMetadata.location || '';
-  const website = userMetadata.website || '';
+  const displayName = profile?.name || userMetadata.full_name as string || '';
+  const bio = userMetadata.bio as string || '';
+  const avatarUrl = profile?.avatar_url || userMetadata.avatar_url as string || '';
+  const location = userMetadata.location as string || '';
+  const website = userMetadata.website as string || '';
 
   const defaultValues: Partial<ProfileFormValues> = {
     displayName,

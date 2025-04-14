@@ -95,7 +95,8 @@ class RBACBridgeImpl {
     if (this.hasRole(ROLES.ADMIN)) return ROLES.ADMIN;
     if (this.hasRole(ROLES.MODERATOR)) return ROLES.MODERATOR;
     if (this.hasRole(ROLES.BUILDER)) return ROLES.BUILDER;
-    return ROLES.USER;
+    if (this.hasRole(ROLES.USER)) return ROLES.USER;
+    return ROLES.GUEST;
   }
 
   public can(permission: Permission): boolean {

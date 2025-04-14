@@ -1,4 +1,3 @@
-
 /**
  * Shared type definitions for the entire application
  */
@@ -63,6 +62,18 @@ export const RBAC_POLICIES: Record<string, UserRole[]> = {
   '/projects/edit': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
   '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
 };
+
+// Additional RBAC policies for simpler usage
+export const RBAC = {
+  POLICIES: RBAC_POLICIES,
+  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  SUPER_ADMINS: [ROLES.SUPER_ADMIN],
+  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  AUTHENTICATED: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+};
+
+export const PATH_POLICIES = RBAC_POLICIES;
 
 /**
  * Auth status enum
@@ -191,6 +202,7 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
 // Re-export for backward compatibility
 export const LOG_LEVEL = LogLevel;
 export const LOG_CATEGORY = LogCategory;
+export const AUTH_STATUS = AuthStatus;
 
 /**
  * Theme-related types
@@ -420,4 +432,3 @@ export const AUTH_STATUS = AuthStatus;
 export const RBAC = {
   POLICIES: RBAC_POLICIES
 };
-export const PATH_POLICIES = RBAC_POLICIES;
