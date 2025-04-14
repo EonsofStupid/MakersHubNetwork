@@ -9,7 +9,16 @@ import {
   SheetFooter,
 } from "@/shared/ui/sheet";
 import { Button } from "@/shared/ui/button";
-import { LogOut, User } from "lucide-react";
+import { 
+  LogOut, 
+  User, 
+  Settings, 
+  Users, 
+  Shield, 
+  FileText, 
+  Database 
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface UserMenuSheetProps {
   isOpen: boolean;
@@ -32,6 +41,49 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   onLogout,
   roles,
 }) => {
+  const navigate = useNavigate();
+  const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+  const isSuperAdmin = roles.includes('super_admin');
+  const isModerator = roles.includes('moderator');
+
+  const adminLinks = [
+    { 
+      label: "Dashboard", 
+      icon: <Shield className="w-4 h-4" />, 
+      path: "/admin",
+      roles: ['admin', 'super_admin']
+    },
+    { 
+      label: "Users", 
+      icon: <Users className="w-4 h-4" />, 
+      path: "/admin/users",
+      roles: ['admin', 'super_admin']
+    },
+    { 
+      label: "Content", 
+      icon: <FileText className="w-4 h-4" />, 
+      path: "/admin/content",
+      roles: ['admin', 'super_admin', 'moderator']
+    },
+    { 
+      label: "Database", 
+      icon: <Database className="w-4 h-4" />, 
+      path: "/admin/database",
+      roles: ['super_admin']
+    },
+    { 
+      label: "Settings", 
+      icon: <Settings className="w-4 h-4" />, 
+      path: "/admin/settings",
+      roles: ['super_admin']
+    }
+  ];
+
+  const hasAccess = (requiredRoles: UserRole[]) => {
+    if (roles.includes('super_admin')) return true;
+    return requiredRoles.some(role => roles.includes(role));
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-80">
@@ -78,6 +130,27 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
             <User className="mr-2 h-4 w-4" />
             Your Profile
           </Button>
+
+          {(isAdmin || isModerator) && (
+            <div className="pt-2 space-y-2 border-t">
+              <p className="text-xs font-medium text-muted-foreground pl-2">
+                Admin Access
+              </p>
+              {adminLinks.map((link) => 
+                hasAccess(link.roles) && (
+                  <Button
+                    key={link.path}
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => navigate(link.path)}
+                  >
+                    {link.icon}
+                    <span className="ml-2">{link.label}</span>
+                  </Button>
+                )
+              )}
+            </div>
+          )}
         </div>
         
         <SheetFooter className="absolute bottom-4 left-4 right-4">
