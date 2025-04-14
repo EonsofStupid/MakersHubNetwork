@@ -1,68 +1,36 @@
 
-import { LogLevel, LogCategory, LogEntry, LogDetails } from '@/shared/types/shared.types';
+import { LogLevel, LogCategory, LogDetails, LogEntry } from '@/shared/types';
+import { LogTransport } from './types';
 import { ConsoleTransport } from './transports/console-transport';
 import { MemoryTransport } from './transports/memory-transport';
+import { UITransport } from './transports/ui-transport';
 
-export interface LogTransport {
-  log(entry: LogEntry): void;
-  setMinLevel(level: LogLevel): void;
-  getEntries?(): LogEntry[];
-  clear?(): void;
-}
-
-export class LoggerService {
+/**
+ * Logger service for centralized logging
+ */
+class LoggerService {
   private static instance: LoggerService;
-  private transports: LogTransport[] = [
-    new ConsoleTransport({ minLevel: LogLevel.INFO }),
-    new MemoryTransport({ maxEntries: 200 })
-  ];
-  private minLevel: LogLevel = LogLevel.INFO;
+  private transports: LogTransport[] = [];
 
   private constructor() {
-    // Singleton instance
+    // Add default transports
+    this.transports.push(new ConsoleTransport());
+    this.transports.push(new MemoryTransport());
+    
+    // Set minimum levels
+    this.transports.forEach(transport => {
+      transport.setMinLevel(LogLevel.DEBUG);
+    });
   }
 
+  /**
+   * Get singleton instance
+   */
   public static getInstance(): LoggerService {
     if (!LoggerService.instance) {
       LoggerService.instance = new LoggerService();
     }
     return LoggerService.instance;
-  }
-
-  /**
-   * Log a message with a specific level and category
-   */
-  public log(level: LogLevel, category: LogCategory, message: string, details?: LogDetails): void {
-    // Create log entry
-    const entry: LogEntry = {
-      id: this.generateId(),
-      timestamp: Date.now(),
-      level,
-      category,
-      message,
-      details,
-      source: details?.source as string
-    };
-
-    // Send to transports
-    this.transports.forEach(transport => {
-      transport.log(entry);
-    });
-
-    // Emit event
-    this.emit('log', { entry });
-  }
-
-  /**
-   * Set the minimum log level
-   */
-  public setMinLevel(level: LogLevel): void {
-    this.minLevel = level;
-    
-    // Update all transports
-    this.transports.forEach(transport => {
-      transport.setMinLevel(level);
-    });
   }
 
   /**
@@ -73,103 +41,127 @@ export class LoggerService {
   }
 
   /**
-   * Get all log entries
+   * Remove a transport
    */
-  public getEntries(): LogEntry[] {
-    const memoryTransport = this.transports.find(
-      t => t instanceof MemoryTransport
-    ) as MemoryTransport;
-    
-    return memoryTransport ? memoryTransport.getEntries() : [];
+  public removeTransport(transport: LogTransport): void {
+    this.transports = this.transports.filter(t => t !== transport);
   }
 
   /**
-   * Clear all log entries
+   * Get transports of a specific type
    */
-  public clear(): void {
-    const memoryTransport = this.transports.find(
-      t => t instanceof MemoryTransport
-    ) as MemoryTransport;
-    
-    if (memoryTransport && memoryTransport.clear) {
-      memoryTransport.clear();
-    }
+  public getTransports<T extends LogTransport>(transportType: new (...args: any[]) => T): T[] {
+    return this.transports.filter(t => t instanceof transportType) as T[];
   }
 
-  // Helper methods for common log levels
+  /**
+   * Log a message with a specific level and category
+   */
+  public log(level: LogLevel, category: LogCategory, message: string, details?: LogDetails): void {
+    const entry: LogEntry = {
+      id: this.generateId(),
+      level,
+      category,
+      message,
+      timestamp: Date.now(),
+      details,
+      source: details?.source as string
+    };
+
+    this.transports.forEach(transport => {
+      try {
+        transport.log(entry);
+      } catch (error) {
+        console.error('Error in log transport:', error);
+      }
+    });
+  }
+
+  /**
+   * Log a debug message
+   */
   public debug(category: LogCategory, message: string, details?: LogDetails): void {
     this.log(LogLevel.DEBUG, category, message, details);
   }
 
+  /**
+   * Log an info message
+   */
   public info(category: LogCategory, message: string, details?: LogDetails): void {
     this.log(LogLevel.INFO, category, message, details);
   }
 
-  public warn(category: LogCategory, message: string, details?: LogDetails): void {
-    this.log(LogLevel.WARN, category, message, details);
-  }
-
-  public error(category: LogCategory, message: string, details?: LogDetails): void {
-    this.log(LogLevel.ERROR, category, message, details);
-  }
-
+  /**
+   * Log a success message
+   */
   public success(category: LogCategory, message: string, details?: LogDetails): void {
     this.log(LogLevel.SUCCESS, category, message, details);
   }
 
-  // Event handling
-  private eventListeners: Record<string, Function[]> = {};
+  /**
+   * Log a warning message
+   */
+  public warn(category: LogCategory, message: string, details?: LogDetails): void {
+    this.log(LogLevel.WARN, category, message, details);
+  }
 
-  public on(event: string, callback: Function): () => void {
-    if (!this.eventListeners[event]) {
-      this.eventListeners[event] = [];
+  /**
+   * Log an error message
+   */
+  public error(category: LogCategory, message: string, details?: LogDetails): void {
+    this.log(LogLevel.ERROR, category, message, details);
+  }
+
+  /**
+   * Log a critical message
+   */
+  public critical(category: LogCategory, message: string, details?: LogDetails): void {
+    this.log(LogLevel.CRITICAL, category, message, details);
+  }
+
+  /**
+   * Log a fatal message
+   */
+  public fatal(category: LogCategory, message: string, details?: LogDetails): void {
+    this.log(LogLevel.FATAL, category, message, details);
+  }
+
+  /**
+   * Log a trace message
+   */
+  public trace(category: LogCategory, message: string, details?: LogDetails): void {
+    this.log(LogLevel.TRACE, category, message, details);
+  }
+
+  /**
+   * Get memory log entries
+   */
+  public getEntries() {
+    const memoryTransports = this.getTransports(MemoryTransport);
+    if (memoryTransports.length > 0) {
+      return (memoryTransports[0] as MemoryTransport).getEntries();
     }
-    this.eventListeners[event].push(callback);
-
-    // Return unsubscribe function
-    return () => {
-      this.eventListeners[event] = this.eventListeners[event].filter(cb => cb !== callback);
-    };
+    return [];
   }
 
-  public subscribe(callback: (entry: LogEntry) => void): () => void {
-    return this.on('log', (event: { entry: LogEntry }) => callback(event.entry));
+  /**
+   * Clear all memory logs
+   */
+  public clearLogs() {
+    const memoryTransports = this.getTransports(MemoryTransport);
+    memoryTransports.forEach(transport => {
+      (transport as MemoryTransport).clear();
+    });
   }
 
-  private emit(event: string, data: any): void {
-    if (this.eventListeners[event]) {
-      this.eventListeners[event].forEach(callback => callback(data));
-    }
-  }
-
-  // Generate unique ID for log entries
+  /**
+   * Generate a unique ID for log entries
+   */
   private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
-  }
-
-  // Get statistics
-  public getStats(): Record<string, any> {
-    const entries = this.getEntries();
-    
-    // By level
-    const byLevel = entries.reduce<Record<LogLevel, number>>((acc, entry) => {
-      acc[entry.level] = (acc[entry.level] || 0) + 1;
-      return acc;
-    }, {} as Record<LogLevel, number>);
-    
-    // By category
-    const byCategory = entries.reduce<Record<LogCategory, number>>((acc, entry) => {
-      acc[entry.category] = (acc[entry.category] || 0) + 1;
-      return acc;
-    }, {} as Record<LogCategory, number>);
-    
-    return {
-      total: entries.length,
-      byLevel,
-      byCategory
-    };
+    return Math.random().toString(36).substring(2, 15) + 
+           Math.random().toString(36).substring(2, 15);
   }
 }
 
-// Export singleton instance
+// Export the singleton instance
 export const logger = LoggerService.getInstance();

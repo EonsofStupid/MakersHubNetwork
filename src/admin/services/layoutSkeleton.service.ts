@@ -1,209 +1,148 @@
 
-import { Layout, LayoutSkeleton, LayoutComponent } from '@/admin/types/layout.types';
-import { v4 as uuidv4 } from 'uuid';
-import { logger } from '@/logging/logger.service';
-import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { supabase } from '@/lib/supabase';
+import { Layout, LayoutSkeleton } from '@/shared/types';
 
 /**
- * Service for managing layout skeletons
- * This is a mock implementation for development
+ * Service for managing layout skeletons in the database
  */
-class LayoutSkeletonService {
-  private layouts: LayoutSkeleton[] = [];
-  private loggerSource = 'LayoutSkeletonService';
+export const layoutSkeletonService = {
+  /**
+   * Get all layout skeletons
+   */
+  async getAll() {
+    const { data, error } = await supabase
+      .from('layout_skeletons')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  constructor() {
-    // Initialize with default layouts
-    this.layouts = [
-      {
-        id: '1',
-        name: 'Default Dashboard',
-        type: 'dashboard',
-        scope: 'admin',
-        description: 'Default admin dashboard layout',
-        layout_json: {
-          components: [
-            {
-              id: 'root',
-              type: 'AdminSection',
-              children: [
-                {
-                  id: 'title',
-                  type: 'heading',
-                  props: {
-                    level: 1,
-                    className: 'text-2xl font-bold',
-                    children: 'Dashboard'
-                  }
-                }
-              ]
-            }
-          ],
-          version: 1
-        },
-        is_active: true,
-        version: 1
-      }
-    ];
-  }
+    if (error) return { success: false, error: error.message };
+    return { success: true, data };
+  },
 
   /**
-   * Get all layouts
+   * Create a new layout skeleton
    */
-  async getAll(): Promise<LayoutSkeleton[]> {
-    logger.log(LogLevel.DEBUG, LogCategory.ADMIN, 'Getting all layouts', {
-      source: this.loggerSource
-    });
-    return Promise.resolve(this.layouts);
-  }
+  async create(layout: Partial<LayoutSkeleton>) {
+    // Ensure required fields are present
+    const newLayout = {
+      name: layout.name || 'New Layout',
+      description: layout.description || '',
+      type: layout.type || 'page',
+      scope: layout.scope || 'site',
+      layout_json: layout.layout_json || {},
+      is_active: layout.is_active !== undefined ? layout.is_active : true,
+      is_locked: layout.is_locked !== undefined ? layout.is_locked : false,
+      version: layout.version || 1
+    };
+
+    const { data, error } = await supabase
+      .from('layout_skeletons')
+      .insert(newLayout)
+      .select()
+      .single();
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data };
+  },
 
   /**
-   * Get layout by ID
+   * Get a layout skeleton by ID
    */
-  async getById(id: string): Promise<{ data: LayoutSkeleton | null }> {
-    const layout = this.layouts.find(l => l.id === id);
-    logger.log(LogLevel.DEBUG, LogCategory.ADMIN, 'Getting layout by ID', {
-      details: { id, found: !!layout },
-      source: this.loggerSource
-    });
-    return Promise.resolve({ data: layout || null });
-  }
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from('layout_skeletons')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data };
+  },
 
   /**
-   * Get layout by type and scope
+   * Get a layout skeleton by type and scope
    */
-  async getByTypeAndScope(type: string, scope: string): Promise<{ data: LayoutSkeleton | null }> {
-    const layout = this.layouts.find(l => l.type === type && l.scope === scope && l.is_active);
-    logger.log(LogLevel.DEBUG, LogCategory.ADMIN, 'Getting layout by type and scope', {
-      details: { type, scope, found: !!layout },
-      source: this.loggerSource
-    });
-    return Promise.resolve({ data: layout || null });
-  }
+  async getByTypeAndScope(type: string, scope: string) {
+    const { data, error } = await supabase
+      .from('layout_skeletons')
+      .select('*')
+      .eq('type', type)
+      .eq('scope', scope)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-  /**
-   * Create a new layout
-   */
-  async create(layout: Partial<LayoutSkeleton>): Promise<{ success: boolean; data?: LayoutSkeleton; error?: string }> {
-    try {
-      const newLayout: LayoutSkeleton = {
-        id: uuidv4(),
-        name: layout.name || 'New Layout',
-        type: layout.type || 'custom',
-        scope: layout.scope || 'admin',
-        description: layout.description,
-        layout_json: layout.layout_json || { components: [], version: 1 },
-        is_active: layout.is_active || false,
-        is_locked: layout.is_locked || false,
-        version: layout.version || 1
-      };
-
-      this.layouts.push(newLayout);
-
-      logger.log(LogLevel.INFO, LogCategory.ADMIN, 'Layout created', {
-        details: { layout: newLayout },
-        source: this.loggerSource
-      });
-
-      return { success: true, data: newLayout };
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.ADMIN, 'Failed to create layout', {
-        details: { error, layout },
-        source: this.loggerSource
-      });
-      return { success: false, error: 'Failed to create layout' };
+    if (error && error.code !== 'PGRST116') {
+      return { success: false, error: error.message };
+    } else if (error && error.code === 'PGRST116') {
+      return { success: false, error: 'No active layout found' };
     }
-  }
+
+    return { success: true, data };
+  },
 
   /**
-   * Update an existing layout
+   * Update a layout skeleton
    */
-  async update(id: string, layout: Partial<LayoutSkeleton>): Promise<{ success: boolean; data?: LayoutSkeleton; error?: string }> {
-    try {
-      const index = this.layouts.findIndex(l => l.id === id);
-      if (index === -1) {
-        return { success: false, error: 'Layout not found' };
-      }
+  async update(id: string, updates: Partial<LayoutSkeleton>) {
+    const { data, error } = await supabase
+      .from('layout_skeletons')
+      .update({
+        name: updates.name,
+        description: updates.description,
+        layout_json: updates.layout_json,
+        is_active: updates.is_active,
+        is_locked: updates.is_locked,
+        version: updates.version
+      })
+      .eq('id', id)
+      .select()
+      .single();
 
-      const updatedLayout = {
-        ...this.layouts[index],
-        ...layout,
-        id // Ensure ID doesn't change
-      };
-
-      this.layouts[index] = updatedLayout;
-
-      logger.log(LogLevel.INFO, LogCategory.ADMIN, 'Layout updated', {
-        details: { layout: updatedLayout },
-        source: this.loggerSource
-      });
-
-      return { success: true, data: updatedLayout };
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.ADMIN, 'Failed to update layout', {
-        details: { error, id, layout },
-        source: this.loggerSource
-      });
-      return { success: false, error: 'Failed to update layout' };
-    }
-  }
+    if (error) return { success: false, error: error.message };
+    return { success: true, data };
+  },
 
   /**
-   * Delete a layout
+   * Delete a layout skeleton
    */
-  async delete(id: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const initialLength = this.layouts.length;
-      this.layouts = this.layouts.filter(l => l.id !== id);
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('layout_skeletons')
+      .delete()
+      .eq('id', id);
 
-      if (this.layouts.length === initialLength) {
-        return { success: false, error: 'Layout not found' };
-      }
-
-      logger.log(LogLevel.INFO, LogCategory.ADMIN, 'Layout deleted', {
-        details: { id },
-        source: this.loggerSource
-      });
-
-      return { success: true };
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.ADMIN, 'Failed to delete layout', {
-        details: { error, id },
-        source: this.loggerSource
-      });
-      return { success: false, error: 'Failed to delete layout' };
-    }
-  }
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  },
 
   /**
-   * Get default layout
+   * Set a layout as active
    */
-  getDefaultLayout(): LayoutSkeleton {
-    return this.layouts[0];
-  }
+  async setActive(id: string) {
+    const { data: layout, error: getError } = await supabase
+      .from('layout_skeletons')
+      .select('type, scope')
+      .eq('id', id)
+      .single();
 
-  /**
-   * Get layout by ID (sync)
-   */
-  getLayoutById(id: string): LayoutSkeleton | null {
-    return this.layouts.find(l => l.id === id) || null;
-  }
+    if (getError) return { success: false, error: getError.message };
 
-  /**
-   * Add component to section
-   */
-  addComponentToSection(layout: LayoutSkeleton, sectionId: string, component: LayoutComponent): LayoutSkeleton {
-    // Implementation would traverse the layout tree and add the component
-    return layout;
-  }
+    // Reset all layouts of the same type and scope
+    await supabase
+      .from('layout_skeletons')
+      .update({ is_active: false })
+      .eq('type', layout.type)
+      .eq('scope', layout.scope);
 
-  /**
-   * Remove component from section
-   */
-  removeComponentFromSection(layout: LayoutSkeleton, sectionId: string, componentId: string): LayoutSkeleton {
-    // Implementation would traverse the layout tree and remove the component
-    return layout;
-  }
-}
+    // Set the selected layout as active
+    const { error } = await supabase
+      .from('layout_skeletons')
+      .update({ is_active: true })
+      .eq('id', id);
 
-export const layoutSkeletonService = new LayoutSkeletonService();
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }
+};

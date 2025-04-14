@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Layout, Component } from '@/admin/types/layout.types';
+import { Layout, Component } from '@/shared/types/features/layout.types';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import { LogCategory } from '@/shared/types/core/logging.types';
 
 interface LayoutEditorProps {
   initialLayout?: Layout;
@@ -13,26 +13,34 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
   const [layout, setLayout] = useState<Layout>(initialLayout || {
     id: 'new-layout',
     name: 'New Layout',
+    components: {},
+    layout: [],
     type: 'page',
-    scope: 'site',
-    components: [],
-    version: 1
+    scope: 'site'
   });
   
   const logger = useLogger('LayoutEditor', LogCategory.ADMIN);
   
   // Handle adding a new component
   const handleAddComponent = (type: string) => {
-    const newComponent: Component = {
-      id: `component-${Date.now()}`,
+    const newComponentId = `component-${Date.now()}`;
+    const newComponent = {
+      id: newComponentId,
       type,
-      props: {},
-      children: []
+      props: {}
     };
     
     setLayout(prev => ({
       ...prev,
-      components: [...prev.components, newComponent]
+      components: {
+        ...prev.components,
+        [newComponentId]: newComponent
+      },
+      layout: [...prev.layout, {
+        id: `layout-${Date.now()}`,
+        position: prev.layout.length,
+        componentId: newComponentId
+      }]
     }));
     
     logger.info('Added new component', { details: { componentType: type } });
@@ -73,7 +81,7 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
             <label htmlFor="layout-type" className="block text-sm mb-1">Type</label>
             <select
               id="layout-type"
-              value={layout.type}
+              value={layout.type || 'page'}
               onChange={(e) => setLayout(prev => ({ ...prev, type: e.target.value }))}
               className="px-3 py-2 border rounded-md w-full"
             >
@@ -109,13 +117,13 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
         </div>
         
         <div className="border rounded-md p-4 min-h-[200px] bg-gray-50">
-          {layout.components.length === 0 ? (
+          {Object.keys(layout.components).length === 0 ? (
             <div className="text-center text-gray-400 py-8">
               No components added yet. Use the buttons above to add components.
             </div>
           ) : (
             <ul className="space-y-2">
-              {layout.components.map((component, index) => (
+              {Object.values(layout.components).map((component) => (
                 <li key={component.id} className="border rounded p-2 bg-white">
                   {component.type}
                 </li>

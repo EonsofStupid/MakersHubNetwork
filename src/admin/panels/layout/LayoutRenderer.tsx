@@ -1,8 +1,8 @@
 
 import React, { useMemo } from 'react';
-import { Component, Layout } from '@/admin/types/layout.types';
+import { Component, Layout } from '@/shared/types/features/layout.types';
 import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/shared/types/shared.types';
+import { LogCategory } from '@/shared/types/core/logging.types';
 import { Skeleton } from '@/shared/ui/skeleton';
 
 interface LayoutRendererProps {
@@ -42,14 +42,14 @@ export function LayoutRenderer({ layout, isLoading, fallback, error }: LayoutRen
   }
   
   // Show fallback if no layout
-  if (!layout || !layout.components || layout.components.length === 0) {
+  if (!layout || !layout.components || Object.keys(layout.components).length === 0) {
     return fallback ? <>{fallback}</> : null;
   }
   
   // Root-level component renderer
   return (
     <div className="layout-root" data-layout-id={layout.id}>
-      {layout.components.map((component, index) => (
+      {Object.values(layout.components).map((component, index) => (
         <ComponentRenderer 
           key={component.id || index} 
           component={component} 
@@ -60,7 +60,7 @@ export function LayoutRenderer({ layout, isLoading, fallback, error }: LayoutRen
 }
 
 interface ComponentRendererProps {
-  component: Component;
+  component: { id: string; type: string; props: Record<string, any> };
 }
 
 function ComponentRenderer({ component }: ComponentRendererProps) {
@@ -72,9 +72,7 @@ function ComponentRenderer({ component }: ComponentRendererProps) {
       case 'container':
         return (
           <div className="border rounded-md p-4 mb-4" data-component-type="container">
-            {component.children?.map((child, index) => (
-              <ComponentRenderer key={child.id || index} component={child} />
-            ))}
+            {component.props?.children}
           </div>
         );
         

@@ -1,8 +1,11 @@
 
-// Re-export all shared types from the central shared.types.ts file
-export * from './shared.types';
+/**
+ * Main types barrel file
+ * Re-exports all types from core and features
+ */
 
-// Additional specific type modules can be re-exported here as needed
-export * from './theme.types';
-export * from './auth.types';
-export * from './build.types';
+// Core types
+export * from './core';
+
+// Feature types
+export * from './features';

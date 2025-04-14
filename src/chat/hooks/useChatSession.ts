@@ -1,122 +1,76 @@
 
-import { useState, useEffect } from 'react';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { chatBridge } from '../lib/ChatBridge';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
+import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { CircuitBreaker } from '@/utils/CircuitBreaker';
+import { ChatMessage, ChatSession, LogCategory } from '@/shared/types';
+import { useLogger } from '@/logging/hooks/use-logger';
 
-interface ChatMessage {
-  id: string;
-  content: string;
-  sender: 'user' | 'assistant' | 'system';
-  timestamp: Date;
-  sessionId?: string;
-}
-
-interface UseChatSessionProps {
-  sessionId?: string;
-  mode?: 'normal' | 'dev' | 'admin';
-}
-
-export function useChatSession({ sessionId: externalSessionId, mode = 'normal' }: UseChatSessionProps = {}) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [sessionId, setSessionId] = useState<string>(externalSessionId || '');
-  const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuthState();
+/**
+ * Hook for managing chat sessions
+ */
+export function useChatSession() {
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const logger = useLogger('useChatSession', LogCategory.CHAT);
-  const chatBreaker = new CircuitBreaker('useChatSession', 5, 1000);
-  
-  useEffect(() => {
-    // Fix: Pass numeric value instead of string for count method
-    if (chatBreaker.count(1) > 3) {
-      logger.warn('Breaking potential infinite loop in useChatSession initialization');
-      return;
-    }
-    
-    if (externalSessionId) {
-      setSessionId(externalSessionId);
-    } else if (!sessionId) {
-      const newSessionId = uuidv4();
-      setSessionId(newSessionId);
-      
-      chatBridge.publish('system', {
-        type: 'session-created',
-        sessionId: newSessionId,
-        mode,
-        userId: user?.id
-      });
-      
-      logger.info('Created new chat session', {
-        details: { sessionId: newSessionId, mode }
-      });
-    }
-  }, [externalSessionId, sessionId, user?.id, logger, mode]);
-  
-  useEffect(() => {
-    if (!sessionId) return;
-    
-    const sessionChannel = `session:${sessionId}`;
-    
-    const unsubscribe = chatBridge.subscribe(sessionChannel, (message) => {
-      if (message.type === 'new-message') {
-        setMessages(prev => [...prev, message.message]);
-      }
-    });
-    
-    return () => {
-      unsubscribe();
+
+  // Create a new session
+  const createSession = useCallback((title?: string) => {
+    const sessionId = uuidv4();
+    const newSession: ChatSession = {
+      id: sessionId,
+      title: title || `New Chat ${sessions.length + 1}`,
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     };
-  }, [sessionId]);
-  
-  const sendMessage = async (content: string) => {
-    if (!sessionId || !content.trim() || isLoading) return;
     
-    try {
-      setIsLoading(true);
-      
-      const userMessage: ChatMessage = {
-        id: `user-${Date.now()}`,
-        content,
-        sender: 'user',
-        timestamp: new Date(),
-        sessionId
-      };
-      
-      setMessages(prev => [...prev, userMessage]);
-      
-      chatBridge.publish('message', {
-        type: 'send-message',
-        message: userMessage,
-        sessionId
-      });
-      
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: `assistant-${Date.now()}`,
-          content: `This is a response to: "${content}"`,
-          sender: 'assistant',
-          timestamp: new Date(),
-          sessionId
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsLoading(false);
-      }, 1000);
-      
-    } catch (error) {
-      logger.error('Error sending message', { 
-        details: { error: error instanceof Error ? error.message : String(error) }
-      });
-      setIsLoading(false);
+    setSessions(prev => [...prev, newSession]);
+    setCurrentSessionId(sessionId);
+    logger.debug(`Created new chat session: ${sessionId}`);
+    
+    return sessionId;
+  }, [sessions.length, logger]);
+
+  // Save a message to the current session
+  const saveMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
+    if (!currentSessionId) {
+      logger.warn('No active session to save message');
+      return null;
     }
-  };
-  
+    
+    const newMessage: ChatMessage = {
+      ...message,
+      id: uuidv4(),
+      timestamp: Date.now()
+    };
+    
+    setSessions(prev => 
+      prev.map(session => 
+        session.id === currentSessionId
+          ? {
+              ...session,
+              messages: [...session.messages, newMessage],
+              updatedAt: Date.now()
+            }
+          : session
+      )
+    );
+    
+    logger.debug(`Saved message to session: ${currentSessionId.substring(0, 6)}...`);
+    return newMessage;
+  }, [currentSessionId, logger]);
+
+  // Get the current session
+  const getCurrentSession = useCallback(() => {
+    if (!currentSessionId) return null;
+    return sessions.find(session => session.id === currentSessionId) || null;
+  }, [currentSessionId, sessions]);
+
   return {
-    messages,
-    sendMessage,
-    isLoading,
-    sessionId
+    sessions,
+    currentSessionId,
+    setCurrentSessionId,
+    createSession,
+    saveMessage,
+    getCurrentSession
   };
 }

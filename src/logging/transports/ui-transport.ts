@@ -1,50 +1,73 @@
 
-import { LogEntry, LogLevel, Transport } from '../types';
-import { LOG_LEVEL_VALUES } from '@/shared/types/shared.types';
+import { LogEntry, LogLevel } from '@/shared/types';
+import { LogTransport } from '@/logging/types';
 
-type LogCallback = (entry: LogEntry) => void;
+/**
+ * Transport for sending logs to UI components (like toast notifications)
+ */
+export class UITransport implements LogTransport {
+  private currentLevel: LogLevel = LogLevel.INFO;
+  private listeners: ((entry: LogEntry) => void)[] = [];
 
-export class UiTransport implements Transport {
-  private listeners: LogCallback[] = [];
-  private minLevel: LogLevel = LogLevel.INFO;
-
-  constructor(options?: { minLevel?: LogLevel }) {
-    if (options?.minLevel) {
-      this.minLevel = options.minLevel;
-    }
+  constructor(level: LogLevel = LogLevel.INFO) {
+    this.currentLevel = level;
   }
 
+  /**
+   * Set the minimum log level
+   */
   setMinLevel(level: LogLevel): void {
-    this.minLevel = level;
+    this.currentLevel = level;
   }
 
-  getMinLevel(): LogLevel {
-    return this.minLevel;
-  }
-
+  /**
+   * Log an entry
+   */
   log(entry: LogEntry): void {
-    // Skip if below minimum level
-    if (LOG_LEVEL_VALUES[entry.level] < LOG_LEVEL_VALUES[this.minLevel]) {
-      return;
+    // Only log if the entry level is greater than or equal to the current level
+    if (this.shouldLog(entry.level)) {
+      this.notifyListeners(entry);
     }
+  }
 
-    // Notify all listeners
+  /**
+   * Add a listener for log entries
+   */
+  addListener(listener: (entry: LogEntry) => void): () => void {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
+  }
+
+  /**
+   * Notify all listeners of a new log entry
+   */
+  private notifyListeners(entry: LogEntry): void {
     this.listeners.forEach(listener => {
       try {
         listener(entry);
       } catch (error) {
-        console.error('Error in UI log listener:', error);
+        console.error('Error in log listener:', error);
       }
     });
   }
 
-  // Add a listener for log entries
-  subscribe(callback: LogCallback): () => void {
-    this.listeners.push(callback);
-
-    // Return unsubscribe function
-    return () => {
-      this.listeners = this.listeners.filter(listener => listener !== callback);
+  /**
+   * Determine if an entry should be logged based on its level
+   */
+  private shouldLog(level: LogLevel): boolean {
+    const levelValues: Record<LogLevel, number> = {
+      [LogLevel.DEBUG]: 0,
+      [LogLevel.INFO]: 1,
+      [LogLevel.SUCCESS]: 2,
+      [LogLevel.WARN]: 3,
+      [LogLevel.ERROR]: 4,
+      [LogLevel.CRITICAL]: 5,
+      [LogLevel.FATAL]: 6,
+      [LogLevel.TRACE]: -1
     };
+
+    return levelValues[level] >= levelValues[this.currentLevel];
   }
 }

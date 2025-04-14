@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { LogLevel, LogCategory, LogDetails } from '@/shared/types/shared.types';
+import { LogLevel, LogCategory, LogDetails } from '@/shared/types';
 import { logger } from '@/logging/logger.service';
 
 /**
