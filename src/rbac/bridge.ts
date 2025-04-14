@@ -1,24 +1,16 @@
-
 import { UserRole } from './constants/roles';
-import { Permission } from './constants/permissions';
+import { Permission } from '@/shared/types/permissions';
 import { rbacStore } from './store/rbac.store';
-import { PATH_POLICIES, ADMIN_SECTION_POLICIES } from './constants/policies';
+import { PATH_POLICIES } from './constants/policies';
 
 /**
  * RBAC Bridge - Clean interface for role-based access control
- * Acts as a facade over RBAC implementation details
  */
 class RBACBridgeImpl {
-  /**
-   * Initialize the RBAC system
-   */
   initialize(): void {
     rbacStore.getState().initialize();
   }
-
-  /**
-   * Check if user has a specific role or any role from an array
-   */
+  
   hasRole(role: UserRole | UserRole[]): boolean {
     const userRoles = rbacStore.getState().roles;
     
@@ -32,21 +24,11 @@ class RBACBridgeImpl {
       return role.some(r => userRoles.includes(r));
     }
     
-    // Check for single role
     return userRoles.includes(role);
   }
   
-  /**
-   * Check if user has a specific permission
-   */
   hasPermission(permission: Permission): boolean {
     const { permissions } = rbacStore.getState();
-    
-    // Super admin always has all permissions
-    if (this.isSuperAdmin()) {
-      return true;
-    }
-    
     return permissions[permission] === true;
   }
   
@@ -99,17 +81,13 @@ class RBACBridgeImpl {
   clearRoles(): void {
     rbacStore.getState().clear();
   }
-  
-  /**
-   * Check if user can access a specific route
-   */
+
   canAccessRoute(route: string): boolean {
     // Super admin can access all routes
     if (this.isSuperAdmin()) {
       return true;
     }
     
-    // Check for path in policies
     const allowedRoles = PATH_POLICIES[route as keyof typeof PATH_POLICIES];
     if (!allowedRoles) {
       return true; // If no specific permissions, allow access
@@ -128,12 +106,13 @@ class RBACBridgeImpl {
     }
     
     // Define section access permissions
-    const requiredPermission = ADMIN_SECTION_POLICIES[section as keyof typeof ADMIN_SECTION_POLICIES];
-    if (!requiredPermission) {
-      return false;
-    }
+    // const requiredPermission = ADMIN_SECTION_POLICIES[section as keyof typeof ADMIN_SECTION_POLICIES];
+    // if (!requiredPermission) {
+    //   return false;
+    // }
     
-    return this.hasPermission(requiredPermission as unknown as Permission);
+    // return this.hasPermission(requiredPermission as unknown as Permission);
+    return false;
   }
   
   /**
@@ -150,8 +129,6 @@ class RBACBridgeImpl {
   }
 }
 
-// Create a singleton instance
+// Create singleton instance
 export const RBACBridge = new RBACBridgeImpl();
-
-// Export for direct import
 export default RBACBridge;

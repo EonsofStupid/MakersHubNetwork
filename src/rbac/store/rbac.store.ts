@@ -1,7 +1,6 @@
-
 import { create } from 'zustand';
 import { UserRole, ROLES } from '../constants/roles';
-import { Permission, DEFAULT_PERMISSIONS } from '../constants/permissions';
+import { Permission, DEFAULT_PERMISSIONS, ROLE_PERMISSIONS } from '@/shared/types/permissions';
 import { LogCategory, LogLevel } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 
@@ -26,11 +25,9 @@ export interface RBACState {
   initialize: () => void;
 }
 
-/**
- * Helper function to map roles to their corresponding permissions
- */
+// Map roles to their corresponding permissions
 const mapRolesToPermissions = (roles: UserRole[]): Record<Permission, boolean> => {
-  // Start with default permissions (all false)
+  // Start with all permissions false
   const permissions = { ...DEFAULT_PERMISSIONS };
   
   // Super admin has all permissions
@@ -41,40 +38,13 @@ const mapRolesToPermissions = (roles: UserRole[]): Record<Permission, boolean> =
     return permissions;
   }
   
-  // Admin permissions
-  if (roles.includes(ROLES.ADMIN)) {
-    permissions[Permission.ADMIN_ACCESS] = true;
-    permissions[Permission.ADMIN_VIEW] = true;
-    permissions[Permission.USER_VIEW] = true;
-    permissions[Permission.USER_EDIT] = true;
-    permissions[Permission.CONTENT_VIEW] = true;
-    permissions[Permission.CONTENT_CREATE] = true;
-    permissions[Permission.CONTENT_EDIT] = true;
-    permissions[Permission.CONTENT_DELETE] = true;
-    permissions[Permission.VIEW_ANALYTICS] = true;
-    permissions[Permission.PROJECT_CREATE] = true;
-    permissions[Permission.PROJECT_EDIT] = true;
-    permissions[Permission.PROJECT_DELETE] = true;
-  }
-  
-  // Moderator permissions
-  if (roles.includes(ROLES.MODERATOR)) {
-    permissions[Permission.CONTENT_VIEW] = true;
-    permissions[Permission.CONTENT_EDIT] = true;
-    permissions[Permission.USER_VIEW] = true;
-  }
-  
-  // Builder permissions
-  if (roles.includes(ROLES.BUILDER)) {
-    permissions[Permission.PROJECT_CREATE] = true;
-    permissions[Permission.PROJECT_EDIT] = true;
-    permissions[Permission.PROJECT_SUBMIT] = true;
-  }
-  
-  // Regular user permissions
-  if (roles.includes(ROLES.USER)) {
-    permissions[Permission.CONTENT_VIEW] = true;
-  }
+  // Add permissions for each role
+  roles.forEach(role => {
+    const rolePerms = ROLE_PERMISSIONS[role] || [];
+    rolePerms.forEach(perm => {
+      permissions[perm] = true;
+    });
+  });
   
   return permissions;
 };
@@ -83,7 +53,7 @@ const mapRolesToPermissions = (roles: UserRole[]): Record<Permission, boolean> =
 export const rbacStore = create<RBACState>((set, get) => ({
   // Initial state
   roles: [],
-  permissions: { ...DEFAULT_PERMISSIONS },
+  permissions: DEFAULT_PERMISSIONS,
   isLoading: false,
   error: null,
   isInitialized: false,
@@ -92,7 +62,7 @@ export const rbacStore = create<RBACState>((set, get) => ({
   initialize: () => {
     set({ isInitialized: true });
     
-    // Try to load roles from localStorage (for persistence between page reloads)
+    // Try to load roles from localStorage
     try {
       const storedRoles = localStorage.getItem('user_roles');
       if (storedRoles) {
@@ -210,10 +180,8 @@ export const rbacStore = create<RBACState>((set, get) => ({
   }
 }));
 
-// Export a selector hook
+// Export selectors
 export const useRbacStore = rbacStore;
-
-// Export selectors for common queries
 export const selectRoles = (state: RBACState) => state.roles;
 export const selectPermissions = (state: RBACState) => state.permissions;
 export const selectIsLoading = (state: RBACState) => state.isLoading;
