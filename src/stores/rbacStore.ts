@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import { UserRole, Permission, ROLES } from '@/types/shared';
+import { UserRole, Permission, ROLES, LogCategory } from '@/shared/types';
 import { useLogger } from '@/hooks/use-logger';
-import { LOG_CATEGORY } from '@/types/shared';
 
 /**
  * RBAC store state interface
@@ -27,11 +26,33 @@ interface RBACState {
  * Manages roles and permissions separately from auth
  */
 export const useRbacStore = create<RBACState>((set, get) => {
-  const logger = useLogger('RbacStore', LOG_CATEGORY.RBAC);
+  const logger = useLogger('RbacStore', LogCategory.RBAC);
   
   return {
     roles: [],
-    permissions: {} as Record<Permission, boolean>,
+    permissions: {
+      'create_project': false,
+      'edit_project': false,
+      'delete_project': false,
+      'submit_build': false,
+      'access_admin': false,
+      'manage_api_keys': false,
+      'manage_users': false,
+      'manage_roles': false,
+      'manage_permissions': false,
+      'view_analytics': false,
+      'admin:view': false,
+      'admin:edit': false,
+      'admin:delete': false,
+      'user:view': false,
+      'user:edit': false,
+      'user:delete': false,
+      'content:view': false,
+      'content:edit': false,
+      'content:delete': false,
+      'settings:view': false,
+      'settings:edit': false
+    },
     
     /**
      * Check if user has the specified role(s)
@@ -70,7 +91,31 @@ export const useRbacStore = create<RBACState>((set, get) => {
      * Clear RBAC state
      */
     clear: () => {
-      set({ roles: [], permissions: {} });
+      const defaultPermissions: Record<Permission, boolean> = {
+        'create_project': false,
+        'edit_project': false,
+        'delete_project': false,
+        'submit_build': false,
+        'access_admin': false,
+        'manage_api_keys': false,
+        'manage_users': false,
+        'manage_roles': false,
+        'manage_permissions': false,
+        'view_analytics': false,
+        'admin:view': false,
+        'admin:edit': false,
+        'admin:delete': false,
+        'user:view': false,
+        'user:edit': false,
+        'user:delete': false,
+        'content:view': false,
+        'content:edit': false,
+        'content:delete': false,
+        'settings:view': false,
+        'settings:edit': false
+      };
+      
+      set({ roles: [], permissions: defaultPermissions });
       logger.info('RBAC state cleared');
     }
   };

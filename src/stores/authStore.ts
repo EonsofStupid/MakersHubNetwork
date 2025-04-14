@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { UserProfile, AuthStatus, AUTH_STATUS } from '@/types/shared';
+import { UserProfile, AuthStatus, AUTH_STATUS } from '@/shared/types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 

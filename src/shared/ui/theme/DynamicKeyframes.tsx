@@ -1,6 +1,6 @@
-
 import { useEffect } from 'react';
 import { useSiteTheme } from '@/shared/hooks/useSiteTheme';
+import { useThemeStore } from '@/shared/stores/theme/store';
 
 interface DynamicKeyframesProps {
   className?: string;
@@ -10,7 +10,8 @@ interface DynamicKeyframesProps {
  * Component that renders theme animations as keyframes in a style tag
  */
 export function DynamicKeyframes({ className }: DynamicKeyframesProps) {
-  const { animations, isLoaded } = useSiteTheme();
+  const { theme } = useSiteTheme();
+  const { animations, isLoaded } = useThemeStore();
 
   useEffect(() => {
     if (!animations || !isLoaded) return;

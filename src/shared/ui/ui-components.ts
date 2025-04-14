@@ -1,4 +1,3 @@
-
 // Re-export UI components from their source files
 // This provides a centralized way to import UI components
 
@@ -50,7 +49,6 @@ export { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 export { Alert, AlertDescription, AlertTitle } from './alert';
 export { Toaster } from './toaster';
 export { useToast, toast } from './use-toast';
-export { Sonner } from './sonner';
-export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from './command';
+export { Toaster as Sonner, toast as sonnerToast } from './sonner';
 export { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './resizable';
-export { Steps, StepsContent, StepsItem } from './steps';
+export { Steps } from './steps';
