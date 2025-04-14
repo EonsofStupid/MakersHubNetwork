@@ -6,7 +6,7 @@ import { AccessDenied } from '@/admin/panels/auth/AccessDenied';
 import LoginPage from '@/app/auth/LoginPage';
 import AdminDashboard from '@/admin/pages/Dashboard';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { AuthStatus, ROLES } from '@/shared/types/shared.types';
+import { AUTH_STATUS, ROLES } from '@/shared/types/shared.types';
 
 const HomePage = () => (
   <div className="container mx-auto p-6">
@@ -34,7 +34,7 @@ const Routes = () => {
   const { status } = useAuthStore();
   
   // Show loading screen while auth is initializing
-  if (status === AuthStatus.LOADING) {
+  if (status === AUTH_STATUS.LOADING) {
     return <LoadingScreen />;
   }
   

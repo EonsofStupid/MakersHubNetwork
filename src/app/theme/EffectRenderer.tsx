@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ThemeEffect, ThemeEffectType } from '@/shared/types/shared.types';
+import { ThemeEffectType } from '@/shared/types/shared.types';
 
 /**
  * Component to render various theme effects
@@ -18,8 +18,8 @@ export const EffectRenderer: React.FC<{
   style = {},
   children
 }) => {
-  // Return null for disabled or missing effects
-  if (effect === ThemeEffectType.NONE) {
+  // Return children without wrapper for disabled or missing effects
+  if (!effect || effect === ThemeEffectType.NONE) {
     return <>{children}</>;
   }
 
@@ -50,16 +50,16 @@ export const EffectRenderer: React.FC<{
             '--grain-opacity': `${0.1 * intensity}`,
           } as React.CSSProperties}
         >
-          <style>
-            {`
+          <style dangerouslySetInnerHTML={{
+            __html: `
             div::before {
               background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
               opacity: var(--grain-opacity);
               content: '';
               pointer-events: none;
             }
-          `}
-          </style>
+          `
+          }} />
           {children}
         </div>
       );
@@ -89,15 +89,15 @@ export const EffectRenderer: React.FC<{
           }}
           data-effect="gradient"
         >
-          <style>
-            {`
+          <style dangerouslySetInnerHTML={{
+            __html: `
             @keyframes gradient {
               0% { background-position: 0% 50%; }
               50% { background-position: 100% 50%; }
               100% { background-position: 0% 50%; }
             }
-          `}
-          </style>
+          `
+          }} />
           {children}
         </div>
       );
@@ -118,21 +118,6 @@ export const EffectRenderer: React.FC<{
         </div>
       );
       
-    case ThemeEffectType.NOISE:
-      return (
-        <div 
-          className={`noise-container relative ${className}`}
-          style={{
-            ...style,
-            '--noise-opacity': `${0.1 * intensity}`,
-          } as React.CSSProperties}
-          data-effect="noise"
-        >
-          <div className="noise-overlay absolute inset-0 z-[-1] pointer-events-none mix-blend-overlay" />
-          {children}
-        </div>
-      );
-      
     case ThemeEffectType.PULSE:
       return (
         <div 
@@ -143,15 +128,15 @@ export const EffectRenderer: React.FC<{
           }}
           data-effect="pulse"
         >
-          <style>
-            {`
+          <style dangerouslySetInnerHTML={{
+            __html: `
             @keyframes pulse {
               0% { opacity: 0.7; }
               50% { opacity: 1; }
               100% { opacity: 0.7; }
             }
-          `}
-          </style>
+          `
+          }} />
           {children}
         </div>
       );

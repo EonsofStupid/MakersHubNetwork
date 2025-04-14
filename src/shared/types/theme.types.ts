@@ -1,6 +1,4 @@
 
-import { ThemeEffect } from './theme/effects';
-
 /**
  * Theme interface
  */
@@ -19,6 +17,8 @@ export interface Theme {
   tokens?: ThemeToken[];
   components?: ThemeComponent[];
   variables?: Record<string, string>;
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -33,6 +33,7 @@ export interface ThemeToken {
   description?: string;
   keyframes?: string;
   value?: string;
+  name?: string;
 }
 
 /**
@@ -98,7 +99,7 @@ export interface TypographyTokens {
     serif: string;
     mono: string;
     [key: string]: string;
-  };
+  } | string;
   fontSize: {
     xs: string;
     sm: string;
@@ -173,14 +174,15 @@ export interface ComponentTokens {
   input: Record<string, string>;
   badge: Record<string, string>;
   alert: Record<string, string>;
-  [key: string]: Record<string, string>;
+  animations?: Record<string, string>;
+  [key: string]: Record<string, string> | undefined;
 }
 
 /**
  * Theme effect settings interface
  */
 export interface ThemeEffectSettings {
-  activeEffects: ThemeEffect[];
+  activeEffects: import('./shared.types').ThemeEffect[];
   intensity: Record<string, number>;
   options: Record<string, Record<string, any>>;
 }
@@ -189,12 +191,25 @@ export interface ThemeEffectSettings {
  * Theme state for global theme store
  */
 export interface ThemeState {
-  themes: Theme[];
-  activeThemeId: string;
-  componentTokens: ComponentTokens;
-  isLoading: boolean;
-  error: string | null;
+  isDark: boolean;
+  primaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  borderColor: string;
+  fontFamily: string;
+  cornerRadius: number;
+  animations: boolean;
+  themes?: Theme[];
+  activeThemeId?: string;
+  componentTokens?: ComponentTokens;
   designTokens?: DesignTokens;
+  isLoading?: boolean;
+  error?: string | null;
+  componentStyles?: Record<string, Record<string, string>>;
+  variables?: Record<string, string>;
+  theme?: Theme;
+  isLoaded?: boolean;
 }
 
 /**
@@ -204,33 +219,6 @@ export interface TokenObject {
   key: string;
   value: string;
   description?: string;
-}
-
-/**
- * Theme log details
- */
-export interface ThemeLogDetails {
-  themeId: string;
-  userId?: string;
-  action: string;
-  component?: string;
-  previousValue?: any;
-  newValue?: any;
-  timestamp: Date;
-}
-
-/**
- * Theme effect type
- */
-export enum ThemeEffectType {
-  NONE = 'none',
-  GLOW = 'glow',
-  GRADIENT = 'gradient',
-  PARTICLE = 'particle',
-  BLUR = 'blur',
-  NEON = 'neon',
-  SHADOW = 'shadow',
-  PULSE = 'pulse'
 }
 
 /**

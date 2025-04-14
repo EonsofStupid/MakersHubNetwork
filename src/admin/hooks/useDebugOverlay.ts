@@ -1,42 +1,24 @@
 
-import { useState, useEffect } from 'react';
-import { useAdminAccess } from './useAdminAccess';
+import { useState, useCallback } from 'react';
+import { RBACBridge } from '@/rbac/bridge';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 
-/**
- * Hook for controlling the debug overlay
- */
 export function useDebugOverlay() {
   const [isVisible, setIsVisible] = useState(false);
-  const { hasSuperAdminAccess } = useAdminAccess();
+  const hasSuperAdminAccess = RBACBridge.isSuperAdmin();
   const logger = useLogger('DebugOverlay', LogCategory.ADMIN);
 
-  useEffect(() => {
-    if (hasSuperAdminAccess()) {
-      document.body.classList.add('debug-overlay-enabled');
-      logger.info('Debug overlay enabled');
-    } else {
-      document.body.classList.remove('debug-overlay-enabled');
-      setIsVisible(false);
-      logger.info('Debug overlay disabled');
-    }
-
-    return () => {
-      document.body.classList.remove('debug-overlay-enabled');
-    };
-  }, [hasSuperAdminAccess, logger]);
-
-  const toggleOverlay = () => {
-    if (hasSuperAdminAccess()) {
+  const toggleOverlay = useCallback(() => {
+    if (hasSuperAdminAccess) {
       setIsVisible(!isVisible);
       logger.info(`Debug overlay ${!isVisible ? 'shown' : 'hidden'}`);
     }
-  };
+  }, [hasSuperAdminAccess, isVisible, logger]);
 
   return {
     isVisible,
     toggleOverlay,
-    hasAccess: hasSuperAdminAccess()
+    hasAccess: hasSuperAdminAccess
   };
 }

@@ -1,5 +1,5 @@
 
-// Permission constants in UPPER_SNAKE case
+// Auth-specific permissions
 export const AUTH_PERMISSIONS = {
   ADMIN_ACCESS: 'admin:access',
   VIEW_CONTENT: 'content:view',
@@ -8,12 +8,15 @@ export const AUTH_PERMISSIONS = {
   DELETE_CONTENT: 'content:delete',
   VIEW_USERS: 'users:view',
   EDIT_USERS: 'users:edit',
+  DELETE_USERS: 'users:delete',
   SYSTEM_VIEW: 'system:view',
-  SUPER_ADMIN: 'super:admin',
-  SETTINGS_VIEW: 'settings:view'
+  SYSTEM_EDIT: 'system:edit',
+  SETTINGS_VIEW: 'settings:view',
+  SETTINGS_EDIT: 'settings:edit',
+  SUPER_ADMIN: 'super:admin'
 } as const;
 
-// Permission value type
+// Auth permission value type
 export type AuthPermissionValue = typeof AUTH_PERMISSIONS[keyof typeof AUTH_PERMISSIONS];
 
 // Re-export for backward compatibility

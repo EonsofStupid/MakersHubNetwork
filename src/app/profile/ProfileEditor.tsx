@@ -1,240 +1,153 @@
 
-import { useState } from "react";
-import { useAuthStore } from "@/auth/store/auth.store";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
-import { Textarea } from "@/shared/ui/textarea";
-import { Switch } from "@/shared/ui/switch";
-import { useToast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
-import { cn } from "@/shared/utils/cn";
-import { User, Upload, X, Save } from "lucide-react";
-import { ThemeDataStream } from "@/app/theme/ThemeDataStream";
+import React, { useState } from 'react';
+import { UserProfile } from '@/shared/types/shared.types';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Textarea } from '@/shared/ui/textarea';
+import { Avatar, AvatarImage, AvatarFallback } from '@/shared/ui/avatar';
+import { Switch } from '@/shared/ui/switch';
+import { toast } from '@/shared/ui/use-toast';
 
 interface ProfileEditorProps {
-  onClose: () => void;
+  profile: UserProfile;
+  onSave: (updatedProfile: Partial<UserProfile>) => Promise<void>;
+  onCancel: () => void;
 }
 
-export const ProfileEditor = ({ onClose }: ProfileEditorProps) => {
-  const { toast } = useToast();
-  const user = useAuthStore((state) => state.user);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    display_name: user?.user_metadata?.display_name || "",
-    bio: user?.user_metadata?.bio || "",
-    theme_preference: user?.user_metadata?.theme_preference || "cyberpunk",
-    motion_enabled: user?.user_metadata?.motion_enabled ?? true,
-  });
+export const ProfileEditor: React.FC<ProfileEditorProps> = ({
+  profile,
+  onSave,
+  onCancel
+}) => {
+  const [name, setName] = useState(profile.name || '');
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '');
+  const [bio, setBio] = useState(profile.bio || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [publicProfile, setPublicProfile] = useState(
+    profile.user_metadata?.public_profile === true
+  );
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      setIsLoading(true);
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${user?.id}/${crypto.randomUUID()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      await supabase.auth.updateUser({
-        data: { avatar_url: publicUrl }
-      });
-
-      toast({
-        title: "Success",
-        description: "Avatar updated successfully",
-      });
-    } catch (error) {
-      console.error("Error uploading avatar:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update avatar",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  // Extract the first letter of the name or email for the avatar fallback
+  const getInitials = () => {
+    if (name) return name.charAt(0).toUpperCase();
+    return profile.email.charAt(0).toUpperCase();
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
     try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.updateUser({
-        data: formData
-      });
-
-      if (error) throw error;
-
+      // Prepare updated profile data
+      const updatedProfile: Partial<UserProfile> = {
+        name,
+        avatar_url: avatarUrl,
+        bio,
+        user_metadata: {
+          ...profile.user_metadata,
+          public_profile: publicProfile
+        }
+      };
+      
+      await onSave(updatedProfile);
       toast({
-        title: "Success",
-        description: "Profile updated successfully",
+        title: 'Profile updated',
+        description: 'Your profile has been successfully updated.',
       });
-      onClose();
     } catch (error) {
-      console.error("Error updating profile:", error);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update profile",
+        title: 'Error',
+        description: 'Failed to update profile. Please try again.',
+        variant: 'destructive',
       });
+      console.error('Failed to update profile:', error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className={cn(
-        "w-[600px] max-w-[90vw] rounded-lg overflow-hidden",
-        "bg-background/20 backdrop-blur-xl",
-        "border border-primary/30",
-        "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]",
-        "relative z-50"
-      )}
-    >
-      <ThemeDataStream className="absolute inset-0 pointer-events-none opacity-20" />
-      
-      <div className="relative z-10 p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-primary animate-morph-header">
-            Edit Profile
-          </h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="mad-scientist-hover"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-6">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative group">
-              <div className="w-24 h-24 rounded-full border-2 border-primary/50 overflow-hidden">
-                {user?.user_metadata?.avatar_url ? (
-                  <img
-                    src={user.user_metadata.avatar_url}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                    <User className="w-12 h-12 text-primary" />
-                  </div>
-                )}
-              </div>
-              <label
-                htmlFor="avatar-upload"
-                className={cn(
-                  "absolute bottom-0 right-0 p-2",
-                  "bg-background/80 backdrop-blur",
-                  "border border-primary/30 rounded-full",
-                  "cursor-pointer",
-                  "hover:bg-primary/20 transition-colors",
-                  "group-hover:scale-110 transition-transform"
-                )}
-              >
-                <Upload className="w-4 h-4" />
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarUpload}
-                  disabled={isLoading}
-                />
-              </label>
-            </div>
+    <Card className="w-full max-w-2xl mx-auto">
+      <form onSubmit={handleSubmit}>
+        <CardHeader>
+          <CardTitle>Edit Profile</CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          <div className="flex justify-center mb-6">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={avatarUrl} alt={name} />
+              <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
+            </Avatar>
           </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="display_name">Display Name</Label>
+          
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Display Name</Label>
               <Input
-                id="display_name"
-                value={formData.display_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, display_name: e.target.value }))}
-                className="bg-background/50"
-                disabled={isLoading}
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your display name"
               />
             </div>
-
-            <div className="space-y-2">
+            
+            <div className="grid gap-2">
+              <Label htmlFor="avatar">Avatar URL</Label>
+              <Input
+                id="avatar"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                placeholder="https://example.com/avatar.jpg"
+              />
+              <p className="text-sm text-muted-foreground">
+                Enter a URL for your profile picture
+              </p>
+            </div>
+            
+            <div className="grid gap-2">
               <Label htmlFor="bio">Bio</Label>
               <Textarea
                 id="bio"
-                value={formData.bio}
-                onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                className="bg-background/50"
-                disabled={isLoading}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell us about yourself"
+                rows={4}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="theme_preference">Theme Preference</Label>
-              <Input
-                id="theme_preference"
-                value={formData.theme_preference}
-                onChange={(e) => setFormData(prev => ({ ...prev, theme_preference: e.target.value }))}
-                className="bg-background/50"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="motion_enabled">Enable Motion</Label>
+            
+            <div className="flex items-center space-x-2 pt-2">
               <Switch
-                id="motion_enabled"
-                checked={formData.motion_enabled}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, motion_enabled: checked }))}
-                disabled={isLoading}
+                id="public-profile"
+                checked={publicProfile}
+                onCheckedChange={setPublicProfile}
               />
+              <Label htmlFor="public-profile">Make my profile public</Label>
             </div>
           </div>
-
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              disabled={isLoading}
-              className="mad-scientist-hover"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className={cn(
-                "relative overflow-hidden",
-                "before:absolute before:inset-0",
-                "before:bg-primary/20 before:translate-y-full",
-                "hover:before:translate-y-0",
-                "before:transition-transform before:duration-300",
-                "mad-scientist-hover"
-              )}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              {isLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </motion.div>
+        </CardContent>
+        
+        <CardFooter className="flex justify-between">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
   );
 };
+
+export default ProfileEditor;

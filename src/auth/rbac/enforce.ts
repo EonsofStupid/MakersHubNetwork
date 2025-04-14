@@ -1,5 +1,5 @@
 
-import { PermissionValue, PERMISSIONS } from "../permissions";
+import { PermissionValue, PERMISSIONS } from "../constants/permissions";
 import { UserRole } from "@/shared/types/shared.types";
 import { mapRolesToPermissions } from "./roles";
 
