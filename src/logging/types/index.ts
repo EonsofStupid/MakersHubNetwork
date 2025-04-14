@@ -1,7 +1,7 @@
 
 import { LogCategory, LogLevel, LogDetails } from '@/shared/types/shared.types';
 
-export { LogCategory, LogLevel, LogDetails };
+export type { LogCategory, LogLevel, LogDetails };
 
 export interface LogEntry {
   id: string;

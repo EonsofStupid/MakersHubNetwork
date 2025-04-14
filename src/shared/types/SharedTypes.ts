@@ -1,7 +1,11 @@
 
-// Re-export from shared.types.ts directly, not as a promise
-export * from './shared.types';
+// Import directly rather than using dynamic import
+import { UserRole, ROLES } from './shared.types';
+
+// Re-export for backward compatibility
+export type { UserRole };
+export { ROLES };
 
 // Type compatibility aliases for backward compatibility
-export type UserRoleType = import('./shared.types').UserRole;
-export const UserRoleEnum = import('./shared.types').ROLES;
+export type UserRoleType = UserRole;
+export const UserRoleEnum = ROLES;

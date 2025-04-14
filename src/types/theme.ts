@@ -1,10 +1,24 @@
 
 import { 
-  ThemeToken as SharedThemeToken, 
-  ComponentTokens as SharedComponentTokens 
+  Theme as SharedTheme, 
+  ThemeEffect as SharedThemeEffect,
+  ThemeComponent as SharedThemeComponent,
+  ThemeEffectType
 } from '@/shared/types/shared.types';
 
-export type ThemeToken = SharedThemeToken;
-export type ComponentTokens = SharedComponentTokens;
+export type Theme = SharedTheme;
+export type ThemeEffect = SharedThemeEffect;
+export type ThemeComponent = SharedThemeComponent;
+export { ThemeEffectType };
 
-export { ThemeEffectType } from '@/shared/types/shared.types';
+export interface ThemeToken {
+  id: string;
+  token_name: string;
+  token_value: string;
+  category: string;
+  description?: string;
+}
+
+export interface ComponentTokens {
+  [componentName: string]: Record<string, string>;
+}

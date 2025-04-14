@@ -2,7 +2,18 @@
 import { useAuthStore } from '@/stores/auth/auth.store';
 import { UserRole, RBAC } from '@/shared/types';
 import { useRbac } from '@/auth/rbac/use-rbac';
-import { PATH_POLICIES } from '@/shared/types/rbac/policies';
+
+// Define the PATH_POLICIES as a value rather than just a type
+export const PATH_POLICIES = {
+  '/admin': [UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
+  '/admin/users': [UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
+  '/admin/roles': [UserRole.SUPER_ADMIN] as UserRole[],
+  '/admin/permissions': [UserRole.SUPER_ADMIN] as UserRole[],
+  '/admin/analytics': [UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
+  '/projects/create': [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
+  '/projects/edit': [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
+  '/projects/delete': [UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
+};
 
 /**
  * Custom hook for role-based access control
@@ -92,7 +103,7 @@ export const useCanAccessPath = (path: string): boolean => {
  */
 export const hasRole = (userRoles: UserRole[], allowedRoles: UserRole | UserRole[]): boolean => {
   // Super admin has all roles
-  if (userRoles.includes(RBAC.SUPER_ADMINS[0])) {
+  if (userRoles.includes(UserRole.SUPER_ADMIN)) {
     return true;
   }
   

@@ -4,7 +4,7 @@
  * Re-exports all core type definitions
  */
 // Export common types explicitly to avoid ambiguity
-export { 
+export type { 
   BaseEntity 
 } from './common.types';
 

@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
-import { LogCategory, LogLevel, LogDetails } from '@/logging/types';
+import { LogCategory, LogLevel } from '@/shared/types/shared.types';
 import { renderUnknownAsNode } from '@/shared/utils/render';
 
 interface LogNotificationProps {
@@ -66,7 +67,7 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
       {getIcon()}
       <AlertTitle>{getTitle()} - {category}</AlertTitle>
       <AlertDescription>
-        {renderUnknownAsNode(message)}
+        {typeof message === 'string' ? message : message}
       </AlertDescription>
     </Alert>
   );

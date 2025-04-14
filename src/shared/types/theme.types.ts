@@ -1,5 +1,17 @@
 
 // Re-export all relevant theme types
-export * from './features/theme.types';
 export * from './theme/effects.types';
-export * from './theme/effects';
+
+// Re-export specific types from features/theme.types to avoid duplicates
+export type {
+  Theme,
+  ThemeState,
+  ThemeStoreActions,
+  ThemeVariables,
+  ThemeComponent,
+  ThemeStatus,
+  ThemeContext,
+  DesignTokens,
+  ComponentTokens,
+  ThemeToken,
+} from './features/theme.types';
