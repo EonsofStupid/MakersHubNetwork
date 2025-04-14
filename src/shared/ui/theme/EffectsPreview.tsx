@@ -1,6 +1,6 @@
-
 import React from 'react';
-import { ThemeEffect } from '@/shared/types/theme.types';
+import { ThemeEffectType } from '@/shared/types/shared.types';
+import { ThemeEffect } from '@/shared/types/theme/effects.types';
 
 interface EffectsPreviewProps {
   effect?: ThemeEffect;

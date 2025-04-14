@@ -1,5 +1,4 @@
 
-import { useAuthStore } from '@/stores/auth/auth.store';
 import { UserRole, RBAC } from '@/shared/types';
 import { useRbac } from '@/auth/rbac/use-rbac';
 
@@ -72,7 +71,9 @@ export const useIsBuilder = (): boolean => {
  * @returns boolean indicating if the current user is authenticated
  */
 export const useIsAuthenticated = (): boolean => {
-  return useAuthStore(state => state.isAuthenticated);
+  // Fix reference to auth store
+  const { isAuthReady } = useRbac();
+  return isAuthReady();
 };
 
 /**

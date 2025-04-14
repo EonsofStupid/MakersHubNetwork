@@ -2,7 +2,7 @@
 // Re-export all relevant theme types
 export * from './theme/effects.types';
 
-// Re-export specific types from features/theme.types to avoid duplicates
+// Re-export specific types from features/theme.types
 export type {
   Theme,
   ThemeState,

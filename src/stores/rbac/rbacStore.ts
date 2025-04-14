@@ -1,8 +1,10 @@
+
 import { create } from 'zustand';
 import { UserRole } from '@/rbac/constants/roles';
 import { Permission } from '@/shared/types/permissions';
 import { AuthPermissionValue } from '@/auth/constants/permissions';
 import { mapRolesToPermissions } from '@/auth/rbac/roles';
+import { useAuthStore as useAuthStateStore } from '@/auth/store/auth.store';
 
 // RBAC State
 export interface RBACState {
@@ -21,6 +23,7 @@ export interface RBACState {
   isSuperAdmin: () => boolean;
   isModerator: () => boolean;
   isBuilder: () => boolean;
+  initialize: () => void;
 }
 
 // Initial state
@@ -34,6 +37,18 @@ const initialState = {
 // RBAC Store
 export const useRbacStore = create<RBACState>((set, get) => ({
   ...initialState,
+
+  initialize: () => {
+    set({ isLoading: true });
+    // Get roles from auth store if available
+    const authState = useAuthStateStore.getState();
+    if (authState.isAuthenticated && authState.roles) {
+      const permissions = mapRolesToPermissions(authState.roles);
+      set({ roles: authState.roles, permissions, isLoading: false });
+    } else {
+      set({ isLoading: false });
+    }
+  },
 
   setRoles: (roles: UserRole[]) => {
     const permissions = mapRolesToPermissions(roles);
