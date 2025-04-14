@@ -3,7 +3,7 @@ import React, { ReactNode } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 import { AccessDenied } from './AccessDenied';
-import { LogCategory, UserRole, AuthStatus } from '@/shared/types/shared.types';
+import { LogCategory, UserRole, AUTH_STATUS } from '@/shared/types/shared.types';
 import { useLogger } from '@/logging/hooks/use-logger';
 
 interface AdminAuthGuardProps {
@@ -33,7 +33,7 @@ export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({
   }, [isAuthenticated, requiredRole, logger]);
 
   // Show loading state while initializing
-  if (status === AuthStatus.LOADING) {
+  if (status === AUTH_STATUS.LOADING) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 

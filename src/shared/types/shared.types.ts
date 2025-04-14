@@ -79,8 +79,15 @@ export interface UserProfile {
   updated_at: string;
   last_sign_in_at?: string;
   roles?: UserRole[];
+  bio?: string;
   user_metadata?: Record<string, unknown>;
+  app_metadata?: Record<string, unknown>;
 }
+
+/**
+ * User type (for compatibility)
+ */
+export interface User extends UserProfile {}
 
 /**
  * Log categories
@@ -93,7 +100,9 @@ export enum LogCategory {
   SYSTEM = 'system',
   CHAT = 'chat',
   THEME = 'theme',
-  DEBUG = 'debug'
+  DEBUG = 'debug',
+  ADMIN = 'admin',
+  APP = 'app'
 }
 
 /**
@@ -112,6 +121,33 @@ export enum LogLevel {
 }
 
 /**
+ * Log level values for comparing severity
+ */
+export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+  [LogLevel.TRACE]: 0,
+  [LogLevel.DEBUG]: 1,
+  [LogLevel.INFO]: 2,
+  [LogLevel.SUCCESS]: 3,
+  [LogLevel.WARN]: 4,
+  [LogLevel.ERROR]: 5,
+  [LogLevel.FATAL]: 6,
+  [LogLevel.CRITICAL]: 7,
+  [LogLevel.SILENT]: 8,
+};
+
+/**
+ * Auth event types
+ */
+export enum AuthEventType {
+  SIGNED_IN = 'SIGNED_IN',
+  SIGNED_OUT = 'SIGNED_OUT',
+  TOKEN_REFRESHED = 'TOKEN_REFRESHED',
+  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
+  USER_UPDATED = 'USER_UPDATED',
+  USER_DELETED = 'USER_DELETED',
+}
+
+/**
  * Log entry interface
  */
 export interface LogEntry {
@@ -123,6 +159,26 @@ export interface LogEntry {
   source?: string;
   details?: any;
   tags?: string[];
+}
+
+/**
+ * Log details interface
+ */
+export interface LogDetails {
+  source?: string;
+  details?: any;
+  tags?: string[];
+  themeName?: string;
+  error?: string | Error;
+  userId?: string;
+  email?: string;
+  roles?: UserRole[];
+  message?: string;
+  tokenCount?: number;
+  variableCount?: number;
+  animationCount?: number;
+  componentCount?: number;
+  count?: number;
 }
 
 /**
@@ -146,15 +202,6 @@ export interface LogEvent {
 }
 
 /**
- * Log details interface
- */
-export interface LogDetails {
-  source?: string;
-  details?: any;
-  tags?: string[];
-}
-
-/**
  * Theme effect types enum
  * Includes both old and new naming conventions for backward compatibility
  */
@@ -174,52 +221,67 @@ export enum ThemeEffectType {
   GRAIN = 'grain'
 }
 
-/**
- * Theme state interface
- */
-export interface ThemeState {
-  isDark: boolean;
-  primaryColor: string;
-  backgroundColor: string;
-  textColor: string;
-  accentColor: string;
-  borderColor: string;
-  fontFamily: string;
-  cornerRadius: number;
-  animations: boolean;
+// Import these from theme.types.ts to avoid duplication
+import { 
+  Theme, 
+  ThemeState, 
+  ComponentTokens, 
+  DesignTokens,
+  ThemeToken,
+  ThemeComponent
+} from './theme.types';
+
+export { 
+  Theme, 
+  ThemeState, 
+  ComponentTokens, 
+  DesignTokens,
+  ThemeToken,
+  ThemeComponent
+};
+
+// Build types (stub declarations to fix imports)
+export enum BuildStatus {
+  PENDING = 'pending',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  CANCELLED = 'cancelled'
 }
 
-/**
- * Theme effect interface
- */
+export interface BuildPart {
+  id: string;
+  name: string;
+}
+
+export interface BuildMod {
+  id: string;
+  name: string;
+}
+
+export interface UserInfo {
+  id: string;
+  name: string;
+}
+
+export interface BaseEntity {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Theme effect interface
 export interface ThemeEffect {
   type: ThemeEffectType;
   enabled: boolean;
   [key: string]: any;
 }
 
-/**
- * Theme effect provider props
- */
+// Theme effect provider props
 export interface EffectRendererProps {
   effect: ThemeEffectType;
   intensity?: number;
   className?: string;
   style?: React.CSSProperties;
   children: React.ReactNode;
-}
-
-/**
- * Legacy effect enum for backward compatibility
- */
-export enum ThemeEffect {
-  NONE = 'none',
-  BLUR = 'blur',
-  GRAIN = 'grain',
-  GLITCH = 'glitch',
-  GRADIENT = 'gradient',
-  CYBER = 'cyber',
-  NOISE = 'noise',
-  PULSE = 'pulse',
-  PARTICLE = 'particle',
 }

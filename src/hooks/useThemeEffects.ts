@@ -1,8 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ThemeEffectType } from '@/shared/types/shared.types';
-import { ThemeEffect } from '@/shared/types/theme/effects.types';
+import { ThemeEffectType, ThemeEffect } from '@/shared/types/shared.types';
 
 /**
  * Hook for managing theme effects

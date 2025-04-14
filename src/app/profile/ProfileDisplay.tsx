@@ -1,174 +1,95 @@
 
-import { useState } from "react";
-import { useAuthStore } from "@/auth/store/auth.store";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/shared/utils/cn";
-import { Button } from "@/shared/ui/button";
-import { ProfileEditor } from "./ProfileEditor";
-import { ThemeDataStream } from "@/app/theme/ThemeDataStream";
-import { User, Edit2, Link, Github, Twitter } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
+import { UserProfile } from '@/shared/types/shared.types';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/shared/ui/avatar';
+import { Edit, Mail, User, Calendar } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
-export const ProfileDisplay = () => {
-  const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
-  const user = useAuthStore((state) => state.user);
-  const profile = user?.user_metadata;
+interface ProfileDisplayProps {
+  profile: UserProfile;
+  isEditable?: boolean;
+  onEdit?: () => void;
+}
 
-  const handleSocialConnect = (platform: string) => {
-    toast({
-      title: "Coming Soon",
-      description: `${platform} integration will be available soon!`,
-      variant: "default",
-    });
+export const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
+  profile,
+  isEditable = false,
+  onEdit
+}) => {
+  // Extract the first letter of the name or email for the avatar fallback
+  const getInitials = () => {
+    if (profile.name) return profile.name.charAt(0).toUpperCase();
+    return profile.email.charAt(0).toUpperCase();
+  };
+
+  // Format the last active date
+  const getLastActive = () => {
+    if (profile.last_sign_in_at) {
+      return `Last active ${formatDistanceToNow(new Date(profile.last_sign_in_at))} ago`;
+    }
+    return 'Not recently active';
+  };
+
+  // Format the joined date
+  const getJoinedDate = () => {
+    if (profile.created_at) {
+      return `Joined ${formatDistanceToNow(new Date(profile.created_at))} ago`;
+    }
+    return 'Recently joined';
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4">
-      <AnimatePresence mode="wait">
-        {!isEditing ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={cn(
-              "w-[672px] max-w-[95vw]", // Increased by 12% from 600px
-              "rounded-lg overflow-hidden",
-              "bg-background/20 backdrop-blur-xl",
-              "border border-primary/30",
-              "shadow-[0_8px_32px_0_rgba(0,240,255,0.2)]",
-              "before:absolute before:inset-0",
-              "before:bg-gradient-to-b before:from-primary/5 before:to-transparent",
-              "before:pointer-events-none",
-              "relative z-50",
-              "transform-gpu scale-[1.12]" // 12% scale increase
-            )}
-            style={{
-              maxHeight: "90vh",
-              overflowY: "auto",
-              scrollbarWidth: "thin",
-              scrollbarColor: "rgba(0, 240, 255, 0.3) transparent"
-            }}
-          >
-            <ThemeDataStream className="absolute inset-0 pointer-events-none opacity-20" />
-            
-            <div className="relative z-10 p-6 space-y-6">
-              <div className="flex items-center justify-between">
-                <motion.div 
-                  className="flex items-center gap-4"
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <div className="relative group">
-                    <div className="w-20 h-20 rounded-full border-2 border-primary/50 overflow-hidden bg-primary/20">
-                      {profile?.avatar_url ? (
-                        <img
-                          src={profile.avatar_url}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <User className="w-10 h-10 text-primary" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="absolute inset-0 rounded-full bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-bold text-primary animate-morph-header">
-                      {profile?.display_name || "Anonymous Maker"}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {profile?.bio || "No bio yet"}
-                    </p>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsEditing(true)}
-                    className={cn(
-                      "relative overflow-hidden",
-                      "before:absolute before:inset-0",
-                      "before:bg-primary/20 before:translate-y-full",
-                      "hover:before:translate-y-0",
-                      "before:transition-transform before:duration-300",
-                      "mad-scientist-hover"
-                    )}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                </motion.div>
-              </div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="grid grid-cols-2 gap-4"
-              >
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Theme</h4>
-                  <p className="text-sm">{profile?.theme_preference || "Cyberpunk"}</p>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Motion</h4>
-                  <p className="text-sm">{profile?.motion_enabled ? "Enabled" : "Disabled"}</p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="flex gap-2 flex-wrap"
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSocialConnect("GitHub")}
-                  className={cn(
-                    "group relative overflow-hidden",
-                    "before:absolute before:inset-0",
-                    "before:bg-primary/20 before:translate-y-full",
-                    "hover:before:translate-y-0",
-                    "before:transition-transform before:duration-300"
-                  )}
-                >
-                  <Github className="w-4 h-4 mr-2" />
-                  Connect GitHub
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSocialConnect("Twitter")}
-                  className={cn(
-                    "group relative overflow-hidden",
-                    "before:absolute before:inset-0",
-                    "before:bg-primary/20 before:translate-y-full",
-                    "hover:before:translate-y-0",
-                    "before:transition-transform before:duration-300"
-                  )}
-                >
-                  <Twitter className="w-4 h-4 mr-2" />
-                  Connect Twitter
-                </Button>
-              </motion.div>
-            </div>
-          </motion.div>
-        ) : (
-          <ProfileEditor onClose={() => setIsEditing(false)} />
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="flex flex-col space-y-1">
+          <CardTitle>{profile.name || 'User'}</CardTitle>
+          <CardDescription>{getLastActive()}</CardDescription>
+        </div>
+        {isEditable && (
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit Profile
+          </Button>
         )}
-      </AnimatePresence>
-    </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex flex-col items-center">
+            <Avatar className="h-24 w-24 mb-2">
+              <AvatarImage src={profile.avatar_url || ''} alt={profile.name || 'User'} />
+              <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
+            </Avatar>
+          </div>
+
+          <div className="flex-1 space-y-4">
+            <div className="grid gap-3">
+              <div className="flex items-center">
+                <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span className="text-sm font-medium">{profile.name || 'No name provided'}</span>
+              </div>
+              <div className="flex items-center">
+                <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span className="text-sm">{profile.email}</span>
+              </div>
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{getJoinedDate()}</span>
+              </div>
+            </div>
+
+            {profile.bio && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium mb-2">About</h3>
+                <p className="text-sm text-muted-foreground">{profile.bio}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
+
+export default ProfileDisplay;
