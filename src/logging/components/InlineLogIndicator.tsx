@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LogLevel } from '../constants/log-level';
-import { renderUnknownAsNode } from '@/shared/utils/render';
+import { renderUnknownAsNode } from '@/shared/utils/render.tsx';
 
 // Define indicator variants
 export type LogIndicatorVariant = 'debug' | 'info' | 'warning' | 'error' | 'critical';

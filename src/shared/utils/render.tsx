@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 /**
@@ -6,11 +5,20 @@ import React from 'react';
  */
 export function errorToObject(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
+    // Extract custom properties from the error object
+    const customProperties: Record<string, unknown> = {};
+    Object.getOwnPropertyNames(error).forEach(key => {
+      if (key !== 'name' && key !== 'message' && key !== 'stack') {
+        const errorObj = error as unknown as Record<string, unknown>;
+        customProperties[key] = errorObj[key];
+      }
+    });
+    
     return {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      ...(error as any), // Capture any custom properties
+      ...customProperties,
     };
   }
   
@@ -52,7 +60,7 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
         {value.map((item, index) => (
           <React.Fragment key={index}>
             {renderUnknownAsNode(item)}
-            {index < value.length - 1 && ', '}
+            {index < value.length - 1 ? ', ' : ''}
           </React.Fragment>
         ))}
       </span>
@@ -74,7 +82,7 @@ export function renderUnknownAsNode(value: unknown): React.ReactNode {
         return val;
       }, 2);
       
-      return safeString;
+      return <pre>{safeString}</pre>;
     } catch (e) {
       return '[Complex Object]';
     }

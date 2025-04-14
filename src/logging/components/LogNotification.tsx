@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
 import { LogCategory, LogLevel } from '@/shared/types/shared.types';
-import { renderUnknownAsNode } from '@/shared/utils/render';
+import { renderUnknownAsNode } from '@/shared/utils/render.tsx';
 
 interface LogNotificationProps {
   level: LogLevel;
