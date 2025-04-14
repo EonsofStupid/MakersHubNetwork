@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ThemeEffectType, ThemeEffect } from '@/shared/types/shared.types';
+import { ThemeEffectType, ThemeEffect } from '@/shared/types/theme.types';
 
 /**
  * Hook for managing theme effects
@@ -13,9 +13,13 @@ export function useThemeEffects() {
   const addEffect = useCallback((elementId: string, effect: Partial<ThemeEffect>) => {
     const id = `${elementId}-${Date.now()}`;
     const newEffect: ThemeEffect = {
+      id,
       type: effect.type || ThemeEffectType.NONE,
       enabled: effect.enabled !== undefined ? effect.enabled : true,
-      ...effect
+      intensity: effect.intensity || 1,
+      selector: effect.selector,
+      config: effect.config,
+      color: effect.color
     };
     
     setEffects(prev => ({
