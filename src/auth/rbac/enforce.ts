@@ -1,5 +1,5 @@
 
-import { PermissionValue, PERMISSIONS } from "../constants/permissions";
+import { AuthPermissionValue, AUTH_PERMISSIONS } from "../constants/permissions";
 import { UserRole } from "@/shared/types/shared.types";
 import { mapRolesToPermissions } from "./roles";
 
@@ -11,12 +11,12 @@ import { mapRolesToPermissions } from "./roles";
  */
 export const hasPermission = (
   userRoles: UserRole[] = [],
-  permission: PermissionValue
+  permission: AuthPermissionValue
 ): boolean => {
   const permissions = mapRolesToPermissions(userRoles);
   
   // Super admin permission grants access to everything
-  if (permissions.includes(PERMISSIONS.SUPER_ADMIN)) {
+  if (permissions.includes(AUTH_PERMISSIONS.SUPER_ADMIN)) {
     return true;
   }
   
@@ -30,7 +30,7 @@ export const hasPermission = (
  * @returns A function that checks if the user has a specific permission
  */
 export const createPermissionChecker = (userRoles: UserRole[] = []) => {
-  return (permission: PermissionValue): boolean => {
+  return (permission: AuthPermissionValue): boolean => {
     return hasPermission(userRoles, permission);
   };
 };
