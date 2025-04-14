@@ -1,148 +1,109 @@
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { chatBridge } from '../lib/ChatBridge';
-import { useLogger } from '@/hooks/use-logger';
-import { LogCategory } from '@/logging';
-import { CircuitBreaker } from '@/utils/CircuitBreaker';
-import { useAuthState } from '@/auth/hooks/useAuthState';
+import React, { createContext, useContext, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { ChatBridge } from '../lib/ChatBridge';
+import { ChatMessage, ChatSession, LogCategory, LogLevel } from '@/shared/types';
+import { logger } from '@/logging/logger.service';
 
-interface ChatContextValue {
-  isOpen: boolean;
-  toggleChat: () => void;
-  openChat: () => void;
-  closeChat: () => void;
-  messages: any[];
-  sendMessage: (content: string) => Promise<void>;
-  activeSessionId: string | null;
-  isLoading: boolean;
+// Define the chat context type
+interface ChatContextType {
+  sessions: ChatSession[];
+  currentSessionId: string | null;
+  setCurrentSessionId: React.Dispatch<React.SetStateAction<string | null>>;
+  createSession: (title?: string) => string;
+  saveMessage: (message: Omit<ChatMessage, 'id'>) => ChatMessage | null;
+  getCurrentSession: () => ChatSession | null;
+  isChatEnabled?: boolean;
 }
 
-const ChatContext = createContext<ChatContextValue | null>(null);
+// Create context with default values
+const ChatContext = createContext<ChatContextType>({
+  sessions: [],
+  currentSessionId: null,
+  setCurrentSessionId: () => {},
+  createSession: () => '',
+  saveMessage: () => null,
+  getCurrentSession: () => null,
+  isChatEnabled: true
+});
 
-export function ChatProvider({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const logger = useLogger('ChatProvider', LogCategory.CHAT);
-  const { user } = useAuthState();
-  const initRef = useRef(false);
-  const chatBreaker = useRef(new CircuitBreaker('ChatProvider', 5, 1000));
-  
-  useEffect(() => {
-    // Initialize circuit breaker
-    chatBreaker.current = new CircuitBreaker('ChatProvider', 5, 1000);
-    
-    return () => {
-      logger.info('Chat provider unmounting');
+// Provider component
+export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isChatEnabled] = useState<boolean>(true);
+
+  // Create a new chat session
+  const createSession = (title = 'New Chat') => {
+    const sessionId = uuidv4();
+    const newSession: ChatSession = {
+      id: sessionId,
+      title,
+      messages: [],
+      mode: 'chat',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
-  }, [logger]);
-  
-  useEffect(() => {
-    if (initRef.current) return;
-    initRef.current = true;
     
-    logger.info('Initializing chat bridge listener');
+    setSessions(prev => [...prev, newSession]);
+    setCurrentSessionId(sessionId);
     
-    const unsubscribe = chatBridge.subscribe('system', (message) => {
-      logger.info('Received system message', {
-        details: { type: message.type }
-      });
-      
-      switch (message.type) {
-        case 'session-created':
-          setActiveSessionId(message.sessionId);
-          break;
-        case 'message-received':
-          setMessages(prev => [...prev, message.message]);
-          break;
-      }
+    logger.log(LogLevel.INFO, LogCategory.CHAT, 'Created new chat session', {
+      sessionId
     });
     
-    return () => {
-      unsubscribe();
+    return sessionId;
+  };
+  
+  // Save a message to the current session
+  const saveMessage = (message: Omit<ChatMessage, 'id'>) => {
+    if (!currentSessionId) return null;
+    
+    const newMessage: ChatMessage = {
+      ...message,
+      id: uuidv4(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
-  }, []);
-  
-  const toggleChat = () => {
-    if (chatBreaker.current.isOpen) {
-      logger.warn('Circuit breaker tripped, ignoring toggle action');
-      return;
-    }
     
-    setIsOpen(prev => !prev);
-  };
-  
-  const openChat = () => setIsOpen(true);
-  const closeChat = () => setIsOpen(false);
-  
-  const sendMessage = async (content: string) => {
-    if (!content.trim()) return;
+    setSessions(prev => prev.map(session => 
+      session.id === currentSessionId
+        ? { 
+            ...session, 
+            messages: [...session.messages, newMessage],
+            updatedAt: Date.now(),
+            updated_at: new Date().toISOString()
+          }
+        : session
+    ));
     
-    try {
-      setIsLoading(true);
-      
-      const message = {
-        id: `msg-${Date.now()}`,
-        content,
-        sender: 'user',
-        timestamp: new Date(),
-        sessionId: activeSessionId,
-        userId: user?.id
-      };
-      
-      setMessages(prev => [...prev, message]);
-      
-      setTimeout(() => {
-        chatBridge.publish('message', {
-          type: 'user-message',
-          message
-        });
-      }, 0);
-      
-      setTimeout(() => {
-        const responseMessage = {
-          id: `msg-${Date.now()}`,
-          content: `Echo: ${content}`,
-          sender: 'assistant',
-          timestamp: new Date(),
-          sessionId: activeSessionId
-        };
-        
-        setMessages(prev => [...prev, responseMessage]);
-        setIsLoading(false);
-      }, 1000);
-      
-    } catch (error) {
-      logger.error('Error sending message', {
-        details: { error: error instanceof Error ? error.message : String(error) }
-      });
-      setIsLoading(false);
-    }
+    return newMessage;
   };
   
-  const value = {
-    isOpen,
-    toggleChat,
-    openChat,
-    closeChat,
-    messages,
-    sendMessage,
-    activeSessionId,
-    isLoading
+  // Get the current session
+  const getCurrentSession = () => {
+    if (!currentSessionId) return null;
+    return sessions.find(session => session.id === currentSessionId) || null;
   };
-  
+
   return (
-    <ChatContext.Provider value={value}>
+    <ChatContext.Provider 
+      value={{ 
+        sessions, 
+        currentSessionId, 
+        setCurrentSessionId,
+        createSession,
+        saveMessage,
+        getCurrentSession,
+        isChatEnabled
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );
-}
+};
 
-export function useChat() {
-  const context = useContext(ChatContext);
-  if (context === null) {
-    throw new Error('useChat must be used within a ChatProvider');
-  }
-  return context;
-}
+// Custom hook for using the chat context
+export const useChatContext = () => useContext(ChatContext);

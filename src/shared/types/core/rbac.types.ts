@@ -15,10 +15,21 @@ export type Permission =
   | 'manage_users'
   | 'manage_roles'
   | 'manage_permissions'
-  | 'view_analytics';
+  | 'view_analytics'
+  | 'admin:view'
+  | 'admin:edit'
+  | 'admin:delete'
+  | 'user:view'
+  | 'user:edit'
+  | 'user:delete'
+  | 'content:view'
+  | 'content:edit'
+  | 'content:delete'
+  | 'settings:view'
+  | 'settings:edit';
 
 // Path-based access policies
-export const RBAC_POLICIES: Record<string, UserRole[]> = {
+export const RBAC_POLICIES = {
   '/admin': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
   '/admin/users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
   '/admin/roles': [ROLES.SUPER_ADMIN],
@@ -27,7 +38,7 @@ export const RBAC_POLICIES: Record<string, UserRole[]> = {
   '/projects/create': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
   '/projects/edit': [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
   '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-};
+} as const;
 
 export type PATH_POLICIES = typeof RBAC_POLICIES;
 

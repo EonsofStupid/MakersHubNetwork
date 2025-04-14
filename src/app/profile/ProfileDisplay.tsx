@@ -1,93 +1,107 @@
 
-import React, { useState } from 'react';
-import { UserProfile } from '@/shared/types/shared.types';
-import { Button } from '@/shared/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/shared/ui/avatar';
-import { Edit, Mail, User, Calendar } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import React from 'react';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { LogCategory, LogLevel } from '@/shared/types';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, Button, Avatar, AvatarImage, AvatarFallback } from '@/shared/ui';
+import { logger } from '@/logging/logger.service';
 
 interface ProfileDisplayProps {
-  profile: UserProfile;
-  isEditable?: boolean;
   onEdit?: () => void;
 }
 
-export const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
-  profile,
-  isEditable = false,
-  onEdit
-}) => {
-  // Extract the first letter of the name or email for the avatar fallback
-  const getInitials = () => {
-    if (profile.name) return profile.name.charAt(0).toUpperCase();
-    return profile.email.charAt(0).toUpperCase();
+export const ProfileDisplay: React.FC<ProfileDisplayProps> = ({ onEdit }) => {
+  const { user } = useAuthStore();
+  
+  if (!user) {
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>Profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Please log in to view your profile.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Generate initials from name or email
+  const getInitials = (): string => {
+    if (user.name) {
+      return user.name
+        .split(' ')
+        .map(part => part[0])
+        .join('')
+        .toUpperCase();
+    }
+    
+    return user.email.substring(0, 2).toUpperCase();
+  };
+  
+  // Handle edit button click
+  const handleEditClick = () => {
+    if (onEdit) {
+      logger.log(LogLevel.INFO, LogCategory.UI, 'User clicked edit profile', {
+        userId: user.id
+      });
+      onEdit();
+    }
   };
 
-  // Format the last active date
-  const getLastActive = () => {
-    if (profile.last_sign_in_at) {
-      return `Last active ${formatDistanceToNow(new Date(profile.last_sign_in_at))} ago`;
+  // Format date string for display
+  const formatDate = (dateStr?: string): string => {
+    if (!dateStr) return 'Not available';
+    
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString();
+    } catch (error) {
+      return 'Invalid date';
     }
-    return 'Not recently active';
-  };
-
-  // Format the joined date
-  const getJoinedDate = () => {
-    if (profile.created_at) {
-      return `Joined ${formatDistanceToNow(new Date(profile.created_at))} ago`;
-    }
-    return 'Recently joined';
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div className="flex flex-col space-y-1">
-          <CardTitle>{profile.name || 'User'}</CardTitle>
-          <CardDescription>{getLastActive()}</CardDescription>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader className="flex flex-row items-center gap-4">
+        <Avatar className="w-16 h-16">
+          {user.avatar_url ? (
+            <AvatarImage src={user.avatar_url} alt={user.name || 'User'} />
+          ) : (
+            <AvatarFallback>{getInitials()}</AvatarFallback>
+          )}
+        </Avatar>
+        <div className="flex flex-col">
+          <CardTitle>{user.name || 'User'}</CardTitle>
+          <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
-        {isEditable && (
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            <Edit className="h-4 w-4 mr-2" />
-            Edit Profile
-          </Button>
-        )}
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex flex-col items-center">
-            <Avatar className="h-24 w-24 mb-2">
-              <AvatarImage src={profile.avatar_url || ''} alt={profile.name || 'User'} />
-              <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
-            </Avatar>
-          </div>
-
-          <div className="flex-1 space-y-4">
-            <div className="grid gap-3">
-              <div className="flex items-center">
-                <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm font-medium">{profile.name || 'No name provided'}</span>
-              </div>
-              <div className="flex items-center">
-                <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm">{profile.email}</span>
-              </div>
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">{getJoinedDate()}</span>
-              </div>
-            </div>
-
-            {profile.bio && (
-              <div className="mt-4">
-                <h3 className="text-sm font-medium mb-2">About</h3>
-                <p className="text-sm text-muted-foreground">{profile.bio}</p>
-              </div>
-            )}
+      
+      <CardContent className="space-y-4">
+        <div className="grid gap-2">
+          <h3 className="font-medium">About</h3>
+          <p className="text-sm text-muted-foreground">
+            {user.bio || 'No bio provided.'}
+          </p>
+        </div>
+        
+        <div className="grid gap-2">
+          <h3 className="font-medium">Account Information</h3>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <span className="text-muted-foreground">Member since:</span>
+            <span>{formatDate(user.created_at)}</span>
+            
+            <span className="text-muted-foreground">Last updated:</span>
+            <span>{formatDate(user.updated_at)}</span>
+            
+            <span className="text-muted-foreground">Last sign in:</span>
+            <span>{formatDate(user.last_sign_in_at)}</span>
           </div>
         </div>
       </CardContent>
+      
+      <CardFooter className="flex justify-end">
+        <Button onClick={handleEditClick}>Edit Profile</Button>
+      </CardFooter>
     </Card>
   );
 };

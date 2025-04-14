@@ -12,7 +12,8 @@ export enum LogLevel {
   CRITICAL = 'critical',
   TRACE = 'trace',
   SUCCESS = 'success',
-  FATAL = 'fatal'
+  FATAL = 'fatal',
+  SILENT = 'silent' // Added missing SILENT level
 }
 
 export const LOG_LEVEL = {
@@ -23,7 +24,8 @@ export const LOG_LEVEL = {
   CRITICAL: LogLevel.CRITICAL,
   TRACE: LogLevel.TRACE,
   SUCCESS: LogLevel.SUCCESS,
-  FATAL: LogLevel.FATAL
+  FATAL: LogLevel.FATAL,
+  SILENT: LogLevel.SILENT
 };
 
 export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
@@ -34,7 +36,8 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.ERROR]: 4,
   [LogLevel.CRITICAL]: 5,
   [LogLevel.FATAL]: 6,
-  [LogLevel.TRACE]: -1
+  [LogLevel.TRACE]: -1,
+  [LogLevel.SILENT]: 100
 };
 
 // Log categories
@@ -95,12 +98,13 @@ export interface LogFilter {
   startTime?: number;
   endTime?: number;
   source?: string;
-  from?: Date | number; // Added based on error
-  to?: Date | number;   // Added based on error
+  from?: Date | number;
+  to?: Date | number;
 }
 
 // Log transport
 export interface LogTransport {
   log: (entry: LogEntry) => void;
   setMinLevel: (level: LogLevel) => void;
+  name?: string;
 }

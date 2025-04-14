@@ -1,40 +1,71 @@
 
 import React, { ReactNode } from 'react';
+import { useChatSession } from '../hooks/useChatSession';
 
-interface ChatWrapperProps {
-  children: ReactNode;
-  isFloating?: boolean;
-  isMobile?: boolean;
-  isExpanded?: boolean;
+export interface ChatWrapperProps {
+  children?: ReactNode;
 }
 
-/**
- * Wrapper component for chat interface
- */
-export const ChatWrapper: React.FC<ChatWrapperProps> = ({
-  children,
-  isFloating = false,
-  isMobile = false,
-  isExpanded = false
-}) => {
-  // Determine classes based on props
-  const wrapperClasses = isFloating
-    ? 'fixed bottom-4 right-4 z-50 shadow-lg rounded-lg overflow-hidden'
-    : 'h-full w-full';
-    
-  const sizeClasses = isFloating
-    ? isExpanded
-      ? isMobile
-        ? 'w-[calc(100%-2rem)] h-[80vh]'
-        : 'w-[400px] h-[600px]'
-      : 'w-[350px] h-[55px]'
-    : 'w-full h-full';
-    
+export const ChatWrapper: React.FC<ChatWrapperProps> = ({ children }) => {
+  const { getCurrentSession, sessions, currentSessionId } = useChatSession();
+  const currentSession = getCurrentSession();
+  
   return (
-    <div className={`bg-background flex flex-col ${wrapperClasses} ${sizeClasses} transition-all duration-300`}>
-      {children}
+    <div className="flex flex-col h-full">
+      {children || (
+        <div className="flex-1 overflow-y-auto p-3">
+          {currentSession ? (
+            <div className="space-y-4">
+              {currentSession.messages?.map((message, index) => (
+                <div 
+                  key={message.id || index}
+                  className={`p-2 rounded-lg max-w-[80%] ${
+                    message.sender === 'user' 
+                      ? 'bg-primary text-primary-foreground ml-auto' 
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {message.content}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-full flex items-center justify-center text-muted-foreground">
+              No active chat session
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div className="p-3 border-t">
+        <form className="flex gap-2" onSubmit={(e) => {
+          e.preventDefault();
+          const input = e.currentTarget.elements.namedItem('message') as HTMLInputElement;
+          if (input?.value) {
+            // Use saveMessage for now since we don't have sendMessage directly
+            const chatSession = useChatSession();
+            chatSession.saveMessage({
+              content: input.value,
+              sender: 'user',
+              timestamp: Date.now()
+            });
+            input.value = '';
+          }
+        }}>
+          <input 
+            type="text" 
+            name="message"
+            className="flex-1 rounded-md border px-3 py-2 text-sm"
+            placeholder="Type your message..."
+          />
+          <button 
+            type="submit"
+            className="bg-primary text-primary-foreground rounded-md px-3 py-2 text-sm"
+          >
+            Send
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
-
-export default ChatWrapper;
