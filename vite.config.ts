@@ -1,44 +1,39 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react-swc"
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import { componentTagger } from "lovable-tagger"
+import { fileURLToPath } from 'url'
 import AutoImport from "unplugin-auto-import/vite"
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { componentTagger } from "lovable-tagger"
 
 export default defineConfig(({ mode }) => ({
-  // ... keep existing code (server configuration)
-
+  server: {
+    host: "::",
+    port: 8080,
+  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),
     AutoImport({
-      // ... keep existing code (imports configuration)
-      dts: resolve(__dirname, "./src/auto-imports.d.ts"),
+      dts: './src/auto-imports.d.ts',
       eslintrc: {
         enabled: true,
         filepath: "./.eslintrc-auto-import.json",
         globalsPropValue: true,
       },
-      // ... keep existing code (remaining AutoImport config)
     }),
   ].filter(Boolean),
 
   resolve: {
     alias: {
-      "@": resolve(__dirname, "./src"),
-      "@components": resolve(__dirname, "./src/components"),
-      "@hooks": resolve(__dirname, "./src/hooks"),
-      "@stores": resolve(__dirname, "./src/stores"),
-      "@lib": resolve(__dirname, "./src/lib"),
-      "@utils": resolve(__dirname, "./src/utils"),
-      "@types": resolve(__dirname, "./src/types"),
-      "@constants": resolve(__dirname, "./src/constants"),
-      "@features": resolve(__dirname, "./src/features"),
+      "@": fileURLToPath(new URL('./src', import.meta.url)),
+      "@components": fileURLToPath(new URL('./src/components', import.meta.url)),
+      "@hooks": fileURLToPath(new URL('./src/hooks', import.meta.url)),
+      "@stores": fileURLToPath(new URL('./src/stores', import.meta.url)),
+      "@lib": fileURLToPath(new URL('./src/lib', import.meta.url)),
+      "@utils": fileURLToPath(new URL('./src/utils', import.meta.url)),
+      "@types": fileURLToPath(new URL('./src/types', import.meta.url)),
+      "@constants": fileURLToPath(new URL('./src/constants', import.meta.url)),
+      "@features": fileURLToPath(new URL('./src/features', import.meta.url)),
     }
-  },
   },
   build: {
     target: "esnext",
