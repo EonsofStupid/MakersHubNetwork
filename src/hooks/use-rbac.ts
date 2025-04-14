@@ -1,6 +1,6 @@
 
 import { useAuthStore } from '@/stores/auth/auth.store';
-import { UserRole, RBAC, PATH_POLICIES } from '@/shared/types/shared.types';
+import { UserRole, RBAC, PATH_POLICIES } from '@/shared/types';
 import { useRbac } from '@/auth/rbac/use-rbac';
 
 /**
@@ -71,7 +71,8 @@ export const useIsAuthenticated = (): boolean => {
  */
 export const useCanAccessPath = (path: string): boolean => {
   const { hasRole } = useRbac();
-  const allowedRoles = PATH_POLICIES[path] || [];
+  const allowedRoles = Object.keys(PATH_POLICIES).includes(path) ? 
+    PATH_POLICIES[path as keyof typeof PATH_POLICIES] : [];
   
   // If no policy exists for the path, allow access
   if (allowedRoles.length === 0) {

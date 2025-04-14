@@ -1,5 +1,6 @@
 
-import { useThemeStore } from "@/shared/store/theme/store";
+import { useThemeStore } from "@/shared/stores/theme/store";
+import { Theme } from "@/shared/types";
 
 export function useSiteTheme() {
   const { 

@@ -1,83 +1,92 @@
 
-import { LogEntry, LogLevel } from '@/shared/types/shared.types';
-import { LogTransport } from '../logger.service';
+import { LogEntry, LogLevel, LOG_LEVEL_VALUES } from '@/shared/types';
+import { LogTransport } from '@/logging/types';
 
 /**
- * A transport that outputs logs to the console
+ * Console transport for logging to browser console
  */
 export class ConsoleTransport implements LogTransport {
-  private minLevel: LogLevel = LogLevel.DEBUG;
-  private showTimestamp: boolean = true;
-  
-  constructor(options?: { minLevel?: LogLevel; showTimestamp?: boolean }) {
-    this.minLevel = options?.minLevel || LogLevel.DEBUG;
-    this.showTimestamp = options?.showTimestamp !== false;
+  private minLevel: LogLevel;
+
+  constructor(minLevel: LogLevel = LogLevel.INFO) {
+    this.minLevel = minLevel;
   }
-  
+
+  /**
+   * Set the minimum log level
+   */
+  setMinLevel(level: LogLevel): void {
+    this.minLevel = level;
+  }
+
+  /**
+   * Log an entry to the console
+   */
   log(entry: LogEntry): void {
-    // Skip logs below minimum level
-    if (this.shouldSkip(entry.level)) {
+    if (!this.shouldLog(entry.level)) {
       return;
     }
+
+    const { level, message, category, details, timestamp } = entry;
+    const time = new Date(timestamp).toISOString();
+    const color = this.getColorForLevel(level);
     
-    const prefix = this.formatPrefix(entry);
-    const message = this.formatMessage(entry);
-    
-    // Choose console method based on log level
-    switch (entry.level) {
+    const categoryDisplay = category ? `[${category.toUpperCase()}]` : '';
+    const formattedMessage = `${time} ${categoryDisplay} ${message}`;
+
+    switch (level) {
       case LogLevel.DEBUG:
-        console.debug(prefix, message, entry.details || '');
+        console.debug(`%c${formattedMessage}`, `color: ${color}`, details);
         break;
       case LogLevel.INFO:
       case LogLevel.SUCCESS:
-        console.info(prefix, message, entry.details || '');
+        console.info(`%c${formattedMessage}`, `color: ${color}`, details);
         break;
       case LogLevel.WARN:
-        console.warn(prefix, message, entry.details || '');
+        console.warn(`%c${formattedMessage}`, `color: ${color}`, details);
         break;
       case LogLevel.ERROR:
-      case LogLevel.FATAL:
       case LogLevel.CRITICAL:
-        console.error(prefix, message, entry.details || '');
+      case LogLevel.FATAL:
+        console.error(`%c${formattedMessage}`, `color: ${color}`, details);
+        break;
+      case LogLevel.TRACE:
+        console.trace(`%c${formattedMessage}`, `color: ${color}`, details);
         break;
       default:
-        console.log(prefix, message, entry.details || '');
+        console.log(`%c${formattedMessage}`, `color: ${color}`, details);
     }
   }
-  
-  private shouldSkip(level: LogLevel): boolean {
-    // Define log level hierarchy for comparison
-    const levels: Record<LogLevel, number> = {
-      [LogLevel.DEBUG]: 0,
-      [LogLevel.INFO]: 1,
-      [LogLevel.SUCCESS]: 2,
-      [LogLevel.WARN]: 3,
-      [LogLevel.ERROR]: 4,
-      [LogLevel.FATAL]: 5,
-      [LogLevel.CRITICAL]: 6,
-      [LogLevel.TRACE]: -1,
-      [LogLevel.SILENT]: 7
-    };
-    
-    return levels[level] < levels[this.minLevel];
+
+  /**
+   * Determine if an entry should be logged based on the minimum level
+   */
+  private shouldLog(level: LogLevel): boolean {
+    return LOG_LEVEL_VALUES[level] >= LOG_LEVEL_VALUES[this.minLevel];
   }
-  
-  private formatPrefix(entry: LogEntry): string {
-    let prefix = `[${entry.category}]`;
-    
-    if (this.showTimestamp) {
-      const timestamp = entry.timestamp.toISOString().split('T')[1].slice(0, -1);
-      prefix = `[${timestamp}] ${prefix}`;
+
+  /**
+   * Get an appropriate color for each log level
+   */
+  private getColorForLevel(level: LogLevel): string {
+    switch (level) {
+      case LogLevel.DEBUG:
+        return '#8a8a8a'; // Gray
+      case LogLevel.INFO:
+        return '#2980b9'; // Blue
+      case LogLevel.SUCCESS:
+        return '#27ae60'; // Green
+      case LogLevel.WARN:
+        return '#f39c12'; // Orange
+      case LogLevel.ERROR:
+        return '#e74c3c'; // Red
+      case LogLevel.CRITICAL:
+      case LogLevel.FATAL:
+        return '#c0392b'; // Dark Red
+      case LogLevel.TRACE:
+        return '#9b59b6'; // Purple
+      default:
+        return 'inherit';
     }
-    
-    if (entry.source) {
-      prefix = `${prefix} [${entry.source}]`;
-    }
-    
-    return prefix;
-  }
-  
-  private formatMessage(entry: LogEntry): string {
-    return entry.message;
   }
 }

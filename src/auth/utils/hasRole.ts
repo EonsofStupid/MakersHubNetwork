@@ -1,5 +1,5 @@
 
-import { UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserRole, ROLES } from '@/shared/types';
 
 /**
  * Checks if a user has the specified role(s)

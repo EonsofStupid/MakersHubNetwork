@@ -1,99 +1,128 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card';
-import { useToast } from '@/shared/ui/use-toast';
-import { AuthStatus } from '@/shared/types/shared.types';
+import { useLogger } from '@/logging/hooks/use-logger';
+import { AuthStatus, AUTH_STATUS, LogCategory } from '@/shared/types';
 
-const LoginPage: React.FC = () => {
+const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, isAuthenticated, status } = useAuthStore();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  // Redirect if already authenticated
-  React.useEffect(() => {
+  const logger = useLogger('LoginPage', LogCategory.AUTH);
+  
+  const { 
+    login, 
+    signup, 
+    isAuthenticated, 
+    status 
+  } = useAuthStore();
+  
+  useEffect(() => {
+    // Redirect to home if already authenticated
     if (isAuthenticated) {
-      navigate('/admin');
+      logger.info('User already authenticated, redirecting to home');
+      navigate('/');
     }
-  }, [isAuthenticated, navigate]);
-
+  }, [isAuthenticated, navigate, logger]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
     try {
-      await login(email, password);
-      toast({
-        title: 'Login successful',
-        description: 'You have been successfully logged in',
-      });
-    } catch (error) {
-      toast({
-        title: 'Login failed',
-        description: (error as Error)?.message || 'Invalid credentials',
-        variant: 'destructive',
-      });
+      if (isSignUp) {
+        logger.info('Attempting to sign up');
+        await signup(email, password);
+        logger.info('Sign up successful');
+      } else {
+        logger.info('Attempting to log in');
+        await login(email, password);
+        logger.info('Login successful');
+      }
+      
+      navigate('/');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      logger.error('Authentication error', { details: { error: errorMessage } });
+      setError(errorMessage);
     }
   };
-
+  
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your credentials to access the admin dashboard
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                For admin access, use: admin@example.com / admin123
-              </p>
-            </div>
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
-              </label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                For superadmin access, use: superadmin@example.com / super123
-              </p>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
+        <h2 className="mb-6 text-center text-3xl font-bold text-gray-900">
+          {isSignUp ? 'Create an Account' : 'Sign In'}
+        </h2>
+        
+        {error && (
+          <div className="mb-4 rounded-md bg-red-50 p-4 text-red-700">
+            <p>{error}</p>
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            />
+          </div>
+          
+          <div>
+            <button
               type="submit"
-              className="w-full"
-              disabled={status === AuthStatus.LOADING}
+              disabled={status === AUTH_STATUS.LOADING}
+              className="flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-300"
             >
-              {status === AuthStatus.LOADING ? 'Logging in...' : 'Login'}
-            </Button>
-          </CardFooter>
+              {status === AUTH_STATUS.LOADING ? (
+                <span>Loading...</span>
+              ) : isSignUp ? (
+                'Sign Up'
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </div>
         </form>
-      </Card>
+        
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-sm text-blue-600 hover:text-blue-500"
+          >
+            {isSignUp
+              ? 'Already have an account? Sign In'
+              : "Don't have an account? Sign Up"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

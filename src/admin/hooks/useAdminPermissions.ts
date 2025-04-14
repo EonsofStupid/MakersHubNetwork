@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { RBACBridge } from '@/rbac/bridge';
 import { useLogger } from '@/logging/hooks/use-logger';
-import { LogCategory, Permission } from '@/shared/types/shared.types';
+import { LogCategory, Permission } from '@/shared/types';
 
 /**
  * Hook for checking admin permissions

@@ -1,87 +1,120 @@
-import { LogTransport, LogEntry, LogLevel, LogFilter } from '../logger.service';
 
-export interface TransportOptions {
-  maxEntries?: number;
-  minLevel?: LogLevel;
-}
+import { LogEntry, LogLevel, LogFilter } from '@/shared/types';
+import { LogTransport } from '@/logging/types';
 
+/**
+ * Memory transport for storing logs in memory
+ */
 export class MemoryTransport implements LogTransport {
-  name = 'memory';
-  private logs: LogEntry[] = [];
-  private listeners: ((event: any) => void)[] = [];
-  
-  constructor(private options: TransportOptions = {}) {}
-  
+  private entries: LogEntry[] = [];
+  private maxEntries: number;
+  private minLevel: LogLevel;
+
+  constructor(minLevel: LogLevel = LogLevel.INFO, maxEntries = 1000) {
+    this.minLevel = minLevel;
+    this.maxEntries = maxEntries;
+  }
+
+  /**
+   * Set the minimum log level
+   */
+  setMinLevel(level: LogLevel): void {
+    this.minLevel = level;
+  }
+
+  /**
+   * Log an entry to memory
+   */
   log(entry: LogEntry): void {
-    this.logs.push(entry);
-    
-    // Limit the number of entries
-    if (this.options.maxEntries && this.logs.length > this.options.maxEntries) {
-      this.logs.shift();
+    if (!this.shouldLog(entry.level)) {
+      return;
     }
-    
-    this.notifyListeners({
-      type: 'new-log',
-      data: entry
-    });
+
+    this.entries.push(entry);
+    this.pruneEntries();
   }
-  
-  subscribe(listener: (event: any) => void): () => void {
-    this.listeners.push(listener);
-    
-    return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+
+  /**
+   * Get filtered entries from memory
+   */
+  getEntries(filter?: LogFilter): LogEntry[] {
+    if (!filter) {
+      return [...this.entries].reverse();
+    }
+
+    return [...this.entries]
+      .filter((entry) => {
+        if (filter.level && entry.level !== filter.level) {
+          return false;
+        }
+        if (filter.category && entry.category !== filter.category) {
+          return false;
+        }
+        if (filter.source && entry.source !== filter.source) {
+          return false;
+        }
+        if (filter.search) {
+          const searchTerm = filter.search.toLowerCase();
+          const messageMatches = entry.message.toLowerCase().includes(searchTerm);
+          const sourceMatches = entry.source?.toLowerCase().includes(searchTerm) || false;
+          if (!messageMatches && !sourceMatches) {
+            return false;
+          }
+        }
+        if (filter.startTime !== undefined && entry.timestamp < filter.startTime) {
+          return false;
+        }
+        if (filter.endTime !== undefined && entry.timestamp > filter.endTime) {
+          return false;
+        }
+        if (filter.from !== undefined) {
+          const fromTimestamp = filter.from instanceof Date ? filter.from.getTime() : filter.from;
+          if (entry.timestamp < fromTimestamp) {
+            return false;
+          }
+        }
+        if (filter.to !== undefined) {
+          const toTimestamp = filter.to instanceof Date ? filter.to.getTime() : filter.to;
+          if (entry.timestamp > toTimestamp) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .reverse();
+  }
+
+  /**
+   * Clear all entries
+   */
+  clear(): void {
+    this.entries = [];
+  }
+
+  /**
+   * Prune entries if over maximum
+   */
+  private pruneEntries(): void {
+    if (this.entries.length > this.maxEntries) {
+      this.entries = this.entries.slice(-this.maxEntries);
+    }
+  }
+
+  /**
+   * Determine if an entry should be logged based on the minimum level
+   */
+  private shouldLog(level: LogLevel): boolean {
+    const levelValues: Record<LogLevel, number> = {
+      [LogLevel.DEBUG]: 0,
+      [LogLevel.INFO]: 1,
+      [LogLevel.SUCCESS]: 2,
+      [LogLevel.WARN]: 3,
+      [LogLevel.ERROR]: 4,
+      [LogLevel.CRITICAL]: 5,
+      [LogLevel.FATAL]: 6,
+      [LogLevel.TRACE]: -1
     };
-  }
-  
-  private notifyListeners(event: any): void {
-    this.listeners.forEach(listener => listener(event));
-  }
-  
-  getLogs(): LogEntry[] {
-    return [...this.logs];
-  }
-  
-  filter(options?: Partial<LogFilter>): LogEntry[] {
-    let entries = [...this.logs];
-    
-    if (options?.level) {
-      entries = entries.filter(log => log.level === options.level);
-    }
-    
-    if (options?.category) {
-      entries = entries.filter(log => log.category === options.category);
-    }
 
-    if (options?.source) {
-      entries = entries.filter(log => log.source && log.source.includes(options.source as string));
-    }
-    
-    if (options?.search) {
-      const searchTerm = options.search.toLowerCase();
-      entries = entries.filter(log =>
-        log.message.toLowerCase().includes(searchTerm) ||
-        (log.source && log.source.toLowerCase().includes(searchTerm)) ||
-        (log.details && JSON.stringify(log.details).toLowerCase().includes(searchTerm))
-      );
-    }
-    
-    if (options?.from) {
-      entries = entries.filter(log => log.timestamp >= options.from!);
-    }
-    
-    if (options?.to) {
-      entries = entries.filter(log => log.timestamp <= options.to!);
-    }
-    
-    return entries;
-  }
-
-  clearLogs(): void {
-    this.logs = [];
-    this.notifyListeners({
-      type: 'logs-cleared',
-      data: null
-    });
+    return levelValues[level] >= levelValues[this.minLevel];
   }
 }

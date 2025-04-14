@@ -1,5 +1,5 @@
 
-import { UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserRole, ROLES } from '@/shared/types';
 
 /**
  * Core RBAC functionality

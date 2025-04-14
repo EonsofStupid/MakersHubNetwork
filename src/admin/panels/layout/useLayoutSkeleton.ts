@@ -1,14 +1,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
-import { Layout, LayoutSkeleton } from '@/admin/types/layout.types';
+import { Layout, LayoutSkeleton } from '@/shared/types';
 import { toast } from 'sonner';
-import { 
-  createDefaultDashboardLayout, 
-  createDefaultSidebarLayout,
-  createDefaultTopNavLayout
-} from '@/admin/utils/layoutUtils';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Hook for fetching and managing layout skeletons from the database
@@ -72,49 +66,63 @@ export function useLayoutSkeleton() {
         let defaultLayout: Layout;
         
         if (type === 'dashboard') {
-          defaultLayout = createDefaultDashboardLayout(uuidv4());
+          defaultLayout = createDefaultDashboardLayout();
         } else if (type === 'sidebar') {
-          defaultLayout = createDefaultSidebarLayout(uuidv4());
+          defaultLayout = createDefaultSidebarLayout();
         } else if (type === 'topnav') {
-          defaultLayout = createDefaultTopNavLayout(uuidv4());
+          defaultLayout = createDefaultTopNavLayout();
         } else {
           defaultLayout = {
-            id: uuidv4(),
+            id: `default-${type}-${Date.now()}`,
             name: `Default ${type}`,
-            type,
-            scope,
-            components: [
-              {
+            components: {
+              root: {
                 id: 'root',
                 type: 'AdminSection',
-                children: [
-                  {
-                    id: 'title',
-                    type: 'heading',
-                    props: {
-                      level: 1,
-                      className: 'text-2xl font-bold',
-                      children: `${type} Layout`
-                    }
-                  }
-                ]
+                props: {}
+              },
+              title: {
+                id: 'title',
+                type: 'heading',
+                props: {
+                  level: 1,
+                  className: 'text-2xl font-bold',
+                  children: `${type} Layout`
+                }
+              }
+            },
+            layout: [
+              {
+                id: 'root-layout',
+                position: 0,
+                componentId: 'root'
+              },
+              {
+                id: 'title-layout',
+                position: 1,
+                componentId: 'title',
+                parentId: 'root-layout'
               }
             ],
-            version: 1
+            type,
+            scope
           };
         }
         
         // Save to database
         return await layoutSkeletonService.create({
           name: defaultLayout.name,
-          type: defaultLayout.type,
-          scope: defaultLayout.scope,
+          type: defaultLayout.type || type,
+          scope: defaultLayout.scope || scope,
           layout_json: {
             components: defaultLayout.components,
+            layout: defaultLayout.layout,
             version: 1
           },
           is_active: true,
-          version: 1
+          is_locked: false,
+          version: 1,
+          description: `Default ${type} layout`
         });
       },
       onSuccess: (data, variables) => {
@@ -181,6 +189,58 @@ export function useLayoutSkeleton() {
         toast.error('Error deleting layout', { description: error.message });
       }
     });
+  };
+
+  // Helper functions to create default layouts
+  const createDefaultDashboardLayout = (): Layout => {
+    return {
+      id: `dashboard-${Date.now()}`,
+      name: 'Default Dashboard',
+      components: {
+        root: { id: 'root', type: 'DashboardLayout', props: {} },
+        header: { id: 'header', type: 'DashboardHeader', props: { title: 'Dashboard' } }
+      },
+      layout: [
+        { id: 'root-layout', position: 0, componentId: 'root' },
+        { id: 'header-layout', position: 0, componentId: 'header', parentId: 'root-layout' }
+      ],
+      type: 'dashboard',
+      scope: 'admin'
+    };
+  };
+
+  const createDefaultSidebarLayout = (): Layout => {
+    return {
+      id: `sidebar-${Date.now()}`,
+      name: 'Default Sidebar',
+      components: {
+        root: { id: 'root', type: 'SidebarLayout', props: {} },
+        nav: { id: 'nav', type: 'SidebarNav', props: {} }
+      },
+      layout: [
+        { id: 'root-layout', position: 0, componentId: 'root' },
+        { id: 'nav-layout', position: 0, componentId: 'nav', parentId: 'root-layout' }
+      ],
+      type: 'sidebar',
+      scope: 'admin'
+    };
+  };
+
+  const createDefaultTopNavLayout = (): Layout => {
+    return {
+      id: `topnav-${Date.now()}`,
+      name: 'Default Top Navigation',
+      components: {
+        root: { id: 'root', type: 'TopNavLayout', props: {} },
+        nav: { id: 'nav', type: 'TopNav', props: {} }
+      },
+      layout: [
+        { id: 'root-layout', position: 0, componentId: 'root' },
+        { id: 'nav-layout', position: 0, componentId: 'nav', parentId: 'root-layout' }
+      ],
+      type: 'topnav',
+      scope: 'admin'
+    };
   };
 
   return {

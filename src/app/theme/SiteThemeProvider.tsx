@@ -1,9 +1,8 @@
 
 import React, { createContext, useContext, useMemo, useEffect, useState } from "react";
-import { Theme, ThemeToken, ThemeComponent, LogLevel, LogCategory } from "@/shared/types/shared.types";
-import { ThemeLogDetails } from "@/shared/types/theme.types";
-import { useThemeStore } from "@/shared/store/theme/store";
-import { useLogger } from "@/logging/hooks/use-logger";
+import { Theme, ThemeToken, ThemeComponent, LogLevel, LogCategory, ThemeLogDetails } from "@/shared/types";
+import { useThemeStore } from "@/shared/stores/theme/store";
+import { useLogger } from "@/hooks/use-logger";
 import { logger } from "@/logging/logger.service";
 
 export interface SiteThemeContextType {
@@ -34,10 +33,10 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
 
   const { 
     themes, 
-    loadThemes, 
     activeThemeId, 
     setActiveTheme,
-    isLoading
+    isLoading,
+    loadThemes
   } = useThemeStore();
 
   // Load themes on mount
@@ -80,9 +79,9 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
           
           activeTheme.tokens.forEach(token => {
             if (token.type === 'css') {
-              variables[token.name] = token.value;
+              variables[token.name || token.token_name] = token.value || token.token_value;
             } else if (token.type === 'animation' && token.keyframes) {
-              cssAnimations[token.name] = token.keyframes;
+              cssAnimations[token.name || token.token_name] = token.keyframes;
             }
           });
           
@@ -101,7 +100,7 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
           const styles: Record<string, Record<string, string>> = {};
           
           activeTheme.components.forEach(component => {
-            styles[component.component_name] = component.styles;
+            styles[component.component_name || component.name] = component.styles || component.tokens;
           });
           
           setComponentStyles(styles);
@@ -127,16 +126,16 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
         });
         
         // Log success
-        logger.log(LogLevel.INFO, LogCategory.SYSTEM, "Theme CSS variables applied", {
+        logger.log(LogLevel.INFO, LogCategory.THEME, "Theme CSS variables applied", {
           theme: activeThemeId,
           cssVarsCount: Object.keys(cssVariables).length
-        });
+        } as ThemeLogDetails);
         
       } catch (error) {
         // Log error
-        logger.log(LogLevel.ERROR, LogCategory.SYSTEM, "Failed to apply theme CSS variables", {
+        logger.log(LogLevel.ERROR, LogCategory.THEME, "Failed to apply theme CSS variables", {
           error: error instanceof Error ? error.message : String(error)
-        });
+        } as ThemeLogDetails);
         
         setThemeError(error instanceof Error ? error : new Error("Failed to apply CSS variables"));
       }

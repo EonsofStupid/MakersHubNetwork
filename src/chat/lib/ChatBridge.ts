@@ -1,84 +1,166 @@
 
-import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { v4 as uuidv4 } from 'uuid';
+import { ChatMessage, LogCategory, LogLevel } from '@/shared/types';
 import { logger } from '@/logging/logger.service';
 
-export type ChatBridgeMessage = {
-  type: string;
-  [key: string]: any;
-};
-
-// Updated to accept any string channel, including dynamic patterns like 'session:123'
-export type ChatBridgeChannel = string;
-
-export type ChatBridgeListener = (message: ChatBridgeMessage) => void;
-
 /**
- * ChatBridge - Implements a centralized messaging system for the chat module
- * This prevents circular dependencies by creating a one-way communication flow
+ * ChatBridge is a bridge between the UI and the chat provider
+ * It manages state and communication with the chat provider
  */
-class ChatBridgeImpl {
-  private listeners: Map<ChatBridgeChannel, ChatBridgeListener[]> = new Map();
+export class ChatBridge {
+  private static sessions: Record<string, { id: string, messages: ChatMessage[] }> = {};
   
   /**
-   * Subscribe to a channel
-   * @param channel The channel to subscribe to
-   * @param listener The listener callback
-   * @returns Unsubscribe function
+   * Create a new session
+   * @returns The new session ID
    */
-  subscribe(channel: ChatBridgeChannel, listener: ChatBridgeListener): () => void {
-    if (!this.listeners.has(channel)) {
-      this.listeners.set(channel, []);
-    }
+  public static createSession(): string {
+    const sessionId = uuidv4();
     
-    const channelListeners = this.listeners.get(channel)!;
-    channelListeners.push(listener);
+    this.sessions[sessionId] = {
+      id: sessionId,
+      messages: []
+    };
     
-    logger.log(LogLevel.DEBUG, LogCategory.CHAT, `Listener added to ${channel} channel`, { 
-      details: { listenersCount: channelListeners.length }
+    logger.log(LogLevel.INFO, LogCategory.CHAT, 'Created new chat session', {
+      sessionId
     });
     
-    // Return unsubscribe function
-    return () => {
-      const index = channelListeners.indexOf(listener);
-      if (index !== -1) {
-        channelListeners.splice(index, 1);
-        logger.log(LogLevel.DEBUG, LogCategory.CHAT, `Listener removed from ${channel} channel`, { 
-          details: { listenersCount: channelListeners.length }
-        });
-      }
-    };
+    return sessionId;
   }
   
   /**
-   * Publish a message to a channel
-   * @param channel The channel to publish to
-   * @param message The message to publish
+   * Send a message to the chat provider
+   * @param message The message content
+   * @param sessionId Optional session ID
+   * @returns The response message
    */
-  publish(channel: ChatBridgeChannel, message: ChatBridgeMessage): void {
-    if (!this.listeners.has(channel)) {
-      return;
+  public static async sendMessage(message: string, sessionId?: string): Promise<ChatMessage | null> {
+    // Use provided session or create a new one
+    const session = sessionId ? this.sessions[sessionId] : undefined;
+    const actualSessionId = session?.id || this.createSession();
+    
+    // Create user message
+    const userMessage: ChatMessage = {
+      id: uuidv4(),
+      content: message,
+      sender: 'user',
+      timestamp: Date.now()
+    };
+    
+    // Add message to session
+    if (this.sessions[actualSessionId]) {
+      this.sessions[actualSessionId].messages.push(userMessage);
+    } else {
+      this.sessions[actualSessionId] = {
+        id: actualSessionId,
+        messages: [userMessage]
+      };
     }
     
-    const channelListeners = this.listeners.get(channel)!;
-    
-    logger.log(LogLevel.DEBUG, LogCategory.CHAT, `Publishing to ${channel} channel`, {
-      details: { message, listenersCount: channelListeners.length }
+    // Log the message
+    logger.log(LogLevel.INFO, LogCategory.CHAT, 'User message sent', {
+      sessionId: actualSessionId,
+      messageId: userMessage.id
     });
     
-    // Use setTimeout to break potential circular dependencies
-    setTimeout(() => {
-      channelListeners.forEach(listener => {
-        try {
-          listener(message);
-        } catch (error) {
-          logger.log(LogLevel.ERROR, LogCategory.CHAT, `Error in ${channel} channel listener`, {
-            details: { error, messageType: message.type }
-          });
-        }
+    try {
+      // In a real implementation, this would call an API
+      // For now, just simulate a response
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create AI response
+      const aiResponse: ChatMessage = {
+        id: uuidv4(),
+        content: `This is a simulated response to: "${message}"`,
+        sender: 'ai',
+        timestamp: Date.now()
+      };
+      
+      // Add response to session
+      if (this.sessions[actualSessionId]) {
+        this.sessions[actualSessionId].messages.push(aiResponse);
+      }
+      
+      // Log the response
+      logger.log(LogLevel.INFO, LogCategory.CHAT, 'AI response received', {
+        sessionId: actualSessionId,
+        messageId: aiResponse.id
       });
-    }, 0);
+      
+      return aiResponse;
+    } catch (error) {
+      // Log any errors
+      logger.log(LogLevel.ERROR, LogCategory.CHAT, 'Error in chat message processing', {
+        sessionId: actualSessionId,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
+      return null;
+    }
+  }
+  
+  /**
+   * Get context for a specific query
+   * @param query The context query
+   * @returns The context
+   */
+  public static async getContext(query: string): Promise<string> {
+    try {
+      // In a real implementation, this would fetch context from a knowledge base
+      // For now, just simulate a response
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      logger.log(LogLevel.DEBUG, LogCategory.CHAT, 'Retrieved context', {
+        query,
+        contextLength: 50
+      });
+      
+      return `This is simulated context for the query: "${query}"`;
+    } catch (error) {
+      logger.log(LogLevel.ERROR, LogCategory.CHAT, 'Error fetching context', {
+        query,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
+      return '';
+    }
+  }
+  
+  /**
+   * Get messages for a session
+   * @param sessionId The session ID
+   * @returns Array of messages
+   */
+  public static getMessages(sessionId: string): ChatMessage[] {
+    return this.sessions[sessionId]?.messages || [];
+  }
+  
+  /**
+   * Clear a session
+   * @param sessionId The session ID
+   */
+  public static clearSession(sessionId: string): void {
+    if (this.sessions[sessionId]) {
+      this.sessions[sessionId].messages = [];
+      
+      logger.log(LogLevel.INFO, LogCategory.CHAT, 'Cleared chat session', {
+        sessionId
+      });
+    }
+  }
+  
+  /**
+   * Delete a session
+   * @param sessionId The session ID
+   */
+  public static deleteSession(sessionId: string): void {
+    if (this.sessions[sessionId]) {
+      delete this.sessions[sessionId];
+      
+      logger.log(LogLevel.INFO, LogCategory.CHAT, 'Deleted chat session', {
+        sessionId
+      });
+    }
   }
 }
-
-// Export singleton instance
-export const chatBridge = new ChatBridgeImpl();

@@ -1,7 +1,7 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { RBACBridge } from '@/bridges/RBACBridge';
-import { UserRole, ROLES, Permission } from '@/shared/types/shared.types';
+import { UserRole, ROLES, Permission } from '@/shared/types';
 import { useAuthStore } from '@/stores/auth/auth.store';
 
 /**
