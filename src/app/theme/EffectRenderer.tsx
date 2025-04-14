@@ -1,182 +1,175 @@
 
 import React from 'react';
 import { ThemeEffect, ThemeEffectType } from '@/shared/types/shared.types';
-import { 
-  normalizeEffectType
-} from '@/shared/types/theme/effects.types';
 
-interface EffectRendererProps {
-  effect: ThemeEffect;
-}
-
-const EffectRenderer: React.FC<EffectRendererProps> = ({ effect }) => {
-  if (!effect || !effect.enabled) {
-    return null;
+/**
+ * Component to render various theme effects
+ */
+export const EffectRenderer: React.FC<{
+  effect: ThemeEffectType;
+  intensity?: number;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}> = ({
+  effect,
+  intensity = 1,
+  className = '',
+  style = {},
+  children
+}) => {
+  // Return null for disabled or missing effects
+  if (effect === ThemeEffectType.NONE) {
+    return <>{children}</>;
   }
 
-  // Normalize effect type (for backward compatibility)
-  const normalizedType = normalizeEffectType(effect.type as string);
-
-  switch (normalizedType) {
-    case ThemeEffectType.NOISE:
-    case ThemeEffectType.GLITCH:
-      return (
-        <>
-          <div className="noise-overlay"></div>
-          <style jsx>
-            {`
-              .noise-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.1'/%3E%3C/svg%3E");
-                pointer-events: none;
-                z-index: 9999;
-                opacity: ${effect.intensity || 0.15};
-                mix-blend-mode: overlay;
-              }
-            `}
-          </style>
-        </>
-      );
-
-    case ThemeEffectType.NEON:
-    case ThemeEffectType.CYBER:
-      return (
-        <>
-          <div className="neon-overlay"></div>
-          <style jsx>
-            {`
-              .neon-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: ${effect.scanLines ? 
-                  `repeating-linear-gradient(
-                    0deg,
-                    rgba(0, 0, 0, 0.15),
-                    rgba(0, 0, 0, 0.15) 1px,
-                    transparent 1px,
-                    transparent 2px
-                  )` : 'transparent'};
-                pointer-events: none;
-                z-index: 9998;
-                mix-blend-mode: overlay;
-              }
-
-              :root {
-                --neon-glow: ${effect.glowColor || '#00f8ff'};
-              }
-            `}
-          </style>
-        </>
-      );
-
+  // Different rendering based on effect type
+  switch (effect) {
     case ThemeEffectType.BLUR:
     case ThemeEffectType.MORPH:
       return (
-        <>
-          <div className="blur-overlay"></div>
-          <style>
-            {`
-              .blur-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                backdrop-filter: blur(${effect.intensity || 1}px);
-                pointer-events: none;
-                z-index: 9997;
-                opacity: 0.2;
-                mix-blend-mode: overlay;
-              }
-            `}
-          </style>
-        </>
+        <div 
+          className={`backdrop-blur-sm ${className}`}
+          style={{
+            backdropFilter: `blur(${intensity * 2}px)`,
+            ...style
+          }}
+        >
+          {children}
+        </div>
       );
-
-    case ThemeEffectType.GRADIENT:
-      const colors = effect.colors || ['#ff00cc', '#3333ff'];
+      
+    case ThemeEffectType.GRAIN:
       return (
-        <>
-          <div className="gradient-overlay"></div>
+        <div 
+          className={`before:absolute before:inset-0 before:z-[-1] before:opacity-20 ${className}`}
+          style={{
+            position: 'relative',
+            isolation: 'isolate',
+            ...style,
+            '--grain-opacity': `${0.1 * intensity}`,
+          } as React.CSSProperties}
+        >
           <style>
             {`
-              .gradient-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: linear-gradient(45deg, ${colors.join(', ')});
-                pointer-events: none;
-                z-index: 9996;
-                opacity: ${effect.intensity || 0.1};
-                mix-blend-mode: overlay;
-              }
-            `}
+            div::before {
+              background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+              opacity: var(--grain-opacity);
+              content: '';
+              pointer-events: none;
+            }
+          `}
           </style>
-        </>
+          {children}
+        </div>
       );
-
+      
+    case ThemeEffectType.GLITCH:
+    case ThemeEffectType.NOISE:
+      return (
+        <div 
+          className={`relative overflow-hidden ${className}`}
+          style={style}
+          data-effect="glitch"
+          data-intensity={intensity}
+        >
+          {children}
+          <div className="glitch-effect absolute inset-0 z-[-1] opacity-50" />
+        </div>
+      );
+      
+    case ThemeEffectType.GRADIENT:
+      return (
+        <div 
+          className={`bg-gradient-to-br ${className}`}
+          style={{
+            backgroundSize: '400% 400%',
+            animation: `gradient ${20/intensity}s ease infinite`,
+            ...style,
+          }}
+          data-effect="gradient"
+        >
+          <style>
+            {`
+            @keyframes gradient {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+          `}
+          </style>
+          {children}
+        </div>
+      );
+      
+    case ThemeEffectType.CYBER:
+    case ThemeEffectType.NEON:
+      return (
+        <div 
+          className={`relative ${className}`}
+          style={{
+            ...style,
+            '--glow-intensity': intensity,
+          } as React.CSSProperties}
+          data-effect="cyber"
+        >
+          <div className="cyber-glow absolute inset-0 z-[-1] pointer-events-none opacity-40" />
+          {children}
+        </div>
+      );
+      
+    case ThemeEffectType.NOISE:
+      return (
+        <div 
+          className={`noise-container relative ${className}`}
+          style={{
+            ...style,
+            '--noise-opacity': `${0.1 * intensity}`,
+          } as React.CSSProperties}
+          data-effect="noise"
+        >
+          <div className="noise-overlay absolute inset-0 z-[-1] pointer-events-none mix-blend-overlay" />
+          {children}
+        </div>
+      );
+      
     case ThemeEffectType.PULSE:
       return (
-        <>
-          <div className="pulse-overlay"></div>
+        <div 
+          className={`pulse-effect ${className}`}
+          style={{
+            animation: `pulse ${2/intensity}s infinite ease-in-out`,
+            ...style,
+          }}
+          data-effect="pulse"
+        >
           <style>
             {`
-              .pulse-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: ${effect.color || '#00f8ff'};
-                pointer-events: none;
-                z-index: 9995;
-                animation: pulse ${effect.speed || 5}s infinite ease-in-out;
-                opacity: 0;
-                mix-blend-mode: overlay;
-              }
-
-              @keyframes pulse {
-                0% { opacity: ${effect.minOpacity || 0}; }
-                50% { opacity: ${effect.maxOpacity || 0.1}; }
-                100% { opacity: ${effect.minOpacity || 0}; }
-              }
-            `}
+            @keyframes pulse {
+              0% { opacity: 0.7; }
+              50% { opacity: 1; }
+              100% { opacity: 0.7; }
+            }
+          `}
           </style>
-        </>
+          {children}
+        </div>
       );
-
+      
     case ThemeEffectType.PARTICLE:
       return (
-        <>
-          <div className="particle-container"></div>
-          <style>
-            {`
-              .particle-container {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                pointer-events: none;
-                z-index: 9994;
-              }
-            `}
-          </style>
-        </>
+        <div 
+          className={`particle-container relative overflow-hidden ${className}`}
+          style={style}
+          data-effect="particle"
+          data-intensity={intensity}
+        >
+          {children}
+          <div className="particle-overlay absolute inset-0 z-[-1] pointer-events-none" />
+        </div>
       );
-
+      
     default:
-      return null;
+      return <>{children}</>;
   }
 };
-
-export default EffectRenderer;

@@ -1,61 +1,65 @@
 
 import { useCallback } from 'react';
-import { useAuthStore } from '../store/auth.store';
-import { UserRole } from '@/shared/types/shared.types';
+import { useRbac } from '@/auth/rbac/use-rbac';
+import { UserRole, ROLES } from '@/shared/types/shared.types';
 
-interface UseHasRoleOptions {
-  role?: UserRole | UserRole[];
-  defaultValue?: boolean;
+/**
+ * Hook to check if the current user has a specific role
+ * @param role The role to check for
+ * @returns Boolean indicating if the user has the role
+ */
+export function useHasRole(role: UserRole | UserRole[]) {
+  const { hasRole } = useRbac();
+  
+  return useCallback(() => {
+    return hasRole(role);
+  }, [hasRole, role]);
 }
 
 /**
- * Hook to check if the current user has a specific role or roles
- * @param options Options for the hook
- * @returns An object with hasRole function and hasAdminAccess boolean
+ * Hook to check if the current user is an admin
+ * @returns Boolean indicating if the user is an admin
  */
-export function useHasRole(options?: UseHasRoleOptions) {
-  const { roles, isAuthenticated } = useAuthStore();
-  const { role, defaultValue = false } = options || {};
+export function useIsAdmin() {
+  const { hasRole } = useRbac();
   
-  const hasRole = useCallback((roleToCheck: UserRole | UserRole[]): boolean => {
-    // Not authenticated
-    if (!isAuthenticated) {
-      return false;
-    }
-    
-    // Super admins have all roles
-    if (roles.includes(UserRole.SUPERADMIN)) {
-      return true;
-    }
-    
-    // Check specific role(s)
-    if (Array.isArray(roleToCheck)) {
-      return roleToCheck.some(r => roles.includes(r));
-    }
-    
-    return roles.includes(roleToCheck);
-  }, [roles, isAuthenticated]);
-
-  // Derived convenience methods
-  const hasAdminAccess = useCallback((): boolean => {
-    return hasRole([UserRole.ADMIN, UserRole.SUPERADMIN]);
+  return useCallback(() => {
+    return hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }, [hasRole]);
+}
 
-  const hasModerationAccess = useCallback((): boolean => {
-    return hasRole([UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPERADMIN]);
+/**
+ * Hook to check if the current user is a super admin
+ * @returns Boolean indicating if the user is a super admin
+ */
+export function useIsSuperAdmin() {
+  const { hasRole } = useRbac();
+  
+  return useCallback(() => {
+    return hasRole(ROLES.SUPER_ADMIN);
   }, [hasRole]);
+}
 
-  const checkRole = useCallback((): boolean => {
-    if (!role) {
-      return defaultValue;
-    }
-    return hasRole(role);
-  }, [role, hasRole, defaultValue]);
+/**
+ * Hook to check if the current user is a moderator
+ * @returns Boolean indicating if the user is a moderator
+ */
+export function useIsModerator() {
+  const { hasRole } = useRbac();
+  
+  return useCallback(() => {
+    return hasRole([ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+  }, [hasRole]);
+}
 
-  return {
-    hasRole,
-    hasAdminAccess,
-    hasModerationAccess,
-    check: checkRole()
-  };
+/**
+ * Hook to check if the current user is a builder
+ * @returns Boolean indicating if the user is a builder
+ */
+export function useIsBuilder() {
+  const { hasRole } = useRbac();
+  
+  return useCallback(() => {
+    return hasRole([ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+  }, [hasRole]);
 }

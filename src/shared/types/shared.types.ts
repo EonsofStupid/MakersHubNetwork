@@ -1,9 +1,5 @@
 
 /**
- * Shared type definitions for the entire application
- */
-
-/**
  * Role definitions
  */
 export const ROLES = {
@@ -15,39 +11,33 @@ export const ROLES = {
   GUEST: 'guest',
 } as const;
 
-export type UserRole = typeof ROLES[keyof typeof ROLES];
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+
+/**
+ * RBAC constants for role-based access control groups
+ */
+export const RBAC = {
+  AUTHENTICATED: [ROLES.USER, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MODERATOR, ROLES.BUILDER],
+  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  SUPER_ADMINS: [ROLES.SUPER_ADMIN],
+  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]
+};
 
 /**
  * Permission definitions
  */
-export const PERMISSIONS = {
-  // Access permissions
-  ADMIN_ACCESS: 'admin:access',
-  
-  // Content management
-  VIEW_CONTENT: 'content:view',
-  CREATE_CONTENT: 'content:create',
-  EDIT_CONTENT: 'content:edit',
-  DELETE_CONTENT: 'content:delete',
-  
-  // User management
-  VIEW_USERS: 'users:view',
-  EDIT_USERS: 'users:edit',
-  DELETE_USERS: 'users:delete',
-  
-  // System management
-  SYSTEM_VIEW: 'system:view',
-  SYSTEM_EDIT: 'system:edit',
-  
-  // Settings
-  SETTINGS_VIEW: 'settings:view',
-  SETTINGS_EDIT: 'settings:edit',
-  
-  // Super admin permission
-  SUPER_ADMIN: 'super:admin',
-} as const;
-
-export type Permission = keyof typeof PERMISSIONS | string;
+export type Permission =
+  | 'create_project'
+  | 'edit_project'
+  | 'delete_project'
+  | 'submit_build'
+  | 'access_admin'
+  | 'manage_api_keys'
+  | 'manage_users'
+  | 'manage_roles'
+  | 'manage_permissions'
+  | 'view_analytics';
 
 /**
  * RBAC route policies
@@ -64,28 +54,18 @@ export const RBAC_POLICIES: Record<string, UserRole[]> = {
   '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
 };
 
-// Additional RBAC policies for simpler usage
-export const RBAC = {
-  POLICIES: RBAC_POLICIES,
-  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  SUPER_ADMINS: [ROLES.SUPER_ADMIN],
-  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  AUTHENTICATED: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-};
-
-export const PATH_POLICIES = RBAC_POLICIES;
-
 /**
- * Auth status enum
+ * Auth status types
  */
-export enum AuthStatus {
-  IDLE = 'idle',
-  LOADING = 'loading',
-  AUTHENTICATED = 'authenticated',
-  UNAUTHENTICATED = 'unauthenticated',
-  ERROR = 'error',
-}
+export const AUTH_STATUS = {
+  IDLE: 'idle',
+  LOADING: 'loading',
+  AUTHENTICATED: 'authenticated',
+  UNAUTHENTICATED: 'unauthenticated',
+  ERROR: 'error',
+} as const;
+
+export type AuthStatus = (typeof AUTH_STATUS)[keyof typeof AUTH_STATUS];
 
 /**
  * User profile type
@@ -98,23 +78,8 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
   last_sign_in_at?: string;
-  user_metadata?: Record<string, unknown>;
-  bio?: string;
   roles?: UserRole[];
-  app_metadata?: {
-    provider?: string;
-    [key: string]: any;
-  };
-}
-
-/**
- * Auth event types
- */
-export enum AuthEventType {
-  SIGNED_IN = 'SIGNED_IN',
-  SIGNED_OUT = 'SIGNED_OUT',
-  USER_UPDATED = 'USER_UPDATED',
-  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
+  user_metadata?: Record<string, unknown>;
 }
 
 /**
@@ -126,10 +91,9 @@ export enum LogCategory {
   API = 'api',
   UI = 'ui',
   SYSTEM = 'system',
-  ADMIN = 'admin',
-  DEBUG = 'debug',
-  APP = 'app',
   CHAT = 'chat',
+  THEME = 'theme',
+  DEBUG = 'debug'
 }
 
 /**
@@ -144,41 +108,25 @@ export enum LogLevel {
   ERROR = 'error',
   FATAL = 'fatal',
   CRITICAL = 'critical',
-  SILENT = 'silent',
+  SILENT = 'silent'
 }
 
 /**
- * Log entry type
+ * Log entry interface
  */
 export interface LogEntry {
-  id?: string;
+  id: string;
   level: LogLevel;
   category: LogCategory;
   message: string;
   timestamp: Date;
   source?: string;
-  details?: Record<string, any>;
+  details?: any;
   tags?: string[];
 }
 
 /**
- * Log event type
- */
-export interface LogEvent {
-  entry: LogEntry;
-}
-
-/**
- * Log details
- */
-export interface LogDetails {
-  source?: string;
-  tags?: string[];
-  [key: string]: any;
-}
-
-/**
- * Log filter type
+ * Log filter interface
  */
 export interface LogFilter {
   level?: LogLevel;
@@ -190,230 +138,88 @@ export interface LogFilter {
 }
 
 /**
- * Log level values for comparison
+ * Log event interface
  */
-export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  [LogLevel.TRACE]: 0,
-  [LogLevel.DEBUG]: 1,
-  [LogLevel.INFO]: 2,
-  [LogLevel.SUCCESS]: 3,
-  [LogLevel.WARN]: 4,
-  [LogLevel.ERROR]: 5,
-  [LogLevel.FATAL]: 6,
-  [LogLevel.CRITICAL]: 7,
-  [LogLevel.SILENT]: 8,
-};
-
-// Exports for backward compatibility
-export const LOG_LEVEL = LogLevel;
-export const LOG_CATEGORY = LogCategory;
-export const AUTH_STATUS = AuthStatus;
-
-/**
- * Theme-related types
- */
-export interface Theme {
-  id: string;
-  name: string;
-  description?: string;
-  designTokens: DesignTokens;
-  componentTokens: ComponentTokens;
-  created_at?: string;
-  updated_at?: string;
-  version: number;
-  tokens?: ThemeToken[];
-  components?: ThemeComponent[];
-  variables?: Record<string, string>;
-  created_by?: string | null;
-  published_at?: string | null;
-  parent_theme_id?: string | null;
-}
-
-export interface ThemeToken {
-  name: string;
-  token_name?: string;
-  token_value?: string;
-  value: string;
-  type: string;
-  description?: string;
-  keyframes?: string;
-}
-
-export interface ThemeComponent {
-  id: string;
-  component_name: string;
-  styles: Record<string, any>;
-}
-
-export interface DesignTokens {
-  colors: ColorTokens;
-  spacing: SpacingTokens;
-  typography: TypographyTokens;
-  effects: EffectTokens;
-  radius: RadiusTokens;
-  shadows: ShadowTokens;
-}
-
-export interface ColorTokens {
-  primary: string;
-  secondary: string;
-  accent: string;
-  background: string;
-  foreground: string;
-  muted: string;
-  'muted-foreground': string;
-  popover: string;
-  'popover-foreground': string;
-  card: string;
-  'card-foreground': string;
-  border: string;
-  input: string;
-  ring: string;
-}
-
-export interface SpacingTokens {
-  sm: string;
-  md: string;
-  lg: string;
-  xl: string;
-  xxl: string;
-}
-
-export interface TypographyTokens {
-  fontFamily: string;
-  fontSize: Record<string, string>;
-  fontWeight: Record<string, string>;
-  lineHeight: Record<string, string>;
-}
-
-export interface EffectTokens {
-  blur: Record<string, string>;
-  glow: Record<string, string>;
-}
-
-export interface RadiusTokens {
-  sm: string;
-  md: string;
-  lg: string;
-  xl: string;
-  full: string;
-}
-
-export interface ShadowTokens {
-  sm: string;
-  md: string;
-  lg: string;
-  xl: string;
-}
-
-export interface ComponentTokens {
-  button: Record<string, string>;
-  card: Record<string, string>;
-  input: Record<string, string>;
-  badge: Record<string, string>;
-  alert: Record<string, string>;
+export interface LogEvent {
+  type: 'new-log' | 'logs-cleared';
+  data: any;
 }
 
 /**
- * Theme effect type
+ * Log details interface
+ */
+export interface LogDetails {
+  source?: string;
+  details?: any;
+  tags?: string[];
+}
+
+/**
+ * Theme effect types enum
+ * Includes both old and new naming conventions for backward compatibility
  */
 export enum ThemeEffectType {
   NONE = 'none',
+  BLUR = 'blur',
+  MORPH = 'morph', // Legacy name for blur
+  NOISE = 'noise',
+  GLITCH = 'glitch', // Legacy name for noise
   GRADIENT = 'gradient',
   GLOW = 'glow',
-  BLUR = 'blur', 
-  NOISE = 'noise',
-  GRID = 'grid',
-  DOTS = 'dots',
-  WAVES = 'waves',
-  NEON = 'neon',
   SHADOW = 'shadow',
+  NEON = 'neon',
+  CYBER = 'cyber', // Legacy name for neon
   PULSE = 'pulse',
   PARTICLE = 'particle',
-  GLITCH = 'glitch', // Added for backward compatibility
-  CYBER = 'cyber',    // Added for backward compatibility
-  MORPH = 'morph',    // Added for backward compatibility
-}
-
-export interface ThemeLogDetails {
-  themeId: string;
-  action: string;
-  timestamp: string;
-  theme?: string;
-  cssVarsCount?: number;
-  error?: string;
-  userId?: string;
-  previousValue?: any;
-  newValue?: any;
-  component?: string;
+  GRAIN = 'grain'
 }
 
 /**
- * Layout types
+ * Theme state interface
  */
-export interface LayoutComponentProps {
+export interface ThemeState {
+  isDark: boolean;
+  primaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  borderColor: string;
+  fontFamily: string;
+  cornerRadius: number;
+  animations: boolean;
+}
+
+/**
+ * Theme effect interface
+ */
+export interface ThemeEffect {
+  type: ThemeEffectType;
+  enabled: boolean;
+  [key: string]: any;
+}
+
+/**
+ * Theme effect provider props
+ */
+export interface EffectRendererProps {
+  effect: ThemeEffectType;
+  intensity?: number;
+  className?: string;
+  style?: React.CSSProperties;
   children: React.ReactNode;
 }
 
 /**
- * User type
+ * Legacy effect enum for backward compatibility
  */
-export interface User {
-  id: string;
-  email: string;
-  app_metadata?: {
-    provider?: string;
-    [key: string]: any;
-  };
-  user_metadata?: {
-    name?: string;
-    full_name?: string;
-    avatar_url?: string;
-    [key: string]: any;
-  };
-  created_at: string;
-  updated_at: string;
-  role?: UserRole;
-  roles?: UserRole[];
-}
-
-/**
- * Build related types
- */
-export enum BuildStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-}
-
-export interface BuildPart {
-  id: string;
-  name: string;
-  description: string;
-  image_url: string;
-  price: number;
-  inventory: number;
-  category: string;
-}
-
-export interface BuildMod {
-  id: string;
-  name: string;
-  description: string;
-  compatibility: string[];
-  price: number;
-}
-
-export interface UserInfo {
-  id: string;
-  name: string;
-  email: string;
-}
-
-export interface BaseEntity {
-  id: string;
-  created_at: string;
-  updated_at: string;
+export enum ThemeEffect {
+  NONE = 'none',
+  BLUR = 'blur',
+  GRAIN = 'grain',
+  GLITCH = 'glitch',
+  GRADIENT = 'gradient',
+  CYBER = 'cyber',
+  NOISE = 'noise',
+  PULSE = 'pulse',
+  PARTICLE = 'particle',
 }
