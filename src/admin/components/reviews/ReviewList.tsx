@@ -7,7 +7,6 @@ export interface ReviewListProps {
 }
 
 export function ReviewList({ className = '' }: ReviewListProps) {
-  // Sample empty state
   const reviews: any[] = [];
 
   return (
@@ -20,7 +19,7 @@ export function ReviewList({ className = '' }: ReviewListProps) {
         <div className="space-y-4">
           {reviews.map((review) => (
             <ReviewCard
-              key={review.id}
+              key={review.id} // key is used as a React prop, not passed to component
               title={review.title}
               content={review.content}
               rating={review.rating}
