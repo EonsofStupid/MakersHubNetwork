@@ -45,7 +45,8 @@ export * from './scroll-area';
 // Feedback
 export * from './spinner';
 export * from './toast';
-export * from './toaster';
+// Explicitly rename the Toaster component from './toaster' to avoid conflicts
+export { Toaster as ToastProvider } from './toaster';
 export * from './use-toast';
 export * from './sonner';
 

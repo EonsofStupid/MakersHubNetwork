@@ -1,68 +1,102 @@
 
 import { create } from 'zustand';
-import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
+import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
-interface DebugStore {
-  // Debug mode
+// Debug store state interface
+interface DebugState {
   isDebugMode: boolean;
+  errorReporting: boolean;
+  verboseLogging: boolean;
+  consoleOutput: boolean;
+  devFeatures: boolean;
+  
+  // Actions
   toggleDebugMode: () => void;
-  setDebugMode: (isEnabled: boolean) => void;
-  
-  // Alt key state for inspection
-  isAltPressed: boolean;
-  setAltPressed: (isPressed: boolean) => void;
-  
-  // Inspector visibility
-  isInspectorVisible: boolean;
-  setInspectorVisible: (isVisible: boolean) => void;
-  
-  // Currently hovered/selected element
-  hoveredElement: HTMLElement | null;
-  setHoveredElement: (element: HTMLElement | null) => void;
-  
-  // Selected component for inspection
-  selectedComponentId: string | null;
-  setSelectedComponentId: (id: string | null) => void;
+  setErrorReporting: (enabled: boolean) => void;
+  setVerboseLogging: (enabled: boolean) => void;
+  setConsoleOutput: (enabled: boolean) => void;
+  setDevFeatures: (enabled: boolean) => void;
+  resetDebugSettings: () => void;
 }
 
-export const useDebugStore = create<DebugStore>((set, get) => ({
+// Create the debug store
+export const useDebugStore = create<DebugState>((set, get) => ({
+  // Initial state
   isDebugMode: false,
+  errorReporting: true,
+  verboseLogging: false,
+  consoleOutput: true,
+  devFeatures: false,
+  
+  // Toggle debug mode
   toggleDebugMode: () => {
-    const newState = !get().isDebugMode;
-    logger.log(
-      LogLevel.INFO,
-      `Debug mode ${newState ? 'enabled' : 'disabled'}`,
-      LogCategory.SYSTEM,
-      { 
-        timestamp: new Date().toISOString(),
-        details: { mode: 'debug' } 
-      }
-    );
-    set({ isDebugMode: newState });
-  },
-  setDebugMode: (isEnabled) => {
-    logger.log(
-      LogLevel.INFO,
-      `Debug mode ${isEnabled ? 'enabled' : 'disabled'}`,
-      LogCategory.SYSTEM,
-      { 
-        timestamp: new Date().toISOString(),
-        details: { mode: 'debug', explicit: true } 
-      }
-    );
-    set({ isDebugMode: isEnabled });
+    set(state => {
+      const newDebugMode = !state.isDebugMode;
+      
+      // Log the debug mode change
+      logger.log(
+        LogLevel.INFO, 
+        LogCategory.DEBUG, 
+        newDebugMode ? "Debug mode enabled" : "Debug mode disabled"
+      );
+      
+      return { isDebugMode: newDebugMode };
+    });
   },
   
-  isAltPressed: false,
-  setAltPressed: (isPressed) => set({ isAltPressed: isPressed }),
+  // Set error reporting
+  setErrorReporting: (enabled: boolean) => {
+    set({ errorReporting: enabled });
+    
+    // Log the error reporting change
+    logger.log(
+      LogLevel.INFO, 
+      LogCategory.DEBUG, 
+      `Error reporting ${enabled ? 'enabled' : 'disabled'}`
+    );
+  },
   
-  isInspectorVisible: false,
-  setInspectorVisible: (isVisible) => set({ isInspectorVisible: isVisible }),
+  // Set verbose logging
+  setVerboseLogging: (enabled: boolean) => {
+    set({ verboseLogging: enabled });
+    
+    // Set the log level based on verbose setting
+    logger.setMinLevel(enabled ? LogLevel.DEBUG : LogLevel.INFO);
+    
+    // Log the verbose logging change
+    logger.log(
+      LogLevel.INFO, 
+      LogCategory.DEBUG, 
+      `Verbose logging ${enabled ? 'enabled' : 'disabled'}`
+    );
+  },
   
-  hoveredElement: null,
-  setHoveredElement: (element) => set({ hoveredElement: element }),
+  // Set console output
+  setConsoleOutput: (enabled: boolean) => {
+    set({ consoleOutput: enabled });
+  },
   
-  selectedComponentId: null,
-  setSelectedComponentId: (id) => set({ selectedComponentId: id })
+  // Set developer features
+  setDevFeatures: (enabled: boolean) => {
+    set({ devFeatures: enabled });
+  },
+  
+  // Reset debug settings
+  resetDebugSettings: () => {
+    set({
+      isDebugMode: false,
+      errorReporting: true,
+      verboseLogging: false,
+      consoleOutput: true,
+      devFeatures: false
+    });
+    
+    // Log the debug settings reset
+    logger.log(
+      LogLevel.INFO, 
+      LogCategory.DEBUG, 
+      "Debug settings reset to defaults"
+    );
+  }
 }));

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
@@ -9,11 +8,13 @@ import { AuthSheet } from '@/app/components/auth/AuthSheet';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
 import { Shield } from 'lucide-react';
+import { AuthStatus } from "@/shared/types/shared.types";
 
 export function MainNav() {
   const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
-  const isLoading = useAuthStore(state => state.status === 'LOADING');
+  const status = useAuthStore(state => state.status);
+  const isLoading = status === AuthStatus.LOADING;
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const hasAdminAccess = RBACBridge.hasAdminAccess();
   

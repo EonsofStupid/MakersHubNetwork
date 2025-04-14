@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useMemo, useEffect, useState } from "react";
-import { Theme, ThemeToken, ThemeComponent, ThemeLogDetails, LogLevel, LogCategory } from "@/shared/types/shared.types";
+import { Theme, ThemeToken, ThemeComponent, LogLevel, LogCategory } from "@/shared/types/shared.types";
+import { ThemeLogDetails } from "@/shared/types/theme.types";
 import { useThemeStore } from "@/shared/store/theme/store";
 import { useLogger } from "@/logging/hooks/use-logger";
 import { logger } from "@/logging/logger.service";
@@ -46,7 +47,10 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
     try {
       loadThemes();
     } catch (error) {
-      log.error("Error loading themes", { error });
+      log.error("Error loading themes", { 
+        error: error instanceof Error ? error.message : String(error)
+      });
+      
       setThemeError(error instanceof Error ? error : new Error("Failed to load themes"));
     }
   }, [loadThemes, defaultTheme, log]);
@@ -126,13 +130,13 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
         logger.log(LogLevel.INFO, LogCategory.SYSTEM, "Theme CSS variables applied", {
           theme: activeThemeId,
           cssVarsCount: Object.keys(cssVariables).length
-        } as unknown as ThemeLogDetails);
+        });
         
       } catch (error) {
         // Log error
         logger.log(LogLevel.ERROR, LogCategory.SYSTEM, "Failed to apply theme CSS variables", {
           error: error instanceof Error ? error.message : String(error)
-        } as unknown as ThemeLogDetails);
+        });
         
         setThemeError(error instanceof Error ? error : new Error("Failed to apply CSS variables"));
       }
@@ -161,7 +165,9 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
         log.debug("Theme animations applied", { count: Object.keys(animations).length });
         
       } catch (error) {
-        log.error("Failed to apply theme animations", { error });
+        log.error("Failed to apply theme animations", { 
+          error: error instanceof Error ? error.message : String(error)
+        });
         setThemeError(error instanceof Error ? error : new Error("Failed to apply animations"));
       }
     }

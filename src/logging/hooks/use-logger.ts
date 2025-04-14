@@ -1,43 +1,32 @@
 
-import { useCallback } from 'react';
-import { LogLevel, LogCategory, LogDetails } from '@/shared/types/shared.types';
+import { useMemo } from 'react';
 import { logger } from '@/logging/logger.service';
+import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
-/**
- * Custom hook for component-level logging
- * @param source The source of the log (usually component name)
- * @param defaultCategory The default category for logs
- * @returns Object with log methods
- */
-export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.UI) {
-  const logWithSource = useCallback((level: LogLevel, message: string, options?: Partial<LogDetails>) => {
-    const details = options ? { ...options, source } : { source };
-    logger.log(level, defaultCategory, message, details);
-  }, [source, defaultCategory]);
+export interface Logger {
+  debug: (message: string, details?: Record<string, any>) => void;
+  info: (message: string, details?: Record<string, any>) => void;
+  warn: (message: string, details?: Record<string, any>) => void;
+  error: (message: string, details?: Record<string, any>) => void;
+  log: (level: LogLevel, message: string, details?: Record<string, any>) => void;
+}
 
-  return {
-    debug: useCallback((message: string, options?: Partial<LogDetails>) => {
-      logWithSource(LogLevel.DEBUG, message, options);
-    }, [logWithSource]),
-    
-    info: useCallback((message: string, options?: Partial<LogDetails>) => {
-      logWithSource(LogLevel.INFO, message, options);
-    }, [logWithSource]),
-    
-    warn: useCallback((message: string, options?: Partial<LogDetails>) => {
-      logWithSource(LogLevel.WARN, message, options);
-    }, [logWithSource]),
-    
-    error: useCallback((message: string, options?: Partial<LogDetails>) => {
-      logWithSource(LogLevel.ERROR, message, options);
-    }, [logWithSource]),
-    
-    log: useCallback((level: LogLevel, message: string, options?: Partial<LogDetails>) => {
-      logWithSource(level, message, options);
-    }, [logWithSource]),
-    
-    withCategory: useCallback((category: LogCategory) => {
-      return useLogger(source, category);
-    }, [source])
-  };
+export function useLogger(source: string, category: LogCategory): Logger {
+  return useMemo(() => ({
+    debug: (message: string, details?: Record<string, any>) => {
+      logger.log(LogLevel.DEBUG, category, message, { source, details });
+    },
+    info: (message: string, details?: Record<string, any>) => {
+      logger.log(LogLevel.INFO, category, message, { source, details });
+    },
+    warn: (message: string, details?: Record<string, any>) => {
+      logger.log(LogLevel.WARN, category, message, { source, details });
+    },
+    error: (message: string, details?: Record<string, any>) => {
+      logger.log(LogLevel.ERROR, category, message, { source, details });
+    },
+    log: (level: LogLevel, message: string, details?: Record<string, any>) => {
+      logger.log(level, category, message, { source, details });
+    }
+  }), [source, category]);
 }

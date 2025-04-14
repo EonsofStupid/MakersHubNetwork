@@ -93,6 +93,8 @@ export {
 
 export type { 
   ToastActionElement, 
-  ToastProps,
-  ToastVariant
+  ToastProps
 } from '@/shared/ui/toast';
+
+// Define ToastVariant type here for backwards compatibility
+export type ToastVariant = 'default' | 'destructive' | 'success' | 'warning' | 'info';
