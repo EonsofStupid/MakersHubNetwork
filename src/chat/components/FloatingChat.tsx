@@ -1,54 +1,54 @@
+
 import React, { useState } from 'react';
-import { PanelRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import { useChatPersistence } from '@/chat/hooks/useChatPersistence';
-import { cn } from '@/lib/utils';
-import { authBridge } from '@/bridges/AuthBridge';
+import { X, MessageCircle } from 'lucide-react';
+import { useChatSession } from '../hooks/useChatSession';
+import { Button } from '@/shared/ui';
 import { ChatWrapper } from './ChatWrapper';
 
-interface FloatingChatProps {
-  className?: string;
-}
-
-export function FloatingChat({ className }: FloatingChatProps) {
+export const FloatingChat: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { isChatEnabled } = useChatPersistence();
+  const chatSession = useChatSession();
   
-  // Check if user is authenticated
-  const isAuthenticated = authBridge.isAuthenticated();
-  
-  // Don't render if chat is disabled or user is not authenticated
-  if (!isChatEnabled || !isAuthenticated) {
+  // If chat is not enabled, don't render anything
+  if (!chatSession.isChatEnabled) {
     return null;
   }
   
+  // Toggle chat open/closed
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
   
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <motion.div
-        className="overflow-hidden rounded-lg shadow-lg"
-        initial={{ height: 0, opacity: 0 }}
-        animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
-      >
-        <ChatWrapper />
-      </motion.div>
-      
-      <Button
-        variant="secondary"
-        onClick={toggleChat}
-        className={cn(
-          "w-40 flex items-center justify-center gap-2",
-          className
-        )}
-      >
-        <PanelRight className="h-4 w-4" />
-        {isOpen ? 'Close Chat' : 'Open Chat'}
-      </Button>
+      {!isOpen ? (
+        <Button 
+          onClick={toggleChat}
+          className="h-12 w-12 rounded-full shadow-lg"
+          variant="default"
+          size="icon"
+        >
+          <MessageCircle size={24} />
+        </Button>
+      ) : (
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-80 sm:w-96 h-[500px] flex flex-col">
+          <div className="flex items-center justify-between p-3 border-b">
+            <h3 className="font-medium">Chat Assistant</h3>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={toggleChat}
+              className="h-8 w-8 p-0"
+            >
+              <X size={18} />
+            </Button>
+          </div>
+          
+          <div className="flex-1 overflow-hidden">
+            <ChatWrapper />
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+};

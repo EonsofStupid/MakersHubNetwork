@@ -3,7 +3,7 @@
  * Authentication related types
  */
 
-// Auth status enum
+// Auth status enum - defined as a const object for type safety
 export const AUTH_STATUS = {
   IDLE: 'idle',
   LOADING: 'loading',
@@ -14,7 +14,7 @@ export const AUTH_STATUS = {
 
 export type AuthStatus = typeof AUTH_STATUS[keyof typeof AUTH_STATUS];
 
-// User roles enum
+// User roles enum - defined as a const object for type safety
 export const ROLES = {
   USER: 'user',
   ADMIN: 'admin',

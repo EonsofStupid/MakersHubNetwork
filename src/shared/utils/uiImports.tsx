@@ -2,7 +2,7 @@
 import React from 'react';
 
 // This is a helper file to make importing UI components easier
-// Map @/components/ui/* imports to @/shared/ui/*
+// Map old imports to new import paths
 
 // Re-export all UI components
 export * from '@/shared/ui';
@@ -24,14 +24,10 @@ export { Switch } from '@/shared/ui/switch';
 export { Slider } from '@/shared/ui/slider';
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/shared/ui/select';
 export { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group';
-export { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 
 // Navigation components
 export { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-export { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from '@/shared/ui/navigation-menu';
-export { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/shared/ui/breadcrumb';
 export { ScrollArea, ScrollBar } from '@/shared/ui/scroll-area';
-export { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/shared/ui/pagination';
 
 // Feedback components
 export { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
@@ -67,3 +63,9 @@ export {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/shared/ui/alert-dialog';
+
+// Helper function to convert old paths to new
+export const getUIImportPath = (oldPath: string): string => {
+  const componentName = oldPath.replace(/^@\/components\/ui\//, '');
+  return `@/shared/ui/${componentName}`;
+};

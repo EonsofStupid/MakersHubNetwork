@@ -1,94 +1,61 @@
 
-import { useState, useEffect } from 'react';
-import { AuthBridge } from '@/bridges/AuthBridge';
-import { RBACBridge } from '@/bridges/RBACBridge';
-import { UserProfile, UserRole, ROLES, AUTH_STATUS, AuthStatus } from '@/shared/types/shared.types';
-
-interface UseAuthStateReturn {
-  user: UserProfile | null;
-  isAuthenticated: boolean;
-  status: AuthStatus;
-  roles: UserRole[];
-  error: Error | null;
-}
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '../store/auth.store';
+import { AUTH_STATUS, UserProfile, AuthStatus } from '@/shared/types';
 
 /**
- * Hook to get the current authentication state
+ * Hook to access auth state with auto-initialization
+ * Provides a simplified interface for components
  */
-export const useAuthState = (): UseAuthStateReturn => {
-  const [user, setUser] = useState<UserProfile | null>(AuthBridge.getUser());
-  const [status, setStatus] = useState<AuthStatus>(
-    user ? AuthStatus.AUTHENTICATED : AuthStatus.UNAUTHENTICATED
-  );
-  const [error, setError] = useState<Error | null>(null);
-  const [roles, setRoles] = useState<UserRole[]>(RBACBridge.getRoles());
+export const useAuthState = () => {
+  const [isInitializing, setIsInitializing] = useState(true);
+  
+  const {
+    user,
+    isAuthenticated,
+    status,
+    error,
+    initialized,
+    initialize,
+    login,
+    logout,
+    signup
+  } = useAuthStore();
 
   useEffect(() => {
-    // Initialize auth state
-    const init = async () => {
-      try {
-        setStatus(AuthStatus.LOADING);
-        
-        // Get session from AuthBridge
-        const session = await AuthBridge.getCurrentSession();
-        
-        if (session?.user) {
-          setUser(session.user);
-          setStatus(AuthStatus.AUTHENTICATED);
-          
-          // Assign roles based on metadata
-          let userRoles: UserRole[] = [ROLES.USER];
-          
-          if (session.user.app_metadata?.roles) {
-            userRoles = session.user.app_metadata.roles as UserRole[];
-          }
-          
-          // For demo purpose, assign admin role for specific emails
-          if (session.user.email === 'admin@example.com') {
-            userRoles.push(ROLES.ADMIN);
-          }
-          
-          if (session.user.email === 'superadmin@example.com') {
-            userRoles.push(ROLES.SUPER_ADMIN);
-          }
-          
-          // Update RBAC bridge
-          RBACBridge.setRoles(userRoles);
-          setRoles(userRoles);
-        } else {
-          setUser(null);
-          setStatus(AuthStatus.UNAUTHENTICATED);
-          RBACBridge.setRoles([]);
-          setRoles([]);
-        }
-      } catch (err) {
-        setStatus(AuthStatus.ERROR);
-        setError(err as Error);
-        setUser(null);
-        RBACBridge.setRoles([]);
-        setRoles([]);
-      }
-    };
-    
-    init();
-    
-    // Set up auth state listener
-    const subscription = AuthBridge.onAuthEvent((event) => {
-      init(); // Refresh auth state when auth event occurs
-    });
-    
-    return () => {
-      if (subscription && typeof subscription.unsubscribe === 'function') {
-        subscription.unsubscribe();
-      }
-    };
-  }, []);
-  
+    // Initialize auth if not already initialized
+    if (!initialized) {
+      initialize().finally(() => {
+        setIsInitializing(false);
+      });
+    } else {
+      setIsInitializing(false);
+    }
+  }, [initialize, initialized]);
+
   return {
     user,
-    isAuthenticated: !!user,
-    status,
-    roles,
-    error
+    isAuthenticated,
+    isAuthReady: initialized && !isInitializing,
+    isLoading: status === AUTH_STATUS.LOADING || isInitializing,
+    error,
+    login,
+    logout,
+    signup,
+    status: status as AuthStatus
   };
 };
+
+export type AuthHookState = {
+  user: UserProfile | null;
+  isAuthenticated: boolean;
+  isAuthReady: boolean;
+  isLoading: boolean;
+  error: Error | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
+  status: AuthStatus;
+};
+
+export default useAuthState;

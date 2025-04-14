@@ -1,78 +1,65 @@
 
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
-import { Button } from '@/shared/ui/button';
-import { useLayoutSkeleton } from '@/admin/hooks/useLayoutSkeleton';
-import { createDefaultDashboardLayout } from '@/admin/utils/layoutUtils';
-import { v4 as uuidv4 } from 'uuid';
-import { useAdminPermissions } from '@/admin/hooks/useAdminPermissions';
-import { ADMIN_PERMISSIONS } from '@/admin/constants/permissions';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui';
+import { RBACBridge } from '@/rbac/bridge';
+import { Permission } from '@/shared/types';
 
 interface FallbackLayoutDisplayProps {
-  type: string;
-  scope: string;
-  children: React.ReactNode;
+  layoutId?: string;
+  fallbackContent?: React.ReactNode;
 }
 
-export function FallbackLayoutDisplay({ type, scope, children }: FallbackLayoutDisplayProps) {
-  const { useSaveLayout } = useLayoutSkeleton();
-  const { mutate: saveLayout, isPending } = useSaveLayout();
-  const { hasPermission } = useAdminPermissions();
-  const canCreateLayout = hasPermission(ADMIN_PERMISSIONS.ADMIN_EDIT);
+/**
+ * Fallback component when a layout cannot be loaded
+ */
+export const FallbackLayoutDisplay: React.FC<FallbackLayoutDisplayProps> = ({
+  layoutId,
+  fallbackContent
+}) => {
+  // For admin users, show debug info, otherwise show a simple fallback
+  const isAdmin = RBACBridge.hasPermission('admin:edit' as Permission);
   
-  const handleCreateDefaultLayout = () => {
-    // Create a default layout based on type
-    const defaultLayout = type === 'dashboard' 
-      ? createDefaultDashboardLayout(uuidv4())
-      : {
-          id: uuidv4(),
-          name: `Default ${type} Layout`,
-          type,
-          scope,
-          components: [],
-          version: 1
-        };
-    
-    // Save the layout to the database
-    saveLayout({
-      name: defaultLayout.name,
-      type: defaultLayout.type,
-      scope: defaultLayout.scope,
-      is_active: true,
-      layout_json: {
-        components: defaultLayout.components,
-        version: 1
-      },
-      version: 1
-    });
-  };
-  
+  if (!isAdmin) {
+    return (
+      <div className="p-4">
+        {fallbackContent || (
+          <Card>
+            <CardHeader>
+              <CardTitle>Layout Not Available</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>The requested layout could not be loaded.</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {canCreateLayout && (
-        <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-700/50">
-          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-          <AlertTitle className="text-amber-800 dark:text-amber-300">No layout found</AlertTitle>
-          <AlertDescription className="text-amber-700 dark:text-amber-400">
-            No active layout was found for this {type} in the {scope} scope.
-          </AlertDescription>
-          
-          <div className="mt-4">
-            <Button 
-              variant="outline" 
-              className="bg-amber-100 border-amber-300 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/50 dark:border-amber-600 dark:text-amber-300"
-              onClick={handleCreateDefaultLayout}
-              disabled={isPending}
-            >
-              {isPending ? "Creating..." : `Create Default ${type} Layout`}
-            </Button>
+    <Card className="border-dashed border-2 border-amber-500">
+      <CardHeader className="bg-amber-50 dark:bg-amber-900/20">
+        <CardTitle className="text-amber-700 dark:text-amber-400">Layout Error</CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        <p className="mb-4">The layout could not be loaded. This message is only visible to admins.</p>
+        
+        {layoutId && (
+          <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded font-mono text-sm">
+            <p>Layout ID: {layoutId}</p>
           </div>
-        </Alert>
-      )}
-      
-      {/* Render the fallback content */}
-      {children}
-    </div>
+        )}
+        
+        <div className="mt-4 text-sm text-slate-600 dark:text-slate-400">
+          <p>Possible reasons:</p>
+          <ul className="list-disc pl-5 mt-2">
+            <li>Layout does not exist in the database</li>
+            <li>Layout JSON is invalid or corrupted</li>
+            <li>Required components are missing</li>
+            <li>Version mismatch between layout and components</li>
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
   );
-}
+};

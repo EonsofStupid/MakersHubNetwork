@@ -145,6 +145,7 @@ export interface RadiusTokens {
   lg: string;
   xl: string;
   full: string;
+  [key: string]: string;
 }
 
 // Component tokens
@@ -201,6 +202,7 @@ export interface ThemeState {
   variables?: Record<string, string>;
   isLoaded?: boolean;
   theme?: Theme | null;
+  componentStyles?: any;
 }
 
 // Theme token
@@ -291,5 +293,5 @@ export const normalizeEffectType = (type: string): ThemeEffectType => {
     'morph': ThemeEffectType.BLUR
   };
   
-  return mappings[type] || (type as ThemeEffectType);
+  return mappings[type as keyof typeof mappings] || (type as ThemeEffectType);
 };

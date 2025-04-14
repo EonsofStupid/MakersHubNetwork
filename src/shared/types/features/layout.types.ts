@@ -2,9 +2,9 @@
 /**
  * Layout system types
  */
+
 import { ReactNode } from 'react';
 
-// Layout component props
 export interface LayoutComponentProps {
   id: string;
   title: string;
@@ -15,10 +15,8 @@ export interface LayoutComponentProps {
   requiredRole?: string;
 }
 
-// Layout component type
 export type LayoutComponent = React.ComponentType<LayoutComponentProps>;
 
-// Admin layout configuration
 export interface AdminLayoutConfig {
   sidebar: {
     width: string;
@@ -40,35 +38,26 @@ export interface AdminLayoutConfig {
   };
 }
 
-// Component type
-export interface Component {
-  id: string;
-  type: string;
-  props: Record<string, any>;
-  children?: Component[];
-}
-
-// Layout item
-export interface LayoutItem {
-  id: string;
-  parentId?: string;
-  position: number;
-  componentId: string;
-}
-
-// Layout interface
 export interface Layout {
   id: string;
   name: string;
   description?: string;
-  components: { [key: string]: { id: string; type: string; props: Record<string, any>; } };
-  layout: Array<LayoutItem>;
+  components: {
+    [key: string]: {
+      id: string;
+      type: string;
+      props: Record<string, any>;
+    }
+  };
+  layout: Array<{
+    id: string;
+    parentId?: string;
+    position: number;
+    componentId: string;
+  }>;
   meta?: Record<string, any>;
-  type?: string;
-  scope?: string;
 }
 
-// Layout skeleton
 export interface LayoutSkeleton {
   id: string;
   name: string;

@@ -2,23 +2,20 @@
 /**
  * Chat system types
  */
+import { BaseEntity } from '../core/common.types';
 
-// Chat mode
-export type ChatMode = 'chat' | 'ultra' | 'developer' | 'image' | 'debug' | 'planning' | 'training' | 'learn' | 'normal' | 'dev';
+export type ChatMode = 'chat' | 'ultra' | 'developer' | 'image' | 'debug' | 'planning' | 'training' | 'learn';
 
-// Chat message
-export interface ChatMessage {
-  id: string;
+export interface ChatMessage extends BaseEntity {
   sender: 'user' | 'ai' | 'system';
   content: string;
   timestamp: number;
   imageUrl?: string;
   thumbnailUrl?: string;
+  session_id?: string;
 }
 
-// Chat conversation
-export interface ChatConversation {
-  id: string;
+export interface ChatSession extends BaseEntity {
   title: string;
   messages: ChatMessage[];
   mode: ChatMode;
@@ -26,63 +23,46 @@ export interface ChatConversation {
   updatedAt: number;
   pinned?: boolean;
   favorite?: boolean;
+  user_id?: string;
+  is_active?: boolean;
+  system_user_id?: string;
 }
 
-// Chat session
-export interface ChatSession {
-  id: string;
-  title: string;
-  messages: ChatMessage[];
-  createdAt: number;
-  updatedAt: number;
-}
-
-// Chat store
 export interface ChatStore {
   mode: ChatMode;
   messages: ChatMessage[];
   isLoading: boolean;
-  conversations: ChatConversation[];
-  activeConversationId: string | null;
+  sessions: ChatSession[];
+  currentSessionId: string | null;
   
   setMode: (mode: ChatMode) => void;
   setIsLoading: (isLoading: boolean) => void;
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   clearMessages: () => void;
-  createConversation: (mode?: ChatMode) => string;
-  setActiveConversation: (id: string) => void;
-  updateConversation?: (id: string, updates: Partial<ChatConversation>) => void;
-  deleteConversation?: (id: string) => void;
-  pinConversation?: (id: string, pinned: boolean) => void;
-  favoriteConversation?: (id: string, favorite: boolean) => void;
+  createSession: (title?: string) => string;
+  setCurrentSessionId: (id: string) => void;
+  updateSession?: (id: string, updates: Partial<ChatSession>) => void;
+  deleteSession?: (id: string) => void;
+  pinSession?: (id: string, pinned: boolean) => void;
+  favoriteSession?: (id: string, favorite: boolean) => void;
+  getCurrentSession: () => ChatSession | null;
+  saveMessage: (message: Omit<ChatMessage, 'id'>) => ChatMessage | null;
+  sendMessage?: (content: string) => Promise<void>;
+  isChatEnabled?: boolean;
 }
 
-// Printer context
 export interface PrinterContext {
   name: string;
   settings: Record<string, unknown>;
 }
 
-// Project context
 export interface ProjectContext {
   id: string;
   title: string;
 }
 
-// Chat bridge
 export interface ChatBridge {
   userId: string;
   printerContext: PrinterContext;
   projectContext: ProjectContext;
-}
-
-// Chat context
-export interface ChatContext {
-  context: string;
-  loadContext: (query: string) => Promise<string>;
-  isLoadingContext: boolean;
-  messages: any[];
-  sendMessage: (content: string) => Promise<void>;
-  isLoading: boolean;
-  mode: ChatMode;
 }
