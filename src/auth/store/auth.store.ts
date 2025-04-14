@@ -1,11 +1,11 @@
 
 import { create } from 'zustand';
-import { UserProfile, AUTH_STATUS, AuthStatus } from '@/auth/types/auth.types';
-import { UserRole } from '@/shared/types/shared.types';
+import { UserProfile, UserRole, AUTH_STATUS, AuthStatus } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 import { LogCategory, LogLevel } from '@/shared/types/shared.types';
 
 interface AuthState {
+  // State
   user: UserProfile | null;
   profile: UserProfile | null;
   isAuthenticated: boolean;
@@ -15,6 +15,7 @@ interface AuthState {
   isLoading: boolean;
   roles: UserRole[];
 
+  // Actions
   initialize: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -24,6 +25,7 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
+  // Initial state
   user: null,
   profile: null,
   isAuthenticated: false,

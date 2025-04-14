@@ -1,7 +1,9 @@
 
 /**
- * Role definitions
+ * Core type definitions
  */
+
+// Role definitions as const enum
 export const ROLES = {
   USER: 'user',
   ADMIN: 'admin',
@@ -11,34 +13,23 @@ export const ROLES = {
   GUEST: 'guest'
 } as const;
 
-export type UserRole = keyof typeof ROLES | string;
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];
 
-/**
- * Log levels
- */
-export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3
+// User Profile
+export interface UserProfile {
+  id: string;
+  email: string;
+  name?: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+  last_sign_in_at?: string;
+  roles?: UserRole[];
+  user_metadata?: Record<string, unknown>;
+  app_metadata?: Record<string, unknown>;
 }
 
-/**
- * Log categories
- */
-export enum LogCategory {
-  AUTH = 'auth',
-  RBAC = 'rbac',
-  API = 'api',
-  UI = 'ui',
-  SYSTEM = 'system',
-  APP = 'app',
-  ADMIN = 'admin'
-}
-
-/**
- * Authentication status
- */
+// Auth status
 export const AUTH_STATUS = {
   IDLE: 'idle',
   LOADING: 'loading',
@@ -47,11 +38,30 @@ export const AUTH_STATUS = {
   ERROR: 'error',
 } as const;
 
-export type AuthStatus = (typeof AUTH_STATUS)[keyof typeof AUTH_STATUS];
+export type AuthStatus = typeof AUTH_STATUS[keyof typeof AUTH_STATUS];
 
-/**
- * Permission type
- */
+// Log categories
+export enum LogCategory {
+  AUTH = 'auth',
+  RBAC = 'rbac',
+  API = 'api',
+  UI = 'ui',
+  SYSTEM = 'system',
+  APP = 'app',
+  ADMIN = 'admin',
+  CHAT = 'chat',
+  THEME = 'theme'
+}
+
+// Log levels  
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3
+}
+
+// Core permission type
 export type Permission =
   | 'create_project'
   | 'edit_project'
@@ -74,3 +84,4 @@ export type Permission =
   | 'content:delete'
   | 'settings:view'
   | 'settings:edit';
+

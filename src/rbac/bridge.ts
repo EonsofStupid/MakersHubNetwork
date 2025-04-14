@@ -1,7 +1,7 @@
-
-import { UserRole } from './constants/roles';
-import { Permission } from '@/shared/types/shared.types';
+import { UserRole, Permission } from '@/shared/types/shared.types';
 import { rbacStore } from './store/rbac.store';
+import { logger } from '@/logging/logger.service';
+import { LogCategory, LogLevel } from '@/shared/types/shared.types';
 
 /**
  * RBAC Bridge - Clean interface for role-based access control
@@ -126,6 +126,50 @@ class RBACBridgeImpl {
     if (roles.includes('builder')) return 'builder';
     if (roles.includes('user')) return 'user';
     return 'guest';
+  }
+
+  /**
+   * Check if user can access a specific route
+   * @param route Route to check
+   * @returns Boolean indicating if user can access the route
+   */
+  canAccessRoute(route: string): boolean {
+    const userRoles = this.getRoles();
+    if (userRoles.includes('super_admin')) return true;
+    
+    const routeRoles: Record<string, UserRole[]> = {
+      '/admin': ['admin', 'super_admin'],
+      '/admin/users': ['admin', 'super_admin'],
+      '/admin/roles': ['super_admin'],
+      '/admin/settings': ['super_admin']
+    };
+    
+    const requiredRoles = routeRoles[route];
+    if (!requiredRoles) return true;
+    
+    return this.hasRole(requiredRoles);
+  }
+
+  /**
+   * Check if user can access a specific admin section
+   * @param section Admin section to check
+   * @returns Boolean indicating if user can access the section
+   */
+  canAccessAdminSection(section: string): boolean {
+    const userRoles = this.getRoles();
+    if (userRoles.includes('super_admin')) return true;
+    
+    const sectionRoles: Record<string, UserRole[]> = {
+      users: ['admin', 'super_admin'],
+      roles: ['super_admin'],
+      settings: ['super_admin'],
+      content: ['admin', 'super_admin', 'moderator']
+    };
+    
+    const requiredRoles = sectionRoles[section];
+    if (!requiredRoles) return false;
+    
+    return this.hasRole(requiredRoles);
   }
 }
 
