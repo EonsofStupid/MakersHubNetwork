@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { layoutSkeletonService } from '@/admin/services/layoutSkeleton.service';
 import { Layout, LayoutSkeleton } from '@/shared/types';
@@ -30,9 +29,9 @@ export function useLayoutSkeleton() {
       queryKey: ['layout', id],
       queryFn: async () => {
         if (!id) return null;
-        const skeleton = await layoutSkeletonService.getById(id);
-        if (!skeleton?.data) return null;
-        return skeleton.data;
+        const response = await layoutSkeletonService.getById(id);
+        if (!response.success || !response.data) return null;
+        return response.data;
       },
       enabled: !!id,
     });
@@ -46,7 +45,7 @@ export function useLayoutSkeleton() {
       queryKey: ['layout', type, scope, 'active'],
       queryFn: async () => {
         const response = await layoutSkeletonService.getByTypeAndScope(type, scope);
-        if (!response?.data) return null;
+        if (!response.success || !response.data) return null;
         return response.data;
       },
     });
