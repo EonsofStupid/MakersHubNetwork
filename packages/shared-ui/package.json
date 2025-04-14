@@ -6,6 +6,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "build:dev": "vite build --mode development"
     "build": "tsup src/index.tsx --format esm --dts --external react",
     "dev": "tsup src/index.tsx --format esm --dts --external react --watch",
     "lint": "eslint ."
