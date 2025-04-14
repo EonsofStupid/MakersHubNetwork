@@ -1,17 +1,16 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/cn';
 import { Button } from '@/shared/ui/button';
 import { Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useThemeStore } from '@/stores/theme/store';
+import { useThemeStore } from '@/shared/stores/theme/store';
 
 interface FooterProps {
   className?: string;
 }
 
-export const Footer: React.FC<FooterProps> = ({ className }) => {
+export function Footer({ className }: FooterProps) {
   const { currentTheme } = useThemeStore();
   const isImpulsivity = currentTheme?.name?.toLowerCase().includes('impulsivity');
   

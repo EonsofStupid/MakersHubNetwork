@@ -37,7 +37,8 @@ export type Permission =
   | 'manage_users'
   | 'manage_roles'
   | 'manage_permissions'
-  | 'view_analytics';
+  | 'view_analytics'
+  | 'admin:edit'; // Added missing permission
 
 /**
  * RBAC route policies
@@ -54,9 +55,22 @@ export const RBAC_POLICIES: Record<string, UserRole[]> = {
   '/projects/delete': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
 };
 
+// Path policies for use in route guards
+export const PATH_POLICIES = RBAC_POLICIES;
+
 /**
- * Auth status types
+ * Auth status types - define as both enum and const for backwards compatibility
  */
+// Define as both const and enum for backwards compatibility
+export enum AuthStatus {
+  IDLE = 'idle',
+  LOADING = 'loading',
+  AUTHENTICATED = 'authenticated',
+  UNAUTHENTICATED = 'unauthenticated',
+  ERROR = 'error',
+}
+
+// Const version for value usage
 export const AUTH_STATUS = {
   IDLE: 'idle',
   LOADING: 'loading',
@@ -65,7 +79,7 @@ export const AUTH_STATUS = {
   ERROR: 'error',
 } as const;
 
-export type AuthStatus = (typeof AUTH_STATUS)[keyof typeof AUTH_STATUS];
+export type AuthStatusType = (typeof AUTH_STATUS)[keyof typeof AUTH_STATUS];
 
 /**
  * User profile type
@@ -82,6 +96,7 @@ export interface UserProfile {
   bio?: string;
   user_metadata?: Record<string, unknown>;
   app_metadata?: Record<string, unknown>;
+  user_id?: string; // Added for compatibility with some API responses
 }
 
 /**
@@ -90,7 +105,7 @@ export interface UserProfile {
 export interface User extends UserProfile {}
 
 /**
- * Log categories
+ * Log categories - define as both enum and const for backwards compatibility
  */
 export enum LogCategory {
   AUTH = 'auth',
@@ -105,8 +120,22 @@ export enum LogCategory {
   APP = 'app'
 }
 
+// Const version for value usage
+export const LOG_CATEGORY = {
+  AUTH: 'auth',
+  RBAC: 'rbac',
+  API: 'api',
+  UI: 'ui',
+  SYSTEM: 'system',
+  CHAT: 'chat',
+  THEME: 'theme',
+  DEBUG: 'debug',
+  ADMIN: 'admin',
+  APP: 'app'
+} as const;
+
 /**
- * Log levels
+ * Log levels - define as both enum and const for backwards compatibility
  */
 export enum LogLevel {
   TRACE = 'trace',
@@ -119,6 +148,19 @@ export enum LogLevel {
   CRITICAL = 'critical',
   SILENT = 'silent'
 }
+
+// Const version for value usage
+export const LOG_LEVEL = {
+  TRACE: 'trace',
+  DEBUG: 'debug',
+  INFO: 'info',
+  SUCCESS: 'success',
+  WARN: 'warn',
+  ERROR: 'error',
+  FATAL: 'fatal',
+  CRITICAL: 'critical',
+  SILENT: 'silent'
+} as const;
 
 /**
  * Log level values for comparing severity
@@ -159,6 +201,7 @@ export interface LogEntry {
   source?: string;
   details?: any;
   tags?: string[];
+  permissions?: string[]; // Added for RBAC logging
 }
 
 /**
@@ -179,6 +222,7 @@ export interface LogDetails {
   animationCount?: number;
   componentCount?: number;
   count?: number;
+  permissions?: string[]; // Added for RBAC logging
 }
 
 /**
@@ -222,7 +266,7 @@ export enum ThemeEffectType {
 }
 
 // Import these from theme.types.ts to avoid duplication
-import { 
+import type { 
   Theme, 
   ThemeState, 
   ComponentTokens, 
@@ -231,7 +275,7 @@ import {
   ThemeComponent
 } from './theme.types';
 
-export { 
+export type { 
   Theme, 
   ThemeState, 
   ComponentTokens, 
@@ -272,9 +316,24 @@ export interface BaseEntity {
 
 // Theme effect interface
 export interface ThemeEffect {
+  id: string;
   type: ThemeEffectType;
   enabled: boolean;
+  intensity: number;
+  selector?: string;
+  config?: Record<string, any>;
+  color?: string;
   [key: string]: any;
+}
+
+// Theme log details type for theme-related logs
+export interface ThemeLogDetails extends LogDetails {
+  theme?: string;
+  themeId?: string;
+  success?: boolean;
+  error?: boolean;
+  errorMessage?: string;
+  details?: Record<string, unknown>;
 }
 
 // Theme effect provider props

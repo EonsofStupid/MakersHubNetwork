@@ -9,7 +9,7 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/shared/ui/toast";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/shared/hooks/use-toast";
 import * as LucideIcons from "lucide-react";
 import React from "react";
 
@@ -24,11 +24,16 @@ const DynamicIcon = ({ name }: { name: string }) => {
 };
 
 export function Toaster() {
-  const { toasts } = useToast();
+  const { toast } = useToast();
+  
+  // Access toasts via toast.__internal.toasts
+  // This is a workaround until the API is updated
+  // @ts-ignore - accessing internal property
+  const toasts = toast && toast.__internal ? toast.__internal.toasts : [];
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, icon, ...props }) {
+      {toasts && toasts.map(function ({ id, title, description, action, icon, ...props }) {
         return (
           <Toast key={id} {...props}>
             <div className="flex gap-2">

@@ -13,7 +13,8 @@ export const AUTH_PERMISSIONS = {
   SYSTEM_EDIT: 'system:edit',
   SETTINGS_VIEW: 'settings:view',
   SETTINGS_EDIT: 'settings:edit',
-  SUPER_ADMIN: 'super:admin'
+  SUPER_ADMIN: 'super:admin',
+  ADMIN_EDIT: 'admin:edit' // Added missing permission
 } as const;
 
 // Auth permission value type

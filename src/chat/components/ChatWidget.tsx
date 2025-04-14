@@ -1,124 +1,99 @@
-import React from 'react';
-import { useChat } from '../context/ChatProvider';
-import { MessageCircle, X, Send } from 'lucide-react';
-import { useThemeStore } from '@/stores/theme/store';
-import { useAuthState } from '@/auth/hooks/useAuthState';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { useAdminAccess } from '@/admin/hooks/useAdminAccess';
-import { useMobile } from '@/hooks/use-mobile';
 
-export function ChatWidget() {
-  const { isOpen, toggleChat, messages, sendMessage, isLoading: chatIsLoading } = useChat();
-  const { user } = useAuthState();
-  const { hasAdminAccess, isAdmin } = useAdminAccess();
-  const [input, setInput] = React.useState('');
-  const messagesRef = React.useRef<HTMLDivElement>(null);
-  const isMobile = useMobile();
-  
-  // Scroll to bottom when messages change
-  React.useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-    }
-  }, [messages]);
-  
-  // Handle input submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (input.trim() && !chatIsLoading) {
-      sendMessage(input);
+import React, { useState } from 'react';
+import { useThemeStore } from '@/shared/stores/theme/store';
+import { Send } from 'lucide-react';
+import { Card, CardHeader, CardContent, CardFooter } from '@/shared/ui/card';
+import { Button } from '@/shared/ui/button';
+import { Textarea } from '@/shared/ui/textarea';
+
+interface ChatWidgetProps {
+  title?: string;
+  onSend?: (message: string) => void;
+  loading?: boolean;
+  messages?: any[];
+  className?: string;
+  height?: string;
+}
+
+export const ChatWidget: React.FC<ChatWidgetProps> = ({
+  title = 'Chat',
+  onSend,
+  loading = false,
+  messages = [],
+  className = '',
+  height = '500px',
+}) => {
+  const [input, setInput] = useState('');
+  const theme = useThemeStore(state => state);
+
+  const handleSend = () => {
+    if (input.trim() && onSend) {
+      onSend(input);
       setInput('');
     }
   };
-  
-  // If not open, show the floating button
-  if (!isOpen) {
-    return (
-      <Button
-        onClick={toggleChat}
-        className="fixed bottom-4 right-4 rounded-full w-12 h-12 p-0 shadow-lg z-50 bg-primary hover:bg-primary/90"
-      >
-        <MessageCircle size={24} />
-      </Button>
-    );
-  }
-  
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
-    <Card className="fixed bottom-4 right-4 w-80 md:w-96 shadow-xl z-50 flex flex-col overflow-hidden max-h-[70vh] rounded-lg border border-border bg-card text-card-foreground">
-      {/* Chat header */}
-      <div className="flex items-center justify-between p-3 border-b bg-muted/50">
-        <h3 className="font-medium">Chat Assistant</h3>
-        <Button variant="ghost" size="icon" onClick={toggleChat}>
-          <X size={18} />
-        </Button>
-      </div>
-      
-      {/* Messages area */}
-      <div 
-        ref={messagesRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[300px] max-h-[50vh]"
-      >
+    <Card className={`flex flex-col w-full overflow-hidden ${className}`} style={{ height }}>
+      <CardHeader className="py-3 px-4 border-b">
+        <h3 className="text-lg font-medium">{title}</h3>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            <p>How can I help you today?</p>
+          <div className="h-full flex items-center justify-center text-muted-foreground">
+            No messages yet. Start a conversation!
           </div>
         ) : (
-          messages.map((msg) => (
-            <div 
-              key={msg.id}
-              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div 
-                className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                  msg.sender === 'user' 
-                    ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                    : 'bg-muted text-muted-foreground rounded-tl-none'
+          <div className="space-y-4">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex ${
+                  msg.sender === 'user' ? 'justify-end' : 'justify-start'
                 }`}
               >
-                <p>{msg.content}</p>
-                <div className="text-xs opacity-70 text-right mt-1">
-                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    msg.sender === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}
+                >
+                  {msg.text}
                 </div>
               </div>
-            </div>
-          ))
-        )}
-        
-        {chatIsLoading && (
-          <div className="flex justify-start">
-            <div className="bg-muted text-muted-foreground rounded-2xl rounded-tl-none px-4 py-2">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-              </div>
-            </div>
+            ))}
           </div>
         )}
-      </div>
-      
-      {/* Input area */}
-      <form onSubmit={handleSubmit} className="border-t p-3 bg-background">
-        <div className="flex items-end gap-2">
+      </CardContent>
+      <CardFooter className="p-4 pt-2 border-t">
+        <div className="flex w-full gap-2">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 min-h-[60px] max-h-[120px]"
-            disabled={chatIsLoading}
+            onKeyDown={handleKeyPress}
+            placeholder="Type a message..."
+            className="min-h-10 flex-1"
+            disabled={loading}
           />
-          <Button 
-            type="submit" 
+          <Button
+            onClick={handleSend}
+            disabled={loading || !input.trim()}
             size="icon"
-            disabled={!input.trim() || chatIsLoading}
-            className="h-10 w-10"
           >
-            <Send size={18} />
+            <Send className="h-4 w-4" />
           </Button>
         </div>
-      </form>
+      </CardFooter>
     </Card>
   );
-}
+};
+
+export default ChatWidget;

@@ -24,7 +24,7 @@ export * from './form';
 export * from './input';
 export * from './label';
 export * from './radio-group';
-export * from './select';
+export * from './select'; // Now properly exported
 export * from './slider';
 export * from './switch';
 export * from './textarea';
@@ -41,7 +41,6 @@ export * from './tooltip';
 export * from './navigation-menu';
 export * from './pagination';
 export * from './scroll-area';
-export * from './steps';
 
 // Feedback
 export * from './spinner';
@@ -49,3 +48,12 @@ export * from './toast';
 export * from './toaster';
 export * from './use-toast';
 export * from './sonner';
+
+// Re-export types explicitly to avoid ambiguity
+export type { 
+  ToastActionElement,
+  ToastProps 
+} from './toast';
+
+// Ensure toast is exported from one place consistently
+export { toast } from './use-toast';

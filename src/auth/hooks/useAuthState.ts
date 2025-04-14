@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { AuthBridge } from '@/bridges/AuthBridge';
 import { RBACBridge } from '@/bridges/RBACBridge';
-import { UserProfile, UserRole, ROLES, AuthStatus } from '@/shared/types/shared.types';
+import { UserProfile, UserRole, ROLES, AUTH_STATUS, AuthStatus } from '@/shared/types/shared.types';
 
 interface UseAuthStateReturn {
   user: UserProfile | null;

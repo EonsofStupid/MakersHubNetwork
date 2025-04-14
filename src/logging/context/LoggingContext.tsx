@@ -1,106 +1,106 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getLogger } from '../index';
-import { LogLevel, LogCategory, LogEntry } from '../types';
-import { v4 as uuidv4 } from 'uuid';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { logger } from '@/logging/logger.service';
+import { LogLevel, LogCategory, LogEntry } from '@/shared/types/shared.types';
 
-interface LoggingContextType {
-  showLogConsole: boolean;
-  setShowLogConsole: (show: boolean) => void;
-  logSystemStartup: () => void;
+// Define the context type
+export interface LoggingContextType {
   logs: LogEntry[];
+  isConsoleVisible: boolean;
+  toggleConsole: () => void;
   clearLogs: () => void;
-  toggleLogConsole: () => void;
+  addLog: (log: LogEntry) => void;
+  logLevel: LogLevel;
+  setLogLevel: (level: LogLevel) => void;
 }
 
-const LoggingContext = createContext<LoggingContextType>({
-  showLogConsole: false,
-  setShowLogConsole: () => {},
-  logSystemStartup: () => {},
+// Create the context with default values
+export const LoggingContext = createContext<LoggingContextType>({
   logs: [],
+  isConsoleVisible: false,
+  toggleConsole: () => {},
   clearLogs: () => {},
-  toggleLogConsole: () => {}
+  addLog: () => {},
+  logLevel: LogLevel.INFO,
+  setLogLevel: () => {},
 });
 
-export const useLoggingContext = () => useContext(LoggingContext);
-
-export const LoggingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [showLogConsole, setShowLogConsole] = useState(false);
+// Provider component
+export function LoggingProvider({ 
+  children, 
+  defaultLevel = LogLevel.INFO
+}: { 
+  children: React.ReactNode;
+  defaultLevel?: LogLevel;
+}) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const logger = getLogger();
+  const [isConsoleVisible, setIsConsoleVisible] = useState(false);
+  const [logLevel, setLogLevel] = useState<LogLevel>(defaultLevel);
   
-  // Toggle log console
-  const toggleLogConsole = useCallback(() => {
-    setShowLogConsole(prev => !prev);
-  }, []);
-  
-  // Clear logs
-  const clearLogs = useCallback(() => {
-    setLogs([]);
-  }, []);
-  
-  // Log system startup
-  const logSystemStartup = useCallback(() => {
-    logger.info('Application UI initialized', {
-      category: LogCategory.SYSTEM,
-      details: {
-        environment: import.meta.env.MODE,
-        timestamp: new Date().toISOString(),
-      },
-      tags: ['startup', 'initialization']
-    });
-  }, [logger]);
-  
-  // Listen for log events
+  // Subscribe to log events
   useEffect(() => {
-    const handleLogEvent = (entry: LogEntry) => {
-      setLogs(prevLogs => [...prevLogs, {
-        ...entry,
-        id: entry.id || uuidv4()
-      }]);
-    };
+    // Display initial log
+    logger.log(
+      LogLevel.INFO, 
+      LogCategory.SYSTEM, 
+      'Logging system initialized', 
+      { logLevel }
+    );
     
-    // Add listener for log events
-    // This is a simplified version - in a real app we'd need to implement
-    // a proper event system for the logger
-    const unsubscribe = subscribeToLogEvents(handleLogEvent);
+    // Subscribe to log events
+    const unsubscribe = logger.subscribe((log) => {
+      setLogs(prevLogs => [...prevLogs, log]);
+    });
     
+    // Cleanup
     return () => {
       unsubscribe();
     };
   }, []);
   
-  // Listen for key combinations to toggle log console (Ctrl+Shift+L)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
-        toggleLogConsole();
-      }
-    };
+  // Toggle console visibility
+  const toggleConsole = () => {
+    setIsConsoleVisible(prev => !prev);
+  };
+  
+  // Add a log entry
+  const addLog = (log: LogEntry) => {
+    setLogs(prev => [...prev, log]);
+  };
+  
+  // Clear logs
+  const clearLogs = () => {
+    setLogs([]);
     
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [toggleLogConsole]);
+    // Access the memory transport and clear logs there too
+    const memoryTransport = logger.getTransports().find(t => t.name === 'memory');
+    if (memoryTransport && 'clearLogs' in memoryTransport) {
+      (memoryTransport as any).clearLogs();
+    }
+  };
   
   return (
-    <LoggingContext.Provider value={{ 
-      showLogConsole, 
-      setShowLogConsole,
-      logSystemStartup,
+    <LoggingContext.Provider value={{
       logs,
+      isConsoleVisible,
+      toggleConsole,
       clearLogs,
-      toggleLogConsole
+      addLog,
+      logLevel,
+      setLogLevel,
     }}>
       {children}
     </LoggingContext.Provider>
   );
-};
+}
 
-// Helper function to subscribe to log events
-// This is a placeholder - in a real app we'd implement a proper event system
-function subscribeToLogEvents(callback: (entry: LogEntry) => void): () => void {
-  // Implementation would depend on how the logging system emits events
-  return () => {};
+// Hook to use the logging context
+export function useLoggingContext() {
+  const context = useContext(LoggingContext);
+  
+  if (!context) {
+    throw new Error('useLoggingContext must be used within a LoggingProvider');
+  }
+  
+  return context;
 }
