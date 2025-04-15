@@ -1,23 +1,17 @@
 
 import { create } from 'zustand';
-import { Theme, ThemeState, ThemeStoreActions, DesignTokens, ComponentTokens } from '@/shared/types/theme/theme.types';
+import { Theme, ThemeState, ThemeStoreActions, DesignTokens, ComponentTokens } from '@/shared/types/theme.types';
 import { devtools, persist } from 'zustand/middleware';
 import { logger } from '@/logging/logger.service';
 import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
-const initialState: ThemeState = {
-  themes: [],
-  activeThemeId: null,
+const defaultTheme: Theme = {
+  id: 'default',
+  name: 'Default Theme',
+  description: 'Default system theme',
   isDark: false,
-  primaryColor: '#0070f3',
-  backgroundColor: '#ffffff',
-  textColor: '#000000',
-  designTokens: {
-    colors: {},
-  },
-  componentTokens: {},
-  isLoading: false,
-  error: null,
+  status: 'active',
+  context: 'site',
   variables: {
     background: '#ffffff',
     foreground: '#000000',
@@ -30,24 +24,48 @@ const initialState: ThemeState = {
     muted: '#f5f5f5',
     mutedForeground: '#6b7280',
     accent: '#f5a623',
-    accentForeground: '#ffffff',
+    accentForeground: '#000000',
     destructive: '#ff0000',
     destructiveForeground: '#ffffff',
     border: '#e2e8f0',
     input: '#e2e8f0',
-    ring: '#0070f3',
+    ring: '#0070f3'
   },
-  theme: null,
-  isLoaded: false,
+  designTokens: {
+    colors: {
+      primary: '#0070f3',
+      background: '#ffffff'
+    }
+  },
+  componentTokens: {}
+};
+
+const initialState: ThemeState = {
+  themes: [defaultTheme],
+  activeThemeId: defaultTheme.id,
+  isDark: false,
+  primaryColor: defaultTheme.variables.primary,
+  backgroundColor: defaultTheme.variables.background,
+  textColor: defaultTheme.variables.foreground,
+  designTokens: defaultTheme.designTokens,
+  componentTokens: defaultTheme.componentTokens || {},
+  isLoading: false,
+  error: null,
+  variables: defaultTheme.variables,
+  theme: defaultTheme,
+  isLoaded: true
 };
 
 export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         ...initialState,
 
-        setThemes: (themes) => set({ themes }),
+        setThemes: (themes) => {
+          set({ themes });
+          logger.log(LogLevel.INFO, LogCategory.THEME, 'Themes updated');
+        },
 
         setActiveTheme: (themeId) => {
           set((state) => {
@@ -57,86 +75,68 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
             return {
               activeThemeId: themeId,
               isDark: theme.isDark || false,
+              primaryColor: theme.variables.primary,
+              backgroundColor: theme.variables.background,
+              textColor: theme.variables.foreground,
               theme,
               variables: theme.variables,
               designTokens: theme.designTokens,
               componentTokens: theme.componentTokens || {},
-              isLoaded: true,
+              isLoaded: true
             };
           });
         },
 
-        setDesignTokens: (tokens: DesignTokens) => set({ designTokens: tokens }),
-        
-        setComponentTokens: (tokens: ComponentTokens) => set({ componentTokens: tokens }),
+        setDesignTokens: (tokens: DesignTokens) => {
+          set({ designTokens: tokens });
+        },
+
+        setComponentTokens: (tokens: ComponentTokens) => {
+          set({ componentTokens: tokens });
+        },
 
         fetchThemes: async () => {
           set({ isLoading: true });
           try {
-            // Simulated API call - replace with actual implementation
-            const themes: Theme[] = [];
-            set({ themes, isLoading: false });
+            // For now, just use default theme
+            set({ 
+              themes: [defaultTheme],
+              isLoading: false
+            });
           } catch (error) {
             set({ 
-              isLoading: false, 
-              error: error instanceof Error ? error.message : 'Unknown error'
+              isLoading: false,
+              error: error instanceof Error ? error.message : 'Failed to fetch themes'
             });
           }
         },
 
         createTheme: async (theme) => {
-          set({ isLoading: true });
-          try {
-            set((state) => ({ 
-              themes: [...state.themes, theme], 
-              isLoading: false 
-            }));
-          } catch (error) {
-            set({ 
-              isLoading: false, 
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
-          }
+          set((state) => ({ themes: [...state.themes, theme] }));
         },
 
         updateTheme: async (theme) => {
-          set({ isLoading: true });
-          try {
-            set((state) => ({
-              themes: state.themes.map((t) => (t.id === theme.id ? theme : t)),
-              isLoading: false,
-            }));
-          } catch (error) {
-            set({ 
-              isLoading: false, 
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
-          }
+          set((state) => ({
+            themes: state.themes.map((t) => (t.id === theme.id ? theme : t))
+          }));
         },
 
         deleteTheme: async (themeId) => {
-          set({ isLoading: true });
-          try {
-            set((state) => ({
-              themes: state.themes.filter((t) => t.id !== themeId),
-              isLoading: false,
-            }));
-          } catch (error) {
-            set({ 
-              isLoading: false, 
-              error: error instanceof Error ? error.message : 'Unknown error'
-            });
-          }
+          set((state) => ({
+            themes: state.themes.filter((t) => t.id !== themeId)
+          }));
         },
 
-        resetTheme: () => set(initialState),
+        resetTheme: () => {
+          set(initialState);
+        }
       }),
       {
         name: 'theme-store',
         partialize: (state) => ({
           activeThemeId: state.activeThemeId,
-          isDark: state.isDark,
-        }),
+          isDark: state.isDark
+        })
       }
     )
   )

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useMemo, useEffect, useState } from "react";
 import { Theme, ThemeVariables } from "@/shared/types/theme.types";
-import { useThemeStore } from "@/shared/store/theme/store";
+import { useThemeStore } from "@/shared/stores/theme/store";
 import { useLogger } from "@/logging/hooks/use-logger";
 import { LogCategory } from "@/shared/types/shared.types";
 import { ThemeLoadingState } from "@/shared/ui/theme/info/ThemeLoadingState";
@@ -10,7 +10,9 @@ import { ThemeErrorState } from "@/shared/ui/theme/info/ThemeErrorState";
 export interface SiteThemeContextType {
   theme: Theme | null;
   isLoaded: boolean;
-  variables: ThemeVariables | null;
+  variables: ThemeVariables;
+  componentStyles?: Record<string, Record<string, string>>;
+  animations?: Record<string, string>;
   themeError: Error | null;
 }
 
@@ -50,8 +52,10 @@ export function SiteThemeProvider({
     theme: themeStore.theme,
     isLoaded: themeStore.isLoaded,
     variables: themeStore.variables,
+    componentStyles: themeStore.componentStyles,
+    animations: themeStore.animations,
     themeError
-  }), [themeStore.theme, themeStore.isLoaded, themeStore.variables, themeError]);
+  }), [themeStore.theme, themeStore.isLoaded, themeStore.variables, themeStore.componentStyles, themeStore.animations, themeError]);
 
   if (themeStore.isLoading) {
     return <ThemeLoadingState />;

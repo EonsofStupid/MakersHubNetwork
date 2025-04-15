@@ -1,6 +1,4 @@
 
-import { ThemeEffectType } from './shared.types';
-
 export interface ThemeVariables {
   background: string;
   foreground: string;
@@ -19,7 +17,7 @@ export interface ThemeVariables {
   border: string;
   input: string;
   ring: string;
-  [key: string]: string; // Add index signature for flexible theme variables
+  [key: string]: string; // Allow for flexible theme variables
 }
 
 export interface DesignTokens {
@@ -60,6 +58,8 @@ export interface ThemeState {
   variables: ThemeVariables;
   theme: Theme | null;
   isLoaded: boolean;
+  componentStyles?: Record<string, Record<string, string>>;
+  animations?: Record<string, string>;
 }
 
 export interface ThemeStoreActions {
@@ -72,4 +72,11 @@ export interface ThemeStoreActions {
   updateTheme: (theme: Theme) => Promise<void>;
   deleteTheme: (themeId: string) => Promise<void>;
   resetTheme: () => void;
+}
+
+export interface ThemeToken {
+  token_name: string;
+  token_value: string;
+  category: string;
+  description?: string;
 }
