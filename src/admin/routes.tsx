@@ -30,7 +30,7 @@ export const AdminRoutes = () => {
             />
           } />
           <Route path="/settings" element={
-            <AdminAuthGuard requiredRole={ROLES.SUPER_ADMIN}>
+            <AdminAuthGuard requiredRole={ROLES.super_admin}>
               <PlaceholderPage 
                 title="System Settings" 
                 description="Configure system settings"
