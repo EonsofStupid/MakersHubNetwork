@@ -1,4 +1,3 @@
-
 /**
  * Theme system types
  */
@@ -195,7 +194,7 @@ export interface ParticleEffect extends ThemeEffect {
 }
 
 export interface MorphEffect extends ThemeEffect {
-  type: ThemeEffectType.BLUR;
+  type: ThemeEffectType.MORPH;
   intensity?: number;
   speed?: number;
 }

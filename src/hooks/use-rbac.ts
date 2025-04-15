@@ -1,7 +1,8 @@
 
 import { useAuthStore } from '@/stores/auth/auth.store';
-import { UserRole, RBAC, PATH_POLICIES } from '@/shared/types';
+import { UserRole, RBAC } from '@/shared/types';
 import { useRbac } from '@/auth/rbac/use-rbac';
+import { PATH_POLICIES } from '@/shared/types/rbac/policies';
 
 /**
  * Custom hook for role-based access control
