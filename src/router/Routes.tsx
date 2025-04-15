@@ -3,24 +3,11 @@ import React from 'react';
 import { Route, Routes as RouterRoutes } from 'react-router-dom';
 import { AdminAuthGuard } from '@/admin/panels/auth/AdminAuthGuard';
 import { AccessDenied } from '@/admin/panels/auth/AccessDenied';
+import HomePage from '@/app/pages/HomePage';
 import LoginPage from '@/app/auth/LoginPage';
 import AdminDashboard from '@/admin/pages/Dashboard';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { AUTH_STATUS, ROLES } from '@/shared/types/shared.types';
-
-const HomePage = () => (
-  <div className="container mx-auto p-6">
-    <h1 className="text-3xl font-bold mb-6">Welcome to Admin Dashboard System</h1>
-    <p className="mb-4">This is a role-based access control system demonstration.</p>
-    <p className="text-muted-foreground">
-      To access the admin dashboard, please login with the following credentials:
-    </p>
-    <ul className="list-disc pl-6 mt-2 mb-4">
-      <li>Admin access: admin@example.com / admin123</li>
-      <li>Super admin access: superadmin@example.com / super123</li>
-    </ul>
-  </div>
-);
 
 // Loading component for auth state
 const LoadingScreen = () => (
