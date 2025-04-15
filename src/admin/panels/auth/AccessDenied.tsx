@@ -1,37 +1,27 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/auth/store/auth.store';
 import { Button } from '@/shared/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
-export const AccessDenied: React.FC = () => {
+export function AccessDenied() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
-
+  
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-      <div className="w-full max-w-md bg-card p-8 rounded-lg shadow-lg text-center">
-        <div className="flex justify-center">
-          <AlertCircle className="h-16 w-16 text-destructive" />
-        </div>
-        <h1 className="text-2xl font-bold mt-4 mb-2">Access Denied</h1>
-        <p className="text-muted-foreground mb-6">
-          {isAuthenticated
-            ? "You don't have permission to access this area. Please contact an administrator."
-            : "You need to be logged in to access this area."}
-        </p>
-        <div className="flex flex-col space-y-3">
-          {!isAuthenticated && (
-            <Button onClick={() => navigate('/auth')}>
-              Login
-            </Button>
-          )}
-          <Button variant="outline" onClick={() => navigate('/')}>
-            Return to Home
-          </Button>
-        </div>
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] p-4 text-center">
+      <Shield size={64} className="text-destructive mb-6" />
+      <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
+      <p className="text-muted-foreground mb-6">
+        You don't have permission to access this area.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Button onClick={() => navigate('/')} variant="outline">
+          Return to Home
+        </Button>
+        <Button onClick={() => navigate('/auth')}>
+          Sign In with Different Account
+        </Button>
       </div>
     </div>
   );
-};
+}

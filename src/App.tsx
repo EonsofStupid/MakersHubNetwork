@@ -6,9 +6,10 @@ import { AppInitializer } from './app/initializer/AppInitializer';
 import { useAuthStore } from './auth/store/auth.store';
 import { Toaster } from './shared/ui/toaster';
 import { MainNav } from './app/layout/MainNav';
-import { FloatingChat } from './components/FloatingChat';
+import { FloatingChat } from './chat/components/FloatingChat';
 import { Footer } from './app/components/Footer';
 import './styles/cyberpunk.css';
+import './index.css';
 
 function App() {
   const { initialize } = useAuthStore();

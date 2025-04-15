@@ -4,35 +4,38 @@ import { logger } from '../logger.service';
 import { LogCategory, LogLevel, LogDetails } from '@/shared/types/shared.types';
 
 /**
- * Hook for component-level logging
+ * Custom hook for component-level logging
+ * 
+ * @param source - Source of the log (component name, service, etc.)
+ * @param category - Log category
+ * @returns Object with log methods for different log levels
  */
-export function useLogger(source: string, defaultCategory: LogCategory = LogCategory.UI) {
-  const logWithSource = useCallback((level: LogLevel, message: string, options?: Partial<LogDetails>) => {
-    const details = options ? { ...options, source } : { source };
-    logger.log(level, defaultCategory, message, details);
-  }, [source, defaultCategory]);
+export const useLogger = (source: string, category: LogCategory = LogCategory.UI) => {
+  const createLogDetails = (details?: any): LogDetails => ({
+    source,
+    ...details
+  });
+
+  const debug = useCallback((message: string, details?: any) => {
+    logger.log(LogLevel.DEBUG, category, message, createLogDetails(details));
+  }, [source, category]);
+
+  const info = useCallback((message: string, details?: any) => {
+    logger.log(LogLevel.INFO, category, message, createLogDetails(details));
+  }, [source, category]);
+
+  const warn = useCallback((message: string, details?: any) => {
+    logger.log(LogLevel.WARN, category, message, createLogDetails(details));
+  }, [source, category]);
+
+  const error = useCallback((message: string, details?: any) => {
+    logger.log(LogLevel.ERROR, category, message, createLogDetails(details));
+  }, [source, category]);
 
   return {
-    debug: useCallback((message: string, options?: Partial<LogDetails>) => {
-      logWithSource(LogLevel.DEBUG, message, options);
-    }, [logWithSource]),
-    
-    info: useCallback((message: string, options?: Partial<LogDetails>) => {
-      logWithSource(LogLevel.INFO, message, options);
-    }, [logWithSource]),
-    
-    warn: useCallback((message: string, options?: Partial<LogDetails>) => {
-      logWithSource(LogLevel.WARN, message, options);
-    }, [logWithSource]),
-    
-    error: useCallback((message: string, options?: Partial<LogDetails>) => {
-      logWithSource(LogLevel.ERROR, message, options);
-    }, [logWithSource]),
-    
-    log: useCallback((level: LogLevel, message: string, options?: Partial<LogDetails>) => {
-      logWithSource(level, message, options);
-    }, [logWithSource])
+    debug,
+    info,
+    warn,
+    error
   };
-}
-
-export default useLogger;
+};

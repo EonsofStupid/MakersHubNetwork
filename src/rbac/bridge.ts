@@ -1,147 +1,50 @@
 
-import { UserRole, Permission, ROLES } from '@/shared/types/shared.types';
-import { rbacStore } from './rbac.store';
+import { ROLES, UserRole } from '@/shared/types/shared.types';
+import { useRBACStore } from './rbac.store';
 
 /**
- * RBAC Bridge provides a clean interface for role-based access control
- * Acts as a facade over RBAC implementation details
+ * RBAC bridge for checking roles and permissions
  */
-export class RBACBridgeImpl {
+export class RBACBridge {
   /**
-   * Check if user has a specific role
+   * Check if the user has a role
+   * @param role Role or roles to check
+   * @returns boolean
    */
-  hasRole(role: UserRole | UserRole[]): boolean {
-    const userRoles = rbacStore.getState().roles;
-    
-    // Super admin always has all roles
-    if (userRoles.includes(ROLES.SUPER_ADMIN)) {
-      return true;
-    }
-    
-    // Check for array of roles (ANY matching)
-    if (Array.isArray(role)) {
-      return role.some(r => userRoles.includes(r));
-    }
-    
-    // Check for single role
-    return userRoles.includes(role);
+  static hasRole(role: UserRole | UserRole[]): boolean {
+    return useRBACStore.getState().hasRole(role);
   }
-  
+
   /**
-   * Check if user has a specific permission
+   * Check if the user has admin access
+   * @returns boolean
    */
-  hasPermission(permission: Permission): boolean {
-    const { permissions } = rbacStore.getState();
-    
-    // Super admin always has all permissions
-    if (this.isSuperAdmin()) {
-      return true;
-    }
-    
-    return permissions[permission] === true;
+  static hasAdminAccess(): boolean {
+    return useRBACStore.getState().hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }
-  
+
   /**
-   * Check if user is a super admin
+   * Check if the user has a permission
+   * @param permission Permission to check
+   * @returns boolean
    */
-  isSuperAdmin(): boolean {
-    return rbacStore.getState().roles.includes(ROLES.SUPER_ADMIN);
+  static hasPermission(permission: string): boolean {
+    return useRBACStore.getState().hasPermission(permission);
   }
-  
+
   /**
-   * Check if user is an admin (either admin or super_admin)
+   * Get all user roles
+   * @returns UserRole[]
    */
-  hasAdminAccess(): boolean {
-    const roles = rbacStore.getState().roles;
-    return roles.includes(ROLES.ADMIN) || roles.includes(ROLES.SUPER_ADMIN);
+  static getUserRoles(): UserRole[] {
+    return useRBACStore.getState().userRoles;
   }
-  
+
   /**
-   * Check if user is a moderator
+   * Get all user permissions
+   * @returns string[]
    */
-  isModerator(): boolean {
-    return rbacStore.getState().roles.includes(ROLES.MODERATOR);
-  }
-  
-  /**
-   * Check if user is a builder
-   */
-  isBuilder(): boolean {
-    return rbacStore.getState().roles.includes(ROLES.BUILDER);
-  }
-  
-  /**
-   * Get user roles
-   */
-  getRoles(): UserRole[] {
-    return rbacStore.getState().roles;
-  }
-  
-  /**
-   * Set user roles
-   */
-  setRoles(roles: UserRole[]): void {
-    rbacStore.getState().setRoles(roles);
-  }
-  
-  /**
-   * Clear user roles
-   */
-  clearRoles(): void {
-    rbacStore.getState().setRoles([]);
-  }
-  
-  /**
-   * Check if user can access a specific route
-   */
-  canAccessRoute(route: string): boolean {
-    // Super admin can access all routes
-    if (this.isSuperAdmin()) {
-      return true;
-    }
-    
-    // Define route access permissions
-    const routeAccessMap: Record<string, UserRole[]> = {
-      '/admin': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-      '/admin/users': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-      '/admin/content': [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-      '/admin/settings': [ROLES.SUPER_ADMIN],
-    };
-    
-    const allowedRoles = routeAccessMap[route];
-    if (!allowedRoles) {
-      return true; // If no specific permissions, allow access
-    }
-    
-    return this.hasRole(allowedRoles);
-  }
-  
-  /**
-   * Check if user can access admin section
-   */
-  canAccessAdminSection(section: string): boolean {
-    // Super admin can access all sections
-    if (this.isSuperAdmin()) {
-      return true;
-    }
-    
-    // Define section access permissions
-    const sectionPermissionsMap: Record<string, Permission> = {
-      'dashboard': 'admin:view' as Permission,
-      'users': 'manage_users' as Permission,
-      'content': 'content:view' as Permission,
-      'settings': 'settings:view' as Permission,
-      'system': 'admin:view' as Permission
-    };
-    
-    const requiredPermission = sectionPermissionsMap[section];
-    if (!requiredPermission) {
-      return false;
-    }
-    
-    return this.hasPermission(requiredPermission);
+  static getUserPermissions(): string[] {
+    return useRBACStore.getState().permissions;
   }
 }
-
-export const RBACBridge = new RBACBridgeImpl();
-export default RBACBridge;

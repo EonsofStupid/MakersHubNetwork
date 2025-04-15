@@ -1,3 +1,4 @@
+
 /**
  * Theme system types
  */
@@ -89,6 +90,8 @@ export interface Theme {
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
+  tokens?: ThemeToken[];
+  components?: ThemeComponent[];
 }
 
 // Theme token interface
@@ -98,6 +101,18 @@ export interface ThemeToken {
   token_value: string;
   category: string;
   description?: string;
+  name?: string;
+  value?: string;
+  type?: string;
+  keyframes?: string;
+}
+
+// Theme component interface
+export interface ThemeComponent {
+  component_name: string;
+  name: string;
+  styles: Record<string, string>;
+  tokens: Record<string, string>;
 }
 
 // Design tokens interface
@@ -158,6 +173,7 @@ export interface ThemeStoreActions {
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
   loadTheme?: (themeId: string) => Promise<void>;
+  loadThemes?: () => Promise<void>;
 }
 
 // Effects-specific types
@@ -175,7 +191,7 @@ export interface GradientEffect extends ThemeEffect {
 }
 
 export interface CyberEffect extends ThemeEffect {
-  type: ThemeEffectType.NEON;
+  type: ThemeEffectType.NEON | ThemeEffectType.CYBER;
   glowColor?: string;
   scanLines?: boolean;
 }
@@ -195,7 +211,7 @@ export interface ParticleEffect extends ThemeEffect {
 
 export interface MorphEffect extends ThemeEffect {
   type: ThemeEffectType.MORPH;
-  intensity?: number;
+  intensity: number; // Make this required, not optional
   speed?: number;
 }
 

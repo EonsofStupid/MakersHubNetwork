@@ -1,57 +1,53 @@
 
-import React, { useState } from 'react';
-import { X, MessageCircle } from 'lucide-react';
-import { useChatSession } from '../hooks/useChatSession';
-import { Button } from '@/shared/ui';
-import { ChatWrapper } from './ChatWrapper';
+import { useState } from 'react';
+import { MessageCircle, X } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
 
-export const FloatingChat: React.FC = () => {
+export function FloatingChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const chatSession = useChatSession();
-  
-  // Default to enabled chat for now since we don't have a flag
-  const isChatEnabled = true;
-  
-  // If chat is not enabled, don't render anything
-  if (!isChatEnabled) {
-    return null;
-  }
-  
-  // Toggle chat open/closed
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
-  };
-  
+
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      {!isOpen ? (
-        <Button 
-          onClick={toggleChat}
-          className="h-12 w-12 rounded-full shadow-lg"
-          variant="default"
-          size="icon"
-        >
-          <MessageCircle size={24} />
-        </Button>
-      ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-80 sm:w-96 h-[500px] flex flex-col">
-          <div className="flex items-center justify-between p-3 border-b">
-            <h3 className="font-medium">Chat Assistant</h3>
+      {isOpen ? (
+        <div className="bg-black/80 backdrop-blur-lg w-80 h-96 rounded-lg border border-primary/30 shadow-lg flex flex-col">
+          <div className="flex justify-between items-center p-3 border-b border-primary/20">
+            <h3 className="text-sm font-medium">Chat Assistant</h3>
             <Button 
               variant="ghost" 
-              size="sm"
-              onClick={toggleChat}
-              className="h-8 w-8 p-0"
+              size="icon" 
+              className="h-6 w-6" 
+              onClick={() => setIsOpen(false)}
             >
-              <X size={18} />
+              <X className="h-4 w-4" />
             </Button>
           </div>
-          
-          <div className="flex-1 overflow-hidden">
-            <ChatWrapper />
+          <div className="flex-1 p-3 overflow-auto">
+            <div className="text-center text-sm text-muted-foreground p-4">
+              Chat feature coming soon!
+            </div>
+          </div>
+          <div className="p-3 border-t border-primary/20">
+            <div className="flex gap-2">
+              <input 
+                className="flex-1 bg-black/50 rounded px-3 py-2 text-sm border border-primary/30 focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="Type your message"
+                disabled
+              />
+              <Button size="sm" disabled>
+                Send
+              </Button>
+            </div>
           </div>
         </div>
+      ) : (
+        <Button 
+          onClick={() => setIsOpen(true)}
+          size="icon"
+          className="h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90"
+        >
+          <MessageCircle />
+        </Button>
       )}
     </div>
   );
-};
+}

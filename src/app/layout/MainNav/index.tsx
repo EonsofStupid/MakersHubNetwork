@@ -1,42 +1,23 @@
+
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/shared/utils/cn";
 import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
 import AuthSection from "./components/AuthSection";
 import { useAuthStore } from "@/auth/store/auth.store";
-import { useSiteTheme } from "@/app/theme/SiteThemeProvider";
-import { useLogger } from "@/hooks/use-logger";
-import { LogCategory } from "@/shared/types/SharedTypes";
+import { ThemeDataStream } from "./components/ThemeDataStream";
+import { useLogger } from "@/logging/hooks/use-logger";
+import { LogCategory } from "@/shared/types/shared.types";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const siteTheme = useSiteTheme();
-  const componentStyles = siteTheme?.componentStyles || {};
-  const animations = siteTheme?.animations || {};
-  const variables = siteTheme?.variables || {};
-  const themeIsLoaded = siteTheme?.isLoaded || false;
-  
-  const logger = useLogger("MainNav", LogCategory.UI);
   const dataStreamRef = useRef<HTMLDivElement>(null);
   const glitchParticlesRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuthStore();
   
-  // Get MainNav styles from theme
-  const styles = componentStyles?.MainNav || {
-    container: 'fixed top-0 w-full z-50 transition-all duration-300',
-    containerAnimated: 'animate-morph-header',
-    header: 'bg-background/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,240,255,0.2)] border-b border-primary/30',
-    dataStream: 'relative',
-    dataStreamEffect: 'mainnav-data-stream',
-    glitchParticles: 'mainnav-glitch-particles',
-    nav: 'flex items-center gap-1 md:gap-2',
-    navItem: 'px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors relative group',
-    navItemActive: 'text-primary',
-    navItemActiveIndicator: 'absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-center',
-    mobileToggle: 'block md:hidden'
-  };
-
+  const logger = useLogger("MainNav", LogCategory.UI);
+  
   // Handle scroll position to apply trapezoid shape
   useEffect(() => {
     const handleScroll = () => {
@@ -83,7 +64,7 @@ export function MainNav() {
       clearTimeout(timer);
       clearInterval(glitchInterval);
     };
-  }, [logger, variables]);
+  }, [logger]);
 
   return (
     <header
@@ -92,7 +73,7 @@ export function MainNav() {
         "mainnav-header",
         "mainnav-gradient",
         "fixed top-0 left-0 right-0 w-full z-50",
-        isLoaded && (styles.containerAnimated || "animate-morph-header"),
+        isLoaded && "animate-morph-header",
         isScrolled && "mainnav-scrolled transform-gpu"
       )}
       style={{
@@ -108,19 +89,10 @@ export function MainNav() {
       
       {/* Background effects container - positioned to cover the entire TopNav */}
       <div className="mainnav-effects-wrapper absolute inset-0 w-full h-full overflow-hidden">
-        <div 
-          ref={dataStreamRef}
-          className={cn(
-            "absolute inset-0 w-full h-full pointer-events-none", 
-            styles.dataStreamEffect || "mainnav-data-stream"
-          )} 
-        />
+        <ThemeDataStream />
         <div 
           ref={glitchParticlesRef}
-          className={cn(
-            "absolute inset-0 w-full h-full pointer-events-none",
-            styles.glitchParticles || "mainnav-glitch-particles"
-          )} 
+          className="absolute inset-0 w-full h-full pointer-events-none mainnav-glitch-particles"
         />
       </div>
       

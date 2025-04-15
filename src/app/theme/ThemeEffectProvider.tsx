@@ -1,6 +1,13 @@
 
 import React from 'react';
-import { ThemeEffectType, ThemeEffectProviderProps } from '@/shared/types/theme.types';
+import { ThemeEffectType, ThemeEffect } from '@/shared/types/theme.types';
+import { cn } from '@/shared/utils/cn';
+
+interface ThemeEffectProviderProps {
+  children: React.ReactNode;
+  className?: string;
+  effect?: ThemeEffect;
+}
 
 /**
  * ThemeEffectProvider component
@@ -54,7 +61,10 @@ export const ThemeEffectProvider: React.FC<ThemeEffectProviderProps> = ({
     case ThemeEffectType.CYBER:
       return (
         <div 
-          className={`${className} relative cyber-container before:absolute before:inset-0 before:z-10 before:pointer-events-none before:opacity-5`}
+          className={cn(
+            className,
+            "relative cyber-container before:absolute before:inset-0 before:z-10 before:pointer-events-none before:opacity-5"
+          )}
         >
           {children}
         </div>

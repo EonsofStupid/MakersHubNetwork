@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { Button } from '@/shared/ui/button';
-import { cn } from '@/lib/utils';
-import { ThemeEffectProvider } from '@/shared/ui/theme/effects/ThemeEffectProvider';
+import { cn } from '@/shared/utils/cn';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import type { ThemeEffect } from '@/app/theme/types/effects';
+import { ThemeEffect } from '@/shared/types/theme.types';
 
 export interface FeatureCtaProps {
   id: string;
@@ -17,18 +17,17 @@ export interface FeatureCtaProps {
   effect?: ThemeEffect;
 }
 
-export const FeatureCta = ({ 
+export function FeatureCta({ 
   id,
   title, 
   description, 
   icon, 
   ctaText, 
   ctaLink, 
-  className,
-  effect,
-}: FeatureCtaProps) => {
+  className
+}: FeatureCtaProps) {
   return (
-    <ThemeEffectProvider effect={effect} className={cn(
+    <div className={cn(
       "relative backdrop-blur-sm rounded-lg overflow-hidden",
       "border border-primary/10 group",
       "p-6 h-full flex flex-col",
@@ -61,6 +60,6 @@ export const FeatureCta = ({
           {ctaText}
         </a>
       </Button>
-    </ThemeEffectProvider>
+    </div>
   );
-};
+}

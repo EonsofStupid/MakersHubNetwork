@@ -1,134 +1,122 @@
-import { create } from 'zustand';
-import { UserRole, Permission, ROLES, LogCategory, LogLevel } from '@/shared/types/shared.types';
-import { logger } from '@/logging/logger.service';
 
-// RBAC State interface
-interface RBACState {
-  roles: UserRole[];
-  permissions: Record<Permission, boolean>;
-  isLoading: boolean;
-  error: string | null;
-  
-  // Actions
-  setRoles: (roles: UserRole[]) => void;
-  addRole: (role: UserRole) => void;
-  removeRole: (role: UserRole) => void;
-  setPermissions: (permissions: Record<Permission, boolean>) => void;
-  setPermission: (permission: Permission, value: boolean) => void;
-  setError: (error: string | null) => void;
-  setLoading: (isLoading: boolean) => void;
+import { create } from 'zustand';
+import { ROLES, UserRole } from '@/shared/types/shared.types';
+
+// Define permission types
+export interface Permission {
+  id: string;
+  name: string;
+  description?: string;
 }
 
-// Helper function to map roles to permissions
-const mapRolesToPermissions = (roles: UserRole[]): Record<Permission, boolean> => {
-  // Create a copy of default permissions
-  const permissions = { ...DEFAULT_PERMISSIONS };
-  
-  // Define role-based permissions
-  if (roles.includes(ROLES.SUPER_ADMIN)) {
-    // Super admin has all permissions
-    Object.keys(permissions).forEach(key => {
-      permissions[key as Permission] = true;
-    });
-  } else if (roles.includes(ROLES.ADMIN)) {
-    // Admin permissions
-    permissions['access_admin'] = true;
-    permissions['admin:view'] = true;
-    permissions['admin:edit'] = true;
-    permissions['user:view'] = true;
-    permissions['user:edit'] = true;
-    permissions['content:view'] = true;
-    permissions['content:edit'] = true;
-    permissions['content:delete'] = true;
-    permissions['manage_users'] = true;
-    permissions['view_analytics'] = true;
-  } else if (roles.includes(ROLES.MODERATOR)) {
-    // Moderator permissions
-    permissions['content:view'] = true;
-    permissions['content:edit'] = true;
-    permissions['user:view'] = true;
-  } else if (roles.includes(ROLES.BUILDER)) {
-    // Builder permissions
-    permissions['create_project'] = true;
-    permissions['edit_project'] = true;
-    permissions['submit_build'] = true;
-  } else if (roles.includes(ROLES.USER)) {
-    // Basic user permissions
-    permissions['create_project'] = true;
-  }
-  
-  return permissions;
+export interface RolePermissions {
+  role: UserRole;
+  permissions: string[];
+}
+
+// Define default permissions for each role
+const DEFAULT_PERMISSIONS: Record<UserRole, string[]> = {
+  [ROLES.USER]: [
+    'view:profile',
+    'edit:profile',
+    'create:build',
+    'edit:own:build',
+    'delete:own:build',
+    'view:builds',
+    'comment:builds'
+  ],
+  [ROLES.BUILDER]: [
+    'view:profile',
+    'edit:profile',
+    'create:build',
+    'edit:own:build',
+    'delete:own:build',
+    'view:builds',
+    'comment:builds',
+    'feature:own:build',
+    'upload:firmware'
+  ],
+  [ROLES.MODERATOR]: [
+    'view:profile',
+    'edit:profile',
+    'view:builds',
+    'comment:builds',
+    'moderate:comments',
+    'review:builds'
+  ],
+  [ROLES.ADMIN]: [
+    'view:profile',
+    'edit:profile',
+    'view:builds',
+    'comment:builds',
+    'moderate:comments',
+    'review:builds',
+    'edit:any:build',
+    'delete:any:build',
+    'feature:any:build',
+    'view:admin',
+    'manage:users',
+    'manage:builds'
+  ],
+  [ROLES.SUPER_ADMIN]: [
+    '*' // All permissions
+  ]
 };
 
-// Create the store with initial state and actions
-export const rbacStore = create<RBACState>((set, get) => ({
-  roles: [],
-  permissions: { ...DEFAULT_PERMISSIONS },
+// Define RBAC store state
+interface RBACState {
+  userRoles: UserRole[];
+  permissions: string[];
+  isLoading: boolean;
+  error: string | null;
+  isInitialized: boolean;
+  
+  // Actions
+  setUserRoles: (roles: UserRole[]) => void;
+  clearUserRoles: () => void;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  hasPermission: (permission: string) => boolean;
+  setPermissions: (permissions: string[]) => void;
+  clearPermissions: () => void;
+}
+
+// Create the RBAC store
+export const useRBACStore = create<RBACState>((set, get) => ({
+  userRoles: [],
+  permissions: [],
   isLoading: false,
   error: null,
+  isInitialized: false,
   
-  setRoles: (roles) => {
-    const permissions = mapRolesToPermissions(roles);
-    logger.log(LogLevel.INFO, LogCategory.RBAC, 'Roles updated', { 
-      details: { roles, permissionsCount: Object.values(permissions).filter(Boolean).length } 
-    });
-    set({ roles, permissions });
+  // Set user roles
+  setUserRoles: (roles: UserRole[]) => {
+    const permissions = roles.flatMap(role => DEFAULT_PERMISSIONS[role] || []);
+    set({ userRoles: roles, permissions, isInitialized: true });
   },
   
-  addRole: (role) => {
-    const currentRoles = get().roles;
-    if (!currentRoles.includes(role)) {
-      const newRoles = [...currentRoles, role];
-      const permissions = mapRolesToPermissions(newRoles);
-      set({ roles: newRoles, permissions });
-      
-      logger.log(LogLevel.INFO, LogCategory.RBAC, 'Role added', { 
-        details: { role, allRoles: newRoles } 
-      });
+  // Clear user roles
+  clearUserRoles: () => set({ userRoles: [], permissions: [], isInitialized: true }),
+  
+  // Check if user has a role
+  hasRole: (roleOrRoles) => {
+    const { userRoles } = get();
+    if (Array.isArray(roleOrRoles)) {
+      return roleOrRoles.some(role => userRoles.includes(role));
     }
+    return userRoles.includes(roleOrRoles);
   },
   
-  removeRole: (role) => {
-    const currentRoles = get().roles;
-    const newRoles = currentRoles.filter(r => r !== role);
-    const permissions = mapRolesToPermissions(newRoles);
-    set({ roles: newRoles, permissions });
-    
-    logger.log(LogLevel.INFO, LogCategory.RBAC, 'Role removed', { 
-      details: { role, remainingRoles: newRoles } 
-    });
+  // Check if user has a permission
+  hasPermission: (permission: string) => {
+    const { permissions } = get();
+    return permissions.includes('*') || permissions.includes(permission);
   },
   
-  setPermissions: (permissions) => {
-    set({ permissions });
-    logger.log(LogLevel.INFO, LogCategory.RBAC, 'Permissions updated', { 
-      details: { permissionsCount: Object.values(permissions).filter(Boolean).length } 
-    });
-  },
+  // Set permissions directly
+  setPermissions: (permissions: string[]) => set({ permissions }),
   
-  setPermission: (permission, value) => {
-    set(state => ({
-      permissions: {
-        ...state.permissions,
-        [permission]: value
-      }
-    }));
-    
-    logger.log(LogLevel.INFO, LogCategory.RBAC, 'Permission changed', { 
-      details: { permission, value } 
-    });
-  },
-  
-  setError: (error) => {
-    set({ error });
-    if (error) {
-      logger.log(LogLevel.ERROR, LogCategory.RBAC, 'Error occurred', { 
-        details: { error } 
-      });
-    }
-  },
-  
-  setLoading: (isLoading) => {
-    set({ isLoading });
-  }
+  // Clear permissions
+  clearPermissions: () => set({ permissions: [] })
 }));
+
+export default useRBACStore;

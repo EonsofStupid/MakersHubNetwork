@@ -1,13 +1,11 @@
+
 import React from 'react';
 import { FeatureCta, FeatureCtaProps } from './FeatureCta';
-import { Sparkles, Code, Rocket, Globe, Zap, Gem } from 'lucide-react';
-import { useSiteTheme } from '@/app/theme/SiteThemeProvider';
-import { cn } from '@/lib/utils';
+import { Code, Globe, Rocket, Sparkles, Zap, Gem } from 'lucide-react';
+import { cn } from '@/shared/utils/cn';
 
-export const FeaturesSection = () => {
-  const { componentStyles } = useSiteTheme();
-  
-  const styles = componentStyles?.FeaturesSection || {
+export function FeaturesSection() {
+  const styles = {
     container: "py-16 bg-background/30 backdrop-blur-sm relative",
     title: "text-3xl font-bold text-center mb-12",
     grid: "grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4",
@@ -76,4 +74,4 @@ export const FeaturesSection = () => {
       </div>
     </section>
   );
-};
+}

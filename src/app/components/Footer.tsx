@@ -1,111 +1,114 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { cn } from '@/shared/utils/cn';
-import { Button } from '@/shared/ui/button';
-import { Heart } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useThemeStore } from '@/shared/stores/theme/store';
+import { Github, Instagram, Twitter } from 'lucide-react';
 
-interface FooterProps {
-  className?: string;
-}
-
-export function Footer({ className }: FooterProps) {
-  const { activeThemeId } = useThemeStore();
-  const isImpulsivity = activeThemeId?.toLowerCase().includes('impulsivity');
-  
-  const currentYear = new Date().getFullYear();
-  
+export function Footer() {
   return (
-    <footer className={cn(
-      "py-8 border-t mt-auto bg-background/80 backdrop-blur-sm",
-      isImpulsivity && "border-t-primary/20 bg-gradient-to-t from-primary/5 to-transparent",
-      className
-    )}>
-      <div className="container px-4 mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex flex-col items-center md:items-start gap-2">
-            <Link to="/" className="text-lg font-bold">
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="inline-flex items-center"
-              >
-                PrinterHub
-              </motion.span>
-            </Link>
-            <p className="text-sm text-muted-foreground text-center md:text-left">
-              Your 3D printing community and resource hub.
+    <footer className="bg-gradient-to-t from-black to-transparent border-t border-primary/10 mt-16">
+      <div className="container mx-auto py-12 px-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div>
+            <h3 className="text-xl font-bold mb-4 cyber-text">IMPULSE</h3>
+            <p className="text-muted-foreground mb-4">
+              The ultimate community for 3D printing enthusiasts.
             </p>
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-6">
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Resources</h4>
-              <div className="flex flex-col gap-1">
-                <FooterLink href="/guides">Guides</FooterLink>
-                <FooterLink href="/faq">FAQ</FooterLink>
-                <FooterLink href="/blog">Blog</FooterLink>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Community</h4>
-              <div className="flex flex-col gap-1">
-                <FooterLink href="/forum">Forum</FooterLink>
-                <FooterLink href="/showcase">Showcase</FooterLink>
-                <FooterLink href="/events">Events</FooterLink>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm">Legal</h4>
-              <div className="flex flex-col gap-1">
-                <FooterLink href="/privacy">Privacy</FooterLink>
-                <FooterLink href="/terms">Terms</FooterLink>
-                <FooterLink href="/cookies">Cookies</FooterLink>
-              </div>
+            <div className="flex space-x-4">
+              <a href="https://twitter.com" className="text-muted-foreground hover:text-primary transition-colors">
+                <Twitter size={20} />
+              </a>
+              <a href="https://github.com" className="text-muted-foreground hover:text-primary transition-colors">
+                <Github size={20} />
+              </a>
+              <a href="https://instagram.com" className="text-muted-foreground hover:text-primary transition-colors">
+                <Instagram size={20} />
+              </a>
             </div>
           </div>
           
-          <div className="flex flex-col items-center md:items-end gap-2">
-            <div className="flex gap-2">
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-                <span className="sr-only">Facebook</span>
-              </Button>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
-                <span className="sr-only">Twitter</span>
-              </Button>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
-                <span className="sr-only">Instagram</span>
-              </Button>
-            </div>
-            
-            <p className="text-xs text-muted-foreground">
-              © {currentYear} PrinterHub. All rights reserved.
-            </p>
+          <div>
+            <h4 className="text-lg font-bold mb-3">Resources</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/guides" className="text-muted-foreground hover:text-primary transition-colors">
+                  Guides
+                </Link>
+              </li>
+              <li>
+                <Link to="/blog" className="text-muted-foreground hover:text-primary transition-colors">
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link to="/tutorials" className="text-muted-foreground hover:text-primary transition-colors">
+                  Tutorials
+                </Link>
+              </li>
+              <li>
+                <Link to="/faq" className="text-muted-foreground hover:text-primary transition-colors">
+                  FAQs
+                </Link>
+              </li>
+            </ul>
           </div>
+          
+          <div>
+            <h4 className="text-lg font-bold mb-3">Community</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/forum" className="text-muted-foreground hover:text-primary transition-colors">
+                  Forums
+                </Link>
+              </li>
+              <li>
+                <Link to="/discord" className="text-muted-foreground hover:text-primary transition-colors">
+                  Discord
+                </Link>
+              </li>
+              <li>
+                <Link to="/events" className="text-muted-foreground hover:text-primary transition-colors">
+                  Events
+                </Link>
+              </li>
+              <li>
+                <Link to="/meetups" className="text-muted-foreground hover:text-primary transition-colors">
+                  Meetups
+                </Link>
+              </li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="text-lg font-bold mb-3">Company</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors">
+                  Privacy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
+                  Terms
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <div className="border-t border-primary/10 mt-8 pt-8 text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} IMPULSE. All rights reserved.</p>
         </div>
       </div>
     </footer>
   );
-};
-
-interface FooterLinkProps {
-  href: string;
-  children: React.ReactNode;
 }
-
-const FooterLink: React.FC<FooterLinkProps> = ({ href, children }) => {
-  return (
-    <a 
-      href={href} 
-      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-    >
-      {children}
-    </a>
-  );
-};

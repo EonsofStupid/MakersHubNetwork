@@ -1,7 +1,7 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { useSiteTheme } from "@/app/theme/SiteThemeProvider";
+import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
 
 interface NavItem {
@@ -9,12 +9,10 @@ interface NavItem {
   href: string;
 }
 
-export const NavigationItems = () => {
+export function NavigationItems() {
   const { pathname } = useLocation();
-  const siteTheme = useSiteTheme();
-  const componentStyles = siteTheme?.componentStyles || {};
   
-  const styles = componentStyles?.MainNav || {
+  const styles = {
     nav: 'flex items-center gap-1 md:gap-2',
     navItem: 'px-3 py-2 text-sm font-medium text-foreground/80 hover:text-primary transition-colors relative group',
     navItemActive: 'text-primary',
@@ -65,13 +63,10 @@ export const NavigationItems = () => {
             <span className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-md" />
             
             {/* Bottom border on hover with glow */}
-            <span className="absolute bottom-0 left-0 w-full h-[1px] bg-primary/50 scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-300 shadow-glow" />
-            
-            {/* Glitch effect on hover */}
-            <span className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 group-hover:animate-pulse-slow pointer-events-none" />
+            <span className="absolute bottom-0 left-0 w-full h-[1px] bg-primary/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
           </Link>
         );
       })}
     </nav>
   );
-};
+}

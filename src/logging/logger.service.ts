@@ -1,155 +1,129 @@
 
-import { v4 as uuid } from 'uuid';
-import { LogEntry, LogFilter, LogLevel, LogCategory } from '@/shared/types/shared.types';
-import { UiTransport } from './transports/ui-transport';
-import { MemoryTransport } from './transports/memory-transport';
+import { LogCategory, LogLevel, LogDetails } from '@/shared/types/shared.types';
 
+/**
+ * Logger service for application-wide logging
+ */
 class LoggerService {
-  private transports: Map<string, any> = new Map();
-  private minLevel: LogLevel = LogLevel.INFO;
-  private memoryTransport: MemoryTransport;
-
-  constructor() {
-    // Initialize default transports
-    this.memoryTransport = new MemoryTransport({ maxEntries: 1000 });
-    this.addTransport('memory', this.memoryTransport);
-    this.addTransport('ui', new UiTransport());
-  }
-
+  private static instance: LoggerService;
+  private logLevel: LogLevel = LogLevel.INFO;
+  private enabledCategories: Set<LogCategory> = new Set(Object.values(LogCategory));
+  private listeners: ((level: LogLevel, category: LogCategory, message: string, details?: LogDetails) => void)[] = [];
+  
   /**
-   * Add a transport to the logger
+   * Get singleton instance
    */
-  addTransport(name: string, transport: any): void {
-    this.transports.set(name, transport);
-    transport.setMinLevel(this.minLevel);
+  public static getInstance(): LoggerService {
+    if (!LoggerService.instance) {
+      LoggerService.instance = new LoggerService();
+    }
+    return LoggerService.instance;
   }
-
+  
   /**
-   * Get a transport by name
+   * Set minimum log level
    */
-  getTransport(name: string): any {
-    return this.transports.get(name);
+  public setLevel(level: LogLevel): void {
+    this.logLevel = level;
   }
-
+  
   /**
-   * Get all transports
+   * Enable specific log categories
    */
-  getTransports(): Map<string, any> {
-    return this.transports;
+  public enableCategories(categories: LogCategory[]): void {
+    categories.forEach(category => this.enabledCategories.add(category));
   }
-
+  
   /**
-   * Set the minimum log level
+   * Disable specific log categories
    */
-  setMinLevel(level: LogLevel): void {
-    this.minLevel = level;
-    
-    // Update all transports
-    this.transports.forEach(transport => {
-      if (transport.setMinLevel) {
-        transport.setMinLevel(level);
-      }
-    });
+  public disableCategories(categories: LogCategory[]): void {
+    categories.forEach(category => this.enabledCategories.delete(category));
   }
-
+  
+  /**
+   * Add log listener
+   */
+  public addListener(listener: (level: LogLevel, category: LogCategory, message: string, details?: LogDetails) => void): void {
+    this.listeners.push(listener);
+  }
+  
+  /**
+   * Remove log listener
+   */
+  public removeListener(listener: (level: LogLevel, category: LogCategory, message: string, details?: LogDetails) => void): void {
+    this.listeners = this.listeners.filter(l => l !== listener);
+  }
+  
   /**
    * Log a message
    */
-  log(
-    level: LogLevel,
-    category: LogCategory,
-    message: string,
-    details?: Record<string, unknown>
-  ): LogEntry {
-    const entry: LogEntry = {
-      id: uuid(),
-      level,
-      category,
-      message,
-      timestamp: Date.now(),
-      details: details || {},
+  public log(level: LogLevel, category: LogCategory, message: string, details?: LogDetails): void {
+    // Check if this log should be processed
+    if (!this.shouldLog(level, category)) {
+      return;
+    }
+    
+    // Format the log message
+    const timestamp = new Date().toISOString();
+    const formattedMsg = `[${timestamp}] [${level.toUpperCase()}] [${category}] ${message}`;
+    
+    // Log to console
+    switch (level) {
+      case LogLevel.DEBUG:
+        console.debug(formattedMsg, details);
+        break;
+      case LogLevel.INFO:
+        console.info(formattedMsg, details);
+        break;
+      case LogLevel.WARN:
+        console.warn(formattedMsg, details);
+        break;
+      case LogLevel.ERROR:
+        console.error(formattedMsg, details);
+        break;
+    }
+    
+    // Notify listeners
+    this.notifyListeners(level, category, message, details);
+  }
+  
+  /**
+   * Check if this log should be processed based on level and category
+   */
+  private shouldLog(level: LogLevel, category: LogCategory): boolean {
+    const levelPriority: Record<LogLevel, number> = {
+      [LogLevel.DEBUG]: 0,
+      [LogLevel.INFO]: 1,
+      [LogLevel.WARN]: 2,
+      [LogLevel.ERROR]: 3
     };
-
-    // Send to all transports
-    this.transports.forEach(transport => {
+    
+    // Check log level
+    if (levelPriority[level] < levelPriority[this.logLevel]) {
+      return false;
+    }
+    
+    // Check category
+    if (!this.enabledCategories.has(category)) {
+      return false;
+    }
+    
+    return true;
+  }
+  
+  /**
+   * Notify all listeners
+   */
+  private notifyListeners(level: LogLevel, category: LogCategory, message: string, details?: LogDetails): void {
+    this.listeners.forEach(listener => {
       try {
-        transport.log(entry);
+        listener(level, category, message, details);
       } catch (error) {
-        console.error('Error in transport', error);
+        console.error('Error in log listener:', error);
       }
     });
-
-    return entry;
-  }
-
-  /**
-   * Debug level log
-   */
-  debug(category: LogCategory, message: string, details?: Record<string, unknown>): void {
-    this.log(LogLevel.DEBUG, category, message, details);
-  }
-
-  /**
-   * Info level log
-   */
-  info(category: LogCategory, message: string, details?: Record<string, unknown>): void {
-    this.log(LogLevel.INFO, category, message, details);
-  }
-
-  /**
-   * Warning level log
-   */
-  warn(category: LogCategory, message: string, details?: Record<string, unknown>): void {
-    this.log(LogLevel.WARN, category, message, details);
-  }
-
-  /**
-   * Error level log
-   */
-  error(category: LogCategory, message: string, details?: Record<string, unknown>): void {
-    this.log(LogLevel.ERROR, category, message, details);
-  }
-
-  /**
-   * Critical level log
-   */
-  critical(category: LogCategory, message: string, details?: Record<string, unknown>): void {
-    this.log(LogLevel.CRITICAL, category, message, details);
-  }
-
-  /**
-   * Success level log
-   */
-  success(category: LogCategory, message: string, details?: Record<string, unknown>): void {
-    this.log(LogLevel.SUCCESS, category, message, details);
-  }
-
-  /**
-   * Get log entries from memory transport
-   */
-  getEntries(filter?: LogFilter): LogEntry[] {
-    if (!this.memoryTransport) return [];
-    return filter ? this.memoryTransport.getFilteredLogs(filter) : this.memoryTransport.getLogs();
-  }
-
-  /**
-   * Clear all logs from memory
-   */
-  clearLogs(): void {
-    if (this.memoryTransport && this.memoryTransport.clear) {
-      this.memoryTransport.clear();
-    }
-  }
-
-  /**
-   * Subscribe to logs (stub - actual implementation would be elsewhere)
-   */
-  subscribe(callback: (entry: LogEntry) => void): () => void {
-    // This is a stub - actual implementation would register callbacks
-    console.log('Log subscription requested - actual implementation would register callbacks');
-    return () => {};
   }
 }
 
-export const logger = new LoggerService();
-export default logger;
+export const logger = LoggerService.getInstance();
