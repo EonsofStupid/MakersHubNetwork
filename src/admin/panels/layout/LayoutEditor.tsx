@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Layout, LayoutComponentType } from '@/shared/types/features/layout.types';
+import { Layout } from '@/shared/types/features/layout.types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/core/logging.types';
 
@@ -8,13 +9,15 @@ interface LayoutEditorProps {
   onSave?: (layout: Layout) => void;
 }
 
+type LayoutComponentType = 'page' | 'section' | 'widget';
+
 export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
   const [layout, setLayout] = useState<Layout>(initialLayout || {
     id: 'new-layout',
     name: 'New Layout',
     components: {},
     layout: [],
-    type: 'page',
+    type: 'page' as LayoutComponentType,
     scope: 'site'
   });
   

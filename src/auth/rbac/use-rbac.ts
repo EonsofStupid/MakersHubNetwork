@@ -17,12 +17,16 @@ export function useRbac() {
   
   // Sync roles from auth store to RBAC bridge
   useEffect(() => {
-    if (userRoles.length > 0) {
-      RBACBridge.setRoles(userRoles);
-      setRoles(userRoles);
+    if (userRoles && userRoles.length > 0) {
+      const typedRoles = userRoles.filter((role): role is UserRole => 
+        Object.values(ROLES).includes(role as UserRole));
+      RBACBridge.setRoles(typedRoles);
+      setRoles(typedRoles);
     } else if (authUser && authUser.roles) {
-      RBACBridge.setRoles(authUser.roles);
-      setRoles(authUser.roles);
+      const typedRoles = authUser.roles.filter((role): role is UserRole => 
+        Object.values(ROLES).includes(role as UserRole));
+      RBACBridge.setRoles(typedRoles);
+      setRoles(typedRoles);
     }
   }, [authUser, userRoles]);
   

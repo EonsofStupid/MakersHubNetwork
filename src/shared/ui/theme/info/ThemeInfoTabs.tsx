@@ -1,99 +1,52 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import { ThemeInfoTab } from './ThemeInfoTab';
-import { Theme } from '@/shared/types/features/theme.types';
-import { ThemeEffect } from '@/shared/types/theme/effects.types';
+import { Theme } from '@/shared/types/theme.types';
+import { BaseThemeEffect } from '@/shared/types/theme/effects.types';
+import ThemeColorSystem from '../ThemeColorSystem';
+import EffectsPreview from '../EffectsPreview';
 
 interface ThemeInfoTabsProps {
-  theme: Theme;
+  theme?: Theme;
+  effects?: BaseThemeEffect[];
+  className?: string;
 }
 
-export function ThemeInfoTabs({ theme }: ThemeInfoTabsProps) {
+export const ThemeInfoTabs: React.FC<ThemeInfoTabsProps> = ({ theme, effects, className }) => {
   return (
-    <Tabs defaultValue="info" className="w-full">
-      <TabsList className="mb-4">
-        <TabsTrigger value="info">Info</TabsTrigger>
-        <TabsTrigger value="tokens">Design Tokens</TabsTrigger>
-        <TabsTrigger value="components">Components</TabsTrigger>
-        {theme.metadata?.effects && <TabsTrigger value="effects">Effects</TabsTrigger>}
+    <Tabs defaultValue="colors" className={`w-full ${className || ''}`}>
+      <TabsList className="w-full grid grid-cols-3">
+        <TabsTrigger value="colors">Colors</TabsTrigger>
+        <TabsTrigger value="effects">Effects</TabsTrigger>
+        <TabsTrigger value="tokens">Tokens</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="info" className="p-2">
-        <ThemeInfoTab theme={theme} />
+      <TabsContent value="colors" className="mt-4">
+        <ThemeColorSystem theme={theme} />
       </TabsContent>
       
-      <TabsContent value="tokens" className="p-2">
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Design Tokens</h3>
-          <div className="border rounded p-4 max-h-96 overflow-auto">
-            <pre className="text-xs">
-              {JSON.stringify(theme.designTokens, null, 2)}
-            </pre>
+      <TabsContent value="effects" className="mt-4">
+        {effects && effects.length > 0 ? (
+          <div className="space-y-4">
+            {effects.filter(e => e.enabled).map((effect, index) => (
+              <EffectsPreview key={`${effect.type}-${index}`} effect={effect} />
+            ))}
           </div>
-        </div>
+        ) : (
+          <p className="text-muted-foreground">No effects applied to this theme.</p>
+        )}
       </TabsContent>
       
-      <TabsContent value="components" className="p-2">
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Component Tokens</h3>
-          {theme.componentTokens && Object.keys(theme.componentTokens).length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(theme.componentTokens).map(([component, tokens]) => (
-                <div key={component} className="border rounded p-4">
-                  <h4 className="font-medium mb-2">{component}</h4>
-                  <div className="text-sm space-y-1">
-                    {Object.entries(tokens).map(([key, value]) => (
-                      <div key={key} className="flex justify-between">
-                        <span>{key}:</span>
-                        <span className="font-mono">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No component tokens defined</p>
-          )}
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="effects" className="p-2">
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Theme Effects</h3>
-          {theme.metadata?.effects ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(theme.metadata.effects as ThemeEffect[]).map((effect, index) => (
-                <div key={index} className="border rounded p-4">
-                  <h4 className="font-medium mb-2">{effect.type}</h4>
-                  <div className="text-sm space-y-1">
-                    <div className="flex justify-between">
-                      <span>Type:</span>
-                      <span className="font-mono">{effect.type}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Intensity:</span>
-                      <span className="font-mono">{effect.intensity}</span>
-                    </div>
-                    {effect.color && (
-                      <div className="flex justify-between items-center">
-                        <span>Color:</span>
-                        <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 rounded-full" style={{ backgroundColor: effect.color }} />
-                          <span className="font-mono">{effect.color}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No effects defined</p>
-          )}
+      <TabsContent value="tokens" className="mt-4">
+        <h3 className="text-lg font-medium mb-2">Design Tokens</h3>
+        <div className="border rounded-md p-3 bg-muted/20">
+          <code className="text-xs">
+            <pre>{theme ? JSON.stringify(theme.designTokens, null, 2) : 'No tokens available'}</pre>
+          </code>
         </div>
       </TabsContent>
     </Tabs>
   );
-}
+};
+
+export default ThemeInfoTabs;

@@ -9,6 +9,8 @@ export interface RBACState {
   isInitialized: boolean;
 }
 
+export type Permission = string;
+
 export interface IRBACBridge {
   hasRole: (role: UserRole | UserRole[]) => boolean;
   getRoles: () => UserRole[];
@@ -18,7 +20,7 @@ export interface IRBACBridge {
   isBuilder: () => boolean;
   setRoles: (roles: UserRole[]) => void;
   clearRoles: () => void;
-  hasPermission: (permission: string) => boolean;
+  hasPermission: (permission: Permission) => boolean;
   canAccessAdminSection: (section?: string) => boolean;
 }
 

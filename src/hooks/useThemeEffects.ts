@@ -1,13 +1,14 @@
+
 import { useCallback } from 'react';
 import { useThemeStore } from '@/stores/theme.store';
-import { ThemeEffect, ThemeEffectType, ThemeState } from '@/shared/types/features/theme.types';
+import { ThemeEffect, ThemeEffectType } from '@/shared/types/theme.types';
 
 /**
  * Hook for managing theme effects
  */
 export const useThemeEffects = () => {
-  const effects = useThemeStore((state: ThemeState) => state.effects || []);
-  const setEffects = useThemeStore((state: ThemeState) => state.setEffects);
+  const effects = useThemeStore((state) => state.effects || []);
+  const setEffects = useThemeStore((state) => state.setEffects);
   
   // Check if an effect is active
   const hasEffect = useCallback((effectType: ThemeEffectType): boolean => {

@@ -1,5 +1,6 @@
+
 import { create } from 'zustand';
-import { Theme, ThemeState, ThemeStatus, ThemeContext } from '@/shared/types/features/theme.types';
+import { Theme, ThemeState, ThemeStatus, ThemeContext, ThemeEffect, ComponentTokens } from '@/shared/types/theme.types';
 import { LogLevel, LogCategory } from '@/shared/types/core/logging.types';
 import { logger } from '@/logging/logger.service';
 
@@ -75,8 +76,9 @@ const defaultTheme: Theme = {
   }
 };
 
-const initialState: ThemeState = {
-  theme: defaultTheme,
+const initialThemeEffects: ThemeEffect[] = [];
+
+export const useThemeStore = create<ThemeState>((set) => ({
   themes: [defaultTheme],
   activeThemeId: defaultTheme.id,
   isDark: defaultTheme.isDark,
@@ -87,14 +89,12 @@ const initialState: ThemeState = {
   componentTokens: defaultTheme.componentTokens,
   isLoading: false,
   error: null,
+  theme: defaultTheme,
   isLoaded: true,
   variables: defaultTheme.variables,
   componentStyles: {},
-  animations: {}
-};
-
-export const useThemeStore = create((set) => ({
-  ...initialState,
+  animations: {},
+  effects: initialThemeEffects,
   
   setThemes: (themes) => {
     set({ themes });
@@ -133,6 +133,14 @@ export const useThemeStore = create((set) => ({
   
   setError: (error) => {
     set({ error });
+  },
+  
+  setVariables: (vars) => {
+    set({ variables: vars });
+  },
+  
+  setEffects: (effects) => {
+    set({ effects });
   },
   
   loadTheme: async (themeId) => {

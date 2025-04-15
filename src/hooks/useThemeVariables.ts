@@ -1,13 +1,14 @@
+
 import { useCallback } from 'react';
 import { useThemeStore } from '@/stores/theme.store';
-import { Theme, ThemeState } from '@/shared/types/features/theme.types';
+import { Theme, ComponentTokens } from '@/shared/types/theme.types';
 
 export const useThemeVariables = () => {
-  const variables = useThemeStore((state: ThemeState) => state.variables);
-  const componentTokens = useThemeStore((state: ThemeState) => state.componentTokens);
-  const theme = useThemeStore((state: ThemeState) => state.theme);
-  const setVariables = useThemeStore((state: ThemeState) => state.setVariables);
-  const setComponentTokens = useThemeStore((state: ThemeState) => state.setComponentTokens);
+  const variables = useThemeStore((state) => state.variables);
+  const componentTokens = useThemeStore((state) => state.componentTokens);
+  const theme = useThemeStore((state) => state.theme);
+  const setVariables = useThemeStore((state) => state.setVariables);
+  const setComponentTokens = useThemeStore((state) => state.setComponentTokens);
 
   const getToken = useCallback((token: string): string => {
     return variables[token] || '';
@@ -37,7 +38,7 @@ export const useThemeVariables = () => {
     return variables;
   }, [variables]);
   
-  const getAllComponentTokens = useCallback((): Record<string, Record<string, string>> => {
+  const getAllComponentTokens = useCallback((): ComponentTokens => {
     return componentTokens;
   }, [componentTokens]);
 

@@ -20,7 +20,7 @@ export const ThemeComponentPreview: React.FC<ThemeComponentPreviewProps> = ({
         {Object.entries(component.styles || {}).map(([key, value]) => (
           <div key={key} className="grid grid-cols-2 gap-2">
             <span className="text-gray-500">{key}:</span>
-            <span>{value}</span>
+            <span>{String(value)}</span>
           </div>
         ))}
       </div>

@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { UserProfile, AuthStatus, AUTH_STATUS } from '@/shared/types/core/auth.types';
 import { mapUserToProfile } from '@/auth/utils/userMapper';
@@ -38,8 +39,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   ...initialState,
 
   setUser: (user) => set({ 
-    user: user as UserProfile, 
-    profile: user as UserProfile,
+    user, 
+    profile: user,
     isAuthenticated: !!user,
     status: user ? AUTH_STATUS.AUTHENTICATED : AUTH_STATUS.UNAUTHENTICATED
   }),
@@ -61,12 +62,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       if (data.user) {
         const userProfile = mapUserToProfile(data.user);
-        set({ 
-          user: userProfile,
-          profile: userProfile,
-          isAuthenticated: true,
-          status: AUTH_STATUS.AUTHENTICATED
-        });
+        if (userProfile) {
+          set({ 
+            user: userProfile,
+            profile: userProfile,
+            isAuthenticated: true,
+            status: AUTH_STATUS.AUTHENTICATED
+          });
+        }
       }
     } catch (error) {
       set({ 
@@ -90,12 +93,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       if (data.user) {
         const userProfile = mapUserToProfile(data.user);
-        set({ 
-          user: userProfile,
-          profile: userProfile,
-          isAuthenticated: true,
-          status: AUTH_STATUS.AUTHENTICATED
-        });
+        if (userProfile) {
+          set({ 
+            user: userProfile,
+            profile: userProfile,
+            isAuthenticated: true,
+            status: AUTH_STATUS.AUTHENTICATED
+          });
+        }
       }
     } catch (error) {
       set({ 
@@ -159,16 +164,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (data.session?.user) {
         const userProfile = mapUserToProfile(data.session.user);
         
-        const roles = userProfile.roles || [];
+        const roles = userProfile?.roles || [];
         
-        set({ 
-          user: userProfile,
-          profile: userProfile,
-          isAuthenticated: true,
-          status: AUTH_STATUS.AUTHENTICATED,
-          roles,
-          initialized: true
-        });
+        if (userProfile) {
+          set({ 
+            user: userProfile,
+            profile: userProfile,
+            isAuthenticated: true,
+            status: AUTH_STATUS.AUTHENTICATED,
+            roles,
+            initialized: true
+          });
+        }
       } else {
         set({
           user: null,

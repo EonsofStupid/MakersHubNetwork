@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useMemo, useEffect, useState } from "react";
 import { Theme, LogLevel, LogDetails } from "@/shared/types/shared.types";
-import { ThemeToken, ThemeComponent } from "@/shared/types/theme.types";
+import { ThemeComponent } from "@/shared/types/theme.types";
 import { useLogger } from "@/hooks/use-logger";
 import { logger } from "@/logging/logger.service";
 import { LogCategory } from "@/shared/types/shared.types";
