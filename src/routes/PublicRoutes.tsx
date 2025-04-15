@@ -32,11 +32,9 @@ export const PublicRoutes = () => {
       {/* Protected admin routes */}
       <Route path="/admin" element={
         <WithRoleProtection allowedRoles={['admin', 'super_admin']}>
-          <AdminLayout />
+          <AdminLayout><AdminDashboard /></AdminLayout>
         </WithRoleProtection>
-      }>
-        <Route index element={<AdminDashboard />} />
-      </Route>
+      } />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

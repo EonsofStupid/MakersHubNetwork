@@ -1,6 +1,5 @@
 
-"use client";
-
+import * as React from "react";
 import {
   Toast,
   ToastClose,
@@ -10,42 +9,20 @@ import {
   ToastViewport,
 } from "@/shared/ui/toast";
 import { useToast } from "@/shared/hooks/use-toast";
-import * as LucideIcons from "lucide-react";
-import React from "react";
-
-// Define a component to render the icon dynamically
-const DynamicIcon = ({ name }: { name: string }) => {
-  // @ts-ignore - dynamically accessing icons
-  const Icon = LucideIcons[name.split('-').map(
-    part => part.charAt(0).toUpperCase() + part.slice(1)
-  ).join('')] || LucideIcons.Info;
-
-  return <Icon className="h-4 w-4" />;
-};
 
 export function Toaster() {
-  const { toast } = useToast();
-  
-  // Access toasts via toast.__internal.toasts
-  // This is a workaround until the API is updated
-  // @ts-ignore - accessing internal property
-  const toasts = toast && toast.__internal ? toast.__internal.toasts : [];
+  const { toasts } = useToast();
 
   return (
     <ToastProvider>
-      {toasts && toasts.map(function ({ id, title, description, action, icon, ...props }) {
+      {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
-            <div className="flex gap-2">
-              {icon && typeof icon === 'string' && (
-                <DynamicIcon name={icon} />
+            <div className="grid gap-1">
+              {title && <ToastTitle>{title}</ToastTitle>}
+              {description && (
+                <ToastDescription>{description}</ToastDescription>
               )}
-              <div className="grid gap-1">
-                {title && <ToastTitle>{title}</ToastTitle>}
-                {description && (
-                  <ToastDescription>{description}</ToastDescription>
-                )}
-              </div>
             </div>
             {action}
             <ToastClose />

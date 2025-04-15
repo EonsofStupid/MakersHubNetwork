@@ -1,6 +1,7 @@
+
 import { create } from 'zustand';
 import { UserRole } from '@/shared/types/core/auth.types';
-import { Permission } from '@/shared/types/core/rbac.types';
+import { Permission } from '@/shared/types/core/auth.types';
 
 // RBAC State
 export interface RBACState {

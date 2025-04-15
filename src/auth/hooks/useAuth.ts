@@ -1,66 +1,44 @@
 
-import { useCallback, useState } from 'react';
-import { AuthBridge } from '@/bridges/AuthBridge';
-import { UserProfile, UserRole, ROLES } from '@/shared/types/shared.types';
-import { RBACBridge } from '@/bridges/RBACBridge';
+import { useContext } from 'react';
+import { useAuthStore } from '../store/auth.store';
+import { RBACBridge } from '@/rbac/bridge';
+import { UserRole } from '@/shared/types/core/auth.types';
 
-export interface UseAuthReturn {
-  user: UserProfile | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  hasRole: (roleOrRoles: UserRole | UserRole[]) => boolean;
-  roles: UserRole[];
-}
-
-export function useAuth(): UseAuthReturn {
-  const [isLoading, setIsLoading] = useState(false);
-  const user = AuthBridge.getUser();
-  
-  const signIn = useCallback(async (email: string, password: string): Promise<void> => {
-    setIsLoading(true);
-    try {
-      await AuthBridge.signInWithEmail(email, password);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  
-  const signOut = useCallback(async (): Promise<void> => {
-    setIsLoading(true);
-    try {
-      await AuthBridge.signOut();
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  
-  const signUp = useCallback(async (email: string, password: string): Promise<void> => {
-    setIsLoading(true);
-    try {
-      await AuthBridge.signUp(email, password);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-  
-  const hasRole = useCallback((roleOrRoles: UserRole | UserRole[]): boolean => {
-    return RBACBridge.hasRole(roleOrRoles);
-  }, []);
+export function useAuth() {
+  const { 
+    user, 
+    isAuthenticated, 
+    login, 
+    logout, 
+    signup, 
+    resetPassword,
+    status,
+    error
+  } = useAuthStore();
   
   // Get roles from RBAC bridge
   const roles = RBACBridge.getRoles();
   
+  // Check if user has specific role
+  const hasRole = (role: UserRole | UserRole[]): boolean => {
+    return RBACBridge.hasRole(role);
+  };
+  
+  // Rename to conform to the interface expected in the components
+  const signIn = login;
+  const signOut = logout;
+  const signUp = signup;
+  
   return {
     user,
+    isAuthenticated,
+    isLoading: status === 'LOADING',
+    roles,
+    hasRole,
     signIn,
     signOut,
     signUp,
-    isAuthenticated: AuthBridge.isAuthenticated,
-    isLoading,
-    hasRole,
-    roles
+    resetPassword,
+    error
   };
 }

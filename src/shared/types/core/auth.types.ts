@@ -22,6 +22,7 @@ export const ROLES = {
 } as const;
 
 export type UserRole = typeof ROLES[keyof typeof ROLES];
+export type Permission = string;
 
 export interface UserProfile extends BaseEntity {
   id: string;
@@ -45,16 +46,4 @@ export interface UserProfile extends BaseEntity {
     roles?: UserRole[];
     [key: string]: any;
   };
-}
-
-// Separate Permission type to avoid conflicts
-export type UserPermission = string;
-
-export interface AuthState {
-  user: UserProfile | null;
-  isAuthenticated: boolean;
-  status: AuthStatus;
-  error: Error | null;
-  roles: UserRole[];
-  initialized: boolean;
 }

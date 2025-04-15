@@ -52,9 +52,7 @@ class RBACBridgeClass implements IRBACBridge {
   }
 
   hasPermission(permission: Permission): boolean {
-    if (this.isSuperAdmin()) return true;
-    // Basic permission check - can be extended
-    return true;
+    return this.isSuperAdmin() || this.hasAdminAccess();
   }
 
   canAccessAdminSection(section?: string): boolean {

@@ -1,47 +1,56 @@
 
-import { useCallback, useMemo } from 'react';
-import { useRbacStore } from '@/rbac/store';
-import { IRBACHook } from '@/rbac/types';
-import { UserRole } from '@/shared/types/shared.types';
+import { useCallback } from 'react';
+import { RBACBridge } from '@/rbac/bridge';
+import { UserRole } from '@/shared/types/core/auth.types';
+
+export interface IRBACHook {
+  roles: UserRole[];
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  can: (permission: string) => boolean;
+  hasAdminAccess: () => boolean;
+  isSuperAdmin: () => boolean;
+  isModerator: () => boolean;
+  isBuilder: () => boolean;
+}
 
 /**
  * Hook for accessing RBAC functionality
  * @returns Object with RBAC methods and state
  */
 export const useRbac = (): IRBACHook => {
-  const { roles, hasRole: storeHasRole, hasPermission } = useRbacStore();
+  const roles = RBACBridge.getRoles();
   
-  // Memoize the hasRole function to prevent unnecessary re-renders
+  // Check if user has a specific role
   const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
-    return storeHasRole(role);
-  }, [storeHasRole]);
+    return RBACBridge.hasRole(role);
+  }, []);
   
   // Check if user has a specific permission
   const can = useCallback((permission: string): boolean => {
-    return hasPermission(permission);
-  }, [hasPermission]);
+    return RBACBridge.hasPermission(permission);
+  }, []);
   
   // Check if user has admin access
   const hasAdminAccess = useCallback((): boolean => {
-    return hasRole(['admin', 'super_admin']);
-  }, [hasRole]);
+    return RBACBridge.hasAdminAccess();
+  }, []);
   
   // Check if user is a super admin
   const isSuperAdmin = useCallback((): boolean => {
-    return hasRole('super_admin');
-  }, [hasRole]);
+    return RBACBridge.isSuperAdmin();
+  }, []);
   
   // Check if user is a moderator
   const isModerator = useCallback((): boolean => {
-    return hasRole('moderator');
-  }, [hasRole]);
+    return RBACBridge.isModerator();
+  }, []);
   
   // Check if user is a builder
   const isBuilder = useCallback((): boolean => {
-    return hasRole('builder');
-  }, [hasRole]);
+    return RBACBridge.isBuilder();
+  }, []);
   
-  return useMemo(() => ({
+  return {
     roles,
     hasRole,
     can,
@@ -49,5 +58,5 @@ export const useRbac = (): IRBACHook => {
     isSuperAdmin,
     isModerator,
     isBuilder
-  }), [roles, hasRole, can, hasAdminAccess, isSuperAdmin, isModerator, isBuilder]);
+  };
 };

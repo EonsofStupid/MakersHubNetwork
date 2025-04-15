@@ -1,5 +1,6 @@
+
 import { create } from 'zustand';
-import { ThemeState, Theme, ComponentTokens } from '@/shared/types/theme.types';
+import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeContext, ThemeStatus, ThemeEffect } from '@/shared/types/features/theme.types';
 
 const defaultTheme: Theme = {
   id: 'default',
@@ -7,8 +8,8 @@ const defaultTheme: Theme = {
   label: 'Default',
   description: 'Default theme',
   isDark: false,
-  status: 'active',
-  context: 'site',
+  status: ThemeStatus.ACTIVE,
+  context: ThemeContext.SITE,
   variables: {
     background: '#ffffff',
     foreground: '#000000',
@@ -77,16 +78,16 @@ export const useThemeStore = create<ThemeState>((set) => ({
   themes: [defaultTheme],
   activeThemeId: defaultTheme.id,
   isDark: defaultTheme.isDark,
-  primaryColor: defaultTheme.variables.primary,
-  backgroundColor: defaultTheme.variables.background,
-  textColor: defaultTheme.variables.foreground,
-  designTokens: defaultTheme.designTokens,
-  componentTokens: defaultTheme.componentTokens,
+  primaryColor: defaultTheme.variables?.primary || '',
+  backgroundColor: defaultTheme.variables?.background || '',
+  textColor: defaultTheme.variables?.foreground || '',
+  designTokens: defaultTheme.designTokens || {},
+  componentTokens: defaultTheme.componentTokens || {},
   isLoading: false,
   error: null,
   theme: defaultTheme,
   isLoaded: true,
-  variables: Object.entries(defaultTheme.variables).reduce((acc, [key, value]) => ({
+  variables: Object.entries(defaultTheme.variables || {}).reduce((acc, [key, value]) => ({
     ...acc,
     [key]: String(value)
   }), {}),
@@ -100,7 +101,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
     const theme = state.themes?.find(t => t.id === themeId);
     if (!theme) return state;
 
-    const variables = Object.entries(theme.variables).reduce((acc, [key, value]) => ({
+    const variables = Object.entries(theme.variables || {}).reduce((acc, [key, value]) => ({
       ...acc,
       [key]: String(value)
     }), {});

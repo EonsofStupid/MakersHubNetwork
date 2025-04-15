@@ -1,63 +1,34 @@
+
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/auth/hooks/useAuth';
-import { UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserRole } from '@/shared/types/core/auth.types';
 
 interface WithRoleProtectionProps {
+  allowedRoles: UserRole | UserRole[];
   children: React.ReactNode;
-  allowedRoles?: UserRole | UserRole[];
-  redirectPath?: string;
+  redirectTo?: string;
 }
 
-/**
- * Role-based access control wrapper component
- * 
- * @param children - The children components to render if authorized
- * @param allowedRoles - The roles allowed to access the content
- * @param redirectPath - The path to redirect to if unauthorized
- * @returns The children if authorized, otherwise a redirect
- */
-export default function WithRoleProtection({
-  children,
-  allowedRoles,
-  redirectPath = '/login',
-}: WithRoleProtectionProps) {
-  const { user, isAuthenticated, hasRole } = useAuth();
+export const WithRoleProtection: React.FC<WithRoleProtectionProps> = ({ 
+  allowedRoles, 
+  children, 
+  redirectTo = '/auth' 
+}) => {
+  const { isAuthenticated, hasRole } = useAuth();
   
-  if (!isAuthenticated || !user) {
-    return <Navigate to={redirectPath} replace />;
+  // For public-first access: if not authenticated, render children by default
+  if (!isAuthenticated) {
+    return <Navigate to={redirectTo} />;
   }
   
-  if (!allowedRoles) {
-    return <>{children}</>;
-  }
-  
+  // Check if user has required roles
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  const hasRequiredRoles = roles.some(role => hasRole(role));
   
-  // Check for admin access
-  if (roles.includes(ROLES.admin) && hasRole([ROLES.admin, ROLES.super_admin])) {
-    return <>{children}</>;
+  if (!hasRequiredRoles) {
+    return <Navigate to="/" />;
   }
   
-  // Check for super admin access
-  if (roles.includes(ROLES.super_admin) && hasRole([ROLES.super_admin])) {
-    return <>{children}</>;
-  }
-  
-  // Check for moderator access
-  if (roles.includes(ROLES.moderator) && hasRole([ROLES.moderator, ROLES.admin, ROLES.super_admin])) {
-    return <>{children}</>;
-  }
-  
-  // Check for builder access
-  if (roles.includes(ROLES.builder) && hasRole([ROLES.builder, ROLES.admin, ROLES.super_admin])) {
-    return <>{children}</>;
-  }
-  
-  // Check for user access
-  if (roles.includes(ROLES.user) && hasRole([ROLES.user, ROLES.builder, ROLES.moderator, ROLES.admin, ROLES.super_admin])) {
-    return <>{children}</>;
-  }
-  
-  return <Navigate to={redirectPath} replace />;
-}
+  return <>{children}</>;
+};
