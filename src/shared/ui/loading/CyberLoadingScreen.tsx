@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader, Circuit, BrainCircuit } from 'lucide-react';
+import { Loader2, Activity, BrainCircuit } from 'lucide-react';
 import { Progress } from '@/shared/ui/progress';
 import { cn } from '@/shared/utils/cn';
 
@@ -26,7 +26,7 @@ export function CyberLoadingScreen({
       <div className="max-w-md w-full space-y-8 p-6">
         <div className="relative flex justify-center">
           <BrainCircuit className="h-16 w-16 text-primary animate-pulse" />
-          <Circuit className="absolute h-24 w-24 text-primary/20 animate-spin-slow" />
+          <Activity className="absolute h-24 w-24 text-primary/20 animate-spin-slow" />
         </div>
         
         <div className="space-y-6 text-center">
