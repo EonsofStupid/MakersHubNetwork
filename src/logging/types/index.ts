@@ -1,15 +1,15 @@
 
 // Re-export shared logging types
 export type { 
-  LogLevel,
   LogCategoryType,
   LogDetails,
   LogEntry,
   LogEvent,
-  LogFilter
+  LogFilter,
+  LogLevel
 } from '@/shared/types/shared.types';
 
-// Export LogCategory
+// Export LogCategory and LogLevel constants
 export { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
 // Logger related types
@@ -22,5 +22,5 @@ export interface LoggerOptions {
 // LogTransport interface
 export interface LogTransport {
   log: (entry: LogEntry) => void;
-  setMinLevel: (level: LogLevel) => void;
+  setLevel: (level: LogLevel) => void;
 }

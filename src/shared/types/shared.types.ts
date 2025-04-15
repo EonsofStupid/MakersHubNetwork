@@ -69,7 +69,7 @@ export const ThemeEffectType = {
   GRAIN: 'GRAIN'
 } as const;
 
-export type ThemeEffect = keyof typeof ThemeEffectType;
+export type ThemeEffectType = keyof typeof ThemeEffectType;
 
 // Logging types
 export const LogCategory = {
@@ -100,6 +100,14 @@ export enum LogLevel {
   SUCCESS = 5,
   FATAL = 6,
   SILENT = 100
+}
+
+// Service response interface
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
 }
 
 // Mapping for log level values
@@ -144,8 +152,8 @@ export interface LogEvent {
 export interface LogFilter {
   level?: LogLevel;
   category?: LogCategoryType;
-  from?: number;
-  to?: number;
+  from?: number | Date;
+  to?: number | Date;
   search?: string;
 }
 
@@ -162,4 +170,81 @@ export interface User extends BaseEntity {
   name?: string;
   avatar_url?: string;
   roles?: UserRole[];
+}
+
+// Add missing theme types
+export interface Theme {
+  id: string;
+  name: string;
+  label?: string;
+  description?: string;
+  isDark?: boolean;
+  status?: string;
+  context?: string;
+  variables?: Record<string, string>;
+  designTokens?: DesignTokens;
+  componentTokens?: ComponentTokens;
+  metadata?: Record<string, any>;
+}
+
+export interface ThemeToken {
+  id?: string;
+  name?: string;
+  token_name?: string;
+  token_value?: string;
+  category?: string;
+  description?: string;
+  fallback_value?: string;
+}
+
+export interface ThemeComponent {
+  id?: string;
+  name?: string;
+  component_name?: string;
+  styles?: Record<string, string>;
+  tokens?: Record<string, string>;
+}
+
+export interface DesignTokens {
+  colors?: Record<string, string>;
+  typography?: any;
+  spacing?: Record<string, string>;
+  borders?: Record<string, string>;
+  shadows?: Record<string, string>;
+  radii?: Record<string, string>;
+  zIndices?: Record<string, string>;
+  breakpoints?: Record<string, string>;
+  transitions?: Record<string, string>;
+  animations?: Record<string, any>;
+  [key: string]: any;
+}
+
+export interface ComponentTokens {
+  [componentName: string]: Record<string, string>;
+}
+
+export interface ThemeState {
+  activeThemeId: string | null;
+  isDark: boolean;
+  primaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  designTokens: DesignTokens;
+  componentTokens: ComponentTokens;
+  isLoading?: boolean;
+  error?: string | null;
+  themes?: Theme[];
+  theme?: Theme | null;
+  isLoaded?: boolean;
+  variables?: Record<string, string>;
+  componentStyles?: Record<string, Record<string, string>>;
+  animations?: Record<string, any>;
+}
+
+export interface ThemeEffect {
+  type: ThemeEffectType;
+  intensity?: number;
+  color?: string;
+  enabled?: boolean;
+  [key: string]: any;
 }

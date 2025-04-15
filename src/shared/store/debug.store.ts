@@ -62,7 +62,7 @@ export const useDebugStore = create<DebugState>((set, get) => ({
     set({ verboseLogging: enabled });
     
     // Set the log level based on verbose setting
-    logger.setMinLevel(enabled ? LogLevel.DEBUG : LogLevel.INFO);
+    logger.setLevel(enabled ? LogLevel.DEBUG : LogLevel.INFO);
     
     // Log the verbose logging change
     logger.log(

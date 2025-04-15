@@ -1,5 +1,5 @@
 
-import { LogCategory, LogLevel } from './shared.types';
+import type { LogCategory, LogLevel } from './shared.types';
 
 /**
  * Extended logger details interface for strongly typed logging
@@ -27,7 +27,7 @@ export interface TypedLogEntry {
   message: string;
   timestamp: number;
   source: string;
-  category: LogCategory;
+  category: keyof typeof LogCategory;
   details?: LogDetails;
 }
 

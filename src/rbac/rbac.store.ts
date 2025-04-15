@@ -60,6 +60,10 @@ const DEFAULT_PERMISSIONS: Record<UserRole, string[]> = {
   ],
   [ROLES.SUPER_ADMIN]: [
     '*' // All permissions
+  ],
+  [ROLES.GUEST]: [
+    'view:public:content',
+    'view:builds'
   ]
 };
 

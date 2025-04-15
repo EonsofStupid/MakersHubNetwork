@@ -1,7 +1,12 @@
 
 import { useCallback } from 'react';
-import { ServiceResponse } from '@/shared/types/shared.types';
 import { supabase } from '@/integrations/supabase/client';
+
+interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
 
 interface LayoutSkeletonService {
   getById: (id: string) => Promise<ServiceResponse<any>>;

@@ -65,12 +65,18 @@ export class MemoryTransport {
       }
 
       // Filter by time range
-      if (filter.from && entry.timestamp < (typeof filter.from === 'number' ? filter.from : filter.from.getTime())) {
-        return false;
+      if (filter.from !== undefined) {
+        const fromTime = typeof filter.from === 'number' ? filter.from : filter.from.getTime();
+        if (entry.timestamp < fromTime) {
+          return false;
+        }
       }
 
-      if (filter.to && entry.timestamp > (typeof filter.to === 'number' ? filter.to : filter.to.getTime())) {
-        return false;
+      if (filter.to !== undefined) {
+        const toTime = typeof filter.to === 'number' ? filter.to : filter.to.getTime();
+        if (entry.timestamp > toTime) {
+          return false;
+        }
       }
 
       // Filter by search term

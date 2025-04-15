@@ -179,11 +179,13 @@ class LoggerService {
     }
     
     if (filter.from !== undefined) {
-      filteredEntries = filteredEntries.filter(entry => entry.timestamp >= filter.from!);
+      const fromTimestamp = filter.from instanceof Date ? filter.from.getTime() : filter.from;
+      filteredEntries = filteredEntries.filter(entry => entry.timestamp >= fromTimestamp);
     }
     
     if (filter.to !== undefined) {
-      filteredEntries = filteredEntries.filter(entry => entry.timestamp <= filter.to!);
+      const toTimestamp = filter.to instanceof Date ? filter.to.getTime() : filter.to;
+      filteredEntries = filteredEntries.filter(entry => entry.timestamp <= toTimestamp);
     }
     
     if (filter.search) {
