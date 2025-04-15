@@ -1,73 +1,94 @@
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { AuthStatus, UserProfile, AUTH_STATUS } from '@/shared/types/core/auth.types';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAuthStore } from '../store/auth.store';
-import { AUTH_STATUS, UserProfile, AuthStatus } from '@/shared/types';
-
-interface AuthContextType {
+interface AuthContextProps {
   user: UserProfile | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
   status: AuthStatus;
-  error: Error | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+  setStatus: React.Dispatch<React.SetStateAction<AuthStatus>>;
+  supabase: any;
 }
 
-const AuthContext = createContext<AuthContextType>({
+const AuthContext = createContext<AuthContextProps>({
   user: null,
   isAuthenticated: false,
-  isLoading: false,
   status: AUTH_STATUS.IDLE,
-  error: null,
-  login: async () => {},
-  logout: async () => {},
-  signup: async () => {},
-  resetPassword: async () => {},
+  setUser: () => {},
+  setStatus: () => {},
+  supabase: null,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const authStore = useAuthStore();
-  const {
-    user,
-    isAuthenticated,
-    error,
-    status
-  } = authStore;
-  
-  const [initialized, setInitialized] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [status, setStatus] = useState<AuthStatus>(AUTH_STATUS.LOADING);
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
-    // Initialize auth store when the component mounts
-    if (!initialized) {
-      authStore.initialize().then(() => {
-        setInitialized(true);
-      });
-    }
-  }, [authStore, initialized]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session) {
+          const userProfile: UserProfile = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.full_name,
+            avatar_url: session.user.user_metadata?.avatar_url,
+            created_at: session.user.created_at,
+            updated_at: session.user.updated_at || session.user.created_at, // Ensure updated_at is not undefined
+            user_metadata: session.user.user_metadata,
+            app_metadata: session.user.app_metadata,
+          };
+          setUser(userProfile);
+          setStatus(AuthStatus.AUTHENTICATED);
+        } else {
+          setUser(null);
+          setStatus(AuthStatus.UNAUTHENTICATED);
+        }
+      }
+    );
 
-  // Determine loading state
-  const isLoading = status === AUTH_STATUS.LOADING;
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        const userProfile: UserProfile = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.full_name,
+          avatar_url: session.user.user_metadata?.avatar_url,
+          created_at: session.user.created_at,
+          updated_at: session.user.updated_at || session.user.created_at, // Ensure updated_at is not undefined
+          user_metadata: session.user.user_metadata,
+          app_metadata: session.user.app_metadata,
+        };
+        setUser(userProfile);
+        setStatus(AuthStatus.AUTHENTICATED);
+      } else {
+        setStatus(AuthStatus.UNAUTHENTICATED);
+      }
+    });
 
-  // Provide the auth context to children
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const value = {
+    user,
+    isAuthenticated: status === AUTH_STATUS.AUTHENTICATED,
+    status,
+    setUser,
+    setStatus,
+    supabase,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        isLoading,
-        status,
-        error,
-        login: authStore.login,
-        logout: authStore.logout,
-        signup: authStore.signup,
-        resetPassword: authStore.resetPassword
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  return useContext(AuthContext);
+};

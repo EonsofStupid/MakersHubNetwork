@@ -3,4 +3,4 @@
 export * from './bridge';
 export * from './store/auth.store';
 export * from './components/RoleGate';
-export { RBACBridge } from '@/shared/bridges/RBACBridge';
+export { RBACBridge } from '@/rbac/bridge';

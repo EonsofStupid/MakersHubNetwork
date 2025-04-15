@@ -23,3 +23,11 @@ export enum ThemeEffectType {
   GLOW = 'glow',
   SHADOW = 'shadow'
 }
+
+export interface ThemeEffect {
+  type: ThemeEffectType;
+  intensity: number;
+  color?: string;
+  enabled?: boolean;
+  [key: string]: any;
+}

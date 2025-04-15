@@ -1,5 +1,6 @@
+
 import { create } from 'zustand';
-import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeStoreActions } from '@/shared/types/theme.types';
+import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeStoreActions } from '@/shared/types/shared.types';
 
 // Utility functions
 const getDefaultDesignTokens = (): DesignTokens => ({
@@ -86,11 +87,11 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>((set, get) =
   ...initialState,
 
   setThemes: (themes) => {
-    set({ themes: themes ?? [] });
+    set({ themes: themes || [] });
   },
 
   setActiveTheme: (themeId) => {
-    const themes = get().themes ?? [];
+    const themes = get().themes || [];
     const activeTheme = themes.find(theme => theme.id === themeId);
     
     if (activeTheme) {
@@ -112,9 +113,9 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>((set, get) =
 
   setDesignTokens: (tokens) => {
     set((state) => {
-      const activeTheme = state.themes.find(theme => theme.id === state.activeThemeId);
+      const activeTheme = state.themes && state.themes.find(theme => theme.id === state.activeThemeId);
       if (activeTheme) {
-        const updatedThemes = state.themes.map(theme => {
+        const updatedThemes = (state.themes || []).map(theme => {
           if (theme.id === state.activeThemeId) {
             return { ...theme, designTokens: tokens };
           }
@@ -150,21 +151,21 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>((set, get) =
       // In a real implementation, this would load from API/storage
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const themes = get().themes;
+      const themes = get().themes || [];
       const theme = themes.find(t => t.id === themeId);
       
       if (theme) {
         set({ 
           activeThemeId: theme.id,
-          isDark: theme.isDark,
-          primaryColor: theme.designTokens.colors?.primary || '#0070f3',
-          backgroundColor: theme.designTokens.colors?.background || '#ffffff',
-          textColor: theme.designTokens.colors?.foreground || '#000000',
-          designTokens: theme.designTokens,
-          componentTokens: theme.componentTokens,
+          isDark: theme.isDark || false,
+          primaryColor: theme.designTokens?.colors?.primary || '#0070f3',
+          backgroundColor: theme.designTokens?.colors?.background || '#ffffff',
+          textColor: theme.designTokens?.colors?.foreground || '#000000',
+          designTokens: theme.designTokens || {},
+          componentTokens: theme.componentTokens || {},
           theme,
-          variables: theme.variables,
-          animations: theme.designTokens.animations,
+          variables: theme.variables || {},
+          animations: theme.designTokens?.animations || {},
           isLoaded: true,
           isLoading: false
         });

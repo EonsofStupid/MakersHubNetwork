@@ -50,3 +50,6 @@ export interface LayoutSkeleton {
   updated_at: string;
   created_by?: string;
 }
+
+// Export Component type for backward compatibility
+export type Component = LayoutComponent;

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage, ChatSession, ChatMode } from '@/shared/types/core/chat.types';
@@ -60,8 +61,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newMessage: ChatMessage = {
       ...message,
       id: uuidv4(),
-      created_at: now,
-      updated_at: now
+      created_at: message.created_at || now,
+      updated_at: message.updated_at || now
     };
     
     setSessions(prev => prev.map(session => 
@@ -69,8 +70,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? { 
             ...session, 
             messages: [...session.messages, newMessage],
-            updatedAt: Date.now(),
-            updated_at: new Date().toISOString()
+            updatedAt: now,
+            updated_at: now
           }
         : session
     ));
