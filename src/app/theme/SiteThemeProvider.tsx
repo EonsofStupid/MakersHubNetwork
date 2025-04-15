@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useMemo, useCallback } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import { Theme, ThemeVariables } from "@/shared/types/theme.types";
 import { useThemeStore } from "@/shared/stores/theme/store";
 import { useLogger } from "@/logging/hooks/use-logger";
@@ -21,31 +21,26 @@ interface SiteThemeProviderProps {
   defaultTheme?: string;
 }
 
-export function SiteThemeProvider({ 
-  children, 
-  defaultTheme = "default" 
-}: SiteThemeProviderProps) {
+export function SiteThemeProvider({ children }: SiteThemeProviderProps) {
   const log = useLogger("SiteThemeProvider", LogCategory.THEME);
   const themeStore = useThemeStore();
   
-  // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<SiteThemeContextType>(() => ({
     theme: themeStore.theme,
     isLoaded: themeStore.isLoaded,
     variables: themeStore.variables,
-    componentStyles: themeStore.componentStyles,
+    componentStyles: themeStore.componentTokens,
     animations: themeStore.animations,
-    themeError: themeStore.error
+    themeError: themeStore.error ? new Error(themeStore.error) : null
   }), [
     themeStore.theme,
     themeStore.isLoaded,
     themeStore.variables,
-    themeStore.componentStyles,
+    themeStore.componentTokens,
     themeStore.animations,
     themeStore.error
   ]);
 
-  // Theme system is managed by SystemInitializer now
   return (
     <SiteThemeContext.Provider value={contextValue}>
       {children}
