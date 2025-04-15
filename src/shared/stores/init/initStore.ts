@@ -21,7 +21,7 @@ interface InitState {
   setAuthStatus: (status: AuthStatus) => void;
 }
 
-export const useInitStore = create<InitState>((set) => ({
+export const useInitStore = create<InitState>((set, get) => ({
   isInitializing: true,
   progress: 0,
   error: null,
@@ -49,7 +49,7 @@ export const useInitStore = create<InitState>((set) => ({
     logger.log(LogLevel.INFO, LogCategory.SYSTEM, `Initialization progress: ${progress}%`, {
       phase,
       progress,
-      elapsedMs: performance.now() - set.getState().startTime
+      elapsedMs: performance.now() - get().startTime
     });
     
     set({ progress, initPhase: phase });
@@ -60,7 +60,7 @@ export const useInitStore = create<InitState>((set) => ({
       logger.log(LogLevel.ERROR, LogCategory.SYSTEM, "System initialization failed", {
         error: error.message,
         stack: error.stack,
-        elapsedMs: performance.now() - set.getState().startTime
+        elapsedMs: performance.now() - get().startTime
       });
     }
     
@@ -68,7 +68,7 @@ export const useInitStore = create<InitState>((set) => ({
   },
   
   completeInit: () => {
-    const elapsedMs = performance.now() - set.getState().startTime;
+    const elapsedMs = performance.now() - get().startTime;
     logger.log(LogLevel.SUCCESS, LogCategory.SYSTEM, "System initialization complete", {
       elapsedMs,
       totalPhases: 5 // Update this as phases are added
@@ -84,7 +84,7 @@ export const useInitStore = create<InitState>((set) => ({
   
   setAuthStatus: (status) => {
     logger.log(LogLevel.INFO, LogCategory.AUTH, `Auth status changed: ${status}`, {
-      previousStatus: set.getState().authStatus
+      previousStatus: get().authStatus
     });
     
     set({ authStatus: status });
