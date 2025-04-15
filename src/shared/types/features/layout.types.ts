@@ -1,6 +1,7 @@
 
 /**
  * Layout system types
+ * Comprehensive type definitions for layout components and configuration
  */
 
 import { ReactNode } from 'react';
@@ -58,8 +59,8 @@ export interface Layout {
     componentId: string;
   }>;
   meta?: Record<string, any>;
-  type?: string; // Added to match usage
-  scope?: string; // Added to match usage
+  type?: string;
+  scope?: string;
 }
 
 export interface LayoutSkeleton {

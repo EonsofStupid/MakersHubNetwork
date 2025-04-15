@@ -42,7 +42,19 @@ export enum Permission {
   API_KEY_MANAGE = 'api:keys:manage',
   
   // Analytics permissions
-  ANALYTICS_VIEW = 'analytics:view'
+  ANALYTICS_VIEW = 'analytics:view',
+  
+  // Legacy permission names (for compatibility)
+  CREATE_PROJECT = 'create_project',
+  EDIT_PROJECT = 'edit_project',
+  DELETE_PROJECT = 'delete_project',
+  SUBMIT_BUILD = 'submit_build',
+  ACCESS_ADMIN = 'access_admin',
+  MANAGE_API_KEYS = 'manage_api_keys',
+  MANAGE_USERS = 'manage_users',
+  MANAGE_ROLES = 'manage_roles',
+  MANAGE_PERMISSIONS = 'manage_permissions',
+  VIEW_ANALYTICS = 'view_analytics'
 }
 
 // Export values array for dev tools and iteration
@@ -71,7 +83,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SETTINGS_VIEW,
     Permission.PROJECT_VIEW,
     Permission.PROJECT_EDIT,
-    Permission.ANALYTICS_VIEW
+    Permission.ANALYTICS_VIEW,
+    Permission.ACCESS_ADMIN,
+    Permission.MANAGE_USERS
   ],
   [UserRole.MODERATOR]: [
     Permission.CONTENT_VIEW,
@@ -82,7 +96,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.PROJECT_CREATE,
     Permission.PROJECT_EDIT,
     Permission.PROJECT_SUBMIT,
-    Permission.PROJECT_VIEW
+    Permission.PROJECT_VIEW,
+    Permission.CREATE_PROJECT,
+    Permission.EDIT_PROJECT,
+    Permission.SUBMIT_BUILD
   ],
   [UserRole.USER]: [
     Permission.CONTENT_VIEW,

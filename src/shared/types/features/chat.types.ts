@@ -1,6 +1,7 @@
 
 /**
  * Chat system types
+ * Standardized type definitions for chat functionality
  */
 
 export type ChatMode = 'chat' | 'ultra' | 'developer' | 'image' | 'debug' | 'planning' | 'training' | 'learn';
@@ -9,11 +10,11 @@ export interface ChatMessage {
   id: string;
   sender: 'user' | 'ai' | 'system';
   content: string;
-  timestamp: number;
+  timestamp?: number;
   imageUrl?: string;
   thumbnailUrl?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ChatSession {
@@ -25,8 +26,8 @@ export interface ChatSession {
   updatedAt: number;
   pinned?: boolean;
   favorite?: boolean;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ChatStore {

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { logger } from '@/logging/logger.service';
-import { LogEntry, LogLevel, LogCategory } from '@/shared/types';
+import { LogEntry, LogLevel, LogCategory } from '@/shared/types/shared.types';
 import { X, Filter, Download, RefreshCw } from 'lucide-react';
 
 interface LogConsoleProps {
@@ -16,7 +16,7 @@ export const LogConsole: React.FC<LogConsoleProps> = ({
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [visible, setVisible] = useState(initialVisible);
   const [filter, setFilter] = useState({
-    level: 'info' as LogLevel,
+    level: LogLevel.INFO,
     category: '' as string,
     search: ''
   });
@@ -31,7 +31,7 @@ export const LogConsole: React.FC<LogConsoleProps> = ({
     try {
       // Get initial logs from memory transport if available
       const memoryTransport = logger.getTransport('memory');
-      if (memoryTransport) {
+      if (memoryTransport && typeof memoryTransport.getEntries === 'function') {
         const entries = memoryTransport.getEntries();
         setLogs(entries);
       }
@@ -62,12 +62,30 @@ export const LogConsole: React.FC<LogConsoleProps> = ({
     if (onClose) onClose();
   };
   
+  // Helper function to get log level value for comparison
+  const getLogLevelValue = (level: LogLevel): number => {
+    const values: Record<LogLevel, number> = {
+      [LogLevel.TRACE]: -1,
+      [LogLevel.DEBUG]: 0,
+      [LogLevel.INFO]: 1,
+      [LogLevel.SUCCESS]: 2,
+      [LogLevel.WARN]: 3,
+      [LogLevel.ERROR]: 4,
+      [LogLevel.CRITICAL]: 5,
+      [LogLevel.FATAL]: 6,
+      [LogLevel.SILENT]: 100
+    };
+    
+    return values[level] || 0;
+  };
+  
   // Apply filters
   const filteredLogs = logs.filter(log => {
     // Filter by level (show equal or higher severity)
-    if (filter.level && LogLevel[filter.level.toUpperCase() as keyof typeof LogLevel]) {
-      const minLevelValue = LogLevel[filter.level.toUpperCase() as keyof typeof LogLevel];
-      const logLevelValue = LogLevel[log.level.toUpperCase() as keyof typeof LogLevel];
+    if (filter.level) {
+      const minLevelValue = getLogLevelValue(filter.level);
+      const logLevelValue = getLogLevelValue(log.level);
+      
       if (logLevelValue < minLevelValue) return false;
     }
     
@@ -79,7 +97,7 @@ export const LogConsole: React.FC<LogConsoleProps> = ({
     // Filter by search text
     if (filter.search) {
       const searchLower = filter.search.toLowerCase();
-      const messageMatch = log.message.toLowerCase().includes(searchLower);
+      const messageMatch = typeof log.message === 'string' && log.message.toLowerCase().includes(searchLower);
       const detailsMatch = log.details ? 
         JSON.stringify(log.details).toLowerCase().includes(searchLower) : false;
         
@@ -165,11 +183,11 @@ export const LogConsole: React.FC<LogConsoleProps> = ({
           onChange={e => setFilter({...filter, level: e.target.value as LogLevel})}
           className="text-xs bg-slate-700 border border-slate-600 rounded px-2 py-1"
         >
-          <option value="debug">Debug & Above</option>
-          <option value="info">Info & Above</option>
-          <option value="warn">Warning & Above</option>
-          <option value="error">Error & Above</option>
-          <option value="critical">Critical & Above</option>
+          <option value={LogLevel.DEBUG}>Debug & Above</option>
+          <option value={LogLevel.INFO}>Info & Above</option>
+          <option value={LogLevel.WARN}>Warning & Above</option>
+          <option value={LogLevel.ERROR}>Error & Above</option>
+          <option value={LogLevel.CRITICAL}>Critical & Above</option>
         </select>
         
         <select
@@ -234,8 +252,8 @@ export const LogConsole: React.FC<LogConsoleProps> = ({
                   <td className="p-1 text-slate-400 whitespace-nowrap">
                     {new Date(log.timestamp).toLocaleTimeString()}
                   </td>
-                  <td className={`p-1 whitespace-nowrap ${getLogLevelColor(log.level)}`}>
-                    {log.level.toUpperCase()}
+                  <td className={`p-1 whitespace-nowrap ${getLogLevelColorClass(log.level)}`}>
+                    {String(log.level).toUpperCase()}
                   </td>
                   <td className="p-1 text-slate-300 whitespace-nowrap">
                     {log.category}
@@ -264,7 +282,7 @@ export const LogConsole: React.FC<LogConsoleProps> = ({
   );
 };
 
-function getLogLevelColor(level: LogLevel): string {
+function getLogLevelColorClass(level: LogLevel): string {
   switch (level) {
     case LogLevel.DEBUG:
       return 'text-blue-300';

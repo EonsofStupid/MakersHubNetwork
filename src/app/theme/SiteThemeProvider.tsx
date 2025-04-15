@@ -31,20 +31,14 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
   const [animations, setAnimations] = useState<Record<string, string> | null>(null);
   const [cssVariables, setCssVariables] = useState<Record<string, string> | null>(null);
 
-  const { 
-    themes, 
-    activeThemeId, 
-    setActiveTheme,
-    isLoading,
-    loadThemes
-  } = useThemeStore();
+  const themeStore = useThemeStore();
 
   // Load themes on mount
   useEffect(() => {
     log.info("Initializing theme system", { themeName: defaultTheme });
     
     try {
-      loadThemes();
+      themeStore.fetchThemes();
     } catch (error) {
       log.error("Error loading themes", { 
         error: error instanceof Error ? error.message : String(error)
@@ -52,22 +46,22 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
       
       setThemeError(error instanceof Error ? error : new Error("Failed to load themes"));
     }
-  }, [loadThemes, defaultTheme, log]);
+  }, [defaultTheme, log]);
 
   // Set active theme
   useEffect(() => {
-    if (themes.length > 0 && !activeThemeId) {
+    if (themeStore.themes?.length > 0 && !themeStore.activeThemeId) {
       // Find the default theme or use the first one
-      const themeToUse = themes.find(t => t.id === defaultTheme) || themes[0];
-      setActiveTheme(themeToUse.id);
+      const themeToUse = themeStore.themes.find(t => t.id === defaultTheme) || themeStore.themes[0];
+      themeStore.setActiveTheme(themeToUse.id);
       log.info(`Setting active theme: ${themeToUse.name} (${themeToUse.id})`);
     }
-  }, [themes, activeThemeId, defaultTheme, setActiveTheme, log]);
+  }, [themeStore.themes, themeStore.activeThemeId, defaultTheme, log]);
 
   // Update theme state when active theme changes
   useEffect(() => {
-    if (activeThemeId && themes.length > 0) {
-      const activeTheme = themes.find(t => t.id === activeThemeId);
+    if (themeStore.activeThemeId && themeStore.themes?.length > 0) {
+      const activeTheme = themeStore.themes.find(t => t.id === themeStore.activeThemeId);
       if (activeTheme) {
         setTheme(activeTheme);
         
@@ -115,7 +109,7 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
         setIsLoaded(true);
       }
     }
-  }, [activeThemeId, themes, log]);
+  }, [themeStore.activeThemeId, themeStore.themes, log]);
 
   // Apply CSS variables to document root
   useEffect(() => {
@@ -130,7 +124,7 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
         
         // Log success
         logger.log(LogLevel.INFO, LogCategory.THEME, "Theme CSS variables applied", {
-          theme: activeThemeId,
+          theme: themeStore.activeThemeId,
           cssVarsCount: Object.keys(cssVariables).length
         } as ThemeLogDetails);
         
@@ -145,7 +139,7 @@ export function SiteThemeProvider({ children, defaultTheme = "impulsivity" }: Si
         setThemeError(error instanceof Error ? error : new Error("Failed to apply CSS variables"));
       }
     }
-  }, [cssVariables, isLoaded, activeThemeId]);
+  }, [cssVariables, isLoaded, themeStore.activeThemeId]);
 
   // Apply animations to style tag
   useEffect(() => {

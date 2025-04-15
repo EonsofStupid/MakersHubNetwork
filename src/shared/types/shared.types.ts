@@ -83,15 +83,15 @@ export enum LogCategory {
 
 // Log levels  
 export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  SUCCESS = 2,
-  WARN = 3,
-  ERROR = 4,
-  CRITICAL = 5,
-  FATAL = 6,
-  TRACE = -1,
-  SILENT = 100
+  DEBUG = 'debug',
+  INFO = 'info',
+  SUCCESS = 'success',
+  WARN = 'warn',
+  ERROR = 'error',
+  CRITICAL = 'critical',
+  FATAL = 'fatal',
+  TRACE = 'trace',
+  SILENT = 'silent'
 }
 
 // Add log level values for easy comparison
@@ -107,40 +107,8 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.SILENT]: 100
 };
 
-// Permission type
-export type Permission =
-  | 'content:view'
-  | 'content:create'
-  | 'content:edit'
-  | 'content:delete'
-  | 'user:view'
-  | 'user:edit'
-  | 'user:delete'
-  | 'admin:access'
-  | 'admin:view'
-  | 'admin:edit'
-  | 'admin:delete'
-  | 'system:view'
-  | 'system:edit'
-  | 'settings:view'
-  | 'settings:edit'
-  | 'project:create'
-  | 'project:edit'
-  | 'project:delete'
-  | 'project:submit'
-  | 'project:view'
-  | 'api:keys:manage'
-  | 'analytics:view'
-  | 'create_project'
-  | 'edit_project'
-  | 'delete_project'
-  | 'submit_build'
-  | 'access_admin'
-  | 'manage_users'
-  | 'manage_roles'
-  | 'manage_permissions'
-  | 'manage_api_keys'
-  | 'view_analytics';
+// Permission type from RBAC permissions
+export type Permission = string;
 
 // RBAC role groupings for easier checks
 export const RBAC = {
@@ -333,4 +301,5 @@ export interface ThemeStoreState {
   theme?: Theme;
   componentStyles?: Record<string, Record<string, string>>;
   animations?: Record<string, string>;
+  isLoaded?: boolean;
 }

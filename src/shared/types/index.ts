@@ -15,7 +15,7 @@ export { UserRole, ROLES, RBAC } from './shared.types';
 export type { Permission } from './shared.types';
 
 // Logging types
-export { LogLevel, LogCategory } from './shared.types';
+export { LogLevel, LogCategory, LOG_LEVEL_VALUES } from './shared.types';
 export type { LogEntry, LogEvent, LogFilter, LogTransport, LogDetails } from './shared.types';
 
 // Theme types
@@ -31,3 +31,20 @@ export type {
   ThemeLogDetails,
   ThemeStoreState
 } from './shared.types';
+
+// Chat types
+export type {
+  ChatMessage,
+  ChatSession,
+  ChatMode
+} from './features/chat.types';
+
+// Layout types
+export type {
+  Layout,
+  LayoutSkeleton,
+  LayoutComponent,
+  LayoutComponentProps,
+  Component,
+  AdminLayoutConfig
+} from './features/layout.types';
