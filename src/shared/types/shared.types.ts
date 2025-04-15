@@ -1,4 +1,3 @@
-
 // Auth types
 export const AUTH_STATUS = {
   LOADING: 'LOADING',

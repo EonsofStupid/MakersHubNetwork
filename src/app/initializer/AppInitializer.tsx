@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { useRBACStore } from '@/rbac/rbac.store';
@@ -15,9 +14,8 @@ export function AppInitializer({ children }: AppInitializerProps) {
   
   useEffect(() => {
     if (status !== 'LOADING') {
-      // If user is authenticated, set some default roles for testing
       if (isAuthenticated) {
-        setUserRoles([ROLES.USER]);
+        setUserRoles([ROLES.user]);
       }
       
       setIsInitialized(true);

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/auth/hooks/useAuth';
@@ -29,7 +28,6 @@ export default function WithRoleProtection({
     return <Navigate to={redirectPath} replace />;
   }
   
-  // If no specific roles are required, allow anyone who's authenticated
   if (!allowedRoles) {
     return <>{children}</>;
   }
@@ -61,6 +59,5 @@ export default function WithRoleProtection({
     return <>{children}</>;
   }
   
-  // If none of the above conditions are met, user doesn't have the required role
   return <Navigate to={redirectPath} replace />;
 }

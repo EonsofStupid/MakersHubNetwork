@@ -24,27 +24,27 @@ interface UserData {
 const mockUsers: UserData[] = [
   {
     id: "1",
-    email: "john@example.com",
+    email: "john@example.com", 
     name: "John Doe",
-    role: ROLES.ADMIN,
+    role: ROLES.admin,
     status: "active",
     createdAt: "2023-04-15T10:30:00Z",
     lastLogin: "2023-05-10T08:45:00Z"
   },
   {
-    id: "2",
+    id: "2", 
     email: "jane@example.com",
     name: "Jane Smith",
-    role: ROLES.BUILDER,
+    role: ROLES.builder,
     status: "active",
     createdAt: "2023-03-22T14:20:00Z",
     lastLogin: "2023-05-09T16:30:00Z"
   },
   {
     id: "3",
-    email: "sam@example.com",
+    email: "sam@example.com", 
     name: "Sam Wilson",
-    role: ROLES.SUPER_ADMIN,
+    role: ROLES.super_admin,
     status: "active",
     createdAt: "2023-02-10T09:15:00Z",
     lastLogin: "2023-05-11T11:20:00Z"
@@ -52,8 +52,8 @@ const mockUsers: UserData[] = [
   {
     id: "4",
     email: "alex@example.com",
-    name: "Alex Johnson",
-    role: ROLES.BUILDER,
+    name: "Alex Johnson", 
+    role: ROLES.builder,
     status: "pending",
     createdAt: "2023-05-05T16:45:00Z",
     lastLogin: null
@@ -62,7 +62,7 @@ const mockUsers: UserData[] = [
     id: "5",
     email: "taylor@example.com",
     name: "Taylor Brown",
-    role: ROLES.BUILDER,
+    role: ROLES.builder,
     status: "suspended",
     createdAt: "2023-01-18T13:10:00Z",
     lastLogin: "2023-04-28T10:05:00Z"
@@ -71,9 +71,9 @@ const mockUsers: UserData[] = [
 
 const getRoleBadgeStyle = (role: UserRole) => {
   switch (role) {
-    case ROLES.SUPER_ADMIN:
+    case ROLES.super_admin:
       return "bg-red-500/20 text-red-500 hover:bg-red-500/30";
-    case ROLES.ADMIN:
+    case ROLES.admin:  
       return "bg-purple-500/20 text-purple-500 hover:bg-purple-500/30";
     default:
       return "bg-blue-500/20 text-blue-500 hover:bg-blue-500/30";
