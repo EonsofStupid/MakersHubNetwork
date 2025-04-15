@@ -1,11 +1,10 @@
 
-import { useThemeStore } from "@/shared/stores/theme/store";
-import { Theme } from "@/shared/types";
+import { useThemeStore } from "@/stores/theme.store";
 
 export function useSiteTheme() {
   const { 
     activeThemeId, 
-    themes, 
+    themes,
     isDark, 
     primaryColor, 
     backgroundColor, 
@@ -14,7 +13,7 @@ export function useSiteTheme() {
     isLoading 
   } = useThemeStore();
 
-  const currentTheme = themes.find(t => t.id === activeThemeId);
+  const currentTheme = themes?.find(t => t.id === activeThemeId) || null;
 
   return {
     theme: currentTheme,

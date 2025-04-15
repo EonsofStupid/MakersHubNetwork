@@ -1,9 +1,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { LogCategory } from '@/shared/types/shared.types';
+import { LogCategory, LogLevel, LogDetails } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
-import { LogLevel } from '@/shared/types';
 
 /**
  * AppBootstrap Component
@@ -33,16 +32,15 @@ export function AppBootstrap() {
         await initialize();
         console.info('Auth service initialized successfully');
       } catch (error) {
-        console.error('Auth initialization failed', { 
-          details: error instanceof Error 
-            ? { message: error.message }
-            : { message: String(error) }
-        });
+        const details: LogDetails = { 
+          error: error instanceof Error ? error.message : String(error),
+          source: 'AppBootstrap' 
+        };
         
-        // Log through the logger service as well if available
-        logger.log(LogLevel.ERROR, LogCategory.APP, 'Auth initialization failed', {
-          error: error instanceof Error ? error.message : String(error)
-        });
+        console.error('Auth initialization failed', details);
+        
+        // Log through the logger service
+        logger.log(LogLevel.ERROR, LogCategory.APP, 'Auth initialization failed', details);
       }
     };
     

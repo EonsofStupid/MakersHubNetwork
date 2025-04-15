@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { LogLevel, LogCategory, LogDetails } from '@/shared/types/shared.types';
+import { LogLevel, LogCategory, LogDetails, LogCategoryType } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 
 /**
@@ -11,7 +11,7 @@ import { logger } from '@/logging/logger.service';
  */
 export function useLogger(source: string, defaultCategory: LogCategoryType = LogCategory.UI) {
   const logWithSource = useCallback((level: LogLevel, message: string, options?: Partial<LogDetails>) => {
-    const details = options ? { ...options, source } : { source };
+    const details: LogDetails = options ? { ...options, source } : { source };
     logger.log(level, defaultCategory, message, details);
   }, [source, defaultCategory]);
 
@@ -41,6 +41,3 @@ export function useLogger(source: string, defaultCategory: LogCategoryType = Log
     }, [source])
   };
 }
-
-// Add LogCategoryType to ensure strong typing
-type LogCategoryType = keyof typeof LogCategory;

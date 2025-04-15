@@ -1,5 +1,5 @@
 
-import { LogCategory, LogLevel, LogDetails, LogEntry } from '@/shared/types/shared.types';
+import { LogLevel, LogCategory, LogCategoryType, LogDetails, LogEntry, LogFilter } from '@/shared/types/shared.types';
 
 /**
  * Logger service for application-wide logging
@@ -7,8 +7,10 @@ import { LogCategory, LogLevel, LogDetails, LogEntry } from '@/shared/types/shar
 class LoggerService {
   private static instance: LoggerService;
   private logLevel: LogLevel = LogLevel.INFO;
-  private enabledCategories: Set<keyof typeof LogCategory> = new Set(Object.keys(LogCategory) as Array<keyof typeof LogCategory>);
-  private listeners: ((level: LogLevel, category: keyof typeof LogCategory, message: string, details?: LogDetails) => void)[] = [];
+  private enabledCategories: Set<LogCategoryType> = new Set(
+    Object.keys(LogCategory) as Array<LogCategoryType>
+  );
+  private listeners: ((level: LogLevel, category: LogCategoryType, message: string, details?: LogDetails) => void)[] = [];
   private logEntries: LogEntry[] = [];
   
   /**
@@ -31,28 +33,28 @@ class LoggerService {
   /**
    * Enable specific log categories
    */
-  public enableCategories(categories: Array<keyof typeof LogCategory>): void {
+  public enableCategories(categories: Array<LogCategoryType>): void {
     categories.forEach(category => this.enabledCategories.add(category));
   }
   
   /**
    * Disable specific log categories
    */
-  public disableCategories(categories: Array<keyof typeof LogCategory>): void {
+  public disableCategories(categories: Array<LogCategoryType>): void {
     categories.forEach(category => this.enabledCategories.delete(category));
   }
   
   /**
    * Add log listener
    */
-  public addListener(listener: (level: LogLevel, category: keyof typeof LogCategory, message: string, details?: LogDetails) => void): void {
+  public addListener(listener: (level: LogLevel, category: LogCategoryType, message: string, details?: LogDetails) => void): void {
     this.listeners.push(listener);
   }
   
   /**
    * Remove log listener
    */
-  public removeListener(listener: (level: LogLevel, category: keyof typeof LogCategory, message: string, details?: LogDetails) => void): void {
+  public removeListener(listener: (level: LogLevel, category: LogCategoryType, message: string, details?: LogDetails) => void): void {
     this.listeners = this.listeners.filter(l => l !== listener);
   }
   
@@ -60,14 +62,15 @@ class LoggerService {
    * Subscribe to log events
    */
   public subscribe(callback: (entry: LogEntry) => void): () => void {
-    const handler = (level: LogLevel, category: keyof typeof LogCategory, message: string, details?: LogDetails) => {
+    const handler = (level: LogLevel, category: LogCategoryType, message: string, details?: LogDetails) => {
       const entry: LogEntry = {
         id: crypto.randomUUID(),
         level,
         category,
         message,
         timestamp: Date.now(),
-        details
+        details,
+        source: details?.source
       };
       callback(entry);
     };
@@ -82,7 +85,7 @@ class LoggerService {
   /**
    * Log a message
    */
-  public log(level: LogLevel, category: keyof typeof LogCategory, message: string, details?: LogDetails): void {
+  public log(level: LogLevel, category: LogCategoryType, message: string, details?: LogDetails): void {
     // Check if this log should be processed
     if (!this.shouldLog(level, category)) {
       return;
@@ -95,7 +98,8 @@ class LoggerService {
       category,
       message,
       timestamp: Date.now(),
-      details
+      details,
+      source: details?.source
     };
     
     // Store the log entry
@@ -133,7 +137,7 @@ class LoggerService {
   /**
    * Check if this log should be processed based on level and category
    */
-  private shouldLog(level: LogLevel, category: keyof typeof LogCategory): boolean {
+  private shouldLog(level: LogLevel, category: LogCategoryType): boolean {
     // Check log level
     if (level < this.logLevel) {
       return false;
@@ -150,7 +154,7 @@ class LoggerService {
   /**
    * Notify all listeners
    */
-  private notifyListeners(level: LogLevel, category: keyof typeof LogCategory, message: string, details?: LogDetails): void {
+  private notifyListeners(level: LogLevel, category: LogCategoryType, message: string, details?: LogDetails): void {
     this.listeners.forEach(listener => {
       try {
         listener(level, category, message, details);
@@ -163,13 +167,7 @@ class LoggerService {
   /**
    * Get log entries with optional filtering
    */
-  public getEntries(filter: Partial<{
-    level: LogLevel;
-    category: keyof typeof LogCategory;
-    from: number;
-    to: number;
-    search: string;
-  }> = {}): LogEntry[] {
+  public getEntries(filter: Partial<LogFilter> = {}): LogEntry[] {
     let filteredEntries = [...this.logEntries];
     
     if (filter.level !== undefined) {

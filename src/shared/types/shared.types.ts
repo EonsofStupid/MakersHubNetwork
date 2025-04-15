@@ -13,24 +13,18 @@ export type AuthEventType = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'US
 
 // RBAC types
 export const ROLES = {
-  SUPER_ADMIN: 'SUPER_ADMIN',
-  ADMIN: 'ADMIN',
-  MODERATOR: 'MODERATOR',
-  BUILDER: 'BUILDER',
-  USER: 'USER',
-  GUEST: 'GUEST'
+  SUPER_ADMIN: 'super_admin',
+  ADMIN: 'admin',
+  MODERATOR: 'moderator',
+  BUILDER: 'builder',
+  USER: 'user',
+  GUEST: 'guest'
 } as const;
 
-// RBAC constants for role-based policies
-export const RBAC = {
-  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[],
-  SUPER_ADMINS: [ROLES.SUPER_ADMIN] as UserRole[],
-  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[],
-  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[],
-  AUTHENTICATED: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[]
-} as const;
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];
 
-export type UserRole = typeof ROLES[keyof typeof ROLES];
+// Permission type
+export type Permission = string;
 
 // User profile type
 export interface UserProfile {
@@ -57,7 +51,7 @@ export interface UserProfile {
   };
 }
 
-// Theme types
+// Theme effect types
 export const ThemeEffectType = {
   NONE: 'NONE',
   CYBER: 'CYBER',
@@ -75,8 +69,7 @@ export const ThemeEffectType = {
   GRAIN: 'GRAIN'
 } as const;
 
-export type ThemeEffectTypeValue = typeof ThemeEffectType[keyof typeof ThemeEffectType];
-export type ThemeEffect = ThemeEffectTypeValue;
+export type ThemeEffect = keyof typeof ThemeEffectType;
 
 // Logging types
 export const LogCategory = {
@@ -95,7 +88,7 @@ export const LogCategory = {
   DEBUG: 'DEBUG'
 } as const;
 
-export type LogCategoryType = typeof LogCategory[keyof typeof LogCategory];
+export type LogCategoryType = keyof typeof LogCategory;
 
 export enum LogLevel {
   DEBUG = 0,
@@ -108,6 +101,19 @@ export enum LogLevel {
   FATAL = 6,
   SILENT = 100
 }
+
+// Mapping for log level values
+export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
+  [LogLevel.TRACE]: -1,
+  [LogLevel.DEBUG]: 0,
+  [LogLevel.INFO]: 1,
+  [LogLevel.WARN]: 2,
+  [LogLevel.ERROR]: 3,
+  [LogLevel.CRITICAL]: 4,
+  [LogLevel.SUCCESS]: 5,
+  [LogLevel.FATAL]: 6,
+  [LogLevel.SILENT]: 100
+};
 
 export interface LogDetails {
   source?: string;
@@ -128,6 +134,7 @@ export interface LogEntry {
   message: string;
   timestamp: number;
   details?: LogDetails;
+  source?: string;
 }
 
 export interface LogEvent {
@@ -142,50 +149,17 @@ export interface LogFilter {
   search?: string;
 }
 
-export interface LogTransport {
-  log: (entry: LogEntry) => void;
-  setMinLevel: (level: LogLevel) => void;
-}
-
-export interface ThemeLogDetails {
-  theme?: string;
-  error?: string;
-  cssVarsCount?: number;
-}
-
-export type Permission = 'create' | 'read' | 'update' | 'delete' | 'admin';
-
-// Theme types
-export interface Theme {
+// Base entity type
+export interface BaseEntity {
   id: string;
-  name: string;
-  label?: string;
-  description?: string;
-  tokens?: ThemeToken[];
-  components?: ThemeComponent[];
-  isDark?: boolean;
-  context?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface ThemeToken {
+// User type
+export interface User extends BaseEntity {
+  email: string;
   name?: string;
-  token_name?: string;
-  value?: string;
-  token_value?: string;
-  type?: string;
-  keyframes?: string;
-  description?: string;
-}
-
-export interface ThemeComponent {
-  name?: string;
-  component_name?: string;
-  styles?: Record<string, string>;
-  tokens?: Record<string, string>;
-}
-
-export interface ServiceResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
+  avatar_url?: string;
+  roles?: UserRole[];
 }

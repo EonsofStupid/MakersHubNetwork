@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { UserRole, Permission, LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { UserRole, LogCategory, LogLevel } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 
 /**
@@ -8,15 +8,15 @@ import { logger } from '@/logging/logger.service';
  */
 interface RbacState {
   roles: UserRole[];
-  permissions: Permission[];
+  permissions: string[];
   
   // Role methods
   hasRole: (check: UserRole | UserRole[]) => boolean;
   setRoles: (roles: UserRole[]) => void;
   
   // Permission methods
-  hasPermission: (check: Permission | Permission[]) => boolean;
-  setPermissions: (permissions: Permission[]) => void;
+  hasPermission: (check: string | string[]) => boolean;
+  setPermissions: (permissions: string[]) => void;
   
   // Utility methods
   clear: () => void;
@@ -51,7 +51,7 @@ export const useRbacStore = create<RbacState>((set, get) => {
     /**
      * Check if user has the specified permission(s)
      */
-    hasPermission: (check: Permission | Permission[]) => {
+    hasPermission: (check: string | string[]) => {
       const { permissions } = get();
       const checkPermissions = Array.isArray(check) ? check : [check];
       return checkPermissions.some(permission => permissions.includes(permission));
@@ -60,7 +60,7 @@ export const useRbacStore = create<RbacState>((set, get) => {
     /**
      * Set user permissions
      */
-    setPermissions: (permissions: Permission[]) => {
+    setPermissions: (permissions: string[]) => {
       set({ permissions });
       logger.log(LogLevel.INFO, LogCategory.RBAC, 'Permissions updated', { permissions });
     },

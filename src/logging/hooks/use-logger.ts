@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { logger } from '../logger.service';
-import { LogCategory, LogLevel, LogDetails } from '@/shared/types/shared.types';
+import { LogLevel, LogCategory, LogCategoryType, LogDetails } from '@/shared/types/shared.types';
 
 /**
  * Custom hook for component-level logging
@@ -10,25 +10,25 @@ import { LogCategory, LogLevel, LogDetails } from '@/shared/types/shared.types';
  * @param category - Log category
  * @returns Object with log methods for different log levels
  */
-export const useLogger = (source: string, category: LogCategory = LogCategory.UI) => {
-  const createLogDetails = (details?: any): LogDetails => ({
+export const useLogger = (source: string, category: LogCategoryType = LogCategory.UI) => {
+  const createLogDetails = (details?: Partial<LogDetails>): LogDetails => ({
     source,
     ...details
   });
 
-  const debug = useCallback((message: string, details?: any) => {
+  const debug = useCallback((message: string, details?: Partial<LogDetails>) => {
     logger.log(LogLevel.DEBUG, category, message, createLogDetails(details));
   }, [source, category]);
 
-  const info = useCallback((message: string, details?: any) => {
+  const info = useCallback((message: string, details?: Partial<LogDetails>) => {
     logger.log(LogLevel.INFO, category, message, createLogDetails(details));
   }, [source, category]);
 
-  const warn = useCallback((message: string, details?: any) => {
+  const warn = useCallback((message: string, details?: Partial<LogDetails>) => {
     logger.log(LogLevel.WARN, category, message, createLogDetails(details));
   }, [source, category]);
 
-  const error = useCallback((message: string, details?: any) => {
+  const error = useCallback((message: string, details?: Partial<LogDetails>) => {
     logger.log(LogLevel.ERROR, category, message, createLogDetails(details));
   }, [source, category]);
 
@@ -36,6 +36,13 @@ export const useLogger = (source: string, category: LogCategory = LogCategory.UI
     debug,
     info,
     warn,
-    error
+    error,
+    log: useCallback((level: LogLevel, message: string, details?: Partial<LogDetails>) => {
+      logger.log(level, category, message, createLogDetails(details));
+    }, [source, category]),
+    
+    withCategory: useCallback((newCategory: LogCategoryType) => {
+      return useLogger(source, newCategory);
+    }, [source])
   };
 };

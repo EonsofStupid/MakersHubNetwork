@@ -1,7 +1,23 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { LogCategory, LogLevel, LogEntry, LogFilter, LogTransport, LogEvent, LogCategoryType } from '@/shared/types/shared.types';
+import { 
+  LogLevel, 
+  LogCategory, 
+  LogCategoryType, 
+  LogEntry, 
+  LogFilter, 
+  LogEvent, 
+  LogDetails 
+} from '@/shared/types/shared.types';
 import { logger } from './logger.service';
+
+/**
+ * Interface for log transports
+ */
+export interface LogTransport {
+  log: (entry: LogEntry) => void;
+  setMinLevel: (level: LogLevel) => void;
+}
 
 /**
  * LogBridge provides a unified interface for application logging
@@ -89,7 +105,7 @@ export class LogBridge {
   /**
    * Log a message
    */
-  public log(level: LogLevel, category: LogCategoryType, message: string, details?: Record<string, unknown>): void {
+  public log(level: LogLevel, category: LogCategoryType, message: string, details?: LogDetails): void {
     // Don't log if level is below minimum
     if (level === LogLevel.SILENT || this.shouldSkipLog(level)) {
       return;
@@ -101,7 +117,8 @@ export class LogBridge {
       category,
       message,
       timestamp: Date.now(),
-      details: details || {}
+      details: details || {},
+      source: details?.source
     };
     
     // Send to all transports
@@ -127,28 +144,28 @@ export class LogBridge {
   /**
    * Convenience method for debug logs
    */
-  public debug(category: LogCategoryType, message: string, details?: Record<string, unknown>): void {
+  public debug(category: LogCategoryType, message: string, details?: LogDetails): void {
     this.log(LogLevel.DEBUG, category, message, details);
   }
   
   /**
    * Convenience method for info logs
    */
-  public info(category: LogCategoryType, message: string, details?: Record<string, unknown>): void {
+  public info(category: LogCategoryType, message: string, details?: LogDetails): void {
     this.log(LogLevel.INFO, category, message, details);
   }
   
   /**
    * Convenience method for warning logs
    */
-  public warn(category: LogCategoryType, message: string, details?: Record<string, unknown>): void {
+  public warn(category: LogCategoryType, message: string, details?: LogDetails): void {
     this.log(LogLevel.WARN, category, message, details);
   }
   
   /**
    * Convenience method for error logs
    */
-  public error(category: LogCategoryType, message: string, details?: Record<string, unknown>): void {
+  public error(category: LogCategoryType, message: string, details?: LogDetails): void {
     this.log(LogLevel.ERROR, category, message, details);
   }
   

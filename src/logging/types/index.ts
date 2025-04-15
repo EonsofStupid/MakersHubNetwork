@@ -1,18 +1,26 @@
 
-// Re-export all logging types with proper export type syntax
-export { LogLevel, LogCategory, type LogDetails } from '@/shared/types/shared.types';
+// Re-export shared logging types
+export type { 
+  LogLevel,
+  LogCategoryType,
+  LogDetails,
+  LogEntry,
+  LogEvent,
+  LogFilter
+} from '@/shared/types/shared.types';
+
+// Export LogCategory
+export { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
 // Logger related types
 export interface LoggerOptions {
   level: LogLevel;
-  categories?: LogCategory[];
+  categories?: LogCategoryType[];
   includeTimestamp?: boolean;
 }
 
-export interface LogEntry {
-  level: LogLevel;
-  category: LogCategory;
-  message: string;
-  timestamp: string;
-  details?: LogDetails;
+// LogTransport interface
+export interface LogTransport {
+  log: (entry: LogEntry) => void;
+  setMinLevel: (level: LogLevel) => void;
 }

@@ -1,41 +1,52 @@
 
-import { UserRole, Permission, LogCategory } from '@/shared/types/shared.types';
+import { UserRole } from '@/shared/types/shared.types';
+import { useRbacStore } from './store';
+import { IRBACBridge } from './types';
 
-export const RBACBridge = {
+/**
+ * Bridge implementation for RBAC functionality
+ * Provides an interface for role-based access control
+ */
+export const RBACBridge: IRBACBridge = {
   hasRole: (role: UserRole | UserRole[]): boolean => {
-    return true;
+    const { hasRole } = useRbacStore.getState();
+    return hasRole(role);
   },
   
   getRoles: (): UserRole[] => {
-    return ['ADMIN', 'USER'];
+    const { roles } = useRbacStore.getState();
+    return roles;
   },
 
   hasAdminAccess: (): boolean => {
-    return RBACBridge.hasRole(['ADMIN', 'SUPER_ADMIN']);
+    return RBACBridge.hasRole(['admin', 'super_admin']);
   },
 
   isSuperAdmin: (): boolean => {
-    return RBACBridge.hasRole('SUPER_ADMIN');
+    return RBACBridge.hasRole('super_admin');
   },
   
   isModerator: (): boolean => {
-    return RBACBridge.hasRole('MODERATOR');
+    return RBACBridge.hasRole('moderator');
   },
   
   isBuilder: (): boolean => {
-    return RBACBridge.hasRole('BUILDER');
+    return RBACBridge.hasRole('builder');
   },
 
   setRoles: (roles: UserRole[]): void => {
-    // Implementation for setting roles
+    const { setRoles } = useRbacStore.getState();
+    setRoles(roles);
   },
 
   clearRoles: (): void => {
-    // Implementation for clearing roles
+    const { clear } = useRbacStore.getState();
+    clear();
   },
 
-  hasPermission: (permission: Permission): boolean => {
-    return true; // Implement proper permission checks
+  hasPermission: (permission: string): boolean => {
+    const { hasPermission } = useRbacStore.getState();
+    return hasPermission(permission);
   },
 
   canAccessAdminSection: (section?: string): boolean => {

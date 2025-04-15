@@ -1,12 +1,12 @@
+
 import React from 'react';
 import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
-import { LogCategory, LogLevel, LogDetails } from '@/logging/types';
-import { renderUnknownAsNode } from '@/shared/utils/render';
+import { LogLevel, LogCategoryType, LogDetails } from '@/shared/types/shared.types';
 
 interface LogNotificationProps {
   level: LogLevel;
-  category: LogCategory;
+  category: LogCategoryType;
   message: string | React.ReactNode;
   onClose?: () => void;
 }
@@ -60,13 +60,21 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
         return 'Log';
     }
   };
+  
+  // Helper to safely render any type of message
+  const renderMessage = (content: string | React.ReactNode) => {
+    if (React.isValidElement(content)) {
+      return content;
+    }
+    return String(content);
+  };
 
   return (
     <Alert variant={getVariant()} className="animate-in slide-in-from-right-5">
       {getIcon()}
       <AlertTitle>{getTitle()} - {category}</AlertTitle>
       <AlertDescription>
-        {renderUnknownAsNode(message)}
+        {renderMessage(message)}
       </AlertDescription>
     </Alert>
   );

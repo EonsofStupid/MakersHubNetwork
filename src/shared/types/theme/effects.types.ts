@@ -1,63 +1,52 @@
 
-import { ThemeEffectType } from '../shared.types';
+import { ThemeEffect, ThemeEffectType } from '@/shared/types/shared.types';
 
-export interface ThemeEffect {
-  type: ThemeEffectType;
-  enabled: boolean;
-  [key: string]: any;
-}
-
-export interface GlitchEffect extends ThemeEffect {
-  type: ThemeEffectType.GLITCH | ThemeEffectType.NOISE; // Support both new and old naming
+export interface GlitchEffect {
+  type: "GLITCH" | "NOISE"; // Support both new and old naming
   color?: string;
   frequency?: string;
   amplitude?: string;
+  enabled: boolean;
 }
 
-export interface GradientEffect extends ThemeEffect {
-  type: ThemeEffectType.GRADIENT;
+export interface GradientEffect {
+  type: "GRADIENT";
   colors?: string[];
   speed?: number; 
+  enabled: boolean;
 }
 
-export interface CyberEffect extends ThemeEffect {
-  type: ThemeEffectType.CYBER | ThemeEffectType.NEON; // Support both new and old naming
+export interface CyberEffect {
+  type: "CYBER" | "NEON"; // Support both new and old naming
   glowColor?: string;
   scanLines?: boolean;
+  enabled: boolean;
 }
 
-export interface PulseEffect extends ThemeEffect {
-  type: ThemeEffectType.PULSE;
+export interface PulseEffect {
+  type: "PULSE";
   color?: string;
   minOpacity?: number;
   maxOpacity?: number;
+  enabled: boolean;
 }
 
-export interface ParticleEffect extends ThemeEffect {
-  type: ThemeEffectType.PARTICLE;
+export interface ParticleEffect {
+  type: "PARTICLE";
   color?: string;
   count?: number;
+  enabled: boolean;
 }
 
-export interface MorphEffect extends ThemeEffect {
-  type: ThemeEffectType.MORPH | ThemeEffectType.BLUR; // Support both new and old naming
+export interface MorphEffect {
+  type: "MORPH" | "BLUR"; // Support both new and old naming
   intensity?: number;
   speed?: number;
+  enabled: boolean;
 }
 
 export interface ThemeEffectProviderProps {
   children: React.ReactNode;
   className?: string;
-  effect?: ThemeEffect;
+  effect?: string;
 }
-
-// Helper function to convert legacy effect types
-export const normalizeEffectType = (type: string): ThemeEffectType => {
-  const mappings: Record<string, ThemeEffectType> = {
-    'glitch': ThemeEffectType.NOISE,
-    'cyber': ThemeEffectType.NEON,
-    'morph': ThemeEffectType.BLUR
-  };
-  
-  return mappings[type] || (type as ThemeEffectType);
-};

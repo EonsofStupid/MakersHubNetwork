@@ -1,14 +1,14 @@
 
 import { useCallback } from 'react';
 import { useThemeStore } from '@/stores/theme.store';
-import { ThemeEffectType, ThemeEffect } from '@/shared/types/shared.types';
+import { ThemeEffect } from '@/shared/types/shared.types';
 
 /**
  * Hook for managing theme effects
  */
 export const useThemeEffects = () => {
   // Access theme store
-  const effects = useThemeStore(state => state.effects);
+  const effects = useThemeStore(state => state.effects || []);
   const setEffects = useThemeStore(state => state.setEffects);
   
   // Check if an effect is active
@@ -49,6 +49,6 @@ export const useThemeEffects = () => {
     removeEffect,
     toggleEffect,
     clearEffects,
-    EFFECTS: ThemeEffectType
+    ThemeEffectType: ThemeEffect
   };
 };

@@ -1,20 +1,43 @@
 
 import { create } from 'zustand';
-import { TokenMap, ComponentTokenMap, ThemeStoreState } from '@/shared/types/theme.types';
-import { LogLevel, LogCategory } from '@/shared/types/shared.types';
+import { 
+  Theme, 
+  ThemeState, 
+  TokenMap, 
+  ComponentTokenMap, 
+  ThemeStoreActions 
+} from '@/shared/types/theme.types';
+import { LogLevel, LogCategory, ThemeEffect } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 
 /**
  * Theme store for managing application theming
  */
-export const useThemeStore = create<ThemeStoreState>((set, get) => ({
+export const useThemeStore = create<ThemeState & {
+  effects: ThemeEffect[];
+  setEffects: (effects: ThemeEffect[]) => void;
+  setError: (error: string | null) => void;
+  setTheme: (theme: string) => Promise<void>;
+  setVariables: (variables: Record<string, string>) => void;
+  setComponentTokens: (tokens: ComponentTokenMap) => void;
+}>((set, get) => ({
+  // State
   theme: 'default',
   variables: {},
   componentTokens: {},
+  themes: [],
+  activeThemeId: null,
   isDark: false,
   isLoading: false,
   effects: [],
   error: null,
+  primaryColor: '',
+  backgroundColor: '',
+  textColor: '',
+  designTokens: {},
+  componentStyles: {},
+  animations: {},
+  isLoaded: false,
   
   // Set current theme
   setTheme: async (theme: string) => {
@@ -58,12 +81,25 @@ export const useThemeStore = create<ThemeStoreState>((set, get) => ({
   },
   
   // Set theme effects
-  setEffects: (effects: string[]) => {
+  setEffects: (effects: ThemeEffect[]) => {
     set({ effects });
   },
   
   // Set error state
   setError: (error: string | null) => {
     set({ error });
+  },
+  
+  // Theme store actions
+  setActiveTheme: (themeId: string) => {
+    set({ activeThemeId: themeId });
+  },
+  
+  setThemes: (themes: Theme[]) => {
+    set({ themes });
+  },
+  
+  setDesignTokens: (designTokens: any) => {
+    set({ designTokens });
   }
 }));
