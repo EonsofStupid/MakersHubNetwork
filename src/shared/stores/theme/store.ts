@@ -1,11 +1,10 @@
+
 import { create } from 'zustand';
-import { Theme, ThemeState, ThemeStoreActions } from '@/shared/types/theme/state.types';
-import { DesignTokens, ComponentTokens } from '@/shared/types/theme/theme.types';
+import { Theme, ThemeState, ThemeStoreActions, DesignTokens, ComponentTokens } from '@/shared/types/theme/theme.types';
 import { devtools, persist } from 'zustand/middleware';
 import { logger } from '@/logging/logger.service';
 import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
-// Initial state with default theme
 const initialState: ThemeState = {
   themes: [],
   activeThemeId: null,
@@ -15,8 +14,6 @@ const initialState: ThemeState = {
   textColor: '#000000',
   designTokens: {
     colors: {},
-    typography: {},
-    spacing: {},
   },
   componentTokens: {},
   isLoading: false,
@@ -42,22 +39,22 @@ const initialState: ThemeState = {
   },
   theme: null,
   isLoaded: false,
-  animations: {},
 };
 
 export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set) => ({
         ...initialState,
 
         setThemes: (themes) => set({ themes }),
 
         setActiveTheme: (themeId) => {
-          const { themes } = get();
-          const theme = themes.find(t => t.id === themeId);
-          if (theme) {
-            set({
+          set((state) => {
+            const theme = state.themes.find((t) => t.id === themeId);
+            if (!theme) return state;
+
+            return {
               activeThemeId: themeId,
               isDark: theme.isDark || false,
               theme,
@@ -65,8 +62,8 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
               designTokens: theme.designTokens,
               componentTokens: theme.componentTokens || {},
               isLoaded: true,
-            });
-          }
+            };
+          });
         },
 
         setDesignTokens: (tokens: DesignTokens) => set({ designTokens: tokens }),
@@ -76,46 +73,59 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
         fetchThemes: async () => {
           set({ isLoading: true });
           try {
-            // Simulated API call - replace with actual API call
-            set({ isLoading: false, themes: [] });
+            // Simulated API call - replace with actual implementation
+            const themes: Theme[] = [];
+            set({ themes, isLoading: false });
           } catch (error) {
-            set({ isLoading: false, error: error instanceof Error ? error.message : 'Unknown error' });
+            set({ 
+              isLoading: false, 
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
           }
         },
 
         createTheme: async (theme) => {
           set({ isLoading: true });
           try {
-            // Simulated API call - replace with actual API call
-            set(state => ({ themes: [...state.themes, theme], isLoading: false }));
+            set((state) => ({ 
+              themes: [...state.themes, theme], 
+              isLoading: false 
+            }));
           } catch (error) {
-            set({ isLoading: false, error: error instanceof Error ? error.message : 'Unknown error' });
+            set({ 
+              isLoading: false, 
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
           }
         },
 
         updateTheme: async (theme) => {
           set({ isLoading: true });
           try {
-            // Simulated API call - replace with actual API call
-            set(state => ({
-              themes: state.themes.map(t => t.id === theme.id ? theme : t),
-              isLoading: false
+            set((state) => ({
+              themes: state.themes.map((t) => (t.id === theme.id ? theme : t)),
+              isLoading: false,
             }));
           } catch (error) {
-            set({ isLoading: false, error: error instanceof Error ? error.message : 'Unknown error' });
+            set({ 
+              isLoading: false, 
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
           }
         },
 
         deleteTheme: async (themeId) => {
           set({ isLoading: true });
           try {
-            // Simulated API call - replace with actual API call
-            set(state => ({
-              themes: state.themes.filter(t => t.id !== themeId),
-              isLoading: false
+            set((state) => ({
+              themes: state.themes.filter((t) => t.id !== themeId),
+              isLoading: false,
             }));
           } catch (error) {
-            set({ isLoading: false, error: error instanceof Error ? error.message : 'Unknown error' });
+            set({ 
+              isLoading: false, 
+              error: error instanceof Error ? error.message : 'Unknown error'
+            });
           }
         },
 
