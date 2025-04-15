@@ -1,225 +1,83 @@
-import { IAuthBridge } from '@/auth/bridge';
-import { UserProfile, LogLevel, LogCategory } from '@/shared/types/shared.types';
-import { logger } from '@/logging/logger.service';
+
+import { UserProfile, AuthStatus, AUTH_STATUS } from '@/shared/types/shared.types';
 
 /**
- * Auth Bridge Implementation
- * 
- * This is a concrete implementation of the AuthBridge interface that
- * provides authentication functionality for the application.
+ * Auth bridge implementation
  */
-class AuthBridgeImpl implements IAuthBridge {
-  private eventSubscribers: Map<string, ((event: any) => void)[]> = new Map();
-  private _isAuthenticated: boolean = false;
-
+class AuthBridgeClass {
+  private _isAuthenticated = false;
+  private _user: UserProfile | null = null;
+  
+  // For simplicity, we'll always return true for now (no auth checks)
   get isAuthenticated(): boolean {
-    return this._isAuthenticated;
+    return true;
   }
-
-  // Session management
-  async getCurrentSession(): Promise<{ user: UserProfile } | null> {
-    try {
-      const storedUser = localStorage.getItem('auth_user');
-      if (storedUser) {
-        this._isAuthenticated = true;
-        return { user: JSON.parse(storedUser) };
-      }
-      this._isAuthenticated = false;
-      return null;
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get current session', { 
-        details: { errorMessage: error instanceof Error ? error.message : String(error) } 
-      });
-      this._isAuthenticated = false;
-      return null;
-    }
-  }
-
-  async refreshSession(): Promise<{ user_id: string } | null> {
-    try {
-      const storedUser = localStorage.getItem('auth_user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser) as UserProfile;
-        this._isAuthenticated = true;
-        return { user_id: user.id };
-      }
-      this._isAuthenticated = false;
-      return null;
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to refresh session', { 
-        details: { errorMessage: error instanceof Error ? error.message : String(error) } 
-      });
-      this._isAuthenticated = false;
-      return null;
-    }
-  }
-
-  // Authentication methods
-  async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    try {
-      const user: UserProfile = {
-        id: 'demo-user-id',
-        email,
-        name: email.split('@')[0],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      localStorage.setItem('auth_user', JSON.stringify(user));
-      localStorage.setItem('auth_token', 'demo-token');
-      this._isAuthenticated = true;
-      
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed in with email', { 
-        details: { email } 
-      });
-
-      return { user, error: null };
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign in with email', { 
-        details: { email, errorMessage: error instanceof Error ? error.message : String(error) } 
-      });
-      this._isAuthenticated = false;
-      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
-    }
-  }
-
-  async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    try {
-      const user: UserProfile = {
-        id: 'demo-user-id',
-        email,
-        name: email.split('@')[0],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      localStorage.setItem('auth_user', JSON.stringify(user));
-      localStorage.setItem('auth_token', 'demo-token');
-      this._isAuthenticated = true;
-
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed up with email', { 
-        details: { email } 
-      });
-
-      return { user, error: null };
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign up with email', { 
-        details: { email, errorMessage: error instanceof Error ? error.message : String(error) } 
-      });
-      this._isAuthenticated = false;
-      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
-    }
-  }
-
-  async signOut(): Promise<void> {
-    try {
-      localStorage.removeItem('auth_user');
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_roles');
-      this._isAuthenticated = false;
-
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'User signed out');
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to sign out', { 
-        details: { errorMessage: error instanceof Error ? error.message : String(error) }
-      });
-    }
-  }
-
-  async signInWithOAuth(provider: string, options?: any): Promise<{ user: UserProfile | null; error: Error | null }> {
-    try {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, `Attempting OAuth sign in with ${provider}`, { 
-        details: { provider, options } 
-      });
-
-      if (provider === 'google') {
-        const mockUser: UserProfile = {
-          id: 'google-user-id',
-          email: 'google-user@example.com',
-          name: 'Google User',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        localStorage.setItem('auth_user', JSON.stringify(mockUser));
-        localStorage.setItem('auth_token', 'google-oauth-token');
-        this._isAuthenticated = true;
-
-        return { user: mockUser, error: null };
-      }
-
-      throw new Error(`OAuth provider ${provider} not supported`);
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, `Failed to sign in with ${provider}`, { 
-        details: { provider, error: error instanceof Error ? error.message : String(error) } 
-      });
-      return { user: null, error: error instanceof Error ? error : new Error(`Unknown error with ${provider} login`) };
-    }
-  }
-
-  async signIn(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
-    return this.signInWithEmail(email, password);
-  }
-
-  subscribeToEvent(event: string, callback: (event: any) => void): { unsubscribe: () => void } {
-    if (!this.eventSubscribers.has(event)) {
-      this.eventSubscribers.set(event, []);
-    }
-    
-    this.eventSubscribers.get(event)?.push(callback);
-    
+  
+  // Always return a mock user for now (no auth checks)
+  getUser(): UserProfile | null {
     return {
-      unsubscribe: () => {
-        const subscribers = this.eventSubscribers.get(event) || [];
-        const index = subscribers.indexOf(callback);
-        if (index !== -1) {
-          subscribers.splice(index, 1);
-        }
-      }
+      id: '1',
+      email: 'user@example.com',
+      name: 'Demo User',
+      avatar_url: 'https://ui-avatars.com/api/?name=Demo+User'
     };
   }
   
-  onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
-    return this.subscribeToEvent('auth', callback);
+  // Mock session management
+  async getCurrentSession(): Promise<{ user: UserProfile } | null> {
+    return { user: this.getUser()! };
   }
   
-  async resetPassword(email: string): Promise<void> {
-    try {
-      logger.log(LogLevel.INFO, LogCategory.AUTH, 'Password reset requested', { 
-        details: { email }
-      });
-      // Mock implementation
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to reset password', { 
-        details: { email, error: String(error) }
-      });
-      throw error;
-    }
+  async refreshSession(): Promise<{ user_id: string } | null> {
+    return { user_id: '1' };
   }
   
-  getUser(): UserProfile | null {
-    try {
-      const storedUser = localStorage.getItem('auth_user');
-      if (storedUser) {
-        return JSON.parse(storedUser);
-      }
-      return null;
-    } catch (error) {
-      logger.log(LogLevel.ERROR, LogCategory.AUTH, 'Failed to get user', { 
-        details: { error: String(error) }
-      });
-      return null;
-    }
+  // Mock auth methods
+  async signInWithEmail(): Promise<{ user: UserProfile | null; error: Error | null }> {
+    return { user: this.getUser(), error: null };
   }
-
+  
+  async signUp(): Promise<{ user: UserProfile | null; error: Error | null }> {
+    return { user: this.getUser(), error: null };
+  }
+  
+  async signOut(): Promise<void> {
+    // No-op
+  }
+  
+  // Mock event subscription
+  onAuthEvent(): { unsubscribe: () => void } {
+    return { unsubscribe: () => {} };
+  }
+  
+  // Mock password reset
+  async resetPassword(): Promise<void> {
+    // No-op
+  }
+  
+  // Alias for getUser
   getProfile(): UserProfile | null {
     return this.getUser();
   }
-
-  getUserProfile(user_id?: string): UserProfile | null {
-    return this.getUser();
+  
+  // Status getter
+  getStatus(): AuthStatus {
+    return AUTH_STATUS.AUTHENTICATED;
+  }
+  
+  // Error getter
+  getError(): Error | null {
+    return null;
+  }
+  
+  // Status flags
+  get isLoading(): boolean {
+    return false;
+  }
+  
+  get isInitialized(): boolean {
+    return true;
   }
 }
 
-// Create and export a singleton instance
-export const authBridge = new AuthBridgeImpl();
+export const authBridge = new AuthBridgeClass();

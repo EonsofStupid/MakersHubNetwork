@@ -1,156 +1,53 @@
 
 import { create } from 'zustand';
-import { AUTH_STATUS } from '@/shared/types/shared.types';
-
-interface UserData {
-  id: string;
-  email: string;
-  name?: string;
-  avatar_url?: string;
-}
+import { AUTH_STATUS, UserProfile } from '@/shared/types/shared.types';
 
 interface AuthState {
-  status: typeof AUTH_STATUS[keyof typeof AUTH_STATUS];
-  user: UserData | null;
+  status: keyof typeof AUTH_STATUS;
+  user: UserProfile | null;
   isAuthenticated: boolean;
-  error: string | null;
+  error: Error | null;
   
   // Actions
   initialize: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
-  updateUser: (user: Partial<UserData>) => Promise<void>;
+  
+  // Additional for UI state
+  roles: string[];
 }
 
-// Create the auth store
-export const useAuthStore = create<AuthState>((set, get) => ({
-  status: AUTH_STATUS.LOADING,
-  user: null,
-  isAuthenticated: false,
+// Create the auth store - always authenticated with no checks
+export const useAuthStore = create<AuthState>((set) => ({
+  status: AUTH_STATUS.AUTHENTICATED,
+  user: {
+    id: '1',
+    email: 'user@example.com',
+    name: 'Demo User',
+    avatar_url: 'https://ui-avatars.com/api/?name=Demo+User'
+  },
+  isAuthenticated: true,
   error: null,
+  roles: ['USER', 'ADMIN'],
   
   // Initialize auth
   initialize: async () => {
-    try {
-      set({ status: AUTH_STATUS.LOADING });
-      
-      // For now, we'll just simulate a logged out state after a delay
-      setTimeout(() => {
-        set({
-          status: AUTH_STATUS.UNAUTHENTICATED,
-          user: null,
-          isAuthenticated: false
-        });
-      }, 500);
-      
-    } catch (error) {
-      set({
-        status: AUTH_STATUS.UNAUTHENTICATED,
-        user: null,
-        isAuthenticated: false,
-        error: error instanceof Error ? error.message : 'Failed to initialize auth'
-      });
-    }
+    // No-op, already initialized
   },
   
   // Login
-  login: async (email: string, password: string) => {
-    try {
-      set({ status: AUTH_STATUS.LOADING, error: null });
-      
-      // For now, we'll just simulate a logged in state after a delay
-      setTimeout(() => {
-        set({
-          status: AUTH_STATUS.AUTHENTICATED,
-          user: {
-            id: '1',
-            email,
-            name: 'Test User',
-            avatar_url: 'https://ui-avatars.com/api/?name=Test+User'
-          },
-          isAuthenticated: true
-        });
-      }, 500);
-      
-    } catch (error) {
-      set({
-        status: AUTH_STATUS.UNAUTHENTICATED,
-        user: null,
-        isAuthenticated: false,
-        error: error instanceof Error ? error.message : 'Failed to login'
-      });
-    }
+  login: async () => {
+    // No-op, always logged in
   },
   
   // Logout
   logout: async () => {
-    try {
-      set({ status: AUTH_STATUS.LOADING, error: null });
-      
-      // For now, we'll just simulate a logged out state after a delay
-      setTimeout(() => {
-        set({
-          status: AUTH_STATUS.UNAUTHENTICATED,
-          user: null,
-          isAuthenticated: false
-        });
-      }, 500);
-      
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to logout'
-      });
-    }
+    // No-op, always logged in
   },
   
   // Signup
-  signup: async (email: string, password: string) => {
-    try {
-      set({ status: AUTH_STATUS.LOADING, error: null });
-      
-      // For now, we'll just simulate a signed up and logged in state after a delay
-      setTimeout(() => {
-        set({
-          status: AUTH_STATUS.AUTHENTICATED,
-          user: {
-            id: '1',
-            email,
-            name: 'New User',
-            avatar_url: 'https://ui-avatars.com/api/?name=New+User'
-          },
-          isAuthenticated: true
-        });
-      }, 500);
-      
-    } catch (error) {
-      set({
-        status: AUTH_STATUS.UNAUTHENTICATED,
-        user: null,
-        isAuthenticated: false,
-        error: error instanceof Error ? error.message : 'Failed to signup'
-      });
-    }
-  },
-  
-  // Update user
-  updateUser: async (userData: Partial<UserData>) => {
-    try {
-      const currentUser = get().user;
-      if (!currentUser) throw new Error('No user logged in');
-      
-      // Update user
-      set({
-        user: {
-          ...currentUser,
-          ...userData
-        }
-      });
-      
-    } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to update user'
-      });
-    }
+  signup: async () => {
+    // No-op, always logged in
   }
 }));

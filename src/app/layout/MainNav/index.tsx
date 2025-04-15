@@ -3,20 +3,14 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/shared/utils/cn";
 import { Logo } from "./components/Logo";
 import { NavigationItems } from "./components/NavigationItems";
-import AuthSection from "./components/AuthSection";
-import { useAuthStore } from "@/auth/store/auth.store";
 import { ThemeDataStream } from "./components/ThemeDataStream";
-import { useLogger } from "@/logging/hooks/use-logger";
-import { LogCategory } from "@/shared/types/shared.types";
+import { Link } from "react-router-dom";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const dataStreamRef = useRef<HTMLDivElement>(null);
   const glitchParticlesRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuthStore();
-  
-  const logger = useLogger("MainNav", LogCategory.UI);
   
   // Handle scroll position to apply trapezoid shape
   useEffect(() => {
@@ -33,8 +27,6 @@ export function MainNav() {
   }, []);
 
   useEffect(() => {
-    logger.info("MainNav mounting");
-    
     // Apply animations after component mounts
     const timer = setTimeout(() => {
       setIsLoaded(true);
@@ -64,7 +56,7 @@ export function MainNav() {
       clearTimeout(timer);
       clearInterval(glitchInterval);
     };
-  }, [logger]);
+  }, []);
 
   return (
     <header
@@ -102,7 +94,9 @@ export function MainNav() {
           <Logo />
           <NavigationItems />
           <div className="flex items-center gap-2">
-            <AuthSection />
+            <Link to="/auth" className="px-4 py-2 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded-md transition-all">
+              Login
+            </Link>
           </div>
         </div>
       </div>

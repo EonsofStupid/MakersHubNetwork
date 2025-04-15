@@ -19,11 +19,10 @@ export function NavigationItems() {
     navItemActiveIndicator: 'absolute -bottom-1 left-0 w-full h-0.5 bg-primary origin-center'
   };
   
-  // Mock nav items - these could come from a configuration or database
+  // Nav items
   const navItems: NavItem[] = [
     { name: "Home", href: "/" },
     { name: "Features", href: "/features" },
-    { name: "Pricing", href: "/pricing" },
     { name: "About", href: "/about" },
     { name: "Blog", href: "/blog" },
     { name: "Contact", href: "/contact" },

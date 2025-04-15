@@ -2,14 +2,10 @@
 import React from 'react';
 import { FeaturesSection } from '../components/landing/FeaturesSection';
 import { ThemeEffectProvider } from '../theme/ThemeEffectProvider';
-import { ThemeEffectType } from '@/shared/types/theme.types';
+import { ThemeEffectType } from '@/shared/types/shared.types';
 import { cn } from '@/shared/utils/cn';
-import { ContentLoader } from '@/shared/ui/loading-state';
-import { useThemeStore } from '@/shared/stores/theme/themeStore';
 
 export default function HomePage() {
-  const { isLoaded } = useThemeStore();
-  
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero section */}
@@ -18,41 +14,35 @@ export default function HomePage() {
         
         <div className="container mx-auto">
           <div className="max-w-3xl mx-auto text-center">
-            {!isLoaded ? (
-              <ContentLoader lines={4} />
-            ) : (
-              <>
-                <h1 className={cn(
-                  "text-4xl md:text-5xl lg:text-6xl font-bold mb-6",
-                  "cyber-text gradient-text"
-                )}>
-                  The Ultimate 3D Printing Community
-                </h1>
-                <p className="text-xl mb-8 text-muted-foreground">
-                  Connect with fellow makers, showcase your builds, and elevate your 3D printing experience
-                </p>
-                <div className="flex flex-wrap gap-4 justify-center">
-                  <a 
-                    href="/builds/explore" 
-                    className={cn(
-                      "px-8 py-3 rounded-md bg-primary text-primary-foreground",
-                      "hover:bg-primary/90 transition-colors cyber-glow"
-                    )}
-                  >
-                    Explore Builds
-                  </a>
-                  <a 
-                    href="/auth" 
-                    className={cn(
-                      "px-8 py-3 rounded-md bg-secondary/10 text-primary",
-                      "border border-primary/30 hover:bg-primary/10 transition-colors"
-                    )}
-                  >
-                    Join Community
-                  </a>
-                </div>
-              </>
-            )}
+            <h1 className={cn(
+              "text-4xl md:text-5xl lg:text-6xl font-bold mb-6",
+              "cyber-text gradient-text"
+            )}>
+              The Ultimate 3D Printing Community
+            </h1>
+            <p className="text-xl mb-8 text-muted-foreground">
+              Connect with fellow makers, showcase your builds, and elevate your 3D printing experience
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <a 
+                href="/builds/explore" 
+                className={cn(
+                  "px-8 py-3 rounded-md bg-primary text-primary-foreground",
+                  "hover:bg-primary/90 transition-colors cyber-glow"
+                )}
+              >
+                Explore Builds
+              </a>
+              <a 
+                href="/auth" 
+                className={cn(
+                  "px-8 py-3 rounded-md bg-secondary/10 text-primary",
+                  "border border-primary/30 hover:bg-primary/10 transition-colors"
+                )}
+              >
+                Join Community
+              </a>
+            </div>
           </div>
         </div>
 
@@ -82,41 +72,27 @@ export default function HomePage() {
             <p className="text-muted-foreground">Check out some amazing projects from our community</p>
           </div>
 
-          {!isLoaded ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="rounded-lg overflow-hidden bg-card border border-border h-80 animate-pulse">
-                  <div className="h-48 bg-muted"></div>
-                  <div className="p-4 space-y-2">
-                    <div className="h-4 bg-muted rounded w-3/4"></div>
-                    <div className="h-4 bg-muted rounded w-1/2"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* This would be populated from your CMS */}
-              <BuildCard
-                title="Voron 2.4 Build"
-                description="CoreXY precision printer with full enclosure"
-                image="/images/placeholder-1.jpg"
-                href="/builds/voron-24"
-              />
-              <BuildCard
-                title="Ender 3 Modifications"
-                description="Upgraded firmware and custom parts"
-                image="/images/placeholder-2.jpg"
-                href="/builds/ender-3-mods"
-              />
-              <BuildCard
-                title="Custom Resin Printer"
-                description="DIY SLA printer with 4K resolution"
-                image="/images/placeholder-3.jpg"
-                href="/builds/diy-resin"
-              />
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Featured builds */}
+            <BuildCard
+              title="Voron 2.4 Build"
+              description="CoreXY precision printer with full enclosure"
+              image="/images/placeholder-1.jpg"
+              href="/builds/voron-24"
+            />
+            <BuildCard
+              title="Ender 3 Modifications"
+              description="Upgraded firmware and custom parts"
+              image="/images/placeholder-2.jpg"
+              href="/builds/ender-3-mods"
+            />
+            <BuildCard
+              title="Custom Resin Printer"
+              description="DIY SLA printer with 4K resolution"
+              image="/images/placeholder-3.jpg"
+              href="/builds/diy-resin"
+            />
+          </div>
         </div>
       </section>
     </div>

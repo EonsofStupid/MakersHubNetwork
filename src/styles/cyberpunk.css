@@ -123,3 +123,79 @@
   transform: scaleX(1);
   transform-origin: left;
 }
+
+/* MainNav specific effects */
+.mainnav-container {
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.mainnav-gradient {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.7));
+}
+
+.mainnav-scrolled {
+  height: 60px;
+}
+
+.glitch-effect {
+  animation: nav-glitch 0.2s ease-in-out;
+}
+
+@keyframes nav-glitch {
+  0% { transform: translate(0); }
+  25% { transform: translate(-5px, 0); }
+  50% { transform: translate(5px, 0); }
+  75% { transform: translate(-2px, 0); }
+  100% { transform: translate(0); }
+}
+
+.mainnav-glitch-particles {
+  position: absolute;
+  background-image: radial-gradient(
+    circle,
+    rgba(0, 240, 255, 0.1) 2px,
+    transparent 2px
+  );
+  background-size: 30px 30px;
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+}
+
+@keyframes morph-header {
+  0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  50% { clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%); }
+  100% { clip-path: polygon(0 0, 100% 0, 99% 100%, 1% 100%); }
+}
+
+.animate-morph-header {
+  animation: morph-header 2s forwards;
+}
+
+.animate-data-stream {
+  opacity: 0.6;
+}
+
+.animate-particles-1 {
+  animation: particles-drift 20s linear infinite;
+}
+
+@keyframes particles-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 100px 100px; }
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(to right, #00F0FF, #FF2D6E, #00F0FF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 200% auto;
+  animation: gradient-shift 3s linear infinite;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}

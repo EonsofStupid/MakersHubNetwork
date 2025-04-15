@@ -5,7 +5,9 @@
 export enum AUTH_STATUS {
   LOADING = 'LOADING',
   AUTHENTICATED = 'AUTHENTICATED',
-  UNAUTHENTICATED = 'UNAUTHENTICATED'
+  UNAUTHENTICATED = 'UNAUTHENTICATED',
+  IDLE = 'IDLE',
+  ERROR = 'ERROR'
 }
 
 // User role enum
@@ -14,7 +16,8 @@ export enum ROLES {
   USER = 'USER',
   SUPER_ADMIN = 'SUPER_ADMIN',
   BUILDER = 'BUILDER',
-  MODERATOR = 'MODERATOR'
+  MODERATOR = 'MODERATOR',
+  GUEST = 'GUEST'
 }
 
 export type UserRole = keyof typeof ROLES;
@@ -33,7 +36,9 @@ export enum LogCategory {
   UI = 'ui',
   SYSTEM = 'system',
   THEME = 'theme',
-  ADMIN = 'admin'
+  ADMIN = 'admin',
+  RBAC = 'rbac',
+  APP = 'app'
 }
 
 // Log details interface
@@ -56,11 +61,7 @@ export enum BuildStatus {
   IN_REVIEW = 'IN_REVIEW'
 }
 
-export interface AuthStatus {
-  LOADING: 'LOADING';
-  AUTHENTICATED: 'AUTHENTICATED';
-  UNAUTHENTICATED: 'UNAUTHENTICATED';
-}
+export type AuthStatus = keyof typeof AUTH_STATUS;
 
 export interface ServiceResponse<T> {
   success: boolean;
@@ -68,5 +69,47 @@ export interface ServiceResponse<T> {
   error?: string;
 }
 
-// Re-export from shared.types.ts for backward compatibility
-export type { UserRole as UserRoleType };
+// User profile types
+export interface UserData {
+  id: string;
+  email: string;
+  name?: string;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  last_sign_in_at?: string;
+  user_metadata?: Record<string, any>;
+  bio?: string;
+}
+
+export type UserProfile = UserData;
+
+// Permission type
+export type Permission = string;
+
+// Theme effect types
+export enum ThemeEffectType {
+  CYBER = 'CYBER',
+  GLITCH = 'GLITCH',
+  NEON = 'NEON',
+  MATRIX = 'MATRIX',
+  NONE = 'NONE'
+}
+
+// Auth event type
+export enum AuthEventType {
+  SIGNED_IN = 'SIGNED_IN',
+  SIGNED_OUT = 'SIGNED_OUT',
+  TOKEN_REFRESHED = 'TOKEN_REFRESHED',
+  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
+  USER_UPDATED = 'USER_UPDATED'
+}
+
+// RBAC constants to use for role checks
+export const RBAC = {
+  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  SUPER_ADMINS: [ROLES.SUPER_ADMIN],
+  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  AUTHENTICATED: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]
+};
