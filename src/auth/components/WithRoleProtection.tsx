@@ -37,27 +37,27 @@ export default function WithRoleProtection({
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   
   // Check for admin access
-  if (roles.includes(ROLES.ADMIN) && hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN])) {
+  if (roles.includes(ROLES.admin) && hasRole([ROLES.admin, ROLES.super_admin])) {
     return <>{children}</>;
   }
   
   // Check for super admin access
-  if (roles.includes(ROLES.SUPER_ADMIN) && hasRole([ROLES.SUPER_ADMIN])) {
+  if (roles.includes(ROLES.super_admin) && hasRole([ROLES.super_admin])) {
     return <>{children}</>;
   }
   
   // Check for moderator access
-  if (roles.includes(ROLES.MODERATOR) && hasRole([ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN])) {
+  if (roles.includes(ROLES.moderator) && hasRole([ROLES.moderator, ROLES.admin, ROLES.super_admin])) {
     return <>{children}</>;
   }
   
   // Check for builder access
-  if (roles.includes(ROLES.BUILDER) && hasRole([ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN])) {
+  if (roles.includes(ROLES.builder) && hasRole([ROLES.builder, ROLES.admin, ROLES.super_admin])) {
     return <>{children}</>;
   }
   
   // Check for user access
-  if (roles.includes(ROLES.USER) && hasRole([ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN])) {
+  if (roles.includes(ROLES.user) && hasRole([ROLES.user, ROLES.builder, ROLES.moderator, ROLES.admin, ROLES.super_admin])) {
     return <>{children}</>;
   }
   
