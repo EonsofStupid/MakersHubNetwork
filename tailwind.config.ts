@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -108,6 +107,7 @@ export default {
         "stream-horizontal": "stream-horizontal var(--stream-duration) linear infinite",
         "stream-vertical": "stream-vertical var(--stream-duration) linear infinite",
         "rotate-y": "rotate-y 0.7s ease-in-out forwards",
+        "spin-slow": "spin 3s linear infinite",
       },
       rotate: {
         'y-180': 'rotateY(180deg)',

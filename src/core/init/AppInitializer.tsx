@@ -6,15 +6,14 @@ import { useLogger } from '@/logging/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 
 interface AppInitializerProps {
-  children: React.ReactNode;
+  children: (state: { isInitializing: boolean }) => React.ReactNode;
 }
 
 export function AppInitializer({ children }: AppInitializerProps) {
   const { initialize, isAuthenticated, user, roles } = useAuthStore();
   const logger = useLogger('AppInitializer', LogCategory.SYSTEM);
-  const [initComplete, setInitComplete] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   
-  // Initialize auth on mount
   useEffect(() => {
     const initApp = async () => {
       try {
@@ -26,29 +25,22 @@ export function AppInitializer({ children }: AppInitializerProps) {
           error: error instanceof Error ? error.message : String(error)
         });
       } finally {
-        setInitComplete(true);
+        setIsInitializing(false);
       }
     };
     
     initApp();
   }, [initialize, logger]);
   
-  // Initialize RBAC when auth state changes
   useEffect(() => {
     if (isAuthenticated && roles && roles.length > 0) {
-      // Set roles in RBAC system
       RBACBridge.setRoles(roles);
       logger.info('User roles set in RBAC', { details: { roles } });
     } else if (!isAuthenticated) {
-      // Clear roles when logged out
       RBACBridge.clearRoles();
       logger.info('RBAC roles cleared');
     }
   }, [isAuthenticated, roles, logger]);
   
-  if (!initComplete) {
-    return <div className="flex items-center justify-center h-screen">Initializing...</div>;
-  }
-  
-  return <>{children}</>;
+  return <>{children({ isInitializing })}</>;
 }

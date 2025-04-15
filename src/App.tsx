@@ -8,6 +8,7 @@ import { SiteThemeProvider } from './app/theme/SiteThemeProvider';
 import { ThemeLoadingState } from './shared/ui/theme/info/ThemeLoadingState';
 import { ThemeErrorState } from './shared/ui/theme/info/ThemeErrorState';
 import { useThemeStore } from './shared/stores/theme/themeStore';
+import { CyberLoadingScreen } from './shared/ui/loading/CyberLoadingScreen';
 
 function App() {
   const { isLoading, error } = useThemeStore();
@@ -15,23 +16,27 @@ function App() {
   return (
     <BrowserRouter>
       <AppInitializer>
-        <SiteThemeProvider defaultTheme="default">
-          {isLoading ? (
-            <ThemeLoadingState />
-          ) : error ? (
-            <ThemeErrorState 
-              error={new Error(error)}
-              onRetry={() => useThemeStore.getState().fetchThemes()}
-            />
-          ) : (
-            <div className="min-h-screen flex flex-col bg-background text-foreground">
-              <main className="flex-1">
-                <Routes />
-              </main>
-            </div>
-          )}
-          <Toaster />
-        </SiteThemeProvider>
+        {({ isInitializing }) => (
+          <SiteThemeProvider defaultTheme="default">
+            {isInitializing ? (
+              <CyberLoadingScreen />
+            ) : isLoading ? (
+              <ThemeLoadingState />
+            ) : error ? (
+              <ThemeErrorState 
+                error={new Error(error)}
+                onRetry={() => useThemeStore.getState().fetchThemes()}
+              />
+            ) : (
+              <div className="min-h-screen flex flex-col bg-background text-foreground">
+                <main className="flex-1">
+                  <Routes />
+                </main>
+              </div>
+            )}
+            <Toaster />
+          </SiteThemeProvider>
+        )}
       </AppInitializer>
     </BrowserRouter>
   );
