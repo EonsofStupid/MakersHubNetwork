@@ -49,7 +49,7 @@ export function AdminSidebar() {
   
   // Only show admin items for admin users
   const hasAdminAccess = RBACBridge.hasAdminAccess();
-  const isSuperAdmin = RBACBridge.hasRole(ROLES.SUPER_ADMIN);
+  const isSuperAdmin = RBACBridge.hasRole(ROLES.super_admin);
   
   if (!hasAdminAccess) return null;
   
