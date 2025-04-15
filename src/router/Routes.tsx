@@ -24,6 +24,13 @@ const Routes = () => {
     <RouterRoutes>
       <Route path="/" element={<HomePage />} />
       <Route path="/auth" element={<LoginPage />} />
+      <Route path="/features" element={<HomePage />} />
+      <Route path="/about" element={<div className="container mx-auto p-6">About Page</div>} />
+      <Route path="/community" element={<div className="container mx-auto p-6">Community Page</div>} />
+      <Route path="/firmware" element={<div className="container mx-auto p-6">Firmware Page</div>} />
+      <Route path="/parts" element={<div className="container mx-auto p-6">Parts Marketplace</div>} />
+      <Route path="/troubleshooting" element={<div className="container mx-auto p-6">Troubleshooting Page</div>} />
+      <Route path="/guides" element={<div className="container mx-auto p-6">Build Guides Page</div>} />
       
       <Route path="/admin" element={
         <AdminAuthGuard requiredRole={[ROLES.ADMIN, ROLES.SUPER_ADMIN]}>
