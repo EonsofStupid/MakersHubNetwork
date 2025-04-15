@@ -7,6 +7,7 @@ import { useLogger } from '@/logging/hooks/use-logger';
 import { LogCategory, LogLevel } from '@/shared/types/shared.types';
 import { logBridge } from '@/logging/bridge';
 import { RBACBridge } from '@/rbac/bridge';
+import { useThemeStore } from '@/shared/store/theme/store';
 
 interface SystemInitializerProps {
   children: React.ReactNode;
@@ -15,22 +16,17 @@ interface SystemInitializerProps {
 export function SystemInitializer({ children }: SystemInitializerProps) {
   const logger = useLogger('SystemInitializer', LogCategory.SYSTEM);
   const { initialize: initAuth, isAuthenticated, roles } = useAuthStore();
-  const { 
-    isInitializing,
-    progress,
-    error,
-    initPhase,
-    startInit,
-    setProgress,
-    setError,
-    completeInit,
-  } = useInitStore();
-  
-  const [errorRecoveryAttempt, setErrorRecoveryAttempt] = useState(0);
+  const { isInitializing, progress, error, initPhase, startInit, setProgress, setError, completeInit } = useInitStore();
+  const themeStore = useThemeStore();
+  const [initAttempt, setInitAttempt] = useState(0);
 
   // Initialize system components in sequence
   useEffect(() => {
+    let isMounted = true;
+
     const initSystem = async () => {
+      if (!isMounted) return;
+      
       try {
         startInit();
         logger.info('Starting robust system initialization sequence');
@@ -39,34 +35,32 @@ export function SystemInitializer({ children }: SystemInitializerProps) {
         setProgress(10, 'Configuring logging system');
         await configureLogging();
         
-        // Phase 2: Initialize core services
-        setProgress(20, 'Initializing core services');
-        await new Promise(resolve => setTimeout(resolve, 50)); // Small delay for visual feedback
+        // Phase 2: Initialize theme system
+        setProgress(30, 'Initializing theme system');
+        await initializeTheme();
         
-        // Phase 3: Initialize authentication
-        setProgress(40, 'Setting up authentication');
+        // Phase 3: Initialize auth
+        setProgress(60, 'Setting up authentication');
         await initAuth();
         
         // Phase 4: Initialize RBAC if user is authenticated
-        setProgress(60, 'Configuring role-based access control');
+        setProgress(80, 'Configuring role-based access control');
         if (isAuthenticated && roles?.length > 0) {
           RBACBridge.setRoles(roles);
-          logger.info('RBAC roles configured', { roles });
         }
         
-        // Phase 5: Final initialization steps
-        setProgress(80, 'Loading application components');
-        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for visual feedback
+        if (!isMounted) return;
         
-        // System ready
         logger.info('System initialization complete');
         completeInit();
       } catch (err) {
+        if (!isMounted) return;
+        
         const error = err instanceof Error ? err : new Error('System initialization failed');
         logger.error('Critical failure during system initialization', { 
-          error: error.message, 
+          error: error.message,
           stack: error.stack,
-          attempt: errorRecoveryAttempt + 1
+          attempt: initAttempt + 1
         });
         
         setError(error);
@@ -74,24 +68,29 @@ export function SystemInitializer({ children }: SystemInitializerProps) {
     };
 
     initSystem();
-  }, [errorRecoveryAttempt]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [initAttempt]);
 
   // Configure logging system
   const configureLogging = async () => {
-    // Enable console transport for immediate feedback
     logger.debug('Configuring logging system');
-    
-    // This is where you would configure any additional logging transports
     return Promise.resolve();
   };
 
-  // Handle retry after error
-  const handleRetry = () => {
-    logger.info('Attempting system initialization recovery', {
-      previousError: error?.message,
-      attemptNumber: errorRecoveryAttempt + 1
-    });
-    setErrorRecoveryAttempt(prev => prev + 1);
+  // Initialize theme system
+  const initializeTheme = async () => {
+    try {
+      logger.debug('Initializing theme system');
+      await themeStore.fetchThemes();
+      themeStore.setActiveTheme('default');
+      logger.info('Theme system initialized successfully');
+    } catch (error) {
+      logger.error('Theme initialization failed', { error });
+      throw error;
+    }
   };
 
   // Show error state with retry option
@@ -102,7 +101,7 @@ export function SystemInitializer({ children }: SystemInitializerProps) {
         subMessage={`${error.message} - Check logs for details`}
         progress={progress}
         errorDetails={error}
-        onRetry={handleRetry}
+        onRetry={() => setInitAttempt(prev => prev + 1)}
         showConsoleToggle={true}
       />
     );

@@ -1,11 +1,9 @@
 
-import React, { createContext, useContext, useMemo, useEffect, useState } from "react";
+import React, { createContext, useContext, useMemo, useCallback } from "react";
 import { Theme, ThemeVariables } from "@/shared/types/theme.types";
 import { useThemeStore } from "@/shared/stores/theme/store";
 import { useLogger } from "@/logging/hooks/use-logger";
 import { LogCategory } from "@/shared/types/shared.types";
-import { ThemeLoadingState } from "@/shared/ui/theme/info/ThemeLoadingState";
-import { ThemeErrorState } from "@/shared/ui/theme/info/ThemeErrorState";
 
 export interface SiteThemeContextType {
   theme: Theme | null;
@@ -28,48 +26,26 @@ export function SiteThemeProvider({
   defaultTheme = "default" 
 }: SiteThemeProviderProps) {
   const log = useLogger("SiteThemeProvider", LogCategory.THEME);
-  const [themeError, setThemeError] = useState<Error | null>(null);
   const themeStore = useThemeStore();
-
-  useEffect(() => {
-    const initTheme = async () => {
-      try {
-        log.info("Initializing theme system");
-        await themeStore.fetchThemes();
-        themeStore.setActiveTheme(defaultTheme);
-        log.info("Theme system initialized");
-      } catch (error) {
-        const err = error instanceof Error ? error : new Error('Failed to initialize theme');
-        log.error("Theme initialization failed", { error: err.message });
-        setThemeError(err);
-      }
-    };
-
-    initTheme();
-  }, [defaultTheme, log, themeStore]);
-
+  
+  // Memoize context value to prevent unnecessary re-renders
   const contextValue = useMemo<SiteThemeContextType>(() => ({
     theme: themeStore.theme,
     isLoaded: themeStore.isLoaded,
     variables: themeStore.variables,
     componentStyles: themeStore.componentStyles,
     animations: themeStore.animations,
-    themeError
-  }), [themeStore.theme, themeStore.isLoaded, themeStore.variables, themeStore.componentStyles, themeStore.animations, themeError]);
+    themeError: themeStore.error
+  }), [
+    themeStore.theme,
+    themeStore.isLoaded,
+    themeStore.variables,
+    themeStore.componentStyles,
+    themeStore.animations,
+    themeStore.error
+  ]);
 
-  if (themeStore.isLoading) {
-    return <ThemeLoadingState />;
-  }
-
-  if (themeError) {
-    return (
-      <ThemeErrorState 
-        error={themeError}
-        onRetry={() => themeStore.fetchThemes()}
-      />
-    );
-  }
-
+  // Theme system is managed by SystemInitializer now
   return (
     <SiteThemeContext.Provider value={contextValue}>
       {children}

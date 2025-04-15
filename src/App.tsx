@@ -6,7 +6,6 @@ import { SystemInitializer } from './core/init/SystemInitializer';
 import { Toaster } from './shared/ui/toaster';
 import { SiteThemeProvider } from './app/theme/SiteThemeProvider';
 import { DebugController } from './core/debug/DebugController';
-import '../src/styles/cyberpunk.css';
 
 function App() {
   return (
