@@ -1,7 +1,20 @@
 
-import { LogCategoryType, LogLevel } from './shared.types';
+import { 
+  LogCategoryType, 
+  LogLevel, 
+  Theme, 
+  ThemeState, 
+  ThemeToken, 
+  ThemeComponent, 
+  DesignTokens, 
+  ComponentTokens, 
+  ThemeEffect, 
+  ThemeEffectType,
+  TokenMap,
+  ComponentTokenMap
+} from './shared.types';
 
-// Re-export some types from shared
+// Export the types re-exported from shared.types
 export type {
   Theme,
   ThemeState,
@@ -10,8 +23,10 @@ export type {
   DesignTokens,
   ComponentTokens,
   ThemeEffect,
-  ThemeEffectType
-} from './shared.types';
+  ThemeEffectType,
+  TokenMap,
+  ComponentTokenMap
+};
 
 // Theme variables interface
 export interface ThemeVariables {
@@ -59,15 +74,6 @@ export interface ThemeStoreActions {
   loadTheme?: (themeId: string) => Promise<void>;
   setIsLoading?: (loading: boolean) => void;
   setError?: (error: string | null) => void;
-}
-
-// Token maps for simplified access
-export interface TokenMap {
-  [key: string]: string;
-}
-
-export interface ComponentTokenMap {
-  [component: string]: TokenMap;
 }
 
 // Theme service response type

@@ -8,7 +8,7 @@ import { TokenMap, ComponentTokenMap } from '@/shared/types/theme.types';
  */
 export const useThemeVariables = () => {
   // Access theme store
-  const variables = useThemeStore(state => state.variables);
+  const variables = useThemeStore(state => state.variables || {});
   const componentTokens = useThemeStore(state => state.componentTokens);
   const theme = useThemeStore(state => state.theme);
   const setVariables = useThemeStore(state => state.setVariables);
@@ -44,7 +44,7 @@ export const useThemeVariables = () => {
   
   // Get all tokens as a map
   const getAllTokens = useCallback((): TokenMap => {
-    return variables;
+    return variables as TokenMap;
   }, [variables]);
   
   // Get all component tokens

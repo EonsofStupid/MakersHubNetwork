@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { DayPicker, useDayPicker } from "react-day-picker"
+import { DayPicker } from "react-day-picker"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 import { cn } from "@/shared/lib/utils"
@@ -14,9 +14,6 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
-  const { buttonBackward, buttonForward, classNames: dayPickerClassNames } =
-    useDayPicker()
-
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}

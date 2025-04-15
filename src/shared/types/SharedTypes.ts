@@ -1,5 +1,5 @@
 
-// Re-export from shared.types.ts directly, not as a promise
+// Re-export from shared.types.ts directly
 export * from './shared.types';
 
 // Type compatibility aliases for backward compatibility

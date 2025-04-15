@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { Theme, ThemeState, ComponentTokens, DesignTokens } from '@/shared/types/shared.types';
+import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeStoreActions } from '@/shared/types/shared.types';
 import { devtools, persist } from 'zustand/middleware';
 import { logger } from '@/logging/logger.service';
 import { LogLevel, LogCategory } from '@/shared/types/shared.types';
@@ -12,8 +12,8 @@ const defaultTheme: Theme = {
   label: 'Default',
   description: 'Default theme',
   isDark: false,
-  status: 'active' as any,
-  context: 'site' as any,
+  status: 'active',
+  context: 'site',
   variables: {
     background: '#ffffff',
     foreground: '#000000',
@@ -107,19 +107,6 @@ const defaultComponentTokens = {
   },
 };
 
-// Theme store interface with CRUD operations
-interface ThemeStoreActions {
-  setThemes: (themes: Theme[]) => void;
-  setActiveTheme: (themeId: string) => void;
-  setDesignTokens: (tokens: DesignTokens) => void;
-  setComponentTokens: (tokens: ComponentTokens) => void;
-  fetchThemes: () => Promise<void>;
-  createTheme: (theme: Theme) => Promise<void>;
-  updateTheme: (theme: Theme) => Promise<void>;
-  deleteTheme: (themeId: string) => Promise<void>;
-  resetTheme: () => void;
-}
-
 // Create the theme store
 export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
   devtools(
@@ -127,26 +114,28 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
       (set, get) => ({
         themes: [defaultTheme],
         activeThemeId: defaultTheme.id,
-        isDark: defaultTheme.isDark,
-        primaryColor: defaultTheme.variables.primary,
-        backgroundColor: defaultTheme.variables.background,
-        textColor: defaultTheme.variables.foreground,
-        designTokens: defaultTheme.designTokens,
+        isDark: defaultTheme.isDark || false,
+        primaryColor: defaultTheme.variables?.primary || '',
+        backgroundColor: defaultTheme.variables?.background || '',
+        textColor: defaultTheme.variables?.foreground || '',
+        designTokens: defaultTheme.designTokens || {},
         componentTokens: defaultComponentTokens,
         isLoading: false,
         error: null,
         
         // Set all themes
         setThemes: (themes) => {
-          set({ themes });
-          logger.log(LogLevel.INFO, LogCategory.THEME, 'Themes updated', { 
-            details: { themesCount: themes.length } 
-          });
+          if (Array.isArray(themes)) {
+            set({ themes });
+            logger.log(LogLevel.INFO, LogCategory.THEME, 'Themes updated', { 
+              details: { themesCount: themes.length } 
+            });
+          }
         },
         
         // Set active theme by ID
         setActiveTheme: (themeId) => {
-          const { themes } = get();
+          const { themes = [] } = get();
           const theme = themes.find((t) => t.id === themeId);
           
           if (!theme) {
@@ -158,11 +147,11 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
           
           set({
             activeThemeId: themeId,
-            isDark: theme.isDark,
-            primaryColor: theme.variables.primary,
-            backgroundColor: theme.variables.background,
-            textColor: theme.variables.foreground,
-            designTokens: theme.designTokens,
+            isDark: theme.isDark || false,
+            primaryColor: theme.variables?.primary || '',
+            backgroundColor: theme.variables?.background || '',
+            textColor: theme.variables?.foreground || '',
+            designTokens: theme.designTokens || {},
             componentTokens: theme.componentTokens || defaultComponentTokens,
           });
           
@@ -179,116 +168,7 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
         // Set component tokens
         setComponentTokens: (tokens) => {
           set({ componentTokens: tokens });
-        },
-        
-        // Fetch themes from API
-        fetchThemes: async () => {
-          try {
-            set({ isLoading: true });
-            
-            // TODO: Replace with API call when backend is available
-            // For now we'll just use a mock
-            const mockThemes: Theme[] = [defaultTheme];
-            
-            set({ themes: mockThemes, isLoading: false });
-            logger.log(LogLevel.INFO, LogCategory.THEME, 'Themes fetched', {
-              details: { themesCount: mockThemes.length }
-            });
-          } catch (error) {
-            set({ isLoading: false, error: (error as Error).message });
-            logger.log(LogLevel.ERROR, LogCategory.THEME, 'Error fetching themes', {
-              details: { error }
-            });
-          }
-        },
-        
-        // Create a new theme
-        createTheme: async (theme) => {
-          try {
-            set({ isLoading: true });
-            
-            // TODO: Replace with API call
-            const newTheme = { ...theme, id: Date.now().toString() };
-            const { themes } = get();
-            
-            set({ themes: [...themes, newTheme], isLoading: false });
-            logger.log(LogLevel.INFO, LogCategory.THEME, 'Theme created', {
-              details: { themeId: newTheme.id, themeName: newTheme.name }
-            });
-          } catch (error) {
-            set({ isLoading: false, error: (error as Error).message });
-            logger.log(LogLevel.ERROR, LogCategory.THEME, 'Error creating theme', {
-              details: { error }
-            });
-          }
-        },
-        
-        // Update an existing theme
-        updateTheme: async (theme) => {
-          try {
-            set({ isLoading: true });
-            
-            // TODO: Replace with API call
-            const { themes } = get();
-            const updatedThemes = themes.map((t) => (t.id === theme.id ? theme : t));
-            
-            set({ themes: updatedThemes, isLoading: false });
-            logger.log(LogLevel.INFO, LogCategory.THEME, 'Theme updated', {
-              details: { themeId: theme.id, themeName: theme.name }
-            });
-          } catch (error) {
-            set({ isLoading: false, error: (error as Error).message });
-            logger.log(LogLevel.ERROR, LogCategory.THEME, 'Error updating theme', {
-              details: { error }
-            });
-          }
-        },
-        
-        // Delete a theme
-        deleteTheme: async (themeId) => {
-          try {
-            set({ isLoading: true });
-            
-            // TODO: Replace with API call
-            const { themes, activeThemeId } = get();
-            const updatedThemes = themes.filter((t) => t.id !== themeId);
-            
-            // If the active theme is being deleted, switch to default
-            const newActiveId = activeThemeId === themeId 
-              ? defaultTheme.id 
-              : activeThemeId;
-            
-            set({ 
-              themes: updatedThemes, 
-              activeThemeId: newActiveId,
-              isLoading: false 
-            });
-            
-            logger.log(LogLevel.INFO, LogCategory.THEME, 'Theme deleted', {
-              details: { themeId }
-            });
-          } catch (error) {
-            set({ isLoading: false, error: (error as Error).message });
-            logger.log(LogLevel.ERROR, LogCategory.THEME, 'Error deleting theme', {
-              details: { error }
-            });
-          }
-        },
-        
-        // Reset to default theme
-        resetTheme: () => {
-          set({
-            activeThemeId: defaultTheme.id,
-            isDark: defaultTheme.isDark,
-            primaryColor: defaultTheme.variables.primary,
-            backgroundColor: defaultTheme.variables.background,
-            textColor: defaultTheme.variables.foreground,
-            designTokens: defaultTheme.designTokens,
-            componentTokens: defaultComponentTokens,
-          });
-          
-          logger.log(LogLevel.INFO, LogCategory.THEME, 'Theme reset to default');
-        },
+        }
       }),
       {
         name: 'theme-store',

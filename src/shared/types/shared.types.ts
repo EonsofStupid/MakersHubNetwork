@@ -13,15 +13,15 @@ export type AuthEventType = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'US
 
 // RBAC types
 export const ROLES = {
-  SUPER_ADMIN: 'super_admin',
-  ADMIN: 'admin',
-  MODERATOR: 'moderator',
-  BUILDER: 'builder',
-  USER: 'user',
-  GUEST: 'guest'
+  super_admin: 'super_admin',
+  admin: 'admin',
+  moderator: 'moderator',
+  builder: 'builder',
+  user: 'user',
+  guest: 'guest'
 } as const;
 
-export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+export type UserRole = typeof ROLES[keyof typeof ROLES];
 
 // Permission type
 export type Permission = string;
@@ -52,41 +52,41 @@ export interface UserProfile {
 }
 
 // Theme effect types
-export const ThemeEffectType = {
-  NONE: 'NONE',
-  CYBER: 'CYBER',
-  NEON: 'NEON',
-  ELECTRIC: 'ELECTRIC',
-  GLITCH: 'GLITCH',
-  SYNTHWAVE: 'SYNTHWAVE',
-  HOLOGRAM: 'HOLOGRAM',
-  BLUR: 'BLUR',
-  MORPH: 'MORPH',
-  NOISE: 'NOISE',
-  GRADIENT: 'GRADIENT',
-  PULSE: 'PULSE',
-  PARTICLE: 'PARTICLE',
-  GRAIN: 'GRAIN'
-} as const;
-
-export type ThemeEffectType = keyof typeof ThemeEffectType;
+export enum ThemeEffectType {
+  NONE = 'none',
+  CYBER = 'cyber',
+  NEON = 'neon',
+  ELECTRIC = 'electric',
+  GLITCH = 'glitch',
+  SYNTHWAVE = 'synthwave',
+  HOLOGRAM = 'hologram',
+  BLUR = 'blur',
+  MORPH = 'morph',
+  NOISE = 'noise',
+  GRADIENT = 'gradient',
+  PULSE = 'pulse',
+  PARTICLE = 'particle',
+  GRAIN = 'grain',
+  GLOW = 'glow',
+  SHADOW = 'shadow'
+}
 
 // Logging types
-export const LogCategory = {
-  APP: 'APP',
-  ADMIN: 'ADMIN',
-  AUTH: 'AUTH',
-  API: 'API',
-  UI: 'UI',
-  PERFORMANCE: 'PERFORMANCE',
-  ERROR: 'ERROR',
-  SECURITY: 'SECURITY',
-  THEME: 'THEME',
-  RBAC: 'RBAC',
-  SYSTEM: 'SYSTEM',
-  CHAT: 'CHAT',
-  DEBUG: 'DEBUG'
-} as const;
+export enum LogCategory {
+  APP = 'APP',
+  ADMIN = 'ADMIN',
+  AUTH = 'AUTH',
+  API = 'API',
+  UI = 'UI',
+  PERFORMANCE = 'PERFORMANCE',
+  ERROR = 'ERROR',
+  SECURITY = 'SECURITY',
+  THEME = 'THEME',
+  RBAC = 'RBAC',
+  SYSTEM = 'SYSTEM',
+  CHAT = 'CHAT',
+  DEBUG = 'DEBUG'
+}
 
 export type LogCategoryType = keyof typeof LogCategory;
 
@@ -170,15 +170,16 @@ export interface User extends BaseEntity {
   name?: string;
   avatar_url?: string;
   roles?: UserRole[];
+  user_metadata?: Record<string, any>;
 }
 
-// Add missing theme types
+// Theme types
 export interface Theme {
   id: string;
   name: string;
   label?: string;
   description?: string;
-  isDark?: boolean;
+  isDark: boolean;
   status?: string;
   context?: string;
   variables?: Record<string, string>;
@@ -195,6 +196,8 @@ export interface ThemeToken {
   category?: string;
   description?: string;
   fallback_value?: string;
+  value?: string;
+  type?: string;
 }
 
 export interface ThemeComponent {
@@ -243,8 +246,24 @@ export interface ThemeState {
 
 export interface ThemeEffect {
   type: ThemeEffectType;
-  intensity?: number;
+  intensity: number;
   color?: string;
   enabled?: boolean;
   [key: string]: any;
+}
+
+export interface ThemeStoreActions {
+  setThemes: (themes: Theme[]) => void;
+  setActiveTheme: (themeId: string) => void;
+  setDesignTokens: (tokens: DesignTokens) => void;
+  setComponentTokens: (tokens: ComponentTokens) => void;
+}
+
+// Custom Token Map type
+export interface TokenMap {
+  [key: string]: string;
+}
+
+export interface ComponentTokenMap {
+  [component: string]: TokenMap;
 }

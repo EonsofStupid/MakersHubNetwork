@@ -11,10 +11,11 @@ export const useTokenConverters = () => {
     const cssVars: Record<string, string> = {};
     
     tokens.forEach(token => {
-      if (token.name && token.value) {
-        cssVars[`--${token.name}`] = token.value;
-      } else if (token.token_name && token.token_value) {
-        cssVars[`--${token.token_name}`] = token.token_value;
+      const name = token.name || token.token_name;
+      const value = token.value || token.token_value;
+      
+      if (name && value) {
+        cssVars[`--${name}`] = value;
       }
     });
     
@@ -28,7 +29,6 @@ export const useTokenConverters = () => {
     tokens.forEach(token => {
       const name = token.name || token.token_name;
       const value = token.value || token.token_value;
-      const description = token.description;
       
       if (name && value) {
         record[name] = value;

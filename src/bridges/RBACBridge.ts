@@ -1,5 +1,5 @@
 
-import { UserRole } from '@/shared/types/shared.types';
+import { UserRole, ROLES } from '@/shared/types/shared.types';
 
 /**
  * RBACBridge provides role-based access control functionality
@@ -45,7 +45,7 @@ class RBACBridgeClass {
    * @returns True if user has admin or super admin role
    */
   hasAdminAccess(): boolean {
-    return this.hasRole(['ADMIN', 'SUPER_ADMIN']);
+    return this.hasRole([ROLES.admin, ROLES.super_admin]);
   }
 
   /**
@@ -53,7 +53,7 @@ class RBACBridgeClass {
    * @returns True if user has super admin role
    */
   isSuperAdmin(): boolean {
-    return this.hasRole('SUPER_ADMIN');
+    return this.hasRole(ROLES.super_admin);
   }
 
   /**
@@ -61,7 +61,7 @@ class RBACBridgeClass {
    * @returns True if user has moderator role
    */
   isModerator(): boolean {
-    return this.hasRole('MODERATOR');
+    return this.hasRole(ROLES.moderator);
   }
 
   /**
@@ -69,7 +69,7 @@ class RBACBridgeClass {
    * @returns True if user has builder role
    */
   isBuilder(): boolean {
-    return this.hasRole('BUILDER');
+    return this.hasRole(ROLES.builder);
   }
 
   /**

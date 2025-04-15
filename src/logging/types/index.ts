@@ -1,16 +1,25 @@
 
 // Re-export shared logging types
-export type { 
+import {
+  LogLevel,
+  LogCategoryType,
+  LogCategory,
+  LogDetails,
+  LogEntry,
+  LogEvent,
+  LogFilter
+} from '@/shared/types/shared.types';
+
+export type {
   LogCategoryType,
   LogDetails,
   LogEntry,
   LogEvent,
-  LogFilter,
-  LogLevel
-} from '@/shared/types/shared.types';
+  LogFilter
+};
 
-// Export LogCategory and LogLevel constants
-export { LogLevel, LogCategory } from '@/shared/types/shared.types';
+// Export LogCategory and LogLevel enums
+export { LogLevel, LogCategory };
 
 // Logger related types
 export interface LoggerOptions {
