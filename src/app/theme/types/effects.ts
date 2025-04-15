@@ -44,3 +44,5 @@ export interface MorphEffect extends ThemeEffect {
   intensity?: number;
   speed?: number;
 }
+
+// Export these types to shared.types.ts as well

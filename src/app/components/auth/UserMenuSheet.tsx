@@ -1,7 +1,6 @@
 
 import React from "react";
-import { UserRole, ROLE_LABELS } from "@/rbac/constants/roles";
-import { RBACBridge } from "@/rbac/bridge";
+import { UserRole } from "@/shared/types/shared.types";
 import {
   Sheet,
   SheetContent,
@@ -10,17 +9,7 @@ import {
   SheetFooter,
 } from "@/shared/ui/sheet";
 import { Button } from "@/shared/ui/button";
-import { 
-  LogOut, 
-  User, 
-  Settings, 
-  Users, 
-  Shield, 
-  FileText, 
-  Database,
-  LayoutDashboard
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { LogOut, User } from "lucide-react";
 
 interface UserMenuSheetProps {
   isOpen: boolean;
@@ -43,48 +32,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
   onLogout,
   roles,
 }) => {
-  const navigate = useNavigate();
-  const isAdmin = RBACBridge.hasAdminAccess();
-  const isSuperAdmin = RBACBridge.isSuperAdmin();
-  const isModerator = RBACBridge.isModerator();
-
-  const adminLinks = [
-    { 
-      label: "Dashboard", 
-      icon: <LayoutDashboard className="w-4 h-4" />, 
-      path: "/admin",
-      roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
-    },
-    { 
-      label: "Users", 
-      icon: <Users className="w-4 h-4" />, 
-      path: "/admin/users",
-      roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
-    },
-    { 
-      label: "Content", 
-      icon: <FileText className="w-4 h-4" />, 
-      path: "/admin/content",
-      roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.MODERATOR]
-    },
-    { 
-      label: "Database", 
-      icon: <Database className="w-4 h-4" />, 
-      path: "/admin/database",
-      roles: [UserRole.SUPER_ADMIN]
-    },
-    { 
-      label: "Settings", 
-      icon: <Settings className="w-4 h-4" />, 
-      path: "/admin/settings",
-      roles: [UserRole.SUPER_ADMIN]
-    }
-  ];
-
-  const hasAccess = (requiredRoles: UserRole[]) => {
-    return RBACBridge.hasRole(requiredRoles);
-  };
-
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-80">
@@ -115,7 +62,7 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
                   key={role}
                   className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
                 >
-                  {ROLE_LABELS[role] || role}
+                  {role}
                 </span>
               ))}
             </div>
@@ -131,27 +78,6 @@ export const UserMenuSheet: React.FC<UserMenuSheetProps> = ({
             <User className="mr-2 h-4 w-4" />
             Your Profile
           </Button>
-
-          {(isAdmin || isModerator) && (
-            <div className="pt-2 space-y-2 border-t">
-              <p className="text-xs font-medium text-muted-foreground pl-2">
-                Admin Access
-              </p>
-              {adminLinks.map((link) => 
-                hasAccess(link.roles) && (
-                  <Button
-                    key={link.path}
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => navigate(link.path)}
-                  >
-                    {link.icon}
-                    <span className="ml-2">{link.label}</span>
-                  </Button>
-                )
-              )}
-            </div>
-          )}
         </div>
         
         <SheetFooter className="absolute bottom-4 left-4 right-4">

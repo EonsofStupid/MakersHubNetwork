@@ -1,9 +1,7 @@
 
 import { useThemeStore } from "@/shared/stores/theme/store";
+import { Theme } from "@/shared/types";
 
-/**
- * Hook to access theme state in a type-safe way
- */
 export function useSiteTheme() {
   const { 
     activeThemeId, 
@@ -16,7 +14,7 @@ export function useSiteTheme() {
     isLoading 
   } = useThemeStore();
 
-  const currentTheme = themes?.find(t => t.id === activeThemeId) || null;
+  const currentTheme = themes.find(t => t.id === activeThemeId);
 
   return {
     theme: currentTheme,

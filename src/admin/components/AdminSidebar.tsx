@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { UserRole } from '@/shared/types/shared.types';
+import { ROLES } from '@/shared/types/shared.types';
 import { RBACBridge } from '@/rbac/bridge';
 
 interface SidebarItemProps {
@@ -33,7 +33,7 @@ export default function AdminSidebar() {
   
   // Only show admin items for admin users
   const hasAdminAccess = RBACBridge.hasAdminAccess();
-  const isSuperAdmin = RBACBridge.hasRole(UserRole.SUPER_ADMIN);
+  const isSuperAdmin = RBACBridge.hasRole(ROLES.SUPER_ADMIN);
   
   if (!hasAdminAccess) return null;
   

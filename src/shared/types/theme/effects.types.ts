@@ -1,51 +1,63 @@
 
 import { ThemeEffectType } from '../shared.types';
 
-/**
- * Base theme effect interface
- */
 export interface ThemeEffect {
   type: ThemeEffectType;
   enabled: boolean;
-  intensity?: number;
+  [key: string]: any;
+}
+
+export interface GlitchEffect extends ThemeEffect {
+  type: ThemeEffectType.GLITCH | ThemeEffectType.NOISE; // Support both new and old naming
   color?: string;
-  duration?: number;
-  delay?: number;
-  selector?: string;
-  config?: Record<string, unknown>;
+  frequency?: string;
+  amplitude?: string;
 }
 
-/**
- * Morph effect interface
- * Requires specific intensity value
- */
-export interface MorphEffect extends Omit<ThemeEffect, 'intensity'> {
-  type: ThemeEffectType.MORPH;
-  intensity: number; // Required for morph effect
+export interface GradientEffect extends ThemeEffect {
+  type: ThemeEffectType.GRADIENT;
+  colors?: string[];
+  speed?: number; 
 }
 
-/**
- * Blur effect interface
- */
-export interface BlurEffect extends ThemeEffect {
-  type: ThemeEffectType.BLUR;
-  radius?: number;
+export interface CyberEffect extends ThemeEffect {
+  type: ThemeEffectType.CYBER | ThemeEffectType.NEON; // Support both new and old naming
+  glowColor?: string;
+  scanLines?: boolean;
 }
 
-/**
- * Glow effect interface
- */
-export interface GlowEffect extends ThemeEffect {
-  type: ThemeEffectType.GLOW;
-  radius?: number;
-  color: string; // Required for glow
+export interface PulseEffect extends ThemeEffect {
+  type: ThemeEffectType.PULSE;
+  color?: string;
+  minOpacity?: number;
+  maxOpacity?: number;
 }
 
-/**
- * All possible effect types
- */
-export type ThemeEffectInstance = 
-  | ThemeEffect
-  | MorphEffect
-  | BlurEffect
-  | GlowEffect;
+export interface ParticleEffect extends ThemeEffect {
+  type: ThemeEffectType.PARTICLE;
+  color?: string;
+  count?: number;
+}
+
+export interface MorphEffect extends ThemeEffect {
+  type: ThemeEffectType.MORPH | ThemeEffectType.BLUR; // Support both new and old naming
+  intensity?: number;
+  speed?: number;
+}
+
+export interface ThemeEffectProviderProps {
+  children: React.ReactNode;
+  className?: string;
+  effect?: ThemeEffect;
+}
+
+// Helper function to convert legacy effect types
+export const normalizeEffectType = (type: string): ThemeEffectType => {
+  const mappings: Record<string, ThemeEffectType> = {
+    'glitch': ThemeEffectType.NOISE,
+    'cyber': ThemeEffectType.NEON,
+    'morph': ThemeEffectType.BLUR
+  };
+  
+  return mappings[type] || (type as ThemeEffectType);
+};

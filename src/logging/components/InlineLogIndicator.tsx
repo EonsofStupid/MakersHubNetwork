@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LogLevel } from '@/shared/types/shared.types';
+import { LogLevel } from '../constants/log-level';
 import { renderUnknownAsNode } from '@/shared/utils/render';
 
 // Define indicator variants

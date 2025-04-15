@@ -107,9 +107,7 @@ export class LogBridge {
     // Send to all transports
     this.transports.forEach(transport => {
       try {
-        if (transport.log) {
-          transport.log(entry);
-        }
+        transport.log(entry);
       } catch (error) {
         console.error('Error in log transport', error);
       }

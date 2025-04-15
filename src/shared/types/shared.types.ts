@@ -1,10 +1,10 @@
 
 /**
- * Core type definitions for the entire application
- * This is the single source of truth for common types
+ * Core shared types for the application
+ * This file serves as the single source of truth for commonly used types
  */
 
-// Role definitions as const enum
+// ===== Role Definitions =====
 export enum UserRole {
   USER = 'user',
   ADMIN = 'admin',
@@ -24,38 +24,54 @@ export const ROLES = {
   GUEST: UserRole.GUEST
 } as const;
 
-// User Profile
-export interface UserProfile {
-  id: string;
-  email: string;
-  name?: string;
-  avatar_url?: string;
-  created_at: string;
-  updated_at: string;
-  last_sign_in_at?: string;
-  roles?: UserRole[];
-  user_metadata?: Record<string, unknown>;
-  app_metadata?: Record<string, unknown>;
-  bio?: string;
-}
+// Path policy definitions for RBAC
+export const RBAC_POLICIES = {
+  '/admin': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/admin/users': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/admin/roles': [UserRole.SUPER_ADMIN],
+  '/admin/permissions': [UserRole.SUPER_ADMIN],
+  '/admin/analytics': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/projects/create': [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/projects/edit': [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  '/projects/delete': [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+} as const;
 
-// Base Entity type
-export interface BaseEntity {
-  id: string;
-  created_at: string;
-  updated_at: string;
-}
+export type PATH_POLICIES = typeof RBAC_POLICIES;
 
-// User type
-export interface User extends BaseEntity {
-  email: string;
-  name?: string;
-  avatar_url?: string;
-  roles?: UserRole[];
-  user_metadata?: Record<string, unknown>;
-}
+// RBAC helper constants
+export const RBAC = {
+  ADMIN_ONLY: [UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  SUPER_ADMINS: [UserRole.SUPER_ADMIN],
+  MODERATORS: [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  BUILDERS: [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+  AUTHENTICATED: [UserRole.USER, UserRole.MODERATOR, UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN],
+};
 
-// Auth status
+// ===== Permission Definitions =====
+export type Permission =
+  | 'create_project'
+  | 'edit_project'
+  | 'delete_project'
+  | 'submit_build'
+  | 'access_admin'
+  | 'manage_api_keys'
+  | 'manage_users'
+  | 'manage_roles'
+  | 'manage_permissions'
+  | 'view_analytics'
+  | 'admin:view'
+  | 'admin:edit'
+  | 'admin:delete'
+  | 'user:view'
+  | 'user:edit'
+  | 'user:delete'
+  | 'content:view'
+  | 'content:edit'
+  | 'content:delete'
+  | 'settings:view'
+  | 'settings:edit';
+
+// ===== Auth Status =====
 export enum AuthStatus {
   IDLE = 'idle',
   LOADING = 'loading',
@@ -70,49 +86,100 @@ export const AUTH_STATUS = {
   LOADING: AuthStatus.LOADING,
   AUTHENTICATED: AuthStatus.AUTHENTICATED,
   UNAUTHENTICATED: AuthStatus.UNAUTHENTICATED,
-  ERROR: AuthStatus.ERROR
+  ERROR: AuthStatus.ERROR,
 } as const;
 
-// Auth event types
 export enum AuthEventType {
-  SIGNED_IN = 'SIGNED_IN',
-  SIGNED_OUT = 'SIGNED_OUT',
-  TOKEN_REFRESHED = 'TOKEN_REFRESHED',
+  SIGN_IN = 'SIGN_IN',
+  SIGN_OUT = 'SIGN_OUT',
   USER_UPDATED = 'USER_UPDATED',
-  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
-  LINKED_ACCOUNT = 'LINKED_ACCOUNT'
+  SESSION_EXPIRED = 'SESSION_EXPIRED',
+  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY'
 }
 
-// Log categories
+// ===== User Profile =====
+export interface UserProfile {
+  id: string;
+  email: string;
+  name?: string;
+  avatar_url?: string;
+  bio?: string;
+  created_at: string;
+  updated_at: string;
+  last_sign_in_at?: string;
+  roles?: UserRole[];
+  user_metadata?: Record<string, unknown>;
+  app_metadata?: Record<string, unknown>;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+  user_metadata?: Record<string, unknown>;
+}
+
+export interface UserInfo {
+  id: string;
+  displayName?: string;
+  email?: string;
+  avatarUrl?: string;
+}
+
+// ===== Logging System =====
+export enum LogLevel {
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+  CRITICAL = 'critical',
+  TRACE = 'trace',
+  SUCCESS = 'success',
+  FATAL = 'fatal',
+  SILENT = 'silent'
+}
+
 export enum LogCategory {
   AUTH = 'auth',
   RBAC = 'rbac',
   API = 'api',
   UI = 'ui',
   SYSTEM = 'system',
-  APP = 'app',
   ADMIN = 'admin',
-  CHAT = 'chat',
   THEME = 'theme',
-  DEBUG = 'debug'
-}
-
-// Log levels  
-export enum LogLevel {
   DEBUG = 'debug',
-  INFO = 'info',
-  SUCCESS = 'success',
-  WARN = 'warn',
-  ERROR = 'error',
-  CRITICAL = 'critical',
-  FATAL = 'fatal',
-  TRACE = 'trace',
-  SILENT = 'silent'
+  APP = 'app',
+  CHAT = 'chat'
 }
 
-// Add log level values for easy comparison
+// For backwards compatibility
+export const LOG_LEVEL = {
+  DEBUG: LogLevel.DEBUG,
+  INFO: LogLevel.INFO,
+  WARN: LogLevel.WARN,
+  ERROR: LogLevel.ERROR,
+  CRITICAL: LogLevel.CRITICAL,
+  TRACE: LogLevel.TRACE,
+  SUCCESS: LogLevel.SUCCESS,
+  FATAL: LogLevel.FATAL,
+  SILENT: LogLevel.SILENT
+};
+
+export const LOG_CATEGORY = {
+  AUTH: LogCategory.AUTH,
+  RBAC: LogCategory.RBAC,
+  API: LogCategory.API,
+  UI: LogCategory.UI,
+  SYSTEM: LogCategory.SYSTEM,
+  ADMIN: LogCategory.ADMIN,
+  THEME: LogCategory.THEME,
+  DEBUG: LogCategory.DEBUG,
+  APP: LogCategory.APP,
+  CHAT: LogCategory.CHAT
+};
+
 export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  [LogLevel.TRACE]: -1,
   [LogLevel.DEBUG]: 0,
   [LogLevel.INFO]: 1,
   [LogLevel.SUCCESS]: 2,
@@ -120,23 +187,13 @@ export const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
   [LogLevel.ERROR]: 4,
   [LogLevel.CRITICAL]: 5,
   [LogLevel.FATAL]: 6,
+  [LogLevel.TRACE]: -1,
   [LogLevel.SILENT]: 100
 };
 
-// Permission type from RBAC permissions
-export type Permission = string;
-
-// RBAC role groupings for easier checks
-export const RBAC = {
-  ADMIN_ONLY: [UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
-  SUPER_ADMINS: [UserRole.SUPER_ADMIN] as UserRole[],
-  MODERATORS: [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
-  BUILDERS: [UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[],
-  AUTHENTICATED: [UserRole.USER, UserRole.MODERATOR, UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN] as UserRole[]
-};
-
-// Logging interfaces
 export interface LogDetails {
+  source?: string;
+  details?: Record<string, unknown>;
   [key: string]: unknown;
 }
 
@@ -156,39 +213,40 @@ export interface LogEvent {
 
 export interface LogFilter {
   level?: LogLevel;
-  category?: LogCategory | LogCategory[];
-  from?: number | Date;
-  to?: number | Date;
+  category?: LogCategory;
   search?: string;
-  limit?: number;
+  startTime?: number;
+  endTime?: number;
   source?: string;
+  from?: Date | number;
+  to?: Date | number;
 }
 
 export interface LogTransport {
   log: (entry: LogEntry) => void;
-  clear?: () => void;
   setMinLevel: (level: LogLevel) => void;
+  name?: string;
+  clear?: () => void;
 }
 
-// Theme related types
+// ===== Theme System =====
 export enum ThemeEffectType {
   NONE = 'none',
   BLUR = 'blur',
   GRAIN = 'grain',
-  GLITCH = 'glitch',
   NOISE = 'noise',
+  GLOW = 'glow',
+  GLITCH = 'glitch',
   GRADIENT = 'gradient',
   CYBER = 'cyber',
   NEON = 'neon',
   PULSE = 'pulse',
   PARTICLE = 'particle',
   MORPH = 'morph',
-  GLOW = 'glow',
   SHADOW = 'shadow'
 }
 
 export interface ThemeEffect {
-  id?: string;
   type: ThemeEffectType;
   enabled: boolean;
   intensity?: number;
@@ -196,80 +254,34 @@ export interface ThemeEffect {
   duration?: number;
   delay?: number;
   selector?: string;
-  config?: Record<string, unknown>;
-}
-
-export interface Theme {
-  id: string;
-  name: string;
-  label?: string;
-  description?: string;
-  isDark?: boolean;
-  status: 'active' | 'draft' | 'archived';
-  context: 'site' | 'admin' | 'app' | 'chat';
-  variables: ThemeVariables;
-  designTokens: DesignTokens;
-  componentTokens?: ComponentTokens;
-  tokens?: Array<ThemeToken | TokenWithKeyframes>;
-  components?: Array<ThemeComponent>;
-  isDefault?: boolean;
-  isSystem?: boolean;
-  version?: number;
-}
-
-export interface ThemeToken {
-  name?: string;
-  token_name: string;
-  value?: string;
-  token_value: string;
-  type?: string;
-  category: string;
-  fallback_value?: string;
-  description?: string;
-}
-
-export interface TokenWithKeyframes extends ThemeToken {
-  type: 'animation';
-  keyframes: string;
-}
-
-export interface ThemeComponent {
+  config?: Record<string, any>;
   id?: string;
-  name?: string;
-  component_name: string;
-  styles?: Record<string, any>;
-  tokens?: Record<string, any>;
-  context?: string;
-  description?: string;
-  theme_id?: string;
-}
-
-export interface DesignTokens {
-  colors: Record<string, string>;
-  typography?: Record<string, any>;
-  spacing?: Record<string, string>;
-  borderRadius?: Record<string, string>;
-  shadows?: Record<string, string>;
-  [key: string]: Record<string, any> | undefined;
-}
-
-export interface ComponentTokens {
-  button?: Record<string, any>;
-  card?: Record<string, any>;
-  input?: Record<string, any>;
-  modal?: Record<string, any>;
-  [key: string]: Record<string, any> | undefined;
+  [key: string]: any;
 }
 
 export interface ThemeLogDetails extends LogDetails {
-  success?: boolean;
-  error?: boolean;
   theme?: string;
+  themeId?: string;
+  success?: boolean;
+  error?: string | Error;
   errorMessage?: string;
   details?: Record<string, unknown>;
+  source?: string;
+  tags?: string[];
 }
 
-// Theme variables interface
+export enum ThemeStatus {
+  ACTIVE = 'active',
+  DRAFT = 'draft',
+  ARCHIVED = 'archived'
+}
+
+export enum ThemeContext {
+  SITE = 'site',
+  ADMIN = 'admin',
+  APP = 'app'
+}
+
 export interface ThemeVariables {
   background: string;
   foreground: string;
@@ -288,51 +300,173 @@ export interface ThemeVariables {
   border: string;
   input: string;
   ring: string;
-  effectColor?: string;
-  effectSecondary?: string;
-  effectTertiary?: string;
-  transitionFast?: string;
-  transitionNormal?: string;
-  transitionSlow?: string;
-  animationFast?: string;
-  animationNormal?: string;
-  animationSlow?: string;
-  radiusSm?: string;
-  radiusMd?: string;
-  radiusLg?: string;
-  radiusFull?: string;
-  [key: string]: string | undefined;
+  
+  // Effect-specific colors
+  effectColor: string;
+  effectSecondary: string;
+  effectTertiary: string;
+  
+  // Transition times
+  transitionFast: string;
+  transitionNormal: string;
+  transitionSlow: string;
+  animationFast: string;
+  animationNormal: string;
+  animationSlow: string;
+  
+  // Border radii
+  radiusSm: string;
+  radiusMd: string;
+  radiusLg: string;
+  radiusFull: string;
 }
 
-// Theme store state
-export interface ThemeStoreState {
+export interface DesignTokens {
+  colors?: Record<string, string>;
+  typography?: Record<string, any>;
+  spacing?: Record<string, string>;
+  borders?: Record<string, string>;
+  shadows?: Record<string, string>;
+  radii?: Record<string, string>;
+  zIndices?: Record<string, string>;
+  breakpoints?: Record<string, string>;
+  transitions?: Record<string, string>;
+  animations?: Record<string, any>;
+  [key: string]: any;
+}
+
+export interface ColorTokens {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  foreground: string;
+  muted: string;
+  mutedForeground: string;
+  card: string;
+  cardForeground: string;
+  destructive: string;
+  destructiveForeground: string;
+  border: string;
+  input: string;
+  ring: string;
+  [key: string]: string;
+}
+
+export interface ShadowTokens {
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
+  inner: string;
+  [key: string]: string;
+}
+
+export interface ComponentTokens {
+  [componentName: string]: Record<string, string>;
+}
+
+export interface ThemeComponent {
+  id?: string;
+  name: string;
+  component_name?: string;
+  tokens: Record<string, string>;
+  styles?: Record<string, string>;
+  variants?: Record<string, Record<string, string>>;
+}
+
+export interface Theme {
+  id: string;
+  name: string;
+  label: string;
+  description?: string;
+  isDark: boolean;
+  status: ThemeStatus;
+  context: ThemeContext;
+  variables: ThemeVariables;
+  designTokens: DesignTokens;
+  componentTokens: ComponentTokens;
+  metadata?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  tokens?: ThemeToken[];
+  components?: ThemeComponent[];
+}
+
+export interface ThemeState {
   themes: Theme[];
-  activeThemeId: string;
+  activeThemeId: string | null;
+  theme?: Theme | null;
   isDark: boolean;
   primaryColor: string;
   backgroundColor: string;
   textColor: string;
+  accentColor?: string;
+  borderColor?: string;
+  fontFamily?: string;
+  cornerRadius?: number;
   designTokens: DesignTokens;
   componentTokens: ComponentTokens;
   isLoading: boolean;
   error: string | null;
-  variables?: ThemeVariables;
-  theme?: Theme;
-  componentStyles?: Record<string, Record<string, string>>;
-  animations?: Record<string, string>;
+  componentStyles?: Record<string, any>;
+  animations?: Record<string, any>;
+  variables?: ThemeVariables | Record<string, string>;
   isLoaded?: boolean;
 }
 
-// Theme store actions interface
 export interface ThemeStoreActions {
   setThemes: (themes: Theme[]) => void;
   setActiveTheme: (themeId: string) => void;
   setDesignTokens: (tokens: DesignTokens) => void;
   setComponentTokens: (tokens: ComponentTokens) => void;
-  fetchThemes: () => Promise<void>;
-  createTheme: (theme: Theme) => Promise<void>;
-  updateTheme: (theme: Theme) => Promise<void>;
-  deleteTheme: (themeId: string) => Promise<void>;
-  resetTheme: () => void;
-  loadThemes: () => Promise<void>;
+  setIsLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
+  loadTheme?: (themeId: string) => Promise<void>;
+}
+
+export interface ThemeToken {
+  id: string;
+  token_name: string;
+  token_value: string;
+  name?: string;
+  value?: string;
+  type?: string;
+  category: string;
+  description?: string;
+  keyframes?: string;
+  fallback_value?: string;
+}
+
+// ===== Build System =====
+export enum BuildStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  IN_REVIEW = 'in_review'
+}
+
+export interface BuildPart {
+  id: string;
+  part_id: string;
+  build_id: string;
+  quantity: number;
+  notes?: string;
+}
+
+export interface BuildMod {
+  id: string;
+  name: string;
+  description?: string;
+  complexity?: number;
+  build_id: string;
+  status?: string;
+}
+
+// ===== Base Entity =====
+export interface BaseEntity {
+  id: string;
+  created_at: string;
+  updated_at: string;
 }

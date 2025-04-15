@@ -1,4 +1,30 @@
 
+/**
+ * Import base types from shared.types.ts
+ */
+import { ThemeEffectType, LogDetails } from './shared.types';
+
+/**
+ * Theme status enum
+ */
+export enum ThemeStatus {
+  ACTIVE = 'ACTIVE',
+  DRAFT = 'DRAFT',
+  ARCHIVED = 'ARCHIVED'
+}
+
+/**
+ * Theme context enum
+ */
+export enum ThemeContext {
+  SITE = 'SITE',
+  ADMIN = 'ADMIN',
+  APP = 'APP'
+}
+
+/**
+ * Theme variables interface
+ */
 export interface ThemeVariables {
   background: string;
   foreground: string;
@@ -17,66 +43,174 @@ export interface ThemeVariables {
   border: string;
   input: string;
   ring: string;
-  [key: string]: string; // Allow for flexible theme variables
+
+  // Effect-specific colors
+  effectColor: string;
+  effectSecondary: string;
+  effectTertiary: string;
+
+  // Transition times
+  transitionFast: string;
+  transitionNormal: string;
+  transitionSlow: string;
+  animationFast: string;
+  animationNormal: string;
+  animationSlow: string;
+
+  // Border radii
+  radiusSm: string;
+  radiusMd: string;
+  radiusLg: string;
+  radiusFull: string;
 }
 
-export interface DesignTokens {
-  colors: Record<string, string>;
-  typography?: Record<string, any>;
-  spacing?: Record<string, string>;
-  animations?: Record<string, string>;
-  [key: string]: Record<string, any> | undefined;
+/**
+ * Color tokens interface
+ */
+export interface ColorTokens {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  foreground: string;
+  muted: string;
+  mutedForeground: string; 
+  cardForeground: string; 
+  destructive: string; 
+  destructiveForeground: string; 
+  popover: string;
+  'popover-foreground': string;
+  card: string;
+  'card-foreground': string;
+  'muted-foreground': string;
+  border: string;
+  input: string;
+  ring: string;
 }
 
-export interface ComponentTokens {
-  [key: string]: Record<string, any>;
+/**
+ * Radius tokens interface
+ */
+export interface RadiusTokens {
+  none: string; 
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
+  full: string;
 }
 
+/**
+ * Shadow tokens interface
+ */
+export interface ShadowTokens {
+  inner: string; 
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
+}
+
+/**
+ * Theme base interface
+ */
 export interface Theme {
   id: string;
   name: string;
+  label: string;
   description?: string;
-  isDark?: boolean;
-  status: 'active' | 'draft' | 'archived';
-  context: 'site' | 'admin' | 'app' | 'chat';
+  isDark: boolean;
+  status: ThemeStatus;
+  context: ThemeContext;
   variables: ThemeVariables;
   designTokens: DesignTokens;
-  componentTokens?: ComponentTokens;
+  componentTokens: ComponentTokens;
+  metadata?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  tokens?: ThemeToken[];
+  components?: ThemeComponent[];
 }
 
+/**
+ * Theme token interface
+ */
+export interface ThemeToken {
+  id: string;
+  name: string;
+  value: string;
+  type: string;
+  category: string;
+  description?: string;
+  keyframes?: string;
+}
+
+/**
+ * Theme component interface
+ */
+export interface ThemeComponent {
+  id: string;
+  component_name: string;
+  styles: Record<string, string>;
+  description?: string;
+}
+
+/**
+ * Design tokens interface
+ */
+export interface DesignTokens {
+  colors?: ColorTokens;
+  typography?: Record<string, any>;
+  spacing?: Record<string, string>;
+  borders?: Record<string, string>;
+  shadows?: ShadowTokens;
+  radii?: RadiusTokens;
+  zIndices?: Record<string, string>;
+  breakpoints?: Record<string, string>;
+  transitions?: Record<string, string>;
+  animations?: Record<string, any>;
+  [key: string]: any;
+}
+
+/**
+ * Component tokens interface
+ */
+export interface ComponentTokens {
+  [componentName: string]: Record<string, string>;
+}
+
+/**
+ * Theme state interface
+ */
 export interface ThemeState {
   themes: Theme[];
-  activeThemeId: string | null;
+  activeThemeId: string;
   isDark: boolean;
   primaryColor: string;
   backgroundColor: string;
   textColor: string;
-  designTokens: DesignTokens;
+  accentColor: string; 
+  borderColor: string;
+  fontFamily: string;
+  cornerRadius: number;
+  animations: boolean;
+  designTokens?: DesignTokens;
   componentTokens: ComponentTokens;
   isLoading: boolean;
   error: string | null;
-  variables: ThemeVariables;
-  theme: Theme | null;
-  isLoaded: boolean;
-  componentStyles?: Record<string, Record<string, string>>;
-  animations?: Record<string, string>;
+  variables?: Record<string, string>;
+  isLoaded?: boolean;
+  theme?: Theme | null;
 }
 
-export interface ThemeStoreActions {
-  setThemes: (themes: Theme[]) => void;
-  setActiveTheme: (themeId: string) => void;
-  setDesignTokens: (tokens: DesignTokens) => void;
-  setComponentTokens: (tokens: ComponentTokens) => void;
-  fetchThemes: () => Promise<void>;
-  createTheme: (theme: Theme) => Promise<void>;
-  updateTheme: (theme: Theme) => Promise<void>;
-  deleteTheme: (themeId: string) => Promise<void>;
-  resetTheme: () => void;
-}
-
-export interface ThemeToken {
-  token_name: string;
-  token_value: string;
-  category: string;
-  description?: string;
+/**
+ * Theme log details type for theme-related logs
+ */
+export interface ThemeLogDetails extends LogDetails {
+  theme?: string;
+  themeId?: string;
+  success?: boolean;
+  errorMessage?: string;
+  details?: Record<string, unknown>;
 }

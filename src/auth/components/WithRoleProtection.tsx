@@ -37,27 +37,27 @@ export default function WithRoleProtection({
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   
   // Check for admin access
-  if (roles.includes(UserRole.ADMIN) && hasRole(RBAC.ADMIN_ONLY)) {
+  if (roles.includes('admin' as UserRole) && hasRole(RBAC.ADMIN_ONLY)) {
     return <>{children}</>;
   }
   
   // Check for super admin access
-  if (roles.includes(UserRole.SUPER_ADMIN) && hasRole(RBAC.SUPER_ADMINS)) {
+  if (roles.includes('super_admin' as UserRole) && hasRole(RBAC.SUPER_ADMINS)) {
     return <>{children}</>;
   }
   
   // Check for moderator access
-  if (roles.includes(UserRole.MODERATOR) && hasRole(RBAC.MODERATORS)) {
+  if (roles.includes('moderator' as UserRole) && hasRole(RBAC.MODERATORS)) {
     return <>{children}</>;
   }
   
   // Check for builder access
-  if (roles.includes(UserRole.BUILDER) && hasRole(RBAC.BUILDERS)) {
+  if (roles.includes('builder' as UserRole) && hasRole(RBAC.BUILDERS)) {
     return <>{children}</>;
   }
   
   // Check for user access
-  if (roles.includes(UserRole.USER) && hasRole(RBAC.AUTHENTICATED)) {
+  if (roles.includes('user' as UserRole) && hasRole(RBAC.AUTHENTICATED)) {
     return <>{children}</>;
   }
   

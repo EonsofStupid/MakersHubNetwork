@@ -1,66 +1,66 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
+import React from 'react';
+import { useThemeStore } from '@/stores/theme/store';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/shared/ui/popover';
 import { Theme } from '@/types/theme';
-import ThemeInfoTab from './info/ThemeInfoTab';
 
 interface ThemeInfoPopupProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  theme?: Theme | null;
+  triggerComponent?: React.ReactNode;
+  onClose?: () => void;
 }
 
-export const ThemeInfoPopup: React.FC<ThemeInfoPopupProps> = ({
-  open,
-  onOpenChange,
-  theme
-}) => {
-  const [activeTab, setActiveTab] = useState('details');
+export function ThemeInfoPopup({ triggerComponent, onClose }: ThemeInfoPopupProps) {
+  const { currentTheme, isLoading } = useThemeStore();
   
-  if (!theme) return null;
+  if (isLoading) {
+    return null;
+  }
+  
+  const themeObj = currentTheme as Theme;
+  
+  const defaultTrigger = (
+    <Button variant="outline" size="sm">
+      Theme Info
+    </Button>
+  );
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>{theme.name || 'Theme Details'}</DialogTitle>
-        </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="colors">Colors</TabsTrigger>
-            <TabsTrigger value="effects">Effects</TabsTrigger>
-          </TabsList>
+    <Popover onOpenChange={(open) => {
+      if (!open && onClose) {
+        onClose();
+      }
+    }}>
+      <PopoverTrigger asChild>
+        {triggerComponent || defaultTrigger}
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <div className="space-y-2">
+          <h4 className="font-medium text-sm">Current Theme</h4>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline">{themeObj?.name || 'Default'}</Badge>
+            <Badge variant="secondary">v{themeObj?.version || '1'}</Badge>
+            {themeObj?.is_default && <Badge>Default</Badge>}
+          </div>
           
-          <TabsContent value="details">
-            <ThemeInfoTab theme={theme} />
-          </TabsContent>
-          
-          <TabsContent value="colors">
-            <div className="grid gap-2">
-              {theme.designTokens?.colors && 
-                Object.entries(theme.designTokens.colors).map(([key, value]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: value as string }}
-                    />
-                    <span className="text-sm">{key}</span>
-                  </div>
-                ))
-              }
+          <div className="mt-4 pt-4 border-t">
+            <h5 className="text-xs font-medium mb-2">Color Preview</h5>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="h-8 bg-primary rounded-md" title="Primary"></div>
+              <div className="h-8 bg-secondary rounded-md" title="Secondary"></div>
+              <div className="h-8 bg-accent rounded-md" title="Accent"></div>
+              <div className="h-8 bg-background rounded-md border" title="Background"></div>
+              <div className="h-8 bg-foreground rounded-md" title="Foreground"></div>
+              <div className="h-8 bg-muted rounded-md" title="Muted"></div>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="effects">
-            <p className="text-sm">Effect information not available</p>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
-};
-
-export default ThemeInfoPopup;
+}

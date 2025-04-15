@@ -1,13 +1,11 @@
 
 import { useEffect, useCallback, useState } from 'react';
-import { RBACBridge } from '@/rbac';
-import { UserRole, ROLES } from '@/rbac/constants/roles';
-import { Permission } from '@/shared/types/permissions';
-import { useAuthStore } from '@/auth/store/auth.store';
+import { RBACBridge } from '@/bridges/RBACBridge';
+import { UserRole, ROLES, Permission } from '@/shared/types';
+import { useAuthStore } from '@/stores/auth/auth.store';
 
 /**
  * Hook to use RBAC (Role-Based Access Control) functionality
- * Enterprise-level implementation with caching and change detection
  */
 export function useRbac() {
   // Get the roles from the RBAC bridge
@@ -16,29 +14,17 @@ export function useRbac() {
   // Get auth state from auth store
   const authUser = useAuthStore(state => state.user);
   const userRoles = useAuthStore(state => state.roles);
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   
   // Sync roles from auth store to RBAC bridge
   useEffect(() => {
-    if (userRoles?.length > 0) {
+    if (userRoles.length > 0) {
       RBACBridge.setRoles(userRoles);
       setRoles(userRoles);
-    } else if (authUser?.app_metadata?.roles) {
-      const metadataRoles = authUser.app_metadata.roles as UserRole[];
-      RBACBridge.setRoles(metadataRoles);
-      setRoles(metadataRoles);
+    } else if (authUser && authUser.roles) {
+      RBACBridge.setRoles(authUser.roles);
+      setRoles(authUser.roles);
     }
-    
-    // Keep local state in sync with bridge
-    const interval = setInterval(() => {
-      const currentRoles = RBACBridge.getRoles();
-      if (JSON.stringify(currentRoles) !== JSON.stringify(roles)) {
-        setRoles(currentRoles);
-      }
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [authUser, userRoles, roles]);
+  }, [authUser, userRoles]);
   
   // Check if user has a specific role
   const hasRole = useCallback((role: UserRole | UserRole[]): boolean => {
@@ -46,7 +32,7 @@ export function useRbac() {
   }, []);
   
   // Check if user has a specific permission
-  const hasPermission = useCallback((permission: Permission): boolean => {
+  const can = useCallback((permission: Permission): boolean => {
     return RBACBridge.hasPermission(permission);
   }, []);
   
@@ -70,11 +56,6 @@ export function useRbac() {
     return RBACBridge.isBuilder();
   }, []);
   
-  // Check if auth is ready and user is authenticated
-  const isAuthReady = useCallback((): boolean => {
-    return isAuthenticated;
-  }, [isAuthenticated]);
-  
   // Map of role constants
   const ROLE_CONSTANTS = {
     USER: ROLES.USER,
@@ -88,12 +69,11 @@ export function useRbac() {
   return {
     roles,
     hasRole,
-    hasPermission,
+    can,
     hasAdminAccess,
     isSuperAdmin,
     isModerator,
     isBuilder,
-    isAuthReady,
     ROLES: ROLE_CONSTANTS
   };
 }

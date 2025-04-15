@@ -1,8 +1,6 @@
-
 import { atom } from 'jotai';
 import { RBACBridge } from '@/bridges/RBACBridge';
-import { UserRole } from '@/rbac/constants/roles';
-import { Permission } from '@/shared/types/permissions';
+import { UserRole, Permission } from '@/shared/types/shared.types';
 
 /**
  * Read-only atoms derived from RBAC store

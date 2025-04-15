@@ -6,7 +6,7 @@ import AuthSection from "./components/AuthSection";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { useSiteTheme } from "@/app/theme/SiteThemeProvider";
 import { useLogger } from "@/hooks/use-logger";
-import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { LogCategory } from "@/shared/types/SharedTypes";
 
 export function MainNav() {
   const [isLoaded, setIsLoaded] = useState(false);

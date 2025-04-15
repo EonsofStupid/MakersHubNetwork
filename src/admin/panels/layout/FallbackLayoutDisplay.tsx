@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui';
 import { RBACBridge } from '@/rbac/bridge';
-import { Permission } from '@/shared/types/permissions';
+import { Permission } from '@/shared/types';
 
 interface FallbackLayoutDisplayProps {
   layoutId?: string;
@@ -17,7 +17,7 @@ export const FallbackLayoutDisplay: React.FC<FallbackLayoutDisplayProps> = ({
   fallbackContent
 }) => {
   // For admin users, show debug info, otherwise show a simple fallback
-  const isAdmin = RBACBridge.hasPermission(Permission.ADMIN_EDIT);
+  const isAdmin = RBACBridge.hasPermission('admin:edit' as Permission);
   
   if (!isAdmin) {
     return (

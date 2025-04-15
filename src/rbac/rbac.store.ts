@@ -1,10 +1,25 @@
 
 import { create } from 'zustand';
-import { UserRole, Permission, ROLES } from '@/shared/types/shared.types';
-import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { UserRole, Permission, ROLES, LogCategory } from '@/shared/types/shared.types';
 import { logger } from '@/logging/logger.service';
 
-// Define default permissions map for initialization
+// RBAC State interface
+interface RBACState {
+  roles: UserRole[];
+  permissions: Record<Permission, boolean>;
+  isLoading: boolean;
+  error: string | null;
+  
+  // Actions
+  setRoles: (roles: UserRole[]) => void;
+  addRole: (role: UserRole) => void;
+  removeRole: (role: UserRole) => void;
+  setPermissions: (permissions: Record<Permission, boolean>) => void;
+  setPermission: (permission: Permission, value: boolean) => void;
+  setError: (error: string | null) => void;
+  setLoading: (isLoading: boolean) => void;
+}
+
 const DEFAULT_PERMISSIONS: Record<Permission, boolean> = {
   'create_project': false,
   'edit_project': false,
@@ -28,23 +43,6 @@ const DEFAULT_PERMISSIONS: Record<Permission, boolean> = {
   'settings:view': false,
   'settings:edit': false
 };
-
-// RBAC State interface
-interface RBACState {
-  roles: UserRole[];
-  permissions: Record<Permission, boolean>;
-  isLoading: boolean;
-  error: string | null;
-  
-  // Actions
-  setRoles: (roles: UserRole[]) => void;
-  addRole: (role: UserRole) => void;
-  removeRole: (role: UserRole) => void;
-  setPermissions: (permissions: Record<Permission, boolean>) => void;
-  setPermission: (permission: Permission, value: boolean) => void;
-  setError: (error: string | null) => void;
-  setLoading: (isLoading: boolean) => void;
-}
 
 // Helper function to map roles to permissions
 const mapRolesToPermissions = (roles: UserRole[]): Record<Permission, boolean> => {
@@ -96,7 +94,8 @@ export const rbacStore = create<RBACState>((set, get) => ({
   
   setRoles: (roles) => {
     const permissions = mapRolesToPermissions(roles);
-    logger.log(LogLevel.INFO, LogCategory.RBAC, 'Roles updated', { 
+    logger.info('RBAC roles updated', { 
+      category: LogCategory.RBAC,
       details: { roles, permissionsCount: Object.values(permissions).filter(Boolean).length } 
     });
     set({ roles, permissions });
@@ -109,7 +108,8 @@ export const rbacStore = create<RBACState>((set, get) => ({
       const permissions = mapRolesToPermissions(newRoles);
       set({ roles: newRoles, permissions });
       
-      logger.log(LogLevel.INFO, LogCategory.RBAC, 'Role added', { 
+      logger.info('RBAC role added', { 
+        category: LogCategory.RBAC,
         details: { role, allRoles: newRoles } 
       });
     }
@@ -121,14 +121,17 @@ export const rbacStore = create<RBACState>((set, get) => ({
     const permissions = mapRolesToPermissions(newRoles);
     set({ roles: newRoles, permissions });
     
-    logger.log(LogLevel.INFO, LogCategory.RBAC, 'Role removed', { 
-        details: { role, remainingRoles: newRoles } 
+    logger.info('RBAC role removed', { 
+      category: LogCategory.RBAC,
+      details: { role, remainingRoles: newRoles } 
     });
   },
   
   setPermissions: (permissions) => {
     set({ permissions });
-    logger.log(LogLevel.INFO, LogCategory.RBAC, 'Permissions updated', { 
+    
+    logger.info('RBAC permissions updated', { 
+      category: LogCategory.RBAC,
       details: { permissionsCount: Object.values(permissions).filter(Boolean).length } 
     });
   },
@@ -141,15 +144,18 @@ export const rbacStore = create<RBACState>((set, get) => ({
       }
     }));
     
-    logger.log(LogLevel.INFO, LogCategory.RBAC, 'Permission changed', { 
+    logger.info('RBAC permission changed', { 
+      category: LogCategory.RBAC,
       details: { permission, value } 
     });
   },
   
   setError: (error) => {
     set({ error });
+    
     if (error) {
-      logger.log(LogLevel.ERROR, LogCategory.RBAC, 'Error occurred', { 
+      logger.error('RBAC error', { 
+        category: LogCategory.RBAC,
         details: { error } 
       });
     }

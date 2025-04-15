@@ -2,22 +2,22 @@
 import React from 'react';
 
 export interface ReviewCardProps {
+  className?: string;
   title?: string;
   content?: string;
   rating?: number;
   author?: string;
   date?: string;
-  className?: string;
 }
 
-export const ReviewCard: React.FC<ReviewCardProps> = ({ 
+export function ReviewCard({ 
+  className = '',
   title = 'Untitled Review',
   content = 'No content',
   rating = 0,
   author = 'Anonymous',
-  date = new Date().toLocaleDateString(),
-  className = ''
-}) => {
+  date = new Date().toLocaleDateString()
+}: ReviewCardProps) {
   return (
     <div className={`border border-border rounded-lg p-4 ${className}`}>
       <div className="flex justify-between items-start mb-2">
@@ -35,6 +35,6 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
       </div>
     </div>
   );
-};
+}
 
 export default ReviewCard;

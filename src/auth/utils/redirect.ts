@@ -1,27 +1,50 @@
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { AuthStatus } from '@/shared/types/shared.types';
-import { useAuthStore } from '../store/auth.store';
+import { useAuthStore } from '@/auth/store/auth.store';
+import { AUTH_STATUS } from '@/shared/types/shared.types';
 
-/**
- * Hook to redirect users based on authentication status
- */
-export const useAuthRedirect = (
-  redirectTo: string,
-  mode: 'authenticated' | 'unauthenticated' = 'unauthenticated'
-) => {
-  const navigate = useNavigate();
-  const { status, isAuthenticated } = useAuthStore();
+export function redirectIfAuthenticated(navigate: (path: string) => void, to: string = '/') {
+  const status = useAuthStore.getState().status;
   
-  useEffect(() => {
-    // Only redirect if auth is initialized
-    if (status !== AuthStatus.LOADING && status !== AuthStatus.IDLE) {
-      if (mode === 'authenticated' && !isAuthenticated) {
-        navigate(redirectTo);
-      } else if (mode === 'unauthenticated' && isAuthenticated) {
-        navigate(redirectTo);
-      }
-    }
-  }, [status, isAuthenticated, navigate, redirectTo, mode]);
-};
+  if (status === AUTH_STATUS.AUTHENTICATED) {
+    navigate(to);
+    return true;
+  }
+  return false;
+}
+
+export function redirectIfLoading(navigate: (path: string) => void, to: string = '/loading') {
+  const status = useAuthStore.getState().status;
+  
+  if (status === AUTH_STATUS.LOADING) {
+    navigate(to);
+    return true;
+  }
+  return false;
+}
+
+export function redirectIfUnauthenticated(navigate: (path: string) => void, to: string = '/login') {
+  const status = useAuthStore.getState().status;
+  
+  if (status !== AUTH_STATUS.AUTHENTICATED) {
+    navigate(to);
+    return true;
+  }
+  return false;
+}
+
+export function redirectBasedOnAuth(
+  navigate: (path: string) => void, 
+  authenticatedPath: string = '/', 
+  unauthenticatedPath: string = '/login'
+) {
+  const status = useAuthStore.getState().status;
+  
+  if (status === AUTH_STATUS.AUTHENTICATED) {
+    navigate(authenticatedPath);
+    return true;
+  } else if (status !== AUTH_STATUS.LOADING) {
+    navigate(unauthenticatedPath);
+    return true;
+  }
+  return false;
+}

@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { AlertCircle, Info, AlertTriangle, XCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert';
-import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { LogCategory } from '../types';
+import { LogLevel } from '../constants/log-level';
 import { renderUnknownAsNode } from '@/shared/utils/render';
 
 interface LogNotificationProps {
@@ -45,6 +46,7 @@ export const LogNotification: React.FC<LogNotificationProps> = ({
     }
   };
 
+  // Get appropriate title based on level
   const getTitle = (): string => {
     switch (level) {
       case LogLevel.DEBUG:

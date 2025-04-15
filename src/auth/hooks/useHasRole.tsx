@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { useRbac } from '@/rbac/hooks/useRbac';
+import { useRbac } from '@/auth/rbac/use-rbac';
 import { UserRole, ROLES } from '@/shared/types/shared.types';
 
 /**
@@ -24,7 +24,7 @@ export function useIsAdmin() {
   const { hasRole } = useRbac();
   
   return useCallback(() => {
-    return hasRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+    return hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }, [hasRole]);
 }
 
@@ -36,7 +36,7 @@ export function useIsSuperAdmin() {
   const { hasRole } = useRbac();
   
   return useCallback(() => {
-    return hasRole(UserRole.SUPER_ADMIN);
+    return hasRole(ROLES.SUPER_ADMIN);
   }, [hasRole]);
 }
 
@@ -48,7 +48,7 @@ export function useIsModerator() {
   const { hasRole } = useRbac();
   
   return useCallback(() => {
-    return hasRole([UserRole.MODERATOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+    return hasRole([ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }, [hasRole]);
 }
 
@@ -60,6 +60,6 @@ export function useIsBuilder() {
   const { hasRole } = useRbac();
   
   return useCallback(() => {
-    return hasRole([UserRole.BUILDER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+    return hasRole([ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
   }, [hasRole]);
 }

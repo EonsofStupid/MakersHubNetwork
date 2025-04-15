@@ -1,3 +1,4 @@
+
 import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useLogger } from '@/logging/hooks/use-logger';
@@ -36,13 +37,12 @@ export function useChatSession() {
       return null;
     }
     
-    const now = new Date().toISOString();
     const newMessage: ChatMessage = {
       id: uuidv4(),
       ...message,
       timestamp: Date.now(),
-      created_at: now,
-      updated_at: now
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     setSessions(prev => 
@@ -85,18 +85,14 @@ export function useChatSession() {
     sendMessage: async (content: string) => {
       saveMessage({
         content,
-        sender: 'user',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        sender: 'user'
       });
       
       // Mock AI response
       setTimeout(() => {
         saveMessage({
           content: 'This is a mock response. Real AI implementation pending.',
-          sender: 'ai',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          sender: 'ai'
         });
       }, 1000);
     },

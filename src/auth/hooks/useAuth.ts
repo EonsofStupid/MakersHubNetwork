@@ -1,7 +1,7 @@
 
 import { useCallback, useState } from 'react';
 import { AuthBridge } from '@/bridges/AuthBridge';
-import { UserProfile, UserRole } from '@/shared/types/shared.types';
+import { UserProfile, UserRole, ROLES } from '@/shared/types/shared.types';
 import { RBACBridge } from '@/bridges/RBACBridge';
 
 export interface UseAuthReturn {
@@ -58,7 +58,7 @@ export function useAuth(): UseAuthReturn {
     signIn,
     signOut,
     signUp,
-    isAuthenticated: !!AuthBridge.isAuthenticated,
+    isAuthenticated: AuthBridge.isAuthenticated,
     isLoading,
     hasRole,
     roles

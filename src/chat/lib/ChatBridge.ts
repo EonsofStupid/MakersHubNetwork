@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage, LogCategory, LogLevel } from '@/shared/types';
 import { logger } from '@/logging/logger.service';
@@ -40,14 +41,11 @@ export class ChatBridge {
     const actualSessionId = session?.id || this.createSession();
     
     // Create user message
-    const now = new Date().toISOString();
     const userMessage: ChatMessage = {
       id: uuidv4(),
       content: message,
       sender: 'user',
-      timestamp: Date.now(),
-      created_at: now,
-      updated_at: now
+      timestamp: Date.now()
     };
     
     // Add message to session
@@ -74,11 +72,9 @@ export class ChatBridge {
       // Create AI response
       const aiResponse: ChatMessage = {
         id: uuidv4(),
-        content: `This is a simulated response to "${message}"`,
+        content: `This is a simulated response to: "${message}"`,
         sender: 'ai',
-        timestamp: Date.now(),
-        created_at: now,
-        updated_at: now
+        timestamp: Date.now()
       };
       
       // Add response to session

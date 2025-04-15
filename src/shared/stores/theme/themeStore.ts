@@ -1,23 +1,52 @@
 
 import { create } from 'zustand';
-import { 
-  Theme, 
-  ThemeState, 
-  ThemeStoreActions, 
-  DesignTokens, 
-  ComponentTokens 
-} from '@/shared/types/theme/theme.types';
-import { devtools, persist } from 'zustand/middleware';
-import { logger } from '@/logging/logger.service';
-import { LogLevel, LogCategory } from '@/shared/types/shared.types';
+import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeStoreActions } from '@/shared/types';
 
-const defaultTheme: Theme = {
-  id: 'default',
-  name: 'Default Theme',
-  description: 'Default system theme',
+// Utility functions
+const getDefaultDesignTokens = (): DesignTokens => ({
+  colors: {
+    primary: '#0070f3',
+    secondary: '#7928ca',
+    accent: '#f5a623',
+    background: '#ffffff',
+    foreground: '#000000',
+    muted: '#f5f5f5',
+    mutedForeground: '#6b7280',
+    card: '#ffffff',
+    cardForeground: '#000000',
+    destructive: '#ff0000',
+    destructiveForeground: '#ffffff',
+    border: '#e2e8f0',
+    input: '#e2e8f0',
+    ring: '#0070f3',
+    popover: '#ffffff',
+    'popover-foreground': '#000000',
+    'card-foreground': '#000000',
+    'muted-foreground': '#6b7280',
+  },
+  // Add other design tokens here
+});
+
+// Initial state
+const initialState: ThemeState = {
+  themes: [],
+  activeThemeId: '',
   isDark: false,
-  status: 'active',
-  context: 'site',
+  primaryColor: '#0070f3',
+  backgroundColor: '#ffffff',
+  textColor: '#000000',
+  designTokens: getDefaultDesignTokens(),
+  componentTokens: {
+    button: {},
+    card: {},
+    input: {},
+    badge: {},
+    alert: {},
+  },
+  isLoading: false,
+  error: null,
+  componentStyles: {},
+  animations: {},
   variables: {
     background: '#ffffff',
     foreground: '#000000',
@@ -30,131 +59,125 @@ const defaultTheme: Theme = {
     muted: '#f5f5f5',
     mutedForeground: '#6b7280',
     accent: '#f5a623',
-    accentForeground: '#000000',
+    accentForeground: '#ffffff',
     destructive: '#ff0000',
     destructiveForeground: '#ffffff',
     border: '#e2e8f0',
     input: '#e2e8f0',
-    ring: '#0070f3'
+    ring: '#0070f3',
+    effectColor: '#0070f3',
+    effectSecondary: '#7928ca',
+    effectTertiary: '#f5a623',
+    transitionFast: '150ms',
+    transitionNormal: '250ms',
+    transitionSlow: '500ms',
+    animationFast: '300ms',
+    animationNormal: '500ms',
+    animationSlow: '1000ms',
+    radiusSm: '0.125rem',
+    radiusMd: '0.25rem',
+    radiusLg: '0.5rem',
+    radiusFull: '9999px'
   },
-  designTokens: {
-    colors: {
-      primary: '#0070f3',
-      background: '#ffffff'
+  isLoaded: false
+};
+
+// Create the store
+export const useThemeStore = create<ThemeState & ThemeStoreActions>((set, get) => ({
+  ...initialState,
+
+  setThemes: (themes) => {
+    set({ themes });
+  },
+
+  setActiveTheme: (themeId) => {
+    set({ activeThemeId: themeId });
+    const activeTheme = get().themes.find(theme => theme.id === themeId);
+    if (activeTheme) {
+      set({
+        isDark: activeTheme.isDark,
+        primaryColor: activeTheme.designTokens.colors?.primary || '#0070f3',
+        backgroundColor: activeTheme.designTokens.colors?.background || '#ffffff',
+        textColor: activeTheme.designTokens.colors?.foreground || '#000000',
+        theme: activeTheme,
+        isLoaded: true,
+        variables: activeTheme.variables,
+        animations: activeTheme.designTokens.animations
+      });
     }
   },
-  componentTokens: {}
-};
 
-const initialState: ThemeState = {
-  themes: [defaultTheme],
-  activeThemeId: defaultTheme.id,
-  isDark: false,
-  primaryColor: defaultTheme.variables.primary,
-  backgroundColor: defaultTheme.variables.background,
-  textColor: defaultTheme.variables.foreground,
-  designTokens: defaultTheme.designTokens,
-  componentTokens: defaultTheme.componentTokens || {},
-  isLoading: false,
-  error: null,
-  variables: defaultTheme.variables,
-  theme: defaultTheme,
-  isLoaded: true
-};
-
-export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
-  devtools(
-    persist(
-      (set) => ({
-        ...initialState,
-
-        setThemes: (themes) => {
-          set({ themes });
-          logger.log(LogLevel.INFO, LogCategory.THEME, 'Themes updated');
-        },
-
-        setActiveTheme: (themeId) => {
-          set((state) => {
-            const theme = state.themes.find((t) => t.id === themeId);
-            if (!theme) {
-              logger.warn(LogCategory.THEME, `Theme ${themeId} not found`);
-              return state;
-            }
-
-            return {
-              activeThemeId: themeId,
-              isDark: theme.isDark || false,
-              primaryColor: theme.variables.primary,
-              backgroundColor: theme.variables.background,
-              textColor: theme.variables.foreground,
-              theme,
-              variables: theme.variables,
-              designTokens: theme.designTokens,
-              componentTokens: theme.componentTokens || {},
-              isLoaded: true
-            };
-          });
-        },
-
-        setDesignTokens: (tokens: DesignTokens) => {
-          set({ designTokens: tokens });
-        },
-
-        setComponentTokens: (tokens: ComponentTokens) => {
-          set({ componentTokens: tokens });
-        },
-
-        fetchThemes: async () => {
-          set({ isLoading: true, error: null });
-          try {
-            // For now, just use default theme
-            set({ 
-              themes: [defaultTheme],
-              isLoading: false,
-              isLoaded: true
-            });
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Failed to fetch themes';
-            logger.error(LogCategory.THEME, errorMessage);
-            set({ 
-              isLoading: false,
-              error: errorMessage,
-              isLoaded: true
-            });
+  setDesignTokens: (tokens) => {
+    set((state) => {
+      const activeTheme = state.themes.find(theme => theme.id === state.activeThemeId);
+      if (activeTheme) {
+        const updatedThemes = state.themes.map(theme => {
+          if (theme.id === state.activeThemeId) {
+            return { ...theme, designTokens: tokens };
           }
-        },
-
-        createTheme: async (theme) => {
-          set((state) => ({ themes: [...state.themes, theme] }));
-          logger.info(LogCategory.THEME, `Theme ${theme.id} created`);
-        },
-
-        updateTheme: async (theme) => {
-          set((state) => ({
-            themes: state.themes.map((t) => (t.id === theme.id ? theme : t))
-          }));
-          logger.info(LogCategory.THEME, `Theme ${theme.id} updated`);
-        },
-
-        deleteTheme: async (themeId) => {
-          set((state) => ({
-            themes: state.themes.filter((t) => t.id !== themeId)
-          }));
-          logger.info(LogCategory.THEME, `Theme ${themeId} deleted`);
-        },
-
-        resetTheme: () => {
-          set(initialState);
-          logger.info(LogCategory.THEME, 'Theme reset to default');
-        }
-      }),
-      {
-        name: 'theme-store',
-        partialize: (state) => ({
-          activeThemeId: state.activeThemeId,
-          isDark: state.isDark
-        })
+          return theme;
+        });
+        return { 
+          themes: updatedThemes,
+          designTokens: tokens
+        };
       }
-    )
-  )
-);
+      return { 
+        designTokens: tokens 
+      };
+    });
+  },
+
+  setComponentTokens: (tokens) => {
+    set({ componentTokens: tokens });
+  },
+
+  setIsLoading: (isLoading) => {
+    set({ isLoading });
+  },
+
+  setError: (error) => {
+    set({ error });
+  },
+
+  loadTheme: async (themeId) => {
+    set({ isLoading: true, error: null });
+    try {
+      // Simulate theme loading with timeout
+      // In a real implementation, this would load from API/storage
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const themes = get().themes;
+      const theme = themes.find(t => t.id === themeId);
+      
+      if (theme) {
+        set({ 
+          activeThemeId: theme.id,
+          isDark: theme.isDark,
+          primaryColor: theme.designTokens.colors?.primary || '#0070f3',
+          backgroundColor: theme.designTokens.colors?.background || '#ffffff',
+          textColor: theme.designTokens.colors?.foreground || '#000000',
+          designTokens: theme.designTokens,
+          componentTokens: theme.componentTokens,
+          theme,
+          variables: theme.variables,
+          animations: theme.designTokens.animations,
+          isLoaded: true,
+          isLoading: false
+        });
+      } else {
+        set({ 
+          error: `Theme with ID ${themeId} not found`,
+          isLoading: false
+        });
+      }
+    } catch (error) {
+      set({ 
+        error: `Failed to load theme: ${error instanceof Error ? error.message : String(error)}`,
+        isLoading: false
+      });
+    }
+  }
+}));
+
+export default useThemeStore;

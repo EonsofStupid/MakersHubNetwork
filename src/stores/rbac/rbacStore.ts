@@ -1,34 +1,30 @@
-
 import { create } from 'zustand';
-import { UserRole } from '@/rbac/constants/roles';
-import { Permission } from '@/shared/types/permissions';
+import { UserRoleType, UserRoleEnum } from '@/shared/types/SharedTypes';
 import { AuthPermissionValue } from '@/auth/constants/permissions';
 import { mapRolesToPermissions } from '@/auth/rbac/roles';
-import { useAuthStore as useAuthStateStore } from '@/auth/store/auth.store';
 
 // RBAC State
 export interface RBACState {
-  roles: UserRole[];
+  roles: UserRoleType[];
   permissions: AuthPermissionValue[];
   isLoading: boolean;
   error: string | null;
-  setRoles: (roles: UserRole[]) => void;
-  addRole: (role: UserRole) => void;
-  removeRole: (role: UserRole) => void;
+  setRoles: (roles: UserRoleType[]) => void;
+  addRole: (role: UserRoleType) => void;
+  removeRole: (role: UserRoleType) => void;
   setError: (error: string) => void;
   setLoading: (isLoading: boolean) => void;
-  hasRole: (check: UserRole | UserRole[]) => boolean;
+  hasRole: (check: UserRoleType | UserRoleType[]) => boolean;
   can: (action: AuthPermissionValue) => boolean;
   isAdmin: () => boolean;
   isSuperAdmin: () => boolean;
   isModerator: () => boolean;
   isBuilder: () => boolean;
-  initialize: () => void;
 }
 
 // Initial state
 const initialState = {
-  roles: [UserRole.GUEST],
+  roles: [UserRoleEnum.GUEST],
   permissions: [],
   isLoading: false,
   error: null
@@ -38,24 +34,12 @@ const initialState = {
 export const useRbacStore = create<RBACState>((set, get) => ({
   ...initialState,
 
-  initialize: () => {
-    set({ isLoading: true });
-    // Get roles from auth store if available
-    const authState = useAuthStateStore.getState();
-    if (authState.isAuthenticated && authState.roles) {
-      const permissions = mapRolesToPermissions(authState.roles);
-      set({ roles: authState.roles, permissions, isLoading: false });
-    } else {
-      set({ isLoading: false });
-    }
-  },
-
-  setRoles: (roles: UserRole[]) => {
+  setRoles: (roles: UserRoleType[]) => {
     const permissions = mapRolesToPermissions(roles);
     set({ roles, permissions, isLoading: false, error: null });
   },
 
-  addRole: (role: UserRole) => {
+  addRole: (role: UserRoleType) => {
     const { roles } = get();
     if (roles.includes(role)) return;
     const newRoles = [...roles, role];
@@ -63,7 +47,7 @@ export const useRbacStore = create<RBACState>((set, get) => ({
     set({ roles: newRoles, permissions });
   },
 
-  removeRole: (role: UserRole) => {
+  removeRole: (role: UserRoleType) => {
     const { roles } = get();
     const newRoles = roles.filter(r => r !== role);
     const permissions = mapRolesToPermissions(newRoles);
@@ -78,7 +62,7 @@ export const useRbacStore = create<RBACState>((set, get) => ({
     set({ isLoading });
   },
 
-  hasRole: (check: UserRole | UserRole[]) => {
+  hasRole: (check: UserRoleType | UserRoleType[]) => {
     const { roles } = get();
     const rolesToCheck = Array.isArray(check) ? check : [check];
     return rolesToCheck.some(role => roles.includes(role));
@@ -91,21 +75,21 @@ export const useRbacStore = create<RBACState>((set, get) => ({
 
   isAdmin: () => {
     const { roles } = get();
-    return roles.includes(UserRole.ADMIN);
+    return roles.includes(UserRoleEnum.ADMIN);
   },
 
   isSuperAdmin: () => {
     const { roles } = get();
-    return roles.includes(UserRole.SUPER_ADMIN);
+    return roles.includes(UserRoleEnum.SUPERADMIN);
   },
 
   isModerator: () => {
     const { roles } = get();
-    return roles.includes(UserRole.MODERATOR);
+    return roles.includes(UserRoleEnum.MODERATOR);
   },
 
   isBuilder: () => {
     const { roles } = get();
-    return roles.includes(UserRole.BUILDER);
+    return roles.includes(UserRoleEnum.BUILDER);
   }
-}));
+})); 
