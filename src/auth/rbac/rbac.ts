@@ -21,7 +21,7 @@ export function hasRole(
   if (!userRoles || userRoles.length === 0) return false;
   
   // Superadmin has all roles
-  if (userRoles.includes(ROLES.SUPER_ADMIN)) return true;
+  if (userRoles.includes(ROLES.super_admin)) return true;
   
   // Check for specific roles
   const rolesToCheck = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
@@ -34,7 +34,7 @@ export function hasRole(
  * @returns Boolean indicating if user has admin access
  */
 export function hasAdminAccess(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+  return hasRole(userRoles, [ROLES.admin, ROLES.super_admin]);
 }
 
 /**
@@ -43,7 +43,7 @@ export function hasAdminAccess(userRoles: UserRole[]): boolean {
  * @returns Boolean indicating if user is a super admin
  */
 export function isSuperAdmin(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, ROLES.SUPER_ADMIN);
+  return hasRole(userRoles, ROLES.super_admin);
 }
 
 /**
@@ -52,7 +52,7 @@ export function isSuperAdmin(userRoles: UserRole[]): boolean {
  * @returns Boolean indicating if user is a moderator or higher
  */
 export function isModerator(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+  return hasRole(userRoles, [ROLES.moderator, ROLES.admin, ROLES.super_admin]);
 }
 
 /**
@@ -61,7 +61,7 @@ export function isModerator(userRoles: UserRole[]): boolean {
  * @returns Boolean indicating if user is a builder or higher
  */
 export function isBuilder(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+  return hasRole(userRoles, [ROLES.builder, ROLES.admin, ROLES.super_admin]);
 }
 
 /**
@@ -70,11 +70,11 @@ export function isBuilder(userRoles: UserRole[]): boolean {
  * @returns The highest role the user has
  */
 export function getHighestRole(userRoles: UserRole[]): UserRole {
-  if (hasRole(userRoles, ROLES.SUPER_ADMIN)) return ROLES.SUPER_ADMIN;
-  if (hasRole(userRoles, ROLES.ADMIN)) return ROLES.ADMIN;
-  if (hasRole(userRoles, ROLES.MODERATOR)) return ROLES.MODERATOR;
-  if (hasRole(userRoles, ROLES.BUILDER)) return ROLES.BUILDER;
-  if (hasRole(userRoles, ROLES.USER)) return ROLES.USER;
+  if (hasRole(userRoles, ROLES.super_admin)) return ROLES.super_admin;
+  if (hasRole(userRoles, ROLES.admin)) return ROLES.admin;
+  if (hasRole(userRoles, ROLES.moderator)) return ROLES.moderator;
+  if (hasRole(userRoles, ROLES.builder)) return ROLES.builder;
+  if (hasRole(userRoles, ROLES.user)) return ROLES.user;
   return ROLES.GUEST;
 }
 
@@ -84,7 +84,7 @@ export function getHighestRole(userRoles: UserRole[]): UserRole {
  * @returns Boolean indicating if user has elevated privileges
  */
 export function hasElevatedPrivileges(userRoles: UserRole[]): boolean {
-  return hasRole(userRoles, [ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+  return hasRole(userRoles, [ROLES.admin, ROLES.super_admin]);
 }
 
 /**
@@ -95,15 +95,15 @@ export function hasElevatedPrivileges(userRoles: UserRole[]): boolean {
  */
 export function canAccessAdminSection(userRoles: UserRole[], section: string): boolean {
   // Super admins can access everything
-  if (hasRole(userRoles, ROLES.SUPER_ADMIN)) return true;
+  if (hasRole(userRoles, ROLES.super_admin)) return true;
 
   // Define section permissions
   const sectionPermissions: Record<string, UserRole[]> = {
-    dashboard: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-    users: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-    content: [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.MODERATOR],
-    settings: [ROLES.SUPER_ADMIN],
-    system: [ROLES.SUPER_ADMIN]
+    dashboard: [ROLES.admin, ROLES.super_admin],
+    users: [ROLES.admin, ROLES.super_admin],
+    content: [ROLES.admin, ROLES.super_admin, ROLES.moderator],
+    settings: [ROLES.super_admin],
+    system: [ROLES.super_admin]
   };
 
   const allowedRoles = sectionPermissions[section];
