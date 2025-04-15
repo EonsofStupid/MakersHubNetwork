@@ -1,8 +1,8 @@
-
 import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useLogger } from '@/logging/hooks/use-logger';
-import { LogCategory, ChatMessage, ChatSession } from '@/shared/types';
+import { LogCategory } from '@/shared/types/core/logging.types';
+import { ChatMessage, ChatSession } from '@/shared/types/core/chat.types';
 
 /**
  * Hook for managing chat sessions
@@ -13,15 +13,17 @@ export function useChatSession() {
   const logger = useLogger('useChatSession', LogCategory.CHAT);
   
   const createSession = useCallback((title?: string) => {
+    const now = new Date().toISOString();
     const sessionId = uuidv4();
     const newSession: ChatSession = {
       id: sessionId,
       title: title || `Chat ${new Date().toLocaleString()}`,
       messages: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      mode: 'chat',
+      createdAt: now,
+      updatedAt: now,
+      created_at: now,
+      updated_at: now
     };
     
     setSessions(prev => [...prev, newSession]);
@@ -31,18 +33,18 @@ export function useChatSession() {
     return sessionId;
   }, [logger]);
   
-  const saveMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
+  const saveMessage = useCallback((message: Omit<ChatMessage, 'id'>) => {
     if (!currentSessionId) {
       logger.warn('Attempted to save message but no active session');
       return null;
     }
     
+    const now = new Date().toISOString();
     const newMessage: ChatMessage = {
       id: uuidv4(),
       ...message,
-      timestamp: Date.now(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: now,
+      updated_at: now
     };
     
     setSessions(prev => 
@@ -51,8 +53,8 @@ export function useChatSession() {
           ? {
               ...session,
               messages: [...session.messages, newMessage],
-              updatedAt: Date.now(),
-              updated_at: new Date().toISOString()
+              updatedAt: now,
+              updated_at: now
             }
           : session
       )

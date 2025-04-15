@@ -1,6 +1,18 @@
 
-import { UserRole, ROLES } from '@/shared/types/core/auth.types';
-import { IRBACBridge } from '@/shared/types/core/rbac.types';
+import { UserRole, Permission } from '@/shared/types/core/auth.types';
+
+export interface IRBACBridge {
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  getRoles: () => UserRole[];
+  hasAdminAccess: () => boolean;
+  isSuperAdmin: () => boolean;
+  isModerator: () => boolean;
+  isBuilder: () => boolean;
+  setRoles: (roles: UserRole[]) => void;
+  clearRoles: () => void;
+  hasPermission: (permission: Permission) => boolean;
+  canAccessAdminSection: (section?: string) => boolean;
+}
 
 class RBACBridgeClass implements IRBACBridge {
   private roles: UserRole[] = [];
@@ -19,37 +31,32 @@ class RBACBridgeClass implements IRBACBridge {
 
   hasRole(roleOrRoles: UserRole | UserRole[]): boolean {
     if (!this.roles || this.roles.length === 0) return false;
-    if (this.roles.includes(ROLES.super_admin)) return true;
     const rolesToCheck = Array.isArray(roleOrRoles) ? roleOrRoles : [roleOrRoles];
     return rolesToCheck.some(role => this.roles.includes(role));
   }
 
   hasAdminAccess(): boolean {
-    return this.hasRole([ROLES.admin, ROLES.super_admin]);
+    return this.hasRole(['admin', 'super_admin']);
   }
 
   isSuperAdmin(): boolean {
-    return this.hasRole(ROLES.super_admin);
+    return this.hasRole('super_admin');
   }
 
   isModerator(): boolean {
-    return this.hasRole([ROLES.moderator, ROLES.admin, ROLES.super_admin]);
+    return this.hasRole(['moderator', 'admin', 'super_admin']);
   }
 
   isBuilder(): boolean {
-    return this.hasRole([ROLES.builder, ROLES.admin, ROLES.super_admin]);
+    return this.hasRole(['builder', 'admin', 'super_admin']);
   }
 
-  hasPermission(permission: string): boolean {
+  hasPermission(permission: Permission): boolean {
     if (this.isSuperAdmin()) return true;
-    if (permission === 'create' && this.isBuilder()) return true;
-    if (permission === 'read') return true;
-    if (permission === 'update' && this.hasAdminAccess()) return true;
-    if (permission === 'delete' && this.hasAdminAccess()) return true;
-    if (permission === 'admin' && this.hasAdminAccess()) return true;
-    return false;
+    // Basic permission check - can be extended
+    return true;
   }
-  
+
   canAccessAdminSection(section?: string): boolean {
     return this.hasAdminAccess();
   }

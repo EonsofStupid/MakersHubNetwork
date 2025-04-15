@@ -1,11 +1,9 @@
-
 import React, { createContext, useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ChatBridge } from '../lib/ChatBridge';
-import { ChatMessage, ChatSession, LogCategory, LogLevel } from '@/shared/types';
+import { ChatMessage, ChatSession, ChatMode } from '@/shared/types/core/chat.types';
+import { LogCategory, LogLevel } from '@/shared/types/core/logging.types';
 import { logger } from '@/logging/logger.service';
 
-// Define the chat context type
 interface ChatContextType {
   sessions: ChatSession[];
   currentSessionId: string | null;
@@ -16,7 +14,6 @@ interface ChatContextType {
   isChatEnabled?: boolean;
 }
 
-// Create context with default values
 const ChatContext = createContext<ChatContextType>({
   sessions: [],
   currentSessionId: null,
@@ -27,24 +24,23 @@ const ChatContext = createContext<ChatContextType>({
   isChatEnabled: true
 });
 
-// Provider component
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isChatEnabled] = useState<boolean>(true);
 
-  // Create a new chat session
   const createSession = (title = 'New Chat') => {
+    const now = new Date().toISOString();
     const sessionId = uuidv4();
     const newSession: ChatSession = {
       id: sessionId,
       title,
       messages: [],
       mode: 'chat',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now,
+      created_at: now,
+      updated_at: now
     };
     
     setSessions(prev => [...prev, newSession]);
@@ -56,16 +52,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     return sessionId;
   };
-  
-  // Save a message to the current session
+
   const saveMessage = (message: Omit<ChatMessage, 'id'>) => {
     if (!currentSessionId) return null;
     
+    const now = new Date().toISOString();
     const newMessage: ChatMessage = {
       ...message,
       id: uuidv4(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: now,
+      updated_at: now
     };
     
     setSessions(prev => prev.map(session => 
@@ -81,8 +77,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     return newMessage;
   };
-  
-  // Get the current session
+
   const getCurrentSession = () => {
     if (!currentSessionId) return null;
     return sessions.find(session => session.id === currentSessionId) || null;
@@ -105,5 +100,4 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Custom hook for using the chat context
 export const useChatContext = () => useContext(ChatContext);
