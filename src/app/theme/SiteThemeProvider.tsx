@@ -1,16 +1,16 @@
 
 import React, { createContext, useContext, useMemo, useEffect, useState } from "react";
-import { Theme, ThemeComponent } from "@/shared/types/theme/theme.types";
-import { useThemeStore } from "@/shared/stores/theme/store";
+import { Theme, ThemeVariables } from "@/shared/types/theme.types";
+import { useThemeStore } from "@/shared/store/theme/store";
 import { useLogger } from "@/logging/hooks/use-logger";
-import { LogLevel, LogCategory } from "@/shared/types/shared.types";
+import { LogCategory } from "@/shared/types/shared.types";
+import { ThemeLoadingState } from "@/shared/ui/theme/info/ThemeLoadingState";
+import { ThemeErrorState } from "@/shared/ui/theme/info/ThemeErrorState";
 
 export interface SiteThemeContextType {
   theme: Theme | null;
   isLoaded: boolean;
-  componentStyles: Record<string, Record<string, string>> | null;
-  animations: Record<string, string> | null;
-  variables: Record<string, string> | null;
+  variables: ThemeVariables | null;
   themeError: Error | null;
 }
 
@@ -23,64 +23,48 @@ interface SiteThemeProviderProps {
 
 export function SiteThemeProvider({ 
   children, 
-  defaultTheme = "impulsivity" 
+  defaultTheme = "default" 
 }: SiteThemeProviderProps) {
   const log = useLogger("SiteThemeProvider", LogCategory.THEME);
-  const [theme, setTheme] = useState<Theme | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [themeError, setThemeError] = useState<Error | null>(null);
-  const [componentStyles, setComponentStyles] = useState<Record<string, Record<string, string>> | null>(null);
-  const [animations, setAnimations] = useState<Record<string, string> | null>(null);
-  const [cssVariables, setCssVariables] = useState<Record<string, string> | null>(null);
-
   const themeStore = useThemeStore();
 
   useEffect(() => {
-    log.info("Initializing theme system", { themeName: defaultTheme });
-    
-    try {
-      themeStore.fetchThemes();
-    } catch (error) {
-      log.error("Error loading themes", { 
-        error: error instanceof Error ? error.message : String(error)
-      });
-      setThemeError(error instanceof Error ? error : new Error("Failed to load themes"));
-    }
-  }, [defaultTheme, log]);
-
-  useEffect(() => {
-    if (themeStore.themes?.length > 0 && !themeStore.activeThemeId) {
-      const themeToUse = themeStore.themes.find(t => t.id === defaultTheme) || themeStore.themes[0];
-      themeStore.setActiveTheme(themeToUse.id);
-      log.info(`Setting active theme: ${themeToUse.name} (${themeToUse.id})`);
-    }
-  }, [themeStore.themes, themeStore.activeThemeId, defaultTheme, log]);
-
-  useEffect(() => {
-    if (themeStore.activeThemeId && themeStore.themes?.length > 0) {
-      const activeTheme = themeStore.themes.find(t => t.id === themeStore.activeThemeId);
-      if (activeTheme) {
-        setTheme(activeTheme);
-        setCssVariables(activeTheme.variables);
-        setComponentStyles(
-          activeTheme.components?.reduce((acc, comp: ThemeComponent) => {
-            acc[comp.component_name] = comp.styles;
-            return acc;
-          }, {} as Record<string, Record<string, string>>) || null
-        );
-        setIsLoaded(true);
+    const initTheme = async () => {
+      try {
+        log.info("Initializing theme system");
+        await themeStore.fetchThemes();
+        themeStore.setActiveTheme(defaultTheme);
+        log.info("Theme system initialized");
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error('Failed to initialize theme');
+        log.error("Theme initialization failed", { error: err.message });
+        setThemeError(err);
       }
-    }
-  }, [themeStore.activeThemeId, themeStore.themes]);
+    };
+
+    initTheme();
+  }, [defaultTheme, log, themeStore]);
 
   const contextValue = useMemo<SiteThemeContextType>(() => ({
-    theme,
-    isLoaded,
-    componentStyles,
-    animations,
-    variables: cssVariables,
-    themeError,
-  }), [theme, isLoaded, componentStyles, animations, cssVariables, themeError]);
+    theme: themeStore.theme,
+    isLoaded: themeStore.isLoaded,
+    variables: themeStore.variables,
+    themeError
+  }), [themeStore.theme, themeStore.isLoaded, themeStore.variables, themeError]);
+
+  if (themeStore.isLoading) {
+    return <ThemeLoadingState />;
+  }
+
+  if (themeError) {
+    return (
+      <ThemeErrorState 
+        error={themeError}
+        onRetry={() => themeStore.fetchThemes()}
+      />
+    );
+  }
 
   return (
     <SiteThemeContext.Provider value={contextValue}>

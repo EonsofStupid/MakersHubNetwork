@@ -1,17 +1,75 @@
 
-// Re-export all relevant theme types
-export * from './theme/effects.types';
+import { ThemeEffectType } from './shared.types';
 
-// Re-export specific types from features/theme.types
-export type {
-  Theme,
-  ThemeState,
-  ThemeStoreActions,
-  ThemeVariables,
-  ThemeComponent,
-  ThemeStatus,
-  ThemeContext,
-  DesignTokens,
-  ComponentTokens,
-  ThemeToken,
-} from './features/theme.types';
+export interface ThemeVariables {
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  primary: string;
+  primaryForeground: string;
+  secondary: string;
+  secondaryForeground: string;
+  muted: string;
+  mutedForeground: string;
+  accent: string;
+  accentForeground: string;
+  destructive: string;
+  destructiveForeground: string;
+  border: string;
+  input: string;
+  ring: string;
+  [key: string]: string; // Add index signature for flexible theme variables
+}
+
+export interface DesignTokens {
+  colors: Record<string, string>;
+  typography?: Record<string, any>;
+  spacing?: Record<string, string>;
+  animations?: Record<string, string>;
+  [key: string]: Record<string, any> | undefined;
+}
+
+export interface ComponentTokens {
+  [key: string]: Record<string, any>;
+}
+
+export interface Theme {
+  id: string;
+  name: string;
+  description?: string;
+  isDark?: boolean;
+  status: 'active' | 'draft' | 'archived';
+  context: 'site' | 'admin' | 'app' | 'chat';
+  variables: ThemeVariables;
+  designTokens: DesignTokens;
+  componentTokens?: ComponentTokens;
+}
+
+export interface ThemeState {
+  themes: Theme[];
+  activeThemeId: string | null;
+  isDark: boolean;
+  primaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  designTokens: DesignTokens;
+  componentTokens: ComponentTokens;
+  isLoading: boolean;
+  error: string | null;
+  variables: ThemeVariables;
+  theme: Theme | null;
+  isLoaded: boolean;
+}
+
+export interface ThemeStoreActions {
+  setThemes: (themes: Theme[]) => void;
+  setActiveTheme: (themeId: string) => void;
+  setDesignTokens: (tokens: DesignTokens) => void;
+  setComponentTokens: (tokens: ComponentTokens) => void;
+  fetchThemes: () => Promise<void>;
+  createTheme: (theme: Theme) => Promise<void>;
+  updateTheme: (theme: Theme) => Promise<void>;
+  deleteTheme: (themeId: string) => Promise<void>;
+  resetTheme: () => void;
+}
