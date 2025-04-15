@@ -1,6 +1,6 @@
-
 import { create } from 'zustand';
-import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeStoreActions } from '@/shared/types';
+import { Theme } from '@/shared/types/theme/theme.types';
+import { ThemeState, ThemeStoreActions } from '@/shared/types/theme/state.types';
 
 // Utility functions
 const getDefaultDesignTokens = (): DesignTokens => ({

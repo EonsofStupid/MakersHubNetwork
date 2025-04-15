@@ -1,6 +1,6 @@
-
 import { create } from 'zustand';
-import { Theme, ThemeStoreState, DesignTokens, ComponentTokens, ThemeStoreActions, ThemeVariables } from '@/shared/types/shared.types';
+import { Theme } from '@/shared/types/theme/theme.types';
+import { ThemeState, ThemeStoreActions } from '@/shared/types/theme/state.types';
 import { devtools, persist } from 'zustand/middleware';
 import { logger } from '@/logging/logger.service';
 import { LogLevel, LogCategory } from '@/shared/types/shared.types';
@@ -108,7 +108,7 @@ const defaultComponentTokens: ComponentTokens = {
 };
 
 // Initial state
-const initialState: ThemeStoreState = {
+const initialState: ThemeState = {
   themes: [defaultTheme],
   activeThemeId: defaultTheme.id,
   isDark: defaultTheme.isDark || false,
@@ -125,7 +125,7 @@ const initialState: ThemeStoreState = {
 };
 
 // Create the theme store
-export const useThemeStore = create<ThemeStoreState & ThemeStoreActions>()(
+export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
   devtools(
     persist(
       (set, get) => ({

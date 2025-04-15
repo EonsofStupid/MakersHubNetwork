@@ -1,8 +1,10 @@
 
+import { Permission } from './permissions/constants';
+
 /**
  * Reexport of Permission type for project-wide usage
  */
-export { Permission, DEFAULT_PERMISSIONS, ROLE_PERMISSIONS, PERMISSION_VALUES } from '@/shared/types/permissions';
+export { Permission };
 
 // For backward compatibility
 export const PROJECT_PERMISSIONS = {

@@ -1,4 +1,3 @@
-
 /**
  * Chat system types
  * Standardized type definitions for chat functionality
