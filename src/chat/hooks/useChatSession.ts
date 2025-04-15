@@ -41,8 +41,8 @@ export function useChatSession() {
       id: uuidv4(),
       ...message,
       timestamp: Date.now(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: message.created_at || new Date().toISOString(),
+      updated_at: message.updated_at || new Date().toISOString()
     };
     
     setSessions(prev => 
@@ -85,14 +85,18 @@ export function useChatSession() {
     sendMessage: async (content: string) => {
       saveMessage({
         content,
-        sender: 'user'
+        sender: 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
       
       // Mock AI response
       setTimeout(() => {
         saveMessage({
           content: 'This is a mock response. Real AI implementation pending.',
-          sender: 'ai'
+          sender: 'ai',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
       }, 1000);
     },

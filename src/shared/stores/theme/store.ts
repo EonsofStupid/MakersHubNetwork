@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { Theme, ThemeStoreState, DesignTokens, ComponentTokens } from '@/shared/types/shared.types';
+import { Theme, ThemeStoreState, DesignTokens, ComponentTokens, ThemeStoreActions, ThemeVariables } from '@/shared/types/shared.types';
 import { devtools, persist } from 'zustand/middleware';
 import { logger } from '@/logging/logger.service';
 import { LogLevel, LogCategory } from '@/shared/types/shared.types';
@@ -12,8 +12,8 @@ const defaultTheme: Theme = {
   label: 'Default',
   description: 'Default theme',
   isDark: false,
-  status: 'active' as any,
-  context: 'site' as any,
+  status: 'active',
+  context: 'site',
   variables: {
     background: '#ffffff',
     foreground: '#000000',
@@ -106,20 +106,6 @@ const defaultComponentTokens: ComponentTokens = {
     fontWeight: '500',
   },
 };
-
-// Theme store interface with CRUD operations
-interface ThemeStoreActions {
-  setThemes: (themes: Theme[]) => void;
-  setActiveTheme: (themeId: string) => void;
-  setDesignTokens: (tokens: DesignTokens) => void;
-  setComponentTokens: (tokens: ComponentTokens) => void;
-  fetchThemes: () => Promise<void>;
-  createTheme: (theme: Theme) => Promise<void>;
-  updateTheme: (theme: Theme) => Promise<void>;
-  deleteTheme: (themeId: string) => Promise<void>;
-  resetTheme: () => void;
-  loadThemes: () => Promise<void>;
-}
 
 // Initial state
 const initialState: ThemeStoreState = {

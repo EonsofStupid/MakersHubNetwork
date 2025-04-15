@@ -45,7 +45,9 @@ export class ChatBridge {
       id: uuidv4(),
       content: message,
       sender: 'user',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     
     // Add message to session
@@ -74,7 +76,9 @@ export class ChatBridge {
         id: uuidv4(),
         content: `This is a simulated response to: "${message}"`,
         sender: 'ai',
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
       // Add response to session

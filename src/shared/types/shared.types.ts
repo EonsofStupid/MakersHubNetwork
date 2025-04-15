@@ -39,6 +39,22 @@ export interface UserProfile {
   bio?: string;
 }
 
+// Base Entity type
+export interface BaseEntity {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// User type
+export interface User extends BaseEntity {
+  email: string;
+  name?: string;
+  avatar_url?: string;
+  roles?: UserRole[];
+  user_metadata?: Record<string, unknown>;
+}
+
 // Auth status
 export enum AuthStatus {
   IDLE = 'idle',
@@ -191,39 +207,7 @@ export interface Theme {
   isDark?: boolean;
   status: 'active' | 'draft' | 'archived';
   context: 'site' | 'admin' | 'app' | 'chat';
-  variables: {
-    background: string;
-    foreground: string;
-    card: string;
-    cardForeground: string;
-    primary: string;
-    primaryForeground: string;
-    secondary: string;
-    secondaryForeground: string;
-    muted: string;
-    mutedForeground: string;
-    accent: string;
-    accentForeground: string;
-    destructive: string;
-    destructiveForeground: string;
-    border: string;
-    input: string;
-    ring: string;
-    effectColor?: string;
-    effectSecondary?: string;
-    effectTertiary?: string;
-    transitionFast?: string;
-    transitionNormal?: string;
-    transitionSlow?: string;
-    animationFast?: string;
-    animationNormal?: string;
-    animationSlow?: string;
-    radiusSm?: string;
-    radiusMd?: string;
-    radiusLg?: string;
-    radiusFull?: string;
-    [key: string]: string | undefined;
-  };
+  variables: ThemeVariables;
   designTokens: DesignTokens;
   componentTokens?: ComponentTokens;
   tokens?: Array<ThemeToken | TokenWithKeyframes>;
@@ -285,6 +269,41 @@ export interface ThemeLogDetails extends LogDetails {
   details?: Record<string, unknown>;
 }
 
+// Theme variables interface
+export interface ThemeVariables {
+  background: string;
+  foreground: string;
+  card: string;
+  cardForeground: string;
+  primary: string;
+  primaryForeground: string;
+  secondary: string;
+  secondaryForeground: string;
+  muted: string;
+  mutedForeground: string;
+  accent: string;
+  accentForeground: string;
+  destructive: string;
+  destructiveForeground: string;
+  border: string;
+  input: string;
+  ring: string;
+  effectColor?: string;
+  effectSecondary?: string;
+  effectTertiary?: string;
+  transitionFast?: string;
+  transitionNormal?: string;
+  transitionSlow?: string;
+  animationFast?: string;
+  animationNormal?: string;
+  animationSlow?: string;
+  radiusSm?: string;
+  radiusMd?: string;
+  radiusLg?: string;
+  radiusFull?: string;
+  [key: string]: string | undefined;
+}
+
 // Theme store state
 export interface ThemeStoreState {
   themes: Theme[];
@@ -297,9 +316,23 @@ export interface ThemeStoreState {
   componentTokens: ComponentTokens;
   isLoading: boolean;
   error: string | null;
-  variables?: Record<string, string>;
+  variables?: ThemeVariables;
   theme?: Theme;
   componentStyles?: Record<string, Record<string, string>>;
   animations?: Record<string, string>;
   isLoaded?: boolean;
+}
+
+// Theme store actions interface
+export interface ThemeStoreActions {
+  setThemes: (themes: Theme[]) => void;
+  setActiveTheme: (themeId: string) => void;
+  setDesignTokens: (tokens: DesignTokens) => void;
+  setComponentTokens: (tokens: ComponentTokens) => void;
+  fetchThemes: () => Promise<void>;
+  createTheme: (theme: Theme) => Promise<void>;
+  updateTheme: (theme: Theme) => Promise<void>;
+  deleteTheme: (themeId: string) => Promise<void>;
+  resetTheme: () => void;
+  loadThemes: () => Promise<void>;
 }

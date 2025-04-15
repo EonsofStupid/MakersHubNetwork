@@ -1,6 +1,6 @@
 
 import { UserRole, Permission, ROLES } from '@/shared/types/shared.types';
-import { rbacStore } from './store/rbac.store';
+import { useRBACStore } from './store/rbac.store';
 import { logger } from '@/logging/logger.service';
 import { LogCategory, LogLevel } from '@/shared/types/shared.types';
 
@@ -13,7 +13,7 @@ class RBACBridgeImpl {
    * Initialize the RBAC system
    */
   initialize(): void {
-    rbacStore.getState().initialize();
+    useRBACStore.getState().setRoles([]);
   }
   
   /**
@@ -22,7 +22,7 @@ class RBACBridgeImpl {
    * @returns Boolean indicating if user has the role
    */
   hasRole(role: UserRole | UserRole[]): boolean {
-    const userRoles = rbacStore.getState().roles;
+    const userRoles = useRBACStore.getState().roles;
     
     // Super admin always has all roles
     if (userRoles.includes(UserRole.SUPER_ADMIN)) {
@@ -44,7 +44,7 @@ class RBACBridgeImpl {
    * @returns Boolean indicating if user has the permission
    */
   hasPermission(permission: Permission): boolean {
-    const { permissions } = rbacStore.getState();
+    const { permissions } = useRBACStore.getState();
     return permissions[permission] === true;
   }
   
@@ -70,14 +70,14 @@ class RBACBridgeImpl {
    * Check if user is a super admin
    */
   isSuperAdmin(): boolean {
-    return rbacStore.getState().roles.includes(UserRole.SUPER_ADMIN);
+    return useRBACStore.getState().roles.includes(UserRole.SUPER_ADMIN);
   }
   
   /**
    * Check if user has admin access
    */
   hasAdminAccess(): boolean {
-    const roles = rbacStore.getState().roles;
+    const roles = useRBACStore.getState().roles;
     return roles.includes(UserRole.ADMIN) || roles.includes(UserRole.SUPER_ADMIN);
   }
   
@@ -85,35 +85,35 @@ class RBACBridgeImpl {
    * Check if user is a moderator
    */
   isModerator(): boolean {
-    return rbacStore.getState().roles.includes(UserRole.MODERATOR);
+    return useRBACStore.getState().roles.includes(UserRole.MODERATOR);
   }
   
   /**
    * Check if user is a builder
    */
   isBuilder(): boolean {
-    return rbacStore.getState().roles.includes(UserRole.BUILDER);
+    return useRBACStore.getState().roles.includes(UserRole.BUILDER);
   }
   
   /**
    * Get all user roles
    */
   getRoles(): UserRole[] {
-    return rbacStore.getState().roles;
+    return useRBACStore.getState().roles;
   }
   
   /**
    * Set user roles
    */
   setRoles(roles: UserRole[]): void {
-    rbacStore.getState().setRoles(roles);
+    useRBACStore.getState().setRoles(roles);
   }
   
   /**
    * Clear user roles (on logout)
    */
   clearRoles(): void {
-    rbacStore.getState().clear();
+    useRBACStore.getState().clear();
   }
   
   /**

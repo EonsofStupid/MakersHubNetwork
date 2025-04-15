@@ -10,6 +10,9 @@ interface DebugStoreState {
   minLevel: LogLevel;
   enabledCategories: LogCategory[];
   
+  // Admin overlay properties
+  showAdminOverlay: boolean;
+  
   // Actions
   setEnabled: (enabled: boolean) => void;
   setConsoleEnabled: (enabled: boolean) => void;
@@ -18,6 +21,7 @@ interface DebugStoreState {
   toggleCategory: (category: LogCategory) => void;
   enableAllCategories: () => void;
   disableAllCategories: () => void;
+  toggleAdminOverlay: () => void;
 }
 
 const allCategories = Object.values(LogCategory);
@@ -30,6 +34,7 @@ export const useDebugStore = create<DebugStoreState>()(
       uiEnabled: false,
       minLevel: LogLevel.INFO,
       enabledCategories: allCategories,
+      showAdminOverlay: false,
       
       setEnabled: (enabled) => set({ enabled }),
       setConsoleEnabled: (enabled) => set({ consoleEnabled: enabled }),
@@ -53,7 +58,8 @@ export const useDebugStore = create<DebugStoreState>()(
       },
       
       enableAllCategories: () => set({ enabledCategories: [...allCategories] }),
-      disableAllCategories: () => set({ enabledCategories: [] })
+      disableAllCategories: () => set({ enabledCategories: [] }),
+      toggleAdminOverlay: () => set((state) => ({ showAdminOverlay: !state.showAdminOverlay }))
     }),
     {
       name: 'debug-store'
