@@ -1,7 +1,13 @@
 
 import { create } from 'zustand';
-import { Theme, ThemeState, ThemeStoreActions } from '@/shared/types/theme/state.types';
-import { DesignTokens, ComponentTokens } from '@/shared/types/theme/tokens.types';
+import { 
+  Theme, 
+  ThemeState, 
+  ThemeStoreActions, 
+  DesignTokens, 
+  ComponentTokens 
+} from '@/shared/types/theme/theme.types';
+import { devtools, persist } from 'zustand/middleware';
 import { logger } from '@/logging/logger.service';
 import { LogLevel, LogCategory } from '@/shared/types/shared.types';
 
@@ -40,7 +46,7 @@ const defaultTheme: Theme = {
   componentTokens: {}
 };
 
-export const useThemeStore = create<ThemeState & ThemeStoreActions>((set) => ({
+const initialState: ThemeState = {
   themes: [defaultTheme],
   activeThemeId: defaultTheme.id,
   isDark: false,
@@ -53,88 +59,102 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>((set) => ({
   error: null,
   variables: defaultTheme.variables,
   theme: defaultTheme,
-  isLoaded: true,
-  animations: {},
+  isLoaded: true
+};
 
-  // Actions
-  setThemes: (themes) => {
-    set({ themes });
-    logger.log(LogLevel.INFO, LogCategory.THEME, 'Themes updated');
-  },
+export const useThemeStore = create<ThemeState & ThemeStoreActions>()(
+  devtools(
+    persist(
+      (set) => ({
+        ...initialState,
 
-  setActiveTheme: (themeId) => {
-    set((state) => {
-      const theme = state.themes.find(t => t.id === themeId);
-      if (!theme) return state;
+        setThemes: (themes) => {
+          set({ themes });
+          logger.log(LogLevel.INFO, LogCategory.THEME, 'Themes updated');
+        },
 
-      return {
-        activeThemeId: themeId,
-        isDark: theme.isDark || false,
-        primaryColor: theme.variables.primary,
-        backgroundColor: theme.variables.background,
-        textColor: theme.variables.foreground,
-        theme,
-        variables: theme.variables,
-        designTokens: theme.designTokens,
-        componentTokens: theme.componentTokens || {}
-      };
-    });
-  },
+        setActiveTheme: (themeId) => {
+          set((state) => {
+            const theme = state.themes.find((t) => t.id === themeId);
+            if (!theme) {
+              logger.warn(LogCategory.THEME, `Theme ${themeId} not found`);
+              return state;
+            }
 
-  setDesignTokens: (tokens: DesignTokens) => {
-    set({ designTokens: tokens });
-  },
+            return {
+              activeThemeId: themeId,
+              isDark: theme.isDark || false,
+              primaryColor: theme.variables.primary,
+              backgroundColor: theme.variables.background,
+              textColor: theme.variables.foreground,
+              theme,
+              variables: theme.variables,
+              designTokens: theme.designTokens,
+              componentTokens: theme.componentTokens || {},
+              isLoaded: true
+            };
+          });
+        },
 
-  setComponentTokens: (tokens: ComponentTokens) => {
-    set({ componentTokens: tokens });
-  },
+        setDesignTokens: (tokens: DesignTokens) => {
+          set({ designTokens: tokens });
+        },
 
-  // Required actions implementation
-  fetchThemes: async () => {
-    set({ isLoading: true });
-    try {
-      // For now just set default theme
-      set({ 
-        themes: [defaultTheme],
-        isLoading: false 
-      });
-    } catch (error) {
-      set({ 
-        error: error instanceof Error ? error.message : 'Failed to fetch themes',
-        isLoading: false 
-      });
-    }
-  },
+        setComponentTokens: (tokens: ComponentTokens) => {
+          set({ componentTokens: tokens });
+        },
 
-  createTheme: async (theme) => {
-    set((state) => ({ themes: [...state.themes, theme] }));
-  },
+        fetchThemes: async () => {
+          set({ isLoading: true, error: null });
+          try {
+            // For now, just use default theme
+            set({ 
+              themes: [defaultTheme],
+              isLoading: false,
+              isLoaded: true
+            });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to fetch themes';
+            logger.error(LogCategory.THEME, errorMessage);
+            set({ 
+              isLoading: false,
+              error: errorMessage,
+              isLoaded: true
+            });
+          }
+        },
 
-  updateTheme: async (theme) => {
-    set((state) => ({
-      themes: state.themes.map((t) => (t.id === theme.id ? theme : t))
-    }));
-  },
+        createTheme: async (theme) => {
+          set((state) => ({ themes: [...state.themes, theme] }));
+          logger.info(LogCategory.THEME, `Theme ${theme.id} created`);
+        },
 
-  deleteTheme: async (themeId) => {
-    set((state) => ({
-      themes: state.themes.filter((t) => t.id !== themeId)
-    }));
-  },
+        updateTheme: async (theme) => {
+          set((state) => ({
+            themes: state.themes.map((t) => (t.id === theme.id ? theme : t))
+          }));
+          logger.info(LogCategory.THEME, `Theme ${theme.id} updated`);
+        },
 
-  resetTheme: () => {
-    set({
-      themes: [defaultTheme],
-      activeThemeId: defaultTheme.id,
-      isDark: false,
-      primaryColor: defaultTheme.variables.primary,
-      backgroundColor: defaultTheme.variables.background,
-      textColor: defaultTheme.variables.foreground,
-      theme: defaultTheme,
-      variables: defaultTheme.variables,
-      designTokens: defaultTheme.designTokens,
-      componentTokens: defaultTheme.componentTokens,
-      isLoaded: true
-    });
-  }
-}));
+        deleteTheme: async (themeId) => {
+          set((state) => ({
+            themes: state.themes.filter((t) => t.id !== themeId)
+          }));
+          logger.info(LogCategory.THEME, `Theme ${themeId} deleted`);
+        },
+
+        resetTheme: () => {
+          set(initialState);
+          logger.info(LogCategory.THEME, 'Theme reset to default');
+        }
+      }),
+      {
+        name: 'theme-store',
+        partialize: (state) => ({
+          activeThemeId: state.activeThemeId,
+          isDark: state.isDark
+        })
+      }
+    )
+  )
+);

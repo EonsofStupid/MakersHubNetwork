@@ -1,4 +1,17 @@
 
+// Base theme interface
+export interface Theme {
+  id: string;
+  name: string;
+  description?: string;
+  isDark?: boolean;
+  status: 'active' | 'draft' | 'archived';
+  context: 'site' | 'admin' | 'app' | 'chat';
+  variables: ThemeVariables;
+  designTokens: DesignTokens;
+  componentTokens?: ComponentTokens;
+}
+
 export interface ThemeVariables {
   background: string;
   foreground: string;
@@ -17,39 +30,6 @@ export interface ThemeVariables {
   border: string;
   input: string;
   ring: string;
-  effectColor?: string;
-  effectSecondary?: string;
-  effectTertiary?: string;
-  [key: string]: string | undefined; // Add index signature for flexible theme variables
-}
-
-export interface Theme {
-  id: string;
-  name: string;
-  description?: string;
-  isDark?: boolean;
-  status: 'active' | 'draft' | 'archived';
-  context: 'site' | 'admin' | 'app' | 'chat';
-  variables: ThemeVariables;
-  designTokens: DesignTokens;
-  componentTokens?: ComponentTokens;
-  isSystem?: boolean;
-  tokens?: ThemeToken[];
-  components?: ThemeComponent[];
-}
-
-export interface ThemeToken {
-  token_name: string;
-  token_value: string;
-  category: string;
-  description?: string;
-}
-
-export interface ThemeComponent {
-  component_name: string;
-  styles: Record<string, any>;
-  context?: string;
-  description?: string;
 }
 
 export interface DesignTokens {
