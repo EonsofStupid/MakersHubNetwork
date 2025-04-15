@@ -1,95 +1,40 @@
+
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { cn } from '@/shared/utils/cn';
-import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/shared/ui/navigation-menu';
-import { Button } from '@/shared/ui/button';
-import { UserMenu } from '@/app/components/auth/UserMenu';
-import { AuthSheet } from '@/app/components/auth/AuthSheet';
+import { useNavigate } from 'react-router-dom';
+import { LoginSheet } from '../auth/LoginSheet';
+import { UserMenu } from '../auth/UserMenu';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { RBACBridge } from '@/rbac/bridge';
-import { Shield } from 'lucide-react';
-import { AuthStatus } from "@/shared/types/shared.types";
+import { NavigationItems } from './components/NavigationItems';
 
 export function MainNav() {
   const navigate = useNavigate();
-  const user = useAuthStore(state => state.user);
-  const status = useAuthStore(state => state.status);
-  const isLoading = status === AuthStatus.LOADING;
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const hasAdminAccess = RBACBridge.hasAdminAccess();
-  
-  return (
-    <div className="flex justify-between items-center py-3">
-      <NavigationMenu>
-        <NavigationMenuList className="flex space-x-4">
-          <NavigationMenuItem>
-            <Link 
-              to="/"
-              className={cn(
-                "text-sm font-medium transition-colors",
-                "hover:text-primary"
-              )}
-            >
-              Home
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link 
-              to="/features"
-              className={cn(
-                "text-sm font-medium transition-colors",
-                "hover:text-primary"
-              )}
-            >
-              Features
-            </Link>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link 
-              to="/about"
-              className={cn(
-                "text-sm font-medium transition-colors",
-                "hover:text-primary"
-              )}
-            >
-              About
-            </Link>
-          </NavigationMenuItem>
-          {isAuthenticated && (
-            <NavigationMenuItem>
-              <Button 
-                variant="ghost"
-                className="text-sm font-medium transition-colors hover:text-primary p-0"
-                onClick={() => navigate('/dashboard')}
-              >
-                Dashboard
-              </Button>
-            </NavigationMenuItem>
-          )}
-          {isAuthenticated && hasAdminAccess && (
-            <NavigationMenuItem>
-              <Button 
-                variant="ghost"
-                className="text-sm font-medium transition-colors hover:text-primary p-0 flex items-center gap-1"
-                onClick={() => navigate('/admin')}
-              >
-                <Shield className="h-3 w-3" />
-                Admin
-              </Button>
-            </NavigationMenuItem>
-          )}
-        </NavigationMenuList>
-      </NavigationMenu>
+  const { isAuthenticated, status } = useAuthStore();
+  const isLoading = status === 'LOADING';
 
-      <div className="flex items-center space-x-2">
-        {isLoading ? (
-          <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-        ) : isAuthenticated ? (
-          <UserMenu />
-        ) : (
-          <AuthSheet />
-        )}
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black/60 border-b border-primary/30 backdrop-blur-md">
+      <div className="container mx-auto px-4 flex items-center justify-between h-16">
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={() => navigate('/')} 
+            className="font-bold text-xl cyber-text"
+          >
+            IMPULSE
+          </button>
+          
+          <NavigationItems />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {isLoading ? (
+            <div className="h-8 w-8 rounded-full bg-primary/20 animate-pulse" />
+          ) : isAuthenticated ? (
+            <UserMenu />
+          ) : (
+            <LoginSheet />
+          )}
+        </div>
       </div>
-    </div>
+    </header>
   );
 }

@@ -1,4 +1,3 @@
-
 // Auth types
 export const AUTH_STATUS = {
   LOADING: 'LOADING',
@@ -29,6 +28,14 @@ export interface UserProfile {
   name?: string;
   avatar_url?: string;
   roles: UserRole[];
+  bio?: string;
+  created_at?: string;
+  last_sign_in_at?: string;
+  updated_at?: string;
+  user_metadata?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
 }
 
 // Theme types
@@ -61,3 +68,17 @@ export enum LogLevel {
   ERROR = 3,
   CRITICAL = 4
 }
+
+export type Permission = 'create' | 'read' | 'update' | 'delete' | 'admin';
+
+export const ThemeEffectType = {
+  NONE: 'none',
+  CYBER: 'cyber',
+  NEON: 'neon',
+  ELECTRIC: 'electric',
+  GLITCH: 'glitch',
+  SYNTHWAVE: 'synthwave',
+  HOLOGRAM: 'hologram',
+  BLUR: 'blur',
+  MORPH: 'morph'
+} as const;

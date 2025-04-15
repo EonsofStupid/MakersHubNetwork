@@ -1884,7 +1884,7 @@ export type Database = {
         | "gemini"
         | "openrouter"
       content_status: "draft" | "review" | "published" | "archived"
-      content_type: "guide" | "tutorial" | "part-desc" | "build-log"
+      content_type: "guide" | "tutorial" | "part-desc" | "build-log" | "news"
       part_status: "draft" | "published" | "archived"
       theme_context: "site" | "admin" | "chat" | "app" | "training"
       theme_status: "draft" | "published" | "archived"
@@ -1896,6 +1896,7 @@ export type Database = {
         | "user"
         | "moderator"
         | "editor"
+        | "guest"
       workflow_field_type:
         | "string"
         | "textarea"
@@ -2033,7 +2034,7 @@ export const Constants = {
         "openrouter",
       ],
       content_status: ["draft", "review", "published", "archived"],
-      content_type: ["guide", "tutorial", "part-desc", "build-log"],
+      content_type: ["guide", "tutorial", "part-desc", "build-log", "news"],
       part_status: ["draft", "published", "archived"],
       theme_context: ["site", "admin", "chat", "app", "training"],
       theme_status: ["draft", "published", "archived"],
@@ -2045,6 +2046,7 @@ export const Constants = {
         "user",
         "moderator",
         "editor",
+        "guest",
       ],
       workflow_field_type: [
         "string",
