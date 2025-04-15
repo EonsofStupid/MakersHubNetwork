@@ -1,8 +1,7 @@
-
 import React, { forwardRef, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { RBACBridge } from '@/rbac/bridge';
-import { ROLES } from '@/shared/types/shared.types';
+import { ROLES } from '@/shared/types/core/auth.types';
 
 interface ComponentWrapperProps {
   children: React.ReactNode;
@@ -14,15 +13,12 @@ interface ComponentWrapperProps {
 
 export const ComponentWrapper = forwardRef<HTMLDivElement, ComponentWrapperProps>(
   ({ children, componentName, className, id, onClick, ...props }, ref) => {
-    // Check if user is a super_admin
-    const isSuperAdmin = RBACBridge.hasRole(ROLES.SUPER_ADMIN);
+    const isSuperAdmin = RBACBridge.hasRole(ROLES.super_admin);
     
-    // Generate a stable component ID that won't change on re-renders
     const stableId = useMemo(() => {
       return id || `${componentName}-${Math.random().toString(36).substring(2, 9)}`;
     }, [componentName, id]);
     
-    // Only add debug-related attributes if user is a super admin
     const debugAttributes = useMemo(() => {
       if (!isSuperAdmin) return {};
       
