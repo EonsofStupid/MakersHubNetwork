@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, LayoutComponent, LayoutComponentType } from '@/shared/types/features/layout.types';
+import { Layout, LayoutComponentType } from '@/shared/types/features/layout.types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/core/logging.types';
 
@@ -14,26 +14,24 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
     name: 'New Layout',
     components: {},
     layout: [],
-    type: 'page',
+    type: 'page' as LayoutComponentType,
     scope: 'site'
   });
   
   const logger = useLogger('LayoutEditor', LogCategory.ADMIN);
   
   const handleComponentUpdate = () => {
-    setLayout((prev: Layout) => {
-      return {
-        ...prev,
-        type: prev.type as LayoutComponentType,
-        id: prev.id,
-        name: prev.name,
-        description: prev.description,
-        components: prev.components,
-        layout: prev.layout,
-        meta: prev.meta,
-        scope: prev.scope
-      };
-    });
+    setLayout((prev: Layout) => ({
+      ...prev,
+      type: prev.type,
+      id: prev.id,
+      name: prev.name,
+      description: prev.description,
+      components: prev.components,
+      layout: prev.layout,
+      meta: prev.meta,
+      scope: prev.scope
+    }));
   };
   
   const handleAddComponent = (type: string) => {

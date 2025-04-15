@@ -1,35 +1,26 @@
-
 import { useCallback } from 'react';
 import { useThemeStore } from '@/stores/theme.store';
-import { TokenMap, ComponentTokenMap } from '@/shared/types/theme.types';
+import { Theme, ThemeState } from '@/shared/types/features/theme.types';
 
-/**
- * Hook to access and manipulate theme variables
- */
 export const useThemeVariables = () => {
-  // Access theme store
-  const variables = useThemeStore(state => state.variables || {});
-  const componentTokens = useThemeStore(state => state.componentTokens);
-  const theme = useThemeStore(state => state.theme);
-  const setVariables = useThemeStore(state => state.setVariables);
-  const setComponentTokens = useThemeStore(state => state.setComponentTokens);
-  
-  // Get a single token value
+  const variables = useThemeStore((state: ThemeState) => state.variables);
+  const componentTokens = useThemeStore((state: ThemeState) => state.componentTokens);
+  const theme = useThemeStore((state: ThemeState) => state.theme);
+  const setVariables = useThemeStore((state: ThemeState) => state.setVariables);
+  const setComponentTokens = useThemeStore((state: ThemeState) => state.setComponentTokens);
+
   const getToken = useCallback((token: string): string => {
     return variables[token] || '';
   }, [variables]);
   
-  // Get component specific token
   const getComponentToken = useCallback((component: string, token: string): string => {
     return componentTokens[component]?.[token] || variables[token] || '';
   }, [componentTokens, variables]);
   
-  // Set a single token value
   const setToken = useCallback((token: string, value: string) => {
     setVariables({ ...variables, [token]: value });
   }, [variables, setVariables]);
   
-  // Set component specific token
   const setComponentToken = useCallback((component: string, token: string, value: string) => {
     const componentToken = componentTokens[component] || {};
     const updatedTokens = {
@@ -42,16 +33,14 @@ export const useThemeVariables = () => {
     setComponentTokens(updatedTokens);
   }, [componentTokens, setComponentTokens]);
   
-  // Get all tokens as a map
-  const getAllTokens = useCallback((): TokenMap => {
-    return variables as TokenMap;
+  const getAllTokens = useCallback((): Record<string, string> => {
+    return variables;
   }, [variables]);
   
-  // Get all component tokens
-  const getAllComponentTokens = useCallback((): ComponentTokenMap => {
+  const getAllComponentTokens = useCallback((): Record<string, Record<string, string>> => {
     return componentTokens;
   }, [componentTokens]);
-  
+
   return {
     theme,
     variables,

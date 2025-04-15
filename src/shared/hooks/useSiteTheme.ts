@@ -1,5 +1,6 @@
 
 import { useThemeStore } from "@/stores/theme.store";
+import { ThemeState } from "@/shared/types/features/theme.types";
 
 export function useSiteTheme() {
   const { 
@@ -11,7 +12,7 @@ export function useSiteTheme() {
     textColor, 
     componentTokens,
     isLoading 
-  } = useThemeStore();
+  } = useThemeStore((state: ThemeState) => state);
 
   const currentTheme = themes?.find(t => t.id === activeThemeId) || null;
 
