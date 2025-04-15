@@ -17,12 +17,12 @@ export const useAdminAuth = () => {
   
   // Check if user has admin access
   const hasAdminAccess = useCallback((): boolean => {
-    return RBACBridge.hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+    return RBACBridge.hasRole([ROLES.admin, ROLES.super_admin]);
   }, []);
   
   // Check if user is super admin
   const isSuperAdmin = useCallback((): boolean => {
-    return RBACBridge.hasRole(ROLES.SUPER_ADMIN);
+    return RBACBridge.hasRole(ROLES.super_admin);
   }, []);
   
   // Get user roles
