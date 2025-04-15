@@ -1,47 +1,52 @@
 
-import { ThemeEffectType } from '../features/theme.types';
-import type { ThemeEffect } from '../features/theme.types';
+import { ThemeEffectType } from '@/shared/types/features/theme.types';
 
-export interface GlitchEffect extends ThemeEffect {
-  type: ThemeEffectType.GLITCH;
+export interface ThemeEffect {
+  type: ThemeEffectType;
+  intensity: number;
   color?: string;
-  frequency?: string;
-  amplitude?: string;
-  enabled: boolean;
+  enabled?: boolean;
+  [key: string]: any;
+}
+
+export interface GlowEffect extends ThemeEffect {
+  type: ThemeEffectType.GLOW;
+  radius?: string;
+  spread?: string;
+  color: string;
 }
 
 export interface GradientEffect extends ThemeEffect {
   type: ThemeEffectType.GRADIENT;
-  colors?: string[];
-  speed?: number; 
-  enabled: boolean;
-}
-
-export interface CyberEffect extends ThemeEffect {
-  type: ThemeEffectType.CYBER;
-  glowColor?: string;
-  scanLines?: boolean;
-  enabled: boolean;
-}
-
-export interface PulseEffect extends ThemeEffect {
-  type: ThemeEffectType.PULSE;
-  color?: string;
-  minOpacity?: number;
-  maxOpacity?: number;
-  enabled: boolean;
+  colors: string[];
+  direction?: string;
+  stops?: number[];
 }
 
 export interface ParticleEffect extends ThemeEffect {
   type: ThemeEffectType.PARTICLE;
-  color?: string;
-  count?: number;
-  enabled: boolean;
+  count: number;
+  size: number;
+  color: string;
+  speed: number;
+}
+
+export interface BlurEffect extends ThemeEffect {
+  type: ThemeEffectType.BLUR;
+  amount: string;
+  background?: string;
 }
 
 export interface MorphEffect extends ThemeEffect {
   type: ThemeEffectType.MORPH;
-  intensity?: number;
-  speed?: number;
-  enabled: boolean;
+  intensity: number; // Make sure this is required and not optional
+  duration?: string;
+  easing?: string;
+}
+
+export interface PulseEffect extends ThemeEffect {
+  type: ThemeEffectType.PULSE;
+  duration: string;
+  scale?: number;
+  opacity?: number;
 }

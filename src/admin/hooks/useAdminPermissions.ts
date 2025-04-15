@@ -15,7 +15,7 @@ export function useAdminPermissions() {
     const hasDirectPermission = RBACBridge.hasPermission(permission);
     
     // Super admin has all permissions
-    const isSuperAdmin = RBACBridge.isSuper_Admin();
+    const isSuperAdmin = RBACBridge.isSuperAdmin();
     
     const result = hasDirectPermission || isSuperAdmin;
     

@@ -1,67 +1,86 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
-import { useThemeStore } from '@/shared/stores/theme/store';
+import React from 'react';
+import { Dialog } from '@/shared/ui/dialog';
+import { Button } from '@/shared/ui/button';
+import { useThemeStore } from '@/shared/stores/theme/themeStore';
+import { Theme } from '@/shared/types/features/theme.types';
+import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/shared/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
-import ThemeInfoTab from './info/ThemeInfoTab';
-import { Theme } from '@/types/theme';
 
 interface ThemeInfoPopupProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  theme?: Theme | null;
+  onClose: () => void;
+  activeTheme?: Theme;
 }
 
-export const ThemeInfoPopup: React.FC<ThemeInfoPopupProps> = ({
-  open,
-  onOpenChange,
-  theme
-}) => {
-  const [activeTab, setActiveTab] = useState('details');
+export function ThemeInfoPopup({ open, onClose, activeTheme }: ThemeInfoPopupProps) {
+  const theme = useThemeStore(state => state.theme) || activeTheme;
   
   if (!theme) return null;
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{theme.name || 'Theme Details'}</DialogTitle>
+          <DialogTitle>{theme.name} Theme</DialogTitle>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="colors">Colors</TabsTrigger>
-            <TabsTrigger value="effects">Effects</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="details">
-            <ThemeInfoTab theme={theme} />
-          </TabsContent>
-          
-          <TabsContent value="colors">
-            <div className="grid gap-2">
-              {theme.designTokens?.colors && 
-                Object.entries(theme.designTokens.colors).map(([key, value]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: value }}
-                    />
-                    <span className="text-sm">{key}</span>
+        <div className="mt-4">
+          <Tabs defaultValue="details">
+            <TabsList>
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="tokens">Tokens</TabsTrigger>
+              <TabsTrigger value="components">Components</TabsTrigger>
+            </TabsList>
+            <TabsContent value="details" className="space-y-2 mt-4">
+              <p><strong>ID:</strong> {theme.id}</p>
+              <p><strong>Mode:</strong> {theme.isDark ? 'Dark' : 'Light'}</p>
+              <p><strong>Description:</strong> {theme.description || 'No description'}</p>
+            </TabsContent>
+            <TabsContent value="tokens" className="space-y-2 mt-4">
+              {theme.designTokens && (
+                <div>
+                  <h4 className="font-medium mb-2">Design Tokens</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {theme.designTokens.colors && Object.entries(theme.designTokens.colors).map(([key, value]) => (
+                      <div key={key} className="flex items-center gap-2">
+                        <div 
+                          className="h-4 w-4 rounded-full" 
+                          style={{ backgroundColor: value as string }} 
+                        />
+                        <span className="text-sm">{key}: {value}</span>
+                      </div>
+                    ))}
                   </div>
-                ))
-              }
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="effects">
-            <p className="text-sm">Effect information not available</p>
-          </TabsContent>
-        </Tabs>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="components" className="space-y-2 mt-4">
+              {theme.componentTokens && (
+                <div>
+                  <h4 className="font-medium mb-2">Component Tokens</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {Object.entries(theme.componentTokens).map(([key, values]) => (
+                      <div key={key} className="border p-2 rounded">
+                        <h5 className="font-medium">{key}</h5>
+                        <div className="text-sm">
+                          {Object.entries(values).map(([prop, val]) => (
+                            <div key={prop}>{prop}: {val}</div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+        
+        <DialogFooter>
+          <Button onClick={onClose}>Close</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-};
-
-export default ThemeInfoPopup;
+}

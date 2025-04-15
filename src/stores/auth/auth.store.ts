@@ -1,192 +1,222 @@
 import { create } from 'zustand';
-import { authBridge } from '@/auth/lib/AuthBridgeImpl';
-import { UserProfile, UserRole, LogCategory } from '@/shared/types/SharedTypes';
-import { useLogger } from '@/hooks/use-logger';
+import { UserProfile, AuthStatus, AUTH_STATUS, UserRole } from '@/shared/types/core/auth.types';
+import { mapUserToProfile } from '@/auth/utils/userMapper';
+import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Auth store state interface
- */
-interface AuthState {
+// RBAC State
+export interface AuthState {
   user: UserProfile | null;
-  roles: UserRole[];
+  profile: UserProfile | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  status: AuthStatus;
   error: Error | null;
+  roles: UserRole[];
   initialized: boolean;
   
-  // Auth methods
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  // Actions
+  setUser: (user: UserProfile | null) => void;
+  setAuthStatus: (status: AuthStatus) => void;
+  setError: (error: Error | null) => void;
+  logout: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  
-  // Session methods
   initialize: () => Promise<void>;
-  refreshSession: () => Promise<void>;
+  updateProfile: (profileData: Partial<UserProfile>) => Promise<void>;
 }
 
-/**
- * Auth store implementation
- * Handles authentication state and user identity
- */
-export const useAuthStore = create<AuthState>((set, get) => {
-  const logger = useLogger('AuthStore', LogCategory.AUTH);
-  
-  return {
-    user: null,
-    roles: [],
-    isAuthenticated: false,
-    isLoading: false,
-    error: null,
-    initialized: false,
-    
-    /**
-     * Sign in with email and password
-     */
-    signIn: async (email: string, password: string) => {
-      try {
-        set({ isLoading: true, error: null });
-        const { user, error } = await authBridge.signInWithEmail(email, password);
-        if (error) throw error;
-        set({ 
-          user, 
-          roles: user?.roles || [], 
-          isAuthenticated: true, 
-          isLoading: false 
-        });
-        logger.info('User signed in successfully', { details: { email } });
-      } catch (error) {
-        set({ error: error as Error, isLoading: false });
-        logger.error('Sign in failed', { details: { error: error instanceof Error ? error.message : String(error) } });
-        throw error;
-      }
-    },
-    
-    /**
-     * Sign out current user
-     */
-    signOut: async () => {
-      try {
-        set({ isLoading: true, error: null });
-        await authBridge.signOut();
-        set({ user: null, roles: [], isAuthenticated: false, isLoading: false });
-        logger.info('User signed out successfully');
-      } catch (error) {
-        set({ error: error as Error, isLoading: false });
-        logger.error('Sign out failed', { details: { error: error instanceof Error ? error.message : String(error) } });
-        throw error;
-      }
-    },
-    
-    /**
-     * Sign up new user
-     */
-    signUp: async (email: string, password: string) => {
-      try {
-        set({ isLoading: true, error: null });
-        const { user, error } = await authBridge.signUp(email, password);
-        if (error) throw error;
-        set({ 
-          user, 
-          roles: user?.roles || [], 
-          isAuthenticated: true, 
-          isLoading: false 
-        });
-        logger.info('User signed up successfully', { details: { email } });
-      } catch (error) {
-        set({ error: error as Error, isLoading: false });
-        logger.error('Sign up failed', { details: { error: error instanceof Error ? error.message : String(error) } });
-        throw error;
-      }
-    },
-    
-    /**
-     * Reset password
-     */
-    resetPassword: async (email: string) => {
-      try {
-        set({ isLoading: true, error: null });
-        await authBridge.resetPassword(email);
-        set({ isLoading: false });
-        logger.info('Password reset email sent', { details: { email } });
-      } catch (error) {
-        set({ error: error as Error, isLoading: false });
-        logger.error('Password reset failed', { details: { error: error instanceof Error ? error.message : String(error) } });
-        throw error;
-      }
-    },
-    
-    /**
-     * Initialize auth state
-     */
-    initialize: async () => {
-      try {
-        set({ isLoading: true, error: null });
-        const session = await authBridge.refreshSession();
-        const user = session ? await authBridge.getUserProfile(session.user_id) : null;
-        set({ 
-          user, 
-          roles: user?.roles || [], 
-          isAuthenticated: !!user, 
-          isLoading: false,
-          initialized: true 
-        });
-        logger.info('Auth state initialized', { details: { isAuthenticated: !!user } });
-      } catch (error) {
-        set({ 
-          error: error as Error, 
-          isLoading: false,
-          initialized: true 
-        });
-        logger.error('Auth initialization failed', { details: { error: error instanceof Error ? error.message : String(error) } });
-      }
-    },
-    
-    /**
-     * Refresh session
-     */
-    refreshSession: async () => {
-      try {
-        set({ isLoading: true, error: null });
-        const session = await authBridge.refreshSession();
-        const user = session ? await authBridge.getUserProfile(session.user_id) : null;
-        set({ 
-          user, 
-          roles: user?.roles || [], 
-          isAuthenticated: !!user, 
-          isLoading: false 
-        });
-        logger.info('Session refreshed', { details: { isAuthenticated: !!user } });
-      } catch (error) {
-        set({ error: error as Error, isLoading: false });
-        logger.error('Session refresh failed', { details: { error: error instanceof Error ? error.message : String(error) } });
-        throw error;
-      }
-    }
-  };
-});
+// Initial state
+const initialState = {
+  user: null,
+  profile: null,
+  isAuthenticated: false,
+  status: AUTH_STATUS.IDLE,
+  error: null,
+  roles: [],
+  initialized: false
+};
 
-/**
- * Auth bridge for direct access without hooks
- */
-export const AuthBridge = {
-  /**
-   * Get current user
-   */
-  getUser: () => useAuthStore.getState().user,
+// RBAC Store
+export const useAuthStore = create<AuthState>((set, get) => ({
+  ...initialState,
+
+  setUser: (user) => set({ 
+    user, 
+    profile: user,
+    isAuthenticated: !!user,
+    status: user ? AUTH_STATUS.AUTHENTICATED : AUTH_STATUS.UNAUTHENTICATED
+  }),
   
-  /**
-   * Get user profile
-   */
-  getProfile: () => useAuthStore.getState().user,
+  setAuthStatus: (status) => set({ status }),
   
-  /**
-   * Check if user is authenticated
-   */
-  isAuthenticated: () => useAuthStore.getState().isAuthenticated,
+  setError: (error) => set({ error }),
   
-  /**
-   * Sign out user
-   */
-  logout: () => useAuthStore.getState().signOut()
-}; 
+  login: async (email, password) => {
+    try {
+      set({ status: AUTH_STATUS.LOADING });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        const userProfile = mapUserToProfile(data.user);
+        set({ 
+          user: userProfile,
+          profile: userProfile,
+          isAuthenticated: true,
+          status: AUTH_STATUS.AUTHENTICATED
+        });
+      }
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error : new Error('Unknown error during login'),
+        status: AUTH_STATUS.ERROR  
+      });
+      throw error;
+    }
+  },
+  
+  signup: async (email, password) => {
+    try {
+      set({ status: AUTH_STATUS.LOADING });
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        const userProfile = mapUserToProfile(data.user);
+        set({ 
+          user: userProfile,
+          profile: userProfile,
+          isAuthenticated: true,
+          status: AUTH_STATUS.AUTHENTICATED
+        });
+      }
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error : new Error('Unknown error during signup'),
+        status: AUTH_STATUS.ERROR  
+      });
+      throw error;
+    }
+  },
+  
+  resetPassword: async (email) => {
+    try {
+      set({ status: AUTH_STATUS.LOADING });
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      
+      if (error) throw error;
+      
+      set({ status: AUTH_STATUS.IDLE });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error : new Error('Unknown error during password reset'),
+        status: AUTH_STATUS.ERROR  
+      });
+      throw error;
+    }
+  },
+  
+  logout: async () => {
+    try {
+      set({ status: AUTH_STATUS.LOADING });
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) throw error;
+      
+      set({ 
+        user: null, 
+        profile: null,
+        isAuthenticated: false,
+        status: AUTH_STATUS.UNAUTHENTICATED,
+        roles: []
+      });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error : new Error('Unknown error during logout'),
+        status: AUTH_STATUS.ERROR  
+      });
+      throw error;
+    }
+  },
+  
+  initialize: async () => {
+    try {
+      set({ status: AUTH_STATUS.LOADING });
+      
+      // Get session from supabase
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) throw error;
+      
+      if (data.session?.user) {
+        const userProfile = mapUserToProfile(data.session.user);
+        
+        // Get user roles if available
+        const roles = userProfile.roles || [];
+        
+        set({ 
+          user: userProfile,
+          profile: userProfile,
+          isAuthenticated: true,
+          status: AUTH_STATUS.AUTHENTICATED,
+          roles,
+          initialized: true
+        });
+      } else {
+        set({
+          user: null,
+          profile: null,
+          isAuthenticated: false,
+          status: AUTH_STATUS.UNAUTHENTICATED,
+          initialized: true
+        });
+      }
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error : new Error('Unknown error during initialization'),
+        status: AUTH_STATUS.ERROR,
+        initialized: true
+      });
+    }
+  },
+  
+  updateProfile: async (profileData) => {
+    try {
+      const { user } = get();
+      
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+      
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          ...user.user_metadata,
+          ...profileData.user_metadata
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Update local state
+      set(state => ({
+        user: state.user ? { ...state.user, ...profileData } : null,
+        profile: state.profile ? { ...state.profile, ...profileData } : null
+      }));
+    } catch (error) {
+      set({ error: error instanceof Error ? error : new Error('Unknown error updating profile') });
+      throw error;
+    }
+  }
+}));

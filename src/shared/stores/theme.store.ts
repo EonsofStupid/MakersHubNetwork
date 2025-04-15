@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { Theme, ThemeState, ComponentTokens, DesignTokens } from '@/shared/types/core/theme.types';
+import { Theme, ThemeState, ComponentTokens, DesignTokens } from '@/shared/types/features/theme.types';
 import { LogLevel, LogCategory } from '@/shared/types/core/logging.types';
 import { logger } from '@/logging/logger.service';
 

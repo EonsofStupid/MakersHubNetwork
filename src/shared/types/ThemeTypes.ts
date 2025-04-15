@@ -1,4 +1,4 @@
-import { ThemeLogDetails } from '@/shared/types/shared.types';
+import { LogDetails } from '@/shared/types/shared.types';
 
 // Theme status enum
 export enum ThemeStatus {

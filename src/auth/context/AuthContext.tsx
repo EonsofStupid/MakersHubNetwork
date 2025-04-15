@@ -1,13 +1,15 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { AuthStatus, UserProfile, AUTH_STATUS } from '@/shared/types/core/auth.types';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { AUTH_STATUS } from '@/shared/types/core/auth.types';
+import { UserProfile } from '@/shared/types/core/auth.types';
+import { createClient } from '@supabase/supabase-js';
 
 interface AuthContextProps {
   user: UserProfile | null;
   isAuthenticated: boolean;
-  status: AuthStatus;
+  status: typeof AUTH_STATUS[keyof typeof AUTH_STATUS];
   setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
-  setStatus: React.Dispatch<React.SetStateAction<AuthStatus>>;
+  setStatus: React.Dispatch<React.SetStateAction<typeof AUTH_STATUS[keyof typeof AUTH_STATUS]>>;
   supabase: any;
 }
 
@@ -22,8 +24,11 @@ const AuthContext = createContext<AuthContextProps>({
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [status, setStatus] = useState<AuthStatus>(AUTH_STATUS.LOADING);
-  const supabase = createClientComponentClient();
+  const [status, setStatus] = useState<typeof AUTH_STATUS[keyof typeof AUTH_STATUS]>(AUTH_STATUS.LOADING);
+  const supabase = createClient(
+    import.meta.env.VITE_SUPABASE_URL || 'https://example.supabase.co',
+    import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'
+  );
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -40,10 +45,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             app_metadata: session.user.app_metadata,
           };
           setUser(userProfile);
-          setStatus(AuthStatus.AUTHENTICATED);
+          setStatus(AUTH_STATUS.AUTHENTICATED);
         } else {
           setUser(null);
-          setStatus(AuthStatus.UNAUTHENTICATED);
+          setStatus(AUTH_STATUS.UNAUTHENTICATED);
         }
       }
     );
@@ -62,9 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           app_metadata: session.user.app_metadata,
         };
         setUser(userProfile);
-        setStatus(AuthStatus.AUTHENTICATED);
+        setStatus(AUTH_STATUS.AUTHENTICATED);
       } else {
-        setStatus(AuthStatus.UNAUTHENTICATED);
+        setStatus(AUTH_STATUS.UNAUTHENTICATED);
       }
     });
 

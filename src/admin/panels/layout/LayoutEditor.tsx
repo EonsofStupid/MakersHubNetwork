@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Layout, Component } from '@/shared/types/features/layout.types';
+import { Layout, LayoutComponent, LayoutComponentType } from '@/shared/types/features/layout.types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/core/logging.types';
 
@@ -21,7 +20,22 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
   
   const logger = useLogger('LayoutEditor', LogCategory.ADMIN);
   
-  // Handle adding a new component
+  const handleComponentUpdate = () => {
+    setLayout((prev: Layout) => {
+      return {
+        ...prev,
+        type: prev.type as LayoutComponentType,
+        id: prev.id,
+        name: prev.name,
+        description: prev.description,
+        components: prev.components,
+        layout: prev.layout,
+        meta: prev.meta,
+        scope: prev.scope
+      };
+    });
+  };
+  
   const handleAddComponent = (type: string) => {
     const newComponentId = `component-${Date.now()}`;
     const newComponent = {
@@ -46,7 +60,6 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
     logger.info('Added new component', { details: { componentType: type } });
   };
   
-  // Handle saving the layout
   const handleSave = () => {
     if (onSave) {
       onSave(layout);
@@ -54,7 +67,6 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
     logger.info('Layout saved');
   };
   
-  // Handle layout name change
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLayout(prev => ({
       ...prev,
