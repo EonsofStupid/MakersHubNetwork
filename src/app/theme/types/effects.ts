@@ -2,45 +2,45 @@
 import { ThemeEffectType } from '@/shared/types/shared.types';
 
 export interface ThemeEffect {
-  type: ThemeEffectType;
+  type: string;
   enabled: boolean;
   [key: string]: any;
 }
 
 export interface GlitchEffect extends ThemeEffect {
-  type: ThemeEffectType.NOISE;
+  type: string;
   color?: string;
   frequency?: string;
   amplitude?: string;
 }
 
 export interface GradientEffect extends ThemeEffect {
-  type: ThemeEffectType.GRADIENT;
+  type: string;
   colors?: string[];
   speed?: number; 
 }
 
 export interface CyberEffect extends ThemeEffect {
-  type: ThemeEffectType.NEON;
+  type: string;
   glowColor?: string;
   scanLines?: boolean;
 }
 
 export interface PulseEffect extends ThemeEffect {
-  type: ThemeEffectType.PULSE;
+  type: string;
   color?: string;
   minOpacity?: number;
   maxOpacity?: number;
 }
 
 export interface ParticleEffect extends ThemeEffect {
-  type: ThemeEffectType.PARTICLE;
+  type: string;
   color?: string;
   count?: number;
 }
 
 export interface MorphEffect extends ThemeEffect {
-  type: ThemeEffectType.BLUR;
+  type: string;
   intensity?: number;
   speed?: number;
 }

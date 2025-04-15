@@ -1,4 +1,5 @@
-import { UserRole, Permission } from '@/shared/types/shared.types';
+
+import { UserRole, Permission, LogCategory } from '@/shared/types/shared.types';
 
 export const RBACBridge = {
   hasRole: (role: UserRole | UserRole[]): boolean => {
@@ -16,6 +17,14 @@ export const RBACBridge = {
   isSuperAdmin: (): boolean => {
     return RBACBridge.hasRole('SUPER_ADMIN');
   },
+  
+  isModerator: (): boolean => {
+    return RBACBridge.hasRole('MODERATOR');
+  },
+  
+  isBuilder: (): boolean => {
+    return RBACBridge.hasRole('BUILDER');
+  },
 
   setRoles: (roles: UserRole[]): void => {
     // Implementation for setting roles
@@ -29,7 +38,7 @@ export const RBACBridge = {
     return true; // Implement proper permission checks
   },
 
-  canAccessAdminSection: (): boolean => {
+  canAccessAdminSection: (section?: string): boolean => {
     return RBACBridge.hasAdminAccess();
   }
 };

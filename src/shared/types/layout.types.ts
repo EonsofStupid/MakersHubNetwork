@@ -1,23 +1,18 @@
 
 import { z } from 'zod';
 
-export const LogCategoryEnum = z.enum(['APP', 'ADMIN', 'AUTH', 'API', 'UI', 'PERFORMANCE', 'ERROR', 'SECURITY', 'THEME', 'RBAC', 'SYSTEM']);
+// Define log category enum with all needed values
+export const LogCategoryEnum = z.enum([
+  'APP', 'ADMIN', 'AUTH', 'API', 'UI', 'PERFORMANCE', 
+  'ERROR', 'SECURITY', 'THEME', 'RBAC', 'SYSTEM', 'GRAIN'
+]);
 export type LogCategory = z.infer<typeof LogCategoryEnum>;
 
+// Define theme effect enum with all needed values
 export const ThemeEffectEnum = z.enum([
-  'NONE',
-  'CYBER',
-  'NEON',
-  'ELECTRIC',
-  'GLITCH',
-  'SYNTHWAVE',
-  'HOLOGRAM',
-  'BLUR',
-  'MORPH',
-  'NOISE',
-  'GRADIENT',
-  'PULSE',
-  'PARTICLE'
+  'NONE', 'CYBER', 'NEON', 'ELECTRIC', 'GLITCH', 
+  'SYNTHWAVE', 'HOLOGRAM', 'BLUR', 'MORPH', 'NOISE', 
+  'GRADIENT', 'PULSE', 'PARTICLE', 'GRAIN'
 ]);
 export type ThemeEffect = z.infer<typeof ThemeEffectEnum>;
 
@@ -64,4 +59,3 @@ export const LayoutSchema = z.object({
 
 export type Layout = z.infer<typeof LayoutSchema>;
 export type LayoutComponent = z.infer<typeof LayoutComponentSchema>;
-

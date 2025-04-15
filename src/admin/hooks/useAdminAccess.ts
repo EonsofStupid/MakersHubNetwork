@@ -1,14 +1,14 @@
 
 import { useCallback } from 'react';
 import { RBACBridge } from '@/rbac/bridge';
-import { useLogger } from '@/logging/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
+import { useLogger } from '@/hooks/use-logger';
 
 /**
  * Hook for checking admin access permissions
  */
 export function useAdminAccess() {
-  const logger = useLogger('useAdminAccess', LogCategory.RBAC);
+  const logger = useLogger('useAdminAccess', LogCategory.ADMIN);
   
   // Check if user has admin access
   const hasAdminAccess = useCallback(() => {
@@ -22,7 +22,7 @@ export function useAdminAccess() {
   
   // Check if user can access a specific admin section
   const canAccessSection = useCallback((section: string) => {
-    const hasAccess = RBACBridge.canAccessAdminSection(section);
+    const hasAccess = RBACBridge.canAccessAdminSection();
     logger.debug(`Access check for section ${section}`, {
       details: {
         section,

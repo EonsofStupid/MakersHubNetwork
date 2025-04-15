@@ -1,32 +1,36 @@
+
 import { atom } from 'jotai';
+import { UserRole } from '@/shared/types/shared.types';
 import { RBACBridge } from '@/bridges/RBACBridge';
-import { UserRole, Permission } from '@/shared/types/shared.types';
 
-/**
- * Read-only atoms derived from RBAC store
- */
+// Ensure we're using the functions correctly
+const rolesAtom = atom<UserRole[]>([]);
 
-export const rolesAtom = atom<UserRole[]>(() => RBACBridge.getRoles());
-
-export const hasRoleAtom = atom(
-  null,
-  (get, set, check: UserRole | UserRole[]) => RBACBridge.hasRole(check)
+const hasRoleAtom = atom(
+  (get) => (role: UserRole | UserRole[]) => RBACBridge.hasRole(role)
 );
 
-export const canAtom = atom(
-  null,
-  (get, set, permission: Permission) => RBACBridge.hasPermission(permission)
+const hasAdminAccessAtom = atom(
+  (get) => () => RBACBridge.hasAdminAccess()
 );
 
-export const canAccessRouteAtom = atom(
-  null,
-  (get, set, route: string) => RBACBridge.canAccessAdminSection(route)
+const isSuperAdminAtom = atom(
+  (get) => () => RBACBridge.isSuperAdmin()
 );
 
-export const isAdminAtom = atom<boolean>(() => RBACBridge.hasAdminAccess());
+const isModeratorAtom = atom(
+  (get) => () => RBACBridge.isModerator && RBACBridge.isModerator()
+);
 
-export const isSuperAdminAtom = atom<boolean>(() => RBACBridge.isSuperAdmin());
+const isBuilderAtom = atom(
+  (get) => () => RBACBridge.isBuilder && RBACBridge.isBuilder()
+);
 
-export const isModeratorAtom = atom<boolean>(() => RBACBridge.isModerator());
-
-export const isBuilderAtom = atom<boolean>(() => RBACBridge.isBuilder()); 
+export {
+  rolesAtom,
+  hasRoleAtom,
+  hasAdminAccessAtom,
+  isSuperAdminAtom,
+  isModeratorAtom,
+  isBuilderAtom
+};

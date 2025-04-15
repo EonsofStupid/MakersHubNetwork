@@ -1,68 +1,57 @@
 
 import { create } from 'zustand';
-import { AUTH_STATUS, UserProfile, ROLES } from '@/shared/types/shared.types';
+import { UserProfile, AuthStatus, AUTH_STATUS } from '@/shared/types/shared.types';
 
-interface AuthState {
-  status: keyof typeof AUTH_STATUS;
+export interface AuthState {
   user: UserProfile | null;
+  profile: UserProfile | null;
   isAuthenticated: boolean;
+  status: AuthStatus;
   error: Error | null;
-  initialized: boolean;
   
   // Actions
-  initialize: () => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
-  
-  // Additional for UI state
-  roles: string[];
+  setUser: (user: UserProfile | null) => void;
+  setAuthStatus: (status: AuthStatus) => void;
+  setError: (error: Error | null) => void;
+  logout: () => void;
+  updateProfile: (profileData: Partial<UserProfile>) => Promise<void>;
 }
 
-// Create the auth store - always authenticated with no checks
 export const useAuthStore = create<AuthState>((set) => ({
-  status: AUTH_STATUS.AUTHENTICATED,
-  user: {
-    id: '1',
-    email: 'user@example.com',
-    name: 'Demo User',
-    avatar_url: 'https://ui-avatars.com/api/?name=Demo+User',
-    roles: [ROLES.USER, ROLES.ADMIN]
-  },
-  isAuthenticated: true,
+  user: null,
+  profile: null,
+  isAuthenticated: false,
+  status: AUTH_STATUS.IDLE,
   error: null,
-  initialized: true,
-  roles: [ROLES.USER, ROLES.ADMIN],
   
-  // Initialize auth
-  initialize: async () => {
-    // Always stays authenticated
-  },
+  setUser: (user) => set({ 
+    user, 
+    profile: user,
+    isAuthenticated: !!user,
+    status: user ? AUTH_STATUS.AUTHENTICATED : AUTH_STATUS.UNAUTHENTICATED
+  }),
   
-  // Login
-  login: async () => {
-    // No-op, always logged in
-  },
+  setAuthStatus: (status) => set({ status }),
   
-  // Logout
-  logout: async () => {
-    // No-op, always logged in
-  },
+  setError: (error) => set({ error }),
   
-  // Signup
-  signup: async () => {
-    // No-op, always logged in
-  },
+  logout: () => set({ 
+    user: null,
+    profile: null,
+    isAuthenticated: false,
+    status: AUTH_STATUS.UNAUTHENTICATED
+  }),
   
-  // Reset password
-  resetPassword: async () => {
-    // No-op
-  },
-  
-  // Update profile
-  updateProfile: async () => {
-    // No-op
+  updateProfile: async (profileData) => {
+    try {
+      // This is a stub - in a real app this would update the profile in Supabase
+      set(state => ({
+        user: state.user ? { ...state.user, ...profileData } : null,
+        profile: state.profile ? { ...state.profile, ...profileData } : null
+      }));
+    } catch (error) {
+      set({ error: error instanceof Error ? error : new Error('Unknown error updating profile') });
+      throw error;
+    }
   }
 }));

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/shared/ui/button';
 import { FcGoogle } from 'react-icons/fc';
@@ -26,18 +25,24 @@ export function GoogleLoginButton({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   
-  const handleGoogleLogin = async () => {
+  const handleLogin = async () => {
     try {
       setIsLoading(true);
-      // Use the correct method name from the auth bridge
-      await authBridge.signInWithOAuth('google');
+      // Use the available method instead of signInWithOAuth
+      // This is a placeholder - implement based on actual authBridge methods
+      const { user, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google'
+      });
+      
+      if (error) throw error;
+      
       onSuccess?.();
     } catch (error) {
       console.error('Google login error:', error);
       toast({
-        title: 'Authentication Failed',
-        description: error instanceof Error ? error.message : 'Failed to sign in with Google',
-        variant: 'destructive'
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error instanceof Error ? error.message : 'Failed to login with Google'
       });
       onError?.(error instanceof Error ? error : new Error('Google login failed'));
     } finally {
@@ -48,7 +53,7 @@ export function GoogleLoginButton({
   if (cyberpunk) {
     return (
       <button
-        onClick={handleGoogleLogin}
+        onClick={handleLogin}
         disabled={isLoading}
         className={cn(
           'relative w-full flex items-center justify-center gap-2 border border-primary/30 bg-background/80 text-primary',
@@ -68,7 +73,7 @@ export function GoogleLoginButton({
   return (
     <Button
       variant={variant}
-      onClick={handleGoogleLogin}
+      onClick={handleLogin}
       disabled={isLoading}
       className={cn(
         'flex items-center gap-2',

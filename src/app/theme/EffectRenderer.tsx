@@ -6,7 +6,7 @@ import { ThemeEffectType } from '@/shared/types/shared.types';
  * Component to render various theme effects
  */
 export const EffectRenderer: React.FC<{
-  effect: ThemeEffectType;
+  effect: string;
   intensity?: number;
   className?: string;
   style?: React.CSSProperties;

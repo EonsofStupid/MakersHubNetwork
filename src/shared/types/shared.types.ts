@@ -1,3 +1,4 @@
+
 // Auth types
 export const AUTH_STATUS = {
   LOADING: 'LOADING',
@@ -8,6 +9,7 @@ export const AUTH_STATUS = {
 } as const;
 
 export type AuthStatus = keyof typeof AUTH_STATUS;
+export type AuthEventType = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED';
 
 // RBAC types
 export const ROLES = {
@@ -35,31 +37,46 @@ export interface UserProfile {
   user_metadata?: {
     full_name?: string;
     avatar_url?: string;
+    bio?: string;
+    location?: string;
+    website?: string;
   };
 }
 
 // Theme types
-export enum ThemeEffectType {
-  NONE = 'none',
-  CYBER = 'cyber',
-  NEON = 'neon',
-  ELECTRIC = 'electric',
-  GLITCH = 'glitch',
-  SYNTHWAVE = 'synthwave',
-  HOLOGRAM = 'hologram'
-}
+export const ThemeEffectType = {
+  NONE: 'NONE',
+  CYBER: 'CYBER',
+  NEON: 'NEON',
+  ELECTRIC: 'ELECTRIC',
+  GLITCH: 'GLITCH',
+  SYNTHWAVE: 'SYNTHWAVE',
+  HOLOGRAM: 'HOLOGRAM',
+  BLUR: 'BLUR',
+  MORPH: 'MORPH',
+  NOISE: 'NOISE',
+  GRADIENT: 'GRADIENT',
+  PULSE: 'PULSE',
+  PARTICLE: 'PARTICLE',
+  GRAIN: 'GRAIN'
+} as const;
+
+export type ThemeEffectTypeValue = typeof ThemeEffectType[keyof typeof ThemeEffectType];
 
 // Logging types
-export enum LogCategory {
-  APP = 'app',
-  ADMIN = 'admin',
-  AUTH = 'auth',
-  API = 'api',
-  UI = 'ui',
-  PERFORMANCE = 'performance',
-  ERROR = 'error',
-  SECURITY = 'security'
-}
+export const LogCategory = {
+  APP: 'APP',
+  ADMIN: 'ADMIN',
+  AUTH: 'AUTH',
+  API: 'API',
+  UI: 'UI',
+  PERFORMANCE: 'PERFORMANCE',
+  ERROR: 'ERROR',
+  SECURITY: 'SECURITY',
+  THEME: 'THEME',
+  RBAC: 'RBAC',
+  SYSTEM: 'SYSTEM'
+} as const;
 
 export enum LogLevel {
   DEBUG = 0,
@@ -69,16 +86,44 @@ export enum LogLevel {
   CRITICAL = 4
 }
 
+export interface ThemeLogDetails {
+  theme?: string;
+  error?: string;
+  cssVarsCount?: number;
+}
+
 export type Permission = 'create' | 'read' | 'update' | 'delete' | 'admin';
 
-export const ThemeEffectType = {
-  NONE: 'none',
-  CYBER: 'cyber',
-  NEON: 'neon',
-  ELECTRIC: 'electric',
-  GLITCH: 'glitch',
-  SYNTHWAVE: 'synthwave',
-  HOLOGRAM: 'hologram',
-  BLUR: 'blur',
-  MORPH: 'morph'
-} as const;
+// Theme types
+export interface Theme {
+  id: string;
+  name: string;
+  label?: string;
+  description?: string;
+  tokens?: ThemeToken[];
+  components?: ThemeComponent[];
+  isDark?: boolean;
+  context?: string;
+}
+
+export interface ThemeToken {
+  name?: string;
+  token_name?: string;
+  value?: string;
+  token_value?: string;
+  type?: string;
+  keyframes?: string;
+}
+
+export interface ThemeComponent {
+  name?: string;
+  component_name?: string;
+  styles?: Record<string, string>;
+  tokens?: Record<string, string>;
+}
+
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}

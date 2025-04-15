@@ -1,7 +1,7 @@
 
 import { Layout, LayoutComponent } from '@/shared/types/layout.types';
 import { LoadingStates } from '@/shared/ui/loading-states';
-import { cn } from '@/shared/utils';
+import { cn } from '@/shared/utils/cn';
 
 interface LayoutRendererProps {
   layout: Layout | null;
@@ -84,4 +84,3 @@ function ComponentRenderer({ component }: { component: LayoutComponent }) {
       );
   }
 }
-
