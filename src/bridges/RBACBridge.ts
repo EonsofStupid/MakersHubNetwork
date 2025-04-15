@@ -26,7 +26,7 @@ class RBACBridgeClass implements IRBACBridge {
     return this.hasRole([ROLES.admin, ROLES.super_admin]);
   }
 
-  isSuper_Admin(): boolean {
+  isSuperAdmin(): boolean {
     return this.hasRole(ROLES.super_admin);
   }
 
@@ -39,7 +39,7 @@ class RBACBridgeClass implements IRBACBridge {
   }
 
   hasPermission(permission: string): boolean {
-    if (this.isSuper_Admin()) return true;
+    if (this.isSuperAdmin()) return true;
     if (permission === 'create' && this.isBuilder()) return true;
     if (permission === 'read') return true;
     if (permission === 'update' && this.hasAdminAccess()) return true;

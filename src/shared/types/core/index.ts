@@ -4,11 +4,9 @@
  * Re-exports all core type definitions
  */
 // Export common types explicitly to avoid ambiguity
-export type { 
-  BaseEntity 
-} from './common.types';
+export * from './common.types';
 
 // Export other types
-export type * from './auth.types';
-export type * from './rbac.types';
-export type * from './logging.types';
+export * from './auth.types';
+export * from './rbac.types';
+export * from './logging.types';

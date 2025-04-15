@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { RBACBridge } from '@/rbac/bridge';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { ROLES } from '@/shared/types/shared.types';
+import { ROLES } from '@/shared/types/core/auth.types';
 
 interface AdminOverlayProps {
   enabled?: boolean;
@@ -19,7 +19,7 @@ export const AdminOverlay: React.FC<AdminOverlayProps> = ({ enabled = false }) =
   const { user } = useAuthStore();
   
   // Only show for admin users
-  const isAllowed = RBACBridge.hasRole(ROLES.ADMIN);
+  const isAllowed = RBACBridge.hasRole(ROLES.admin);
   
   useEffect(() => {
     if (!enabled || !isAllowed) return;
@@ -29,7 +29,7 @@ export const AdminOverlay: React.FC<AdminOverlayProps> = ({ enabled = false }) =
       roles: RBACBridge.getRoles(),
       userId: user?.id,
       email: user?.email,
-      isAdmin: RBACBridge.hasRole(ROLES.ADMIN),
+      isAdmin: RBACBridge.hasRole(ROLES.admin),
       isSuperAdmin: RBACBridge.isSuperAdmin(),
       authStatus: useAuthStore.getState().status,
     };

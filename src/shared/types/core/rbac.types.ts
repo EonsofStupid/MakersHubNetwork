@@ -13,7 +13,7 @@ export interface IRBACBridge {
   hasRole: (role: UserRole | UserRole[]) => boolean;
   getRoles: () => UserRole[];
   hasAdminAccess: () => boolean;
-  isSuper_Admin: () => boolean;
+  isSuperAdmin: () => boolean;
   isModerator: () => boolean;
   isBuilder: () => boolean;
   setRoles: (roles: UserRole[]) => void;

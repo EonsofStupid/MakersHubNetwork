@@ -1,5 +1,5 @@
 
-import { UserProfile, AuthStatus, AUTH_STATUS, UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserProfile, AuthStatus, AUTH_STATUS, UserRole, ROLES } from '@/shared/types/core/auth.types';
 
 /**
  * Auth bridge implementation
@@ -20,11 +20,13 @@ class AuthBridgeClass {
       email: 'user@example.com',
       name: 'Demo User',
       avatar_url: 'https://ui-avatars.com/api/?name=Demo+User',
-      roles: [ROLES.USER],
+      roles: [ROLES.user],
       user_metadata: {
         full_name: 'Demo User',
         avatar_url: 'https://ui-avatars.com/api/?name=Demo+User'
-      }
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
   }
   
