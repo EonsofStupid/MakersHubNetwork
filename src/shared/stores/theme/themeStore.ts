@@ -1,6 +1,5 @@
-
 import { create } from 'zustand';
-import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeStoreActions } from '@/shared/types';
+import { Theme, ThemeState, ComponentTokens, DesignTokens, ThemeStoreActions } from '@/shared/types/theme.types';
 
 // Utility functions
 const getDefaultDesignTokens = (): DesignTokens => ({
@@ -87,22 +86,26 @@ export const useThemeStore = create<ThemeState & ThemeStoreActions>((set, get) =
   ...initialState,
 
   setThemes: (themes) => {
-    set({ themes });
+    set({ themes: themes ?? [] });
   },
 
   setActiveTheme: (themeId) => {
-    set({ activeThemeId: themeId });
-    const activeTheme = get().themes.find(theme => theme.id === themeId);
+    const themes = get().themes ?? [];
+    const activeTheme = themes.find(theme => theme.id === themeId);
+    
     if (activeTheme) {
       set({
-        isDark: activeTheme.isDark,
-        primaryColor: activeTheme.designTokens.colors?.primary || '#0070f3',
-        backgroundColor: activeTheme.designTokens.colors?.background || '#ffffff',
-        textColor: activeTheme.designTokens.colors?.foreground || '#000000',
+        activeThemeId: themeId,
+        isDark: activeTheme.isDark ?? false,
+        primaryColor: activeTheme.designTokens?.colors?.primary ?? '#0070f3',
+        backgroundColor: activeTheme.designTokens?.colors?.background ?? '#ffffff',
+        textColor: activeTheme.designTokens?.colors?.foreground ?? '#000000',
+        designTokens: activeTheme.designTokens ?? {},
+        componentTokens: activeTheme.componentTokens ?? {},
         theme: activeTheme,
-        isLoaded: true,
-        variables: activeTheme.variables,
-        animations: activeTheme.designTokens.animations
+        variables: activeTheme.variables ?? {},
+        animations: activeTheme.designTokens?.animations ?? {},
+        isLoaded: true
       });
     }
   },

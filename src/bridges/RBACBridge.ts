@@ -18,8 +18,10 @@ class RBACBridgeClass implements IRBACBridge {
   }
 
   hasRole(roleOrRoles: UserRole | UserRole[]): boolean {
+    if (!this.roles || this.roles.length === 0) return false;
+    if (this.roles.includes(ROLES.super_admin)) return true;
     const rolesToCheck = Array.isArray(roleOrRoles) ? roleOrRoles : [roleOrRoles];
-    return this.roles.some(role => rolesToCheck.includes(role));
+    return rolesToCheck.some(role => this.roles.includes(role));
   }
 
   hasAdminAccess(): boolean {
@@ -31,11 +33,11 @@ class RBACBridgeClass implements IRBACBridge {
   }
 
   isModerator(): boolean {
-    return this.hasRole(ROLES.moderator);
+    return this.hasRole([ROLES.moderator, ROLES.admin, ROLES.super_admin]);
   }
 
   isBuilder(): boolean {
-    return this.hasRole(ROLES.builder);
+    return this.hasRole([ROLES.builder, ROLES.admin, ROLES.super_admin]);
   }
 
   hasPermission(permission: string): boolean {

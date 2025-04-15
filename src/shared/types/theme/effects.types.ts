@@ -1,12 +1,9 @@
 
-import { ThemeEffectType } from '../shared.types';
-import type { ThemeEffect } from '../shared.types';
-
-// Re-export ThemeEffect from shared types
-export type { ThemeEffect };
+import { ThemeEffectType } from '../features/theme.types';
+import type { ThemeEffect } from '../features/theme.types';
 
 export interface GlitchEffect extends ThemeEffect {
-  type: "GLITCH" | "NOISE"; // Support both new and old naming
+  type: ThemeEffectType.GLITCH;
   color?: string;
   frequency?: string;
   amplitude?: string;
@@ -14,21 +11,21 @@ export interface GlitchEffect extends ThemeEffect {
 }
 
 export interface GradientEffect extends ThemeEffect {
-  type: "GRADIENT";
+  type: ThemeEffectType.GRADIENT;
   colors?: string[];
   speed?: number; 
   enabled: boolean;
 }
 
 export interface CyberEffect extends ThemeEffect {
-  type: "CYBER" | "NEON"; // Support both new and old naming
+  type: ThemeEffectType.CYBER;
   glowColor?: string;
   scanLines?: boolean;
   enabled: boolean;
 }
 
 export interface PulseEffect extends ThemeEffect {
-  type: "PULSE";
+  type: ThemeEffectType.PULSE;
   color?: string;
   minOpacity?: number;
   maxOpacity?: number;
@@ -36,21 +33,15 @@ export interface PulseEffect extends ThemeEffect {
 }
 
 export interface ParticleEffect extends ThemeEffect {
-  type: "PARTICLE";
+  type: ThemeEffectType.PARTICLE;
   color?: string;
   count?: number;
   enabled: boolean;
 }
 
 export interface MorphEffect extends ThemeEffect {
-  type: "MORPH" | "BLUR"; // Support both new and old naming
+  type: ThemeEffectType.MORPH;
   intensity?: number;
   speed?: number;
   enabled: boolean;
-}
-
-export interface ThemeEffectProviderProps {
-  children: React.ReactNode;
-  className?: string;
-  effect?: ThemeEffect;
 }

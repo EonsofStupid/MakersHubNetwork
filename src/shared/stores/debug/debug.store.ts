@@ -1,6 +1,6 @@
-
 import { create } from 'zustand';
-import { LogLevel, LogCategory, LOG_LEVEL, LOG_CATEGORY } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
+import { LogLevel, LogCategory } from '@/shared/types/core/logging.types';
 
 interface DebugState {
   // Debug UI controls
