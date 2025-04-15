@@ -1,5 +1,5 @@
 
-import { Theme, DesignTokens, ComponentTokens } from './theme.types';
+import { Theme, DesignTokens, ComponentTokens, ThemeVariables } from './theme.types';
 
 export interface ThemeState {
   themes: Theme[];
@@ -12,9 +12,10 @@ export interface ThemeState {
   componentTokens: ComponentTokens;
   isLoading: boolean;
   error: string | null;
-  variables: Record<string, string>;
+  variables: ThemeVariables;
   theme: Theme | null;
   isLoaded: boolean;
+  animations?: Record<string, string>;
 }
 
 export interface ThemeStoreActions {
@@ -28,3 +29,4 @@ export interface ThemeStoreActions {
   deleteTheme: (themeId: string) => Promise<void>;
   resetTheme: () => void;
 }
+

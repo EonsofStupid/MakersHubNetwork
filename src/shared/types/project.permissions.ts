@@ -4,7 +4,7 @@ import { Permission } from './permissions/constants';
 /**
  * Reexport of Permission type for project-wide usage
  */
-export { Permission };
+export type { Permission };
 
 // For backward compatibility
 export const PROJECT_PERMISSIONS = {
@@ -16,3 +16,4 @@ export const PROJECT_PERMISSIONS = {
 } as const;
 
 export type ProjectPermission = typeof PROJECT_PERMISSIONS[keyof typeof PROJECT_PERMISSIONS];
+
