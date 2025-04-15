@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { RBACBridge } from '@/rbac/bridge';
+import { RBACBridge } from '@/bridges/RBACBridge';
 import { Button } from '@/shared/ui/button';
-import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { LogCategory, LogLevel } from '@/shared/types/core/logging.types';
 import { logger } from '@/logging/logger.service';
 
 interface AdminTopNavProps {

@@ -1,3 +1,6 @@
+
+import { ROLES } from '@/shared/types/core/auth.types';
+
 export const PATH_POLICIES = {
   '/admin': [ROLES.admin, ROLES.super_admin],
   '/admin/users': [ROLES.admin, ROLES.super_admin],

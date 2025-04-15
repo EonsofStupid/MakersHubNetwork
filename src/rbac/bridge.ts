@@ -1,7 +1,7 @@
 
-import { UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserRole, ROLES } from '@/shared/types/core/auth.types';
 import { useRbacStore } from './store';
-import { IRBACBridge } from './types';
+import { IRBACBridge } from '@/shared/types/core/rbac.types';
 
 /**
  * Bridge implementation for RBAC functionality
@@ -19,19 +19,19 @@ export const RBACBridge: IRBACBridge = {
   },
 
   hasAdminAccess: (): boolean => {
-    return RBACBridge.hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN]);
+    return RBACBridge.hasRole([ROLES.admin, ROLES.super_admin]);
   },
 
   isSuperAdmin: (): boolean => {
-    return RBACBridge.hasRole(ROLES.SUPER_ADMIN);
+    return RBACBridge.hasRole(ROLES.super_admin);
   },
   
   isModerator: (): boolean => {
-    return RBACBridge.hasRole(ROLES.MODERATOR);
+    return RBACBridge.hasRole(ROLES.moderator);
   },
   
   isBuilder: (): boolean => {
-    return RBACBridge.hasRole(ROLES.BUILDER);
+    return RBACBridge.hasRole(ROLES.builder);
   },
 
   setRoles: (roles: UserRole[]): void => {

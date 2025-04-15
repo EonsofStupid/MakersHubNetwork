@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { RBACBridge } from '@/rbac/bridge';
+import { RBACBridge } from '@/bridges/RBACBridge';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { ROLES } from '@/shared/types/core/auth.types';
 

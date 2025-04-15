@@ -1,7 +1,7 @@
 
 import { useEffect, useCallback, useState } from 'react';
 import { RBACBridge } from '@/bridges/RBACBridge';
-import { UserRole, ROLES, Permission } from '@/shared/types';
+import { UserRole, ROLES } from '@/shared/types/core/auth.types';
 import { useAuthStore } from '@/stores/auth/auth.store';
 
 /**
@@ -31,11 +31,6 @@ export function useRbac() {
     return RBACBridge.hasRole(role);
   }, []);
   
-  // Check if user has a specific permission
-  const can = useCallback((permission: Permission): boolean => {
-    return RBACBridge.hasPermission(permission);
-  }, []);
-  
   // Check if user has admin access
   const hasAdminAccess = useCallback((): boolean => {
     return RBACBridge.hasAdminAccess();
@@ -58,18 +53,17 @@ export function useRbac() {
   
   // Map of role constants
   const ROLE_CONSTANTS = {
-    USER: ROLES.USER,
-    ADMIN: ROLES.ADMIN,
-    SUPER_ADMIN: ROLES.SUPER_ADMIN,
-    MODERATOR: ROLES.MODERATOR,
-    BUILDER: ROLES.BUILDER,
-    GUEST: ROLES.GUEST,
+    user: ROLES.user,
+    admin: ROLES.admin,
+    super_admin: ROLES.super_admin,
+    moderator: ROLES.moderator,
+    builder: ROLES.builder,
+    guest: ROLES.guest,
   };
   
   return {
     roles,
     hasRole,
-    can,
     hasAdminAccess,
     isSuperAdmin,
     isModerator,

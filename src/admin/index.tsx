@@ -1,3 +1,4 @@
+
 // Import styles first to ensure proper cascade
 import '@/admin/styles/admin-core.css';
 import '@/admin/styles/impulse-admin.css';
@@ -12,7 +13,9 @@ import '@/admin/styles/text-effects.css';
 import '@/admin/theme/impulse/impulse-theme.css';
 
 // Export the AdminDashboard from its dedicated component file
-export { OverviewDashboard as AdminDashboard } from './panels/overview/OverviewDashboard';
+// Note: Assuming OverviewDashboard is a default export
+import OverviewDashboard from './panels/overview/OverviewDashboard';
+export { OverviewDashboard as AdminDashboard };
 
 // Export routes
 export { AdminRoutes } from './routes';

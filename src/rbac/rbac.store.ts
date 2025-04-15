@@ -1,6 +1,8 @@
 
 import { create } from 'zustand';
-import { ROLES, UserRole } from '@/shared/types/shared.types';
+import { UserRole, ROLES } from '@/shared/types/core/auth.types';
+import { LogCategory, LogLevel } from '@/shared/types/core/logging.types';
+import { logger } from '@/logging/logger.service';
 
 // Define permission types
 export interface Permission {
@@ -16,7 +18,7 @@ export interface RolePermissions {
 
 // Define default permissions for each role
 const DEFAULT_PERMISSIONS: Record<UserRole, string[]> = {
-  [ROLES.USER]: [
+  [ROLES.user]: [
     'view:profile',
     'edit:profile',
     'create:build',
@@ -25,7 +27,7 @@ const DEFAULT_PERMISSIONS: Record<UserRole, string[]> = {
     'view:builds',
     'comment:builds'
   ],
-  [ROLES.BUILDER]: [
+  [ROLES.builder]: [
     'view:profile',
     'edit:profile',
     'create:build',
@@ -36,7 +38,7 @@ const DEFAULT_PERMISSIONS: Record<UserRole, string[]> = {
     'feature:own:build',
     'upload:firmware'
   ],
-  [ROLES.MODERATOR]: [
+  [ROLES.moderator]: [
     'view:profile',
     'edit:profile',
     'view:builds',
@@ -44,7 +46,7 @@ const DEFAULT_PERMISSIONS: Record<UserRole, string[]> = {
     'moderate:comments',
     'review:builds'
   ],
-  [ROLES.ADMIN]: [
+  [ROLES.admin]: [
     'view:profile',
     'edit:profile',
     'view:builds',
@@ -58,10 +60,10 @@ const DEFAULT_PERMISSIONS: Record<UserRole, string[]> = {
     'manage:users',
     'manage:builds'
   ],
-  [ROLES.SUPER_ADMIN]: [
+  [ROLES.super_admin]: [
     '*' // All permissions
   ],
-  [ROLES.GUEST]: [
+  [ROLES.guest]: [
     'view:public:content',
     'view:builds'
   ]
