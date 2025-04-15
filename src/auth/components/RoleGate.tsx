@@ -1,26 +1,29 @@
 
 import React from 'react';
-import { UserRole, ROLES } from '@/shared/types/shared.types';
-import { RBACBridge } from '@/rbac/bridge';
+import { useAuth } from '@/auth/hooks/useAuth';
+import { UserRole, RBAC } from '@/shared/types/shared.types';
 
 interface RoleGateProps {
+  children: React.ReactNode;
   allowedRoles: UserRole | UserRole[];
   fallback?: React.ReactNode;
-  children: React.ReactNode;
 }
 
 /**
- * Component for conditional rendering based on roles
- * 
- * @param props - Component props
- * @returns React component that conditionally renders based on roles
+ * Role-based access control gate component
+ * Only renders children if the user has the required role(s)
  */
-export const RoleGate: React.FC<RoleGateProps> = ({
+export const RoleGate: React.FC<RoleGateProps> = ({ 
+  children, 
   allowedRoles,
-  fallback = null,
-  children
+  fallback = null
 }) => {
-  if (!RBACBridge.hasRole(allowedRoles)) {
+  const { hasRole } = useAuth();
+  
+  const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+  const hasPermission = roles.some(role => hasRole(role));
+  
+  if (!hasPermission) {
     return <>{fallback}</>;
   }
   
@@ -28,36 +31,29 @@ export const RoleGate: React.FC<RoleGateProps> = ({
 };
 
 /**
- * Pre-configured component for admin-only content
+ * AdminGate - Only allows admin and super admin users
  */
-export const AdminGate: React.FC<Omit<RoleGateProps, 'allowedRoles'>> = (props) => {
-  return <RoleGate allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]} {...props} />;
+export const AdminGate: React.FC<Omit<RoleGateProps, 'allowedRoles'>> = ({ 
+  children, 
+  fallback = null 
+}) => {
+  return (
+    <RoleGate allowedRoles={RBAC.ADMIN_ONLY} fallback={fallback}>
+      {children}
+    </RoleGate>
+  );
 };
 
 /**
- * Pre-configured component for super admin-only content
+ * SuperAdminGate - Only allows super admin users
  */
-export const SuperAdminGate: React.FC<Omit<RoleGateProps, 'allowedRoles'>> = (props) => {
-  return <RoleGate allowedRoles={ROLES.SUPER_ADMIN} {...props} />;
-};
-
-/**
- * Pre-configured component for moderator-only content
- */
-export const ModeratorGate: React.FC<Omit<RoleGateProps, 'allowedRoles'>> = (props) => {
-  return <RoleGate allowedRoles={[ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]} {...props} />;
-};
-
-/**
- * Pre-configured component for builder-only content
- */
-export const BuilderGate: React.FC<Omit<RoleGateProps, 'allowedRoles'>> = (props) => {
-  return <RoleGate allowedRoles={[ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN]} {...props} />;
-};
-
-/**
- * Pre-configured component for authenticated-only content
- */
-export const AuthGate: React.FC<Omit<RoleGateProps, 'allowedRoles'>> = (props) => {
-  return <RoleGate allowedRoles={[ROLES.USER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.BUILDER]} {...props} />;
+export const SuperAdminGate: React.FC<Omit<RoleGateProps, 'allowedRoles'>> = ({ 
+  children, 
+  fallback = null 
+}) => {
+  return (
+    <RoleGate allowedRoles={RBAC.SUPER_ADMINS} fallback={fallback}>
+      {children}
+    </RoleGate>
+  );
 };

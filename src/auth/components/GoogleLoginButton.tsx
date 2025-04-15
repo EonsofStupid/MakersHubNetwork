@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Button } from '@/shared/ui/button';
 import { FcGoogle } from 'react-icons/fc';
 import { authBridge } from '@/auth/bridge';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GoogleLoginButtonProps {
   className?: string;
@@ -28,9 +30,8 @@ export function GoogleLoginButton({
   const handleLogin = async () => {
     try {
       setIsLoading(true);
-      // Use the available method instead of signInWithOAuth
-      // This is a placeholder - implement based on actual authBridge methods
-      const { user, error } = await supabase.auth.signInWithOAuth({
+      // Use supabase OAuth
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google'
       });
       

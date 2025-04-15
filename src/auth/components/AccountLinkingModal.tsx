@@ -1,73 +1,35 @@
 
 import React from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle
-} from '@/shared/ui/dialog';
-import { Button } from '@/shared/ui/button';
-import { Github } from 'lucide-react'; // Replace with correct imports
 
-// Define component props
-export interface AccountLinkingModalProps {
+interface AccountLinkingModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({ 
-  isOpen, 
-  onClose 
-}) => {
-  // Callback handlers for provider linking
-  const handleLinkGoogle = () => {
-    // Implement Google account linking logic
-    console.log('Linking Google account');
-    onClose();
-  };
-  
-  const handleLinkGithub = () => {
-    // Implement GitHub account linking logic
-    console.log('Linking GitHub account');
-    onClose();
-  };
+export const AccountLinkingModal: React.FC<AccountLinkingModalProps> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Link Your Accounts</DialogTitle>
-          <DialogDescription>
-            Connect your social accounts to enable single sign-on and additional features.
-          </DialogDescription>
-        </DialogHeader>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-card p-6 rounded-lg max-w-md w-full">
+        <h2 className="text-xl font-bold mb-4">Link Accounts</h2>
+        <p className="mb-4">Link your current account with other sign-in methods to access your account in different ways.</p>
         
-        <div className="flex flex-col space-y-3 pt-4">
-          <Button 
-            variant="outline"
-            className="flex items-center justify-center gap-2"
-            onClick={handleLinkGoogle}
+        <div className="flex justify-end gap-2 mt-6">
+          <button 
+            onClick={onClose}
+            className="px-4 py-2 bg-muted text-muted-foreground rounded hover:bg-muted/80"
           >
-            <svg viewBox="0 0 24 24" width="20" height="20">
-              <path
-                fill="currentColor"
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5.75 11.43h-2.69v2.69a.94.94 0 0 1-.93.93h-2.25a.94.94 0 0 1-.93-.93v-2.69H8.26a.94.94 0 0 1-.93-.93v-2.25c0-.51.42-.93.93-.93h2.69V6.63c0-.51.42-.93.93-.93h2.25c.51 0 .93.42.93.93v2.69h2.69c.51 0 .93.42.93.93v2.25c0 .51-.42.93-.93.93z"
-              />
-            </svg>
-            <span>Link Google Account</span>
-          </Button>
-          
-          <Button 
-            variant="outline"
-            className="flex items-center justify-center gap-2"
-            onClick={handleLinkGithub}
+            Cancel
+          </button>
+          <button 
+            onClick={onClose}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
           >
-            <Github size={20} />
-            <span>Link GitHub Account</span>
-          </Button>
+            Link Account
+          </button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };

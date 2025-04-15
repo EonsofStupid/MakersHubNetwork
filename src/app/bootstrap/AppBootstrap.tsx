@@ -2,6 +2,8 @@
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { LogCategory } from '@/shared/types/shared.types';
+import { logger } from '@/logging/logger.service';
+import { LogLevel } from '@/shared/types';
 
 /**
  * AppBootstrap Component
@@ -10,8 +12,7 @@ import { LogCategory } from '@/shared/types/shared.types';
  * Designed to run only once when the app mounts
  */
 export function AppBootstrap() {
-  const initialize = useAuthStore(state => state.initialize);
-  const initialized = useAuthStore(state => state.initialized);
+  const { initialize, initialized } = useAuthStore();
   const initAttemptRef = useRef(false);
   
   // Handle initialization of auth on mount
@@ -36,6 +37,11 @@ export function AppBootstrap() {
           details: error instanceof Error 
             ? { message: error.message }
             : { message: String(error) }
+        });
+        
+        // Log through the logger service as well if available
+        logger.log(LogLevel.ERROR, LogCategory.APP, 'Auth initialization failed', {
+          error: error instanceof Error ? error.message : String(error)
         });
       }
     };

@@ -1,5 +1,5 @@
 
-import { UserProfile, AuthStatus, AUTH_STATUS } from '@/shared/types/shared.types';
+import { UserProfile, AuthStatus, AUTH_STATUS, UserRole, ROLES } from '@/shared/types/shared.types';
 
 /**
  * Auth bridge implementation
@@ -8,18 +8,23 @@ class AuthBridgeClass {
   private _isAuthenticated = false;
   private _user: UserProfile | null = null;
   
-  // For simplicity, we'll always return true for now (no auth checks)
+  // For simplicity, we'll return true (no auth checks)
   get isAuthenticated(): boolean {
     return true;
   }
   
-  // Always return a mock user for now (no auth checks)
+  // Return a mock user with roles
   getUser(): UserProfile | null {
     return {
       id: '1',
       email: 'user@example.com',
       name: 'Demo User',
-      avatar_url: 'https://ui-avatars.com/api/?name=Demo+User'
+      avatar_url: 'https://ui-avatars.com/api/?name=Demo+User',
+      roles: [ROLES.USER],
+      user_metadata: {
+        full_name: 'Demo User',
+        avatar_url: 'https://ui-avatars.com/api/?name=Demo+User'
+      }
     };
   }
   
@@ -32,12 +37,12 @@ class AuthBridgeClass {
     return { user_id: '1' };
   }
   
-  // Mock auth methods
-  async signInWithEmail(): Promise<{ user: UserProfile | null; error: Error | null }> {
+  // Mock auth methods with proper signatures
+  async signInWithEmail(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     return { user: this.getUser(), error: null };
   }
   
-  async signUp(): Promise<{ user: UserProfile | null; error: Error | null }> {
+  async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     return { user: this.getUser(), error: null };
   }
   
@@ -46,17 +51,22 @@ class AuthBridgeClass {
   }
   
   // Mock event subscription
-  onAuthEvent(): { unsubscribe: () => void } {
+  onAuthEvent(callback: (event: any) => void): { unsubscribe: () => void } {
     return { unsubscribe: () => {} };
   }
   
   // Mock password reset
-  async resetPassword(): Promise<void> {
+  async resetPassword(email: string): Promise<void> {
     // No-op
   }
   
   // Alias for getUser
   getProfile(): UserProfile | null {
+    return this.getUser();
+  }
+
+  // Get user profile by ID (used in auth store)
+  async getUserProfile(userId: string): Promise<UserProfile | null> {
     return this.getUser();
   }
   

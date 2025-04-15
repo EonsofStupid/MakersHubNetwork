@@ -1,7 +1,7 @@
 
 import { useCallback, useState } from 'react';
 import { AuthBridge } from '@/bridges/AuthBridge';
-import { UserProfile, UserRole, ROLES } from '@/shared/types/shared.types';
+import { UserProfile, UserRole, ROLES, RBAC } from '@/shared/types/shared.types';
 import { RBACBridge } from '@/bridges/RBACBridge';
 
 export interface UseAuthReturn {

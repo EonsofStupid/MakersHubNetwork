@@ -21,6 +21,15 @@ export const ROLES = {
   GUEST: 'GUEST'
 } as const;
 
+// RBAC constants for role-based policies
+export const RBAC = {
+  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  SUPER_ADMINS: [ROLES.SUPER_ADMIN],
+  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
+  AUTHENTICATED: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]
+} as const;
+
 export type UserRole = keyof typeof ROLES;
 
 // User profile type
@@ -29,7 +38,7 @@ export interface UserProfile {
   email: string;
   name?: string;
   avatar_url?: string;
-  roles: UserRole[];
+  roles?: UserRole[];
   bio?: string;
   created_at?: string;
   last_sign_in_at?: string;
@@ -40,6 +49,11 @@ export interface UserProfile {
     bio?: string;
     location?: string;
     website?: string;
+    [key: string]: any;
+  };
+  app_metadata?: {
+    roles?: UserRole[];
+    [key: string]: any;
   };
 }
 
@@ -75,7 +89,8 @@ export const LogCategory = {
   SECURITY: 'SECURITY',
   THEME: 'THEME',
   RBAC: 'RBAC',
-  SYSTEM: 'SYSTEM'
+  SYSTEM: 'SYSTEM',
+  CHAT: 'CHAT'  // Add missing CHAT category
 } as const;
 
 export enum LogLevel {

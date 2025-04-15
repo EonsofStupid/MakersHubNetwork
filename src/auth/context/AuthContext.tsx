@@ -28,29 +28,27 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const authStore = useAuthStore();
   const {
     user,
     isAuthenticated,
-    isLoading,
     error,
-    status,
-    login,
-    logout,
-    signup,
-    resetPassword,
-    initialize
-  } = useAuthStore();
-
+    status
+  } = authStore;
+  
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     // Initialize auth store when the component mounts
     if (!initialized) {
-      initialize().then(() => {
+      authStore.initialize().then(() => {
         setInitialized(true);
       });
     }
-  }, [initialize, initialized]);
+  }, [authStore, initialized]);
+
+  // Determine loading state
+  const isLoading = status === AUTH_STATUS.LOADING;
 
   // Provide the auth context to children
   return (
@@ -61,10 +59,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         status,
         error,
-        login,
-        logout,
-        signup,
-        resetPassword
+        login: authStore.login,
+        logout: authStore.logout,
+        signup: authStore.signup,
+        resetPassword: authStore.resetPassword
       }}
     >
       {children}
