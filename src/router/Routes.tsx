@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Route, Routes as RouterRoutes } from 'react-router-dom';
-import HomePage from '@/app/pages/HomePage';
+import HomePage from '@/app/home/HomePage';
 import LoginPage from '@/app/auth/LoginPage';
 import AdminDashboard from '@/admin/pages/Dashboard';
 

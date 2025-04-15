@@ -1,0 +1,13 @@
+
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "section_order": [
+    "hero",
+    "featured",
+    "categories",
+    "posts", 
+    "db"
+  ],
+  "featured_override": null,
+  "updated_at": "2023-04-15T00:00:00Z"
+}
