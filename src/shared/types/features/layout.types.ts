@@ -1,6 +1,9 @@
 
 import { ReactNode } from 'react';
 
+export type LayoutComponentType = 'page' | 'section' | 'widget';
+export type LayoutScope = 'site' | 'admin' | 'feature';
+
 export interface LayoutComponentProps {
   id: string;
   title: string;
@@ -11,19 +14,18 @@ export interface LayoutComponentProps {
   requiredRole?: string;
 }
 
-export type LayoutComponent = React.ComponentType<LayoutComponentProps>;
+export interface LayoutComponent {
+  id: string;
+  type: string;
+  props: Record<string, any>;
+}
 
 export interface Layout {
   id: string;
   name: string;
   description?: string;
-  components: {
-    [key: string]: {
-      id: string;
-      type: string;
-      props: Record<string, any>;
-    }
-  };
+  type: LayoutComponentType;
+  components: Record<string, LayoutComponent>;
   layout: Array<{
     id: string;
     parentId?: string;
@@ -31,8 +33,7 @@ export interface Layout {
     componentId: string;
   }>;
   meta?: Record<string, any>;
-  type: 'page' | 'section' | 'widget';
-  scope: 'site' | 'admin' | 'feature';
+  scope: LayoutScope;
 }
 
 export interface LayoutSkeleton {

@@ -16,10 +16,10 @@ export interface ChatSession {
   title: string;
   messages: ChatMessage[];
   mode: ChatMode;
-  createdAt: string;
-  updatedAt: string;
   created_at: string;
   updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   pinned?: boolean;
   favorite?: boolean;
 }
