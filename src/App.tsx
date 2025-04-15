@@ -2,42 +2,23 @@
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import Routes from './router/Routes';
-import { AppInitializer } from './core/init/AppInitializer';
+import { SystemInitializer } from './core/init/SystemInitializer';
 import { Toaster } from './shared/ui/toaster';
 import { SiteThemeProvider } from './app/theme/SiteThemeProvider';
-import { ThemeLoadingState } from './shared/ui/theme/info/ThemeLoadingState';
-import { ThemeErrorState } from './shared/ui/theme/info/ThemeErrorState';
-import { useThemeStore } from './shared/stores/theme/themeStore';
-import { CyberLoadingScreen } from './shared/ui/loading/CyberLoadingScreen';
 
 function App() {
-  const { isLoading, error } = useThemeStore();
-
   return (
     <BrowserRouter>
-      <AppInitializer>
-        {({ isInitializing }) => (
-          <SiteThemeProvider defaultTheme="default">
-            {isInitializing ? (
-              <CyberLoadingScreen />
-            ) : isLoading ? (
-              <ThemeLoadingState />
-            ) : error ? (
-              <ThemeErrorState 
-                error={new Error(error)}
-                onRetry={() => useThemeStore.getState().fetchThemes()}
-              />
-            ) : (
-              <div className="min-h-screen flex flex-col bg-background text-foreground">
-                <main className="flex-1">
-                  <Routes />
-                </main>
-              </div>
-            )}
-            <Toaster />
-          </SiteThemeProvider>
-        )}
-      </AppInitializer>
+      <SystemInitializer>
+        <SiteThemeProvider defaultTheme="default">
+          <div className="min-h-screen flex flex-col bg-background text-foreground">
+            <main className="flex-1">
+              <Routes />
+            </main>
+          </div>
+          <Toaster />
+        </SiteThemeProvider>
+      </SystemInitializer>
     </BrowserRouter>
   );
 }
