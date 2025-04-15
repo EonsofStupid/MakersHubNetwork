@@ -5,6 +5,7 @@ export * from './components/FeaturedSection';
 export * from './components/CategorySection';
 export * from './components/PostsSection';
 export * from './components/DBSection';
+export * from './components/AdminOverlay';
 export * from './schema/homeLayoutSchema';
 export * from './store/home.store';
 export * from './utils/homeLayoutLoader';

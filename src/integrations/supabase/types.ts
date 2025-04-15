@@ -218,6 +218,113 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          content: string | null
+          created_at: string | null
+          excerpt: string | null
+          id: string
+          is_featured: boolean | null
+          published_at: string | null
+          slug: string
+          status: string
+          thumbnail_url: string | null
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          is_featured?: boolean | null
+          published_at?: string | null
+          slug: string
+          status?: string
+          thumbnail_url?: string | null
+          title: string
+          type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          id?: string
+          is_featured?: boolean | null
+          published_at?: string | null
+          slug?: string
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      blog_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       build_mods: {
         Row: {
           build_id: string
@@ -625,6 +732,30 @@ export type Database = {
           name?: string
           slug?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      home_layout: {
+        Row: {
+          created_by: string | null
+          featured_override: string | null
+          id: string
+          section_order: string[]
+          updated_at: string | null
+        }
+        Insert: {
+          created_by?: string | null
+          featured_override?: string | null
+          id?: string
+          section_order?: string[]
+          updated_at?: string | null
+        }
+        Update: {
+          created_by?: string | null
+          featured_override?: string | null
+          id?: string
+          section_order?: string[]
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1055,6 +1186,66 @@ export type Database = {
             columns: ["part_id"]
             isOneToOne: false
             referencedRelation: "printer_parts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_categories: {
+        Row: {
+          category_id: string
+          post_id: string
+        }
+        Insert: {
+          category_id: string
+          post_id: string
+        }
+        Update: {
+          category_id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "blog_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_categories_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_tags: {
+        Row: {
+          post_id: string
+          tag_id: string
+        }
+        Insert: {
+          post_id: string
+          tag_id: string
+        }
+        Update: {
+          post_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_tags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "blog_tags"
             referencedColumns: ["id"]
           },
         ]

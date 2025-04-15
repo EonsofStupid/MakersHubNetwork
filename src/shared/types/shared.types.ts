@@ -1,146 +1,63 @@
 
-// Core shared types
-
-// Auth status enum
-export enum AUTH_STATUS {
-  LOADING = 'LOADING',
-  AUTHENTICATED = 'AUTHENTICATED',
-  UNAUTHENTICATED = 'UNAUTHENTICATED',
-  IDLE = 'IDLE',
-  ERROR = 'ERROR'
-}
-
-// User role enum
-export enum ROLES {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  BUILDER = 'BUILDER',
-  MODERATOR = 'MODERATOR',
-  GUEST = 'GUEST'
-}
-
-export type UserRole = keyof typeof ROLES;
-
-// Log level and category
-export enum LogLevel {
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  DEBUG = 'debug'
-}
-
-export enum LogCategory {
-  AUTH = 'auth',
-  API = 'api',
-  UI = 'ui',
-  SYSTEM = 'system',
-  THEME = 'theme',
-  ADMIN = 'admin',
-  RBAC = 'rbac',
-  APP = 'app',
-  CHAT = 'chat'
-}
-
-// Log details interface
-export interface ThemeLogDetails {
-  theme?: string;
-  cssVarsCount?: number;
-  error?: string;
-  [key: string]: any;
-}
-
-export interface LogDetails {
-  [key: string]: any;
-}
-
-// Build status for 3D printer builds
-export enum BuildStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED', 
-  REJECTED = 'REJECTED',
-  IN_REVIEW = 'IN_REVIEW'
-}
+// Auth types
+export const AUTH_STATUS = {
+  LOADING: 'LOADING',
+  AUTHENTICATED: 'AUTHENTICATED',
+  UNAUTHENTICATED: 'UNAUTHENTICATED',
+  IDLE: 'IDLE',
+  ERROR: 'ERROR'
+} as const;
 
 export type AuthStatus = keyof typeof AUTH_STATUS;
 
-export interface ServiceResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
+// RBAC types
+export const ROLES = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  ADMIN: 'ADMIN',
+  MODERATOR: 'MODERATOR',
+  BUILDER: 'BUILDER',
+  USER: 'USER',
+  GUEST: 'GUEST'
+} as const;
 
-// User profile types
-export interface UserData {
+export type UserRole = keyof typeof ROLES;
+
+// User profile type
+export interface UserProfile {
   id: string;
   email: string;
   name?: string;
   avatar_url?: string;
-  created_at?: string;
-  updated_at?: string;
-  last_sign_in_at?: string;
-  user_metadata?: Record<string, any>;
-  bio?: string;
-  roles?: UserRole[];
+  roles: UserRole[];
 }
 
-export type UserProfile = UserData;
-
-// Permission type
-export type Permission = string;
-
-// Theme effect types
+// Theme types
 export enum ThemeEffectType {
-  NONE = 'NONE',
-  CYBER = 'CYBER',
-  GLITCH = 'GLITCH',
-  NEON = 'NEON',
-  MATRIX = 'MATRIX',
-  BLUR = 'BLUR',
-  MORPH = 'MORPH',
-  GRAIN = 'GRAIN',
-  NOISE = 'NOISE',
-  GRADIENT = 'GRADIENT',
-  PULSE = 'PULSE',
-  PARTICLE = 'PARTICLE',
-  GLOW = 'GLOW',
-  SHADOW = 'SHADOW'
+  NONE = 'none',
+  CYBER = 'cyber',
+  NEON = 'neon',
+  ELECTRIC = 'electric',
+  GLITCH = 'glitch',
+  SYNTHWAVE = 'synthwave',
+  HOLOGRAM = 'hologram'
 }
 
-// Theme effect interface
-export interface ThemeEffect {
-  type: ThemeEffectType;
-  intensity?: number;
-  enabled: boolean;
+// Logging types
+export enum LogCategory {
+  APP = 'app',
+  ADMIN = 'admin',
+  AUTH = 'auth',
+  API = 'api',
+  UI = 'ui',
+  PERFORMANCE = 'performance',
+  ERROR = 'error',
+  SECURITY = 'security'
 }
 
-// Auth event type
-export enum AuthEventType {
-  SIGNED_IN = 'SIGNED_IN',
-  SIGNED_OUT = 'SIGNED_OUT',
-  TOKEN_REFRESHED = 'TOKEN_REFRESHED',
-  PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
-  USER_UPDATED = 'USER_UPDATED'
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+  CRITICAL = 4
 }
-
-// Log event type
-export interface LogEvent {
-  timestamp: string;
-  level: LogLevel;
-  category: LogCategory;
-  message: string;
-  details?: LogDetails;
-}
-
-export interface LogEntry extends LogEvent {
-  id: string;
-}
-
-// RBAC constants to use for role checks
-export const RBAC = {
-  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  SUPER_ADMINS: [ROLES.SUPER_ADMIN],
-  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  AUTHENTICATED: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]
-};

@@ -11,10 +11,15 @@ import { DBSection } from './components/DBSection';
 import { AdminOverlay, AdminOverlayButton } from './components/AdminOverlay';
 import { supabase } from '@/integrations/supabase/client';
 
+interface FeaturedPostOption {
+  id: string;
+  title: string;
+}
+
 export default function HomePage() {
   const { layout, setLayout, isLoading } = useHomeStore();
   const [isAdminOverlayVisible, setIsAdminOverlayVisible] = useState(false);
-  const [featuredPosts, setFeaturedPosts] = useState<{ id: string; title: string }[]>([]);
+  const [featuredPosts, setFeaturedPosts] = useState<FeaturedPostOption[]>([]);
   
   // Check if user has admin rights
   const hasAdminAccess = RBACBridge.hasAdminAccess();
@@ -34,14 +39,15 @@ export default function HomePage() {
     if (hasAdminAccess) {
       const fetchFeaturedPosts = async () => {
         try {
-          const { data } = await supabase
-            .from('posts')
+          const { data, error } = await supabase
+            .from('blog_posts')
             .select('id, title')
             .order('created_at', { ascending: false })
             .limit(10);
             
+          if (error) throw error;
           if (data) {
-            setFeaturedPosts(data);
+            setFeaturedPosts(data as FeaturedPostOption[]);
           }
         } catch (error) {
           console.error('Failed to load posts for admin overlay:', error);

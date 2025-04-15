@@ -7,8 +7,7 @@ interface Category {
   id: string;
   name: string;
   slug: string;
-  description: string;
-  image_url?: string;
+  description?: string;
 }
 
 interface CategorySectionProps {
@@ -24,24 +23,34 @@ export function CategorySection({ className }: CategorySectionProps) {
       setIsLoading(true);
       try {
         const { data, error } = await supabase
-          .from('printer_part_categories')
-          .select('*')
-          .order('name')
-          .limit(6);
+          .from('blog_categories')
+          .select('id, name, slug, description')
+          .order('name', { ascending: true });
           
         if (error) throw error;
-        
         setCategories(data as Category[]);
       } catch (error) {
         console.error('Error loading categories:', error);
         // Fallback content
         setCategories([
-          { id: '1', name: 'Extruders', slug: 'extruders', description: 'High performance extruders for all printer types' },
-          { id: '2', name: 'Hot Ends', slug: 'hot-ends', description: 'Precision hot ends for perfect extrusion' },
-          { id: '3', name: 'Linear Rails', slug: 'linear-rails', description: 'Smooth motion for precision prints' },
-          { id: '4', name: 'Control Boards', slug: 'control-boards', description: 'Next-gen electronics for your printer' },
-          { id: '5', name: 'Build Plates', slug: 'build-plates', description: 'Superior adhesion and release' },
-          { id: '6', name: 'Enclosures', slug: 'enclosures', description: 'Temperature control for perfect prints' },
+          {
+            id: '1',
+            name: '3D Printer Builds',
+            slug: '3d-printer-builds',
+            description: 'Full 3D printer builds and assembly guides'
+          },
+          {
+            id: '2',
+            name: 'Modifications',
+            slug: 'modifications',
+            description: 'Upgrades and modifications for existing printers'
+          },
+          {
+            id: '3',
+            name: 'Tutorials',
+            slug: 'tutorials',
+            description: 'Step-by-step guides and tutorials'
+          }
         ]);
       } finally {
         setIsLoading(false);
@@ -53,56 +62,35 @@ export function CategorySection({ className }: CategorySectionProps) {
 
   if (isLoading) {
     return (
-      <section className={cn("py-16 container mx-auto", className)}>
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-4">Browse Categories</h2>
-          <div className="h-2 w-40 bg-primary/20 mx-auto rounded animate-pulse"></div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1,2,3,4,5,6].map(i => (
-            <div key={i} className="h-32 bg-muted/40 rounded-lg animate-pulse"></div>
+      <section className={cn("py-16 px-4 container mx-auto", className)}>
+        <h2 className="text-3xl font-bold mb-8 text-center">Categories</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {Array(3).fill(0).map((_, i) => (
+            <div key={i} className="h-24 bg-muted/40 rounded-lg animate-pulse"></div>
           ))}
         </div>
       </section>
     );
   }
 
-  return (
-    <section className={cn("py-16 container mx-auto", className)}>
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-4">Browse Categories</h2>
-        <p className="text-muted-foreground">Find printer parts by category</p>
-      </div>
+  if (categories.length === 0) {
+    return null;
+  }
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  return (
+    <section className={cn("py-16 px-4 container mx-auto", className)}>
+      <h2 className="text-3xl font-bold mb-8 text-center">Explore Categories</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {categories.map(category => (
           <a 
-            key={category.id} 
-            href={`/categories/${category.slug}`}
-            className={cn(
-              "group relative overflow-hidden rounded-lg border border-primary/10",
-              "bg-card hover:border-primary/30 transition-all h-32 flex items-center justify-center",
-              "hover:shadow-lg hover:shadow-primary/5"
-            )}
+            key={category.id}
+            href={`/category/${category.slug}`}
+            className="block p-6 bg-card border border-primary/10 rounded-lg hover:bg-primary/5 transition-colors"
           >
-            {category.image_url && (
-              <div 
-                className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity"
-                style={{
-                  backgroundImage: `url(${category.image_url})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}
-              />
+            <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
+            {category.description && (
+              <p className="text-muted-foreground">{category.description}</p>
             )}
-            <div className="relative z-10 text-center p-4">
-              <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
-                {category.name}
-              </h3>
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {category.description}
-              </p>
-            </div>
           </a>
         ))}
       </div>

@@ -42,6 +42,7 @@ export async function saveHomeLayout(layout: HomeLayout): Promise<boolean> {
         id: layout.id,
         section_order: layout.section_order,
         featured_override: layout.featured_override,
+        created_by: supabase.auth.getUser().then(res => res.data.user?.id),
         updated_at: new Date().toISOString()
       });
 

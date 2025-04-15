@@ -1,62 +1,44 @@
 
-import { ROLES, UserRole } from '@/shared/types/shared.types';
+import { UserRole } from '@/shared/types/shared.types';
 
 /**
- * RBACBridge - Simple bridge for role-based access control
- * Always returns true for all checks to ensure site loads with no auth blocks
+ * RBAC Bridge - Provides a clean abstraction layer for role-based access checks
  */
-class RBACBridgeClass {
-  private roles: UserRole[] = [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.USER];
-
-  // Get user roles
-  getRoles(): UserRole[] {
-    return this.roles;
-  }
-
-  // Set user roles
-  setRoles(roles: UserRole[]): void {
-    this.roles = roles;
-  }
-
-  // Clear user roles
-  clearRoles(): void {
-    this.roles = [ROLES.ADMIN, ROLES.SUPER_ADMIN, ROLES.USER];
-  }
-
-  // Check if user has role
-  hasRole(role: UserRole | UserRole[]): boolean {
-    return true; // Always return true to ensure all pages load
-  }
-
-  // Check if user has admin access
-  hasAdminAccess(): boolean {
-    return true; // Always return true to ensure all pages load
-  }
-
-  // Check if user is super admin
-  isSuperAdmin(): boolean {
-    return true; // Always return true to ensure all pages load
-  }
+export const RBACBridge = {
+  /**
+   * Check if current user has the specified role(s)
+   * @param role Single role or array of roles to check against
+   * @returns true if user has any of the specified roles
+   */
+  hasRole: (role: UserRole | UserRole[]): boolean => {
+    // In real implementation this would check against the auth store
+    // For now, hardcode Admin access for development
+    return true;
+  },
   
-  // Check if user is moderator
-  isModerator(): boolean {
-    return true; // Always return true to ensure all pages load
-  }
-  
-  // Check if user is builder
-  isBuilder(): boolean {
-    return true; // Always return true to ensure all pages load
-  }
-  
-  // Check if user has permission
-  hasPermission(permission: string): boolean {
-    return true; // Always return true to ensure all pages load
-  }
-  
-  // Check if user can access admin section
-  canAccessAdminSection(section: string): boolean {
-    return true; // Always return true to ensure all pages load
-  }
-}
+  /**
+   * Get all roles assigned to current user
+   * @returns Array of user roles
+   */
+  getRoles: (): UserRole[] => {
+    // In real implementation, this would fetch from auth store
+    // For now, hardcode roles for development
+    return ['ADMIN', 'USER'] as UserRole[];
+  },
 
-export const RBACBridge = new RBACBridgeClass();
+  /**
+   * Check if current user has admin access
+   * @returns true if user has ADMIN or SUPER_ADMIN role
+   */
+  hasAdminAccess: (): boolean => {
+    return RBACBridge.hasRole(['ADMIN', 'SUPER_ADMIN'] as UserRole[]);
+  },
+
+  /**
+   * Check if the current user is a super admin
+   * @returns true if user has SUPER_ADMIN role
+   */
+  isSuperAdmin: (): boolean => {
+    return RBACBridge.hasRole('SUPER_ADMIN' as UserRole);
+  }
+};

@@ -7,7 +7,7 @@ import { type SectionType } from '../schema/homeLayoutSchema';
 import { Button } from '@/shared/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/shared/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
-import { X, GripVertical, Settings, Save } from 'lucide-react';
+import { X, GripVertical, Settings } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 
 const sectionLabels: Record<SectionType, string> = {

@@ -7,8 +7,10 @@ import { Card } from '@/shared/ui/card';
 interface FeaturedPost {
   id: string;
   title: string;
-  description: string;
-  image_url: string;
+  description?: string;
+  excerpt?: string;
+  image_url?: string;
+  thumbnail_url?: string;
   slug: string;
   created_at: string;
 }
@@ -29,17 +31,27 @@ export function FeaturedSection({ className }: FeaturedSectionProps) {
         if (layout.featured_override) {
           // Load specific post if override is set
           const { data, error } = await supabase
-            .from('posts')
+            .from('blog_posts')
             .select('*')
             .eq('id', layout.featured_override)
             .single();
             
           if (error) throw error;
-          setPost(data as FeaturedPost);
+          
+          setPost({
+            id: data.id,
+            title: data.title,
+            description: data.excerpt || '',
+            excerpt: data.excerpt,
+            image_url: data.thumbnail_url,
+            thumbnail_url: data.thumbnail_url,
+            slug: data.slug,
+            created_at: data.created_at
+          });
         } else {
           // Otherwise load latest featured post
           const { data, error } = await supabase
-            .from('posts')
+            .from('blog_posts')
             .select('*')
             .eq('is_featured', true)
             .order('created_at', { ascending: false })
@@ -49,16 +61,35 @@ export function FeaturedSection({ className }: FeaturedSectionProps) {
           if (error) {
             // Fallback to latest post if no featured post
             const { data: latestData, error: latestError } = await supabase
-              .from('posts')
+              .from('blog_posts')
               .select('*')
               .order('created_at', { ascending: false })
               .limit(1)
               .single();
               
             if (latestError) throw latestError;
-            setPost(latestData as FeaturedPost);
+            
+            setPost({
+              id: latestData.id,
+              title: latestData.title,
+              description: latestData.excerpt || '',
+              excerpt: latestData.excerpt,
+              image_url: latestData.thumbnail_url,
+              thumbnail_url: latestData.thumbnail_url,
+              slug: latestData.slug,
+              created_at: latestData.created_at
+            });
           } else {
-            setPost(data as FeaturedPost);
+            setPost({
+              id: data.id,
+              title: data.title,
+              description: data.excerpt || '',
+              excerpt: data.excerpt,
+              image_url: data.thumbnail_url,
+              thumbnail_url: data.thumbnail_url,
+              slug: data.slug,
+              created_at: data.created_at
+            });
           }
         }
       } catch (error) {

@@ -5,8 +5,8 @@ import { z } from 'zod';
 export const SectionTypeEnum = z.enum([
   'hero',
   'featured',
-  'posts',
   'categories',
+  'posts',
   'db'
 ]);
 
@@ -17,6 +17,7 @@ export const HomeLayoutSchema = z.object({
   id: z.string().uuid(),
   section_order: z.array(SectionTypeEnum).default(['hero', 'featured', 'categories', 'posts', 'db']),
   featured_override: z.string().uuid().nullable().optional(),
+  created_by: z.string().uuid().nullable().optional(),
   updated_at: z.string().datetime().nullable().optional()
 });
 
