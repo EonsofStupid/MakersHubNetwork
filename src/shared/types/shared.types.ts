@@ -38,7 +38,8 @@ export enum LogCategory {
   THEME = 'theme',
   ADMIN = 'admin',
   RBAC = 'rbac',
-  APP = 'app'
+  APP = 'app',
+  CHAT = 'chat'
 }
 
 // Log details interface
@@ -80,6 +81,7 @@ export interface UserData {
   last_sign_in_at?: string;
   user_metadata?: Record<string, any>;
   bio?: string;
+  roles?: UserRole[];
 }
 
 export type UserProfile = UserData;
@@ -89,11 +91,27 @@ export type Permission = string;
 
 // Theme effect types
 export enum ThemeEffectType {
+  NONE = 'NONE',
   CYBER = 'CYBER',
   GLITCH = 'GLITCH',
   NEON = 'NEON',
   MATRIX = 'MATRIX',
-  NONE = 'NONE'
+  BLUR = 'BLUR',
+  MORPH = 'MORPH',
+  GRAIN = 'GRAIN',
+  NOISE = 'NOISE',
+  GRADIENT = 'GRADIENT',
+  PULSE = 'PULSE',
+  PARTICLE = 'PARTICLE',
+  GLOW = 'GLOW',
+  SHADOW = 'SHADOW'
+}
+
+// Theme effect interface
+export interface ThemeEffect {
+  type: ThemeEffectType;
+  intensity?: number;
+  enabled: boolean;
 }
 
 // Auth event type
@@ -103,6 +121,19 @@ export enum AuthEventType {
   TOKEN_REFRESHED = 'TOKEN_REFRESHED',
   PASSWORD_RECOVERY = 'PASSWORD_RECOVERY',
   USER_UPDATED = 'USER_UPDATED'
+}
+
+// Log event type
+export interface LogEvent {
+  timestamp: string;
+  level: LogLevel;
+  category: LogCategory;
+  message: string;
+  details?: LogDetails;
+}
+
+export interface LogEntry extends LogEvent {
+  id: string;
 }
 
 // RBAC constants to use for role checks

@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { FeaturesSection } from '../components/landing/FeaturesSection';
-import { ThemeEffectProvider } from '../theme/ThemeEffectProvider';
 import { ThemeEffectType } from '@/shared/types/shared.types';
 import { cn } from '@/shared/utils/cn';
 
@@ -54,15 +53,7 @@ export default function HomePage() {
       </section>
 
       {/* Features section */}
-      <ThemeEffectProvider 
-        effect={{
-          type: ThemeEffectType.CYBER,
-          intensity: 1,
-          enabled: true
-        }}
-      >
-        <FeaturesSection />
-      </ThemeEffectProvider>
+      <FeaturesSection />
 
       {/* Showcase section */}
       <section className="py-16 px-4">

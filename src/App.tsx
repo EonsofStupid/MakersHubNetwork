@@ -5,12 +5,14 @@ import Routes from './router/Routes';
 import { MainNav } from './app/layout/MainNav';
 import { Footer } from './app/components/Footer';
 import { Toaster } from './shared/ui/toaster';
+import { AppBootstrap } from './app/bootstrap/AppBootstrap';
 import './styles/cyberpunk.css';
 import './index.css';
 
 function App() {
   return (
     <BrowserRouter>
+      <AppBootstrap />
       <div className="min-h-screen flex flex-col bg-black text-white">
         <MainNav />
         <main className="flex-1 mt-16">

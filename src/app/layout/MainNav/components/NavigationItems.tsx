@@ -2,7 +2,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/shared/utils/cn";
-import { motion } from "framer-motion";
 
 interface NavItem {
   name: string;
@@ -47,14 +46,8 @@ export function NavigationItems() {
             
             {/* Animated underline indicator */}
             {isActive && (
-              <motion.span
+              <span
                 className={cn(styles.navItemActiveIndicator, "bg-primary")}
-                layoutId="navigation-underline"
-                transition={{
-                  type: "spring",
-                  stiffness: 500,
-                  damping: 30,
-                }}
               />
             )}
             

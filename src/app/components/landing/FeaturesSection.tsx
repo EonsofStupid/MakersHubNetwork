@@ -1,77 +1,99 @@
 
-import React from 'react';
-import { FeatureCta, FeatureCtaProps } from './FeatureCta';
-import { Code, Globe, Rocket, Sparkles, Zap, Gem } from 'lucide-react';
-import { cn } from '@/shared/utils/cn';
+import { useState } from "react";
+import { cn } from "@/shared/utils/cn";
+import { ThemeEffectType } from "@/shared/types/shared.types";
+
+const features = [
+  {
+    title: "Build Showcase",
+    description: "Share your 3D printing projects with the community and get feedback from fellow enthusiasts.",
+    icon: "🖨️",
+  },
+  {
+    title: "Model Library",
+    description: "Access thousands of 3D models contributed by our community members and partners.",
+    icon: "📚",
+  },
+  {
+    title: "Tech Support",
+    description: "Get help with your printer issues from experienced makers through our support forums.",
+    icon: "🛠️",
+  },
+  {
+    title: "Learning Resources",
+    description: "Access tutorials, guides, and courses to improve your 3D printing skills.",
+    icon: "📝",
+  },
+  {
+    title: "Materials Database",
+    description: "Comprehensive information on filaments, resins, and other printing materials.",
+    icon: "🧪",
+  },
+  {
+    title: "Live Events",
+    description: "Join virtual meetups, conferences, and competitions with the 3D printing community.",
+    icon: "🎭",
+  },
+];
 
 export function FeaturesSection() {
-  const styles = {
-    container: "py-16 bg-background/30 backdrop-blur-sm relative",
-    title: "text-3xl font-bold text-center mb-12",
-    grid: "grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4",
-  };
-  
-  const features: Omit<FeatureCtaProps, 'id'>[] = [
-    {
-      title: "Build Showcase",
-      description: "Show off your 3D printer builds with detailed specifications and high-quality images.",
-      icon: <Sparkles className="h-6 w-6" />,
-      ctaText: "Show Your Build",
-      ctaLink: "/builds/create"
-    },
-    {
-      title: "Community Support",
-      description: "Get help with your builds from a community of passionate makers.",
-      icon: <Globe className="h-6 w-6" />,
-      ctaText: "Join Community",
-      ctaLink: "/community"
-    },
-    {
-      title: "Firmware Customization",
-      description: "Share and discover custom firmware configurations for popular 3D printers.",
-      icon: <Code className="h-6 w-6" />,
-      ctaText: "Explore Firmware",
-      ctaLink: "/firmware"
-    },
-    {
-      title: "Part Marketplace",
-      description: "Find upgrades and replacement parts specifically for your printer model.",
-      icon: <Gem className="h-6 w-6" />,
-      ctaText: "Find Parts",
-      ctaLink: "/parts"
-    },
-    {
-      title: "Print Troubleshooting",
-      description: "Solve common printing issues with our troubleshooting guides and community advice.",
-      icon: <Zap className="h-6 w-6" />,
-      ctaText: "Fix Issues",
-      ctaLink: "/troubleshooting"
-    },
-    {
-      title: "Build Guides",
-      description: "Step-by-step guides for popular printer builds and modifications.",
-      icon: <Rocket className="h-6 w-6" />,
-      ctaText: "View Guides",
-      ctaLink: "/guides"
-    }
-  ];
+  const [activeFeature, setActiveFeature] = useState(0);
 
   return (
-    <section className={cn(styles.container)}>
-      <h2 className={cn(styles.title)}>Unleash Your 3D Printing Potential</h2>
-      <div className={cn(styles.grid)}>
-        {features.map((feature, index) => (
-          <FeatureCta
-            key={index}
-            id={`feature-${index}`}
-            title={feature.title}
-            description={feature.description}
-            icon={feature.icon}
-            ctaText={feature.ctaText}
-            ctaLink={feature.ctaLink}
-          />
-        ))}
+    <section className="py-16 px-4 bg-black/30 relative overflow-hidden">
+      <div className="container mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-3 cyber-text">Community Features</h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Join our global community of 3D printing enthusiasts and access these amazing features
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
+          {/* Features list */}
+          <div className="lg:col-span-1 space-y-4">
+            {features.map((feature, index) => (
+              <button
+                key={index}
+                className={cn(
+                  "text-left p-4 w-full rounded-lg transition-all duration-300",
+                  "hover:bg-primary/10 border border-transparent",
+                  activeFeature === index
+                    ? "bg-primary/20 border-primary/30 cyber-glow"
+                    : "hover:border-primary/10"
+                )}
+                onClick={() => setActiveFeature(index)}
+              >
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">{feature.icon}</span>
+                  <h3 className="font-medium text-primary">{feature.title}</h3>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Feature showcase */}
+          <div className="lg:col-span-2 bg-black/20 p-6 rounded-xl border border-primary/20 relative overflow-hidden min-h-[400px] flex items-center justify-center">
+            {/* Animated background */}
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent z-0"></div>
+              <div className="absolute w-full h-1 bottom-0 left-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
+              <div className="absolute w-1 h-full top-0 right-0 bg-gradient-to-b from-transparent via-primary/30 to-transparent"></div>
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10 text-center p-8 max-w-md mx-auto">
+              <span className="text-5xl mb-4 block">{features[activeFeature].icon}</span>
+              <h3 className="text-2xl font-bold mb-4 cyber-text">{features[activeFeature].title}</h3>
+              <p className="text-muted-foreground">{features[activeFeature].description}</p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Decorative elements */}
+      <div className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full bg-primary/10 blur-xl"></div>
+      <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-secondary/10 blur-xl"></div>
     </section>
   );
 }
