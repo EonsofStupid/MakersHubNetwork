@@ -1,16 +1,15 @@
 import { create } from 'zustand';
-import { UserProfile, AuthStatus, AUTH_STATUS, UserRole } from '@/shared/types/core/auth.types';
+import { UserProfile, AuthStatus, AUTH_STATUS } from '@/shared/types/core/auth.types';
 import { mapUserToProfile } from '@/auth/utils/userMapper';
 import { supabase } from '@/integrations/supabase/client';
 
-// RBAC State
 export interface AuthState {
   user: UserProfile | null;
   profile: UserProfile | null;
   isAuthenticated: boolean;
   status: AuthStatus;
   error: Error | null;
-  roles: UserRole[];
+  roles: string[];
   initialized: boolean;
   
   // Actions
@@ -25,7 +24,6 @@ export interface AuthState {
   updateProfile: (profileData: Partial<UserProfile>) => Promise<void>;
 }
 
-// Initial state
 const initialState = {
   user: null,
   profile: null,
@@ -36,7 +34,6 @@ const initialState = {
   initialized: false
 };
 
-// RBAC Store
 export const useAuthStore = create<AuthState>((set, get) => ({
   ...initialState,
 
@@ -155,7 +152,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ status: AUTH_STATUS.LOADING });
       
-      // Get session from supabase
       const { data, error } = await supabase.auth.getSession();
       
       if (error) throw error;
@@ -163,7 +159,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (data.session?.user) {
         const userProfile = mapUserToProfile(data.session.user);
         
-        // Get user roles if available
         const roles = userProfile.roles || [];
         
         set({ 
@@ -209,7 +204,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       if (error) throw error;
       
-      // Update local state
       set(state => ({
         user: state.user ? { ...state.user, ...profileData } : null,
         profile: state.profile ? { ...state.profile, ...profileData } : null

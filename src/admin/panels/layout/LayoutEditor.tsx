@@ -14,7 +14,7 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
     name: 'New Layout',
     components: {},
     layout: [],
-    type: 'page' as LayoutComponentType,
+    type: 'page',
     scope: 'site'
   });
   
@@ -23,14 +23,8 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
   const handleComponentUpdate = () => {
     setLayout((prev: Layout) => ({
       ...prev,
-      type: prev.type,
-      id: prev.id,
-      name: prev.name,
-      description: prev.description,
       components: prev.components,
-      layout: prev.layout,
-      meta: prev.meta,
-      scope: prev.scope
+      layout: prev.layout
     }));
   };
   
@@ -83,7 +77,7 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
               id="layout-name"
               type="text"
               value={layout.name}
-              onChange={handleNameChange}
+              onChange={(e) => setLayout(prev => ({ ...prev, name: e.target.value }))}
               className="px-3 py-2 border rounded-md w-full"
             />
           </div>
@@ -91,8 +85,8 @@ export function LayoutEditor({ initialLayout, onSave }: LayoutEditorProps) {
             <label htmlFor="layout-type" className="block text-sm mb-1">Type</label>
             <select
               id="layout-type"
-              value={layout.type || 'page'}
-              onChange={(e) => setLayout(prev => ({ ...prev, type: e.target.value }))}
+              value={layout.type}
+              onChange={(e) => setLayout(prev => ({ ...prev, type: e.target.value as LayoutComponentType }))}
               className="px-3 py-2 border rounded-md w-full"
             >
               <option value="page">Page</option>

@@ -1,5 +1,5 @@
 
-import { LogDetails } from '@/shared/types/shared.types';
+import { LogDetails } from '../core/logging.types';
 
 // Theme status enum
 export enum ThemeStatus {
@@ -15,7 +15,34 @@ export enum ThemeContext {
   APP = 'APP'
 }
 
-// Theme variables interface
+// Theme effect type enum
+export enum ThemeEffectType {
+  NONE = 'none',
+  CYBER = 'cyber',
+  NEON = 'neon',
+  ELECTRIC = 'electric',
+  GLITCH = 'glitch',
+  SYNTHWAVE = 'synthwave',
+  HOLOGRAM = 'hologram',
+  BLUR = 'blur',
+  MORPH = 'morph',
+  NOISE = 'noise',
+  GRADIENT = 'gradient',
+  PULSE = 'pulse',
+  PARTICLE = 'particle',
+  GRAIN = 'grain',
+  GLOW = 'glow',
+  SHADOW = 'shadow'
+}
+
+export interface ThemeEffect {
+  type: ThemeEffectType;
+  intensity: number;
+  enabled: boolean;
+  color?: string;
+  [key: string]: any;
+}
+
 export interface ThemeVariables {
   background: string;
   foreground: string;
@@ -49,10 +76,9 @@ export interface ThemeVariables {
   radiusFull: string;
 }
 
-// Design tokens interface
 export interface DesignTokens {
   colors?: Record<string, string>;
-  typography?: Record<string, any>;
+  typography?: any;
   spacing?: Record<string, string>;
   borders?: Record<string, string>;
   shadows?: Record<string, string>;
@@ -64,12 +90,10 @@ export interface DesignTokens {
   [key: string]: any;
 }
 
-// Component tokens interface
 export interface ComponentTokens {
   [componentName: string]: Record<string, string>;
 }
 
-// Theme interface
 export interface Theme {
   id: string;
   name: string;
@@ -87,7 +111,6 @@ export interface Theme {
   createdBy?: string;
 }
 
-// Theme state interface
 export interface ThemeState {
   themes: Theme[];
   activeThemeId: string | null;
@@ -104,32 +127,8 @@ export interface ThemeState {
   variables: Record<string, string>;
   componentStyles: Record<string, any>;
   animations: Record<string, any>;
-}
-
-export interface ThemeEffect {
-  type: ThemeEffectType;
-  intensity: number;
-  color?: string;
-  enabled?: boolean;
-  [key: string]: any;
-}
-
-// Theme effect type enum
-export enum ThemeEffectType {
-  NONE = 'none',
-  CYBER = 'cyber',
-  NEON = 'neon',
-  ELECTRIC = 'electric',
-  GLITCH = 'glitch',
-  SYNTHWAVE = 'synthwave',
-  HOLOGRAM = 'hologram',
-  BLUR = 'blur',
-  MORPH = 'morph',
-  NOISE = 'noise',
-  GRADIENT = 'gradient',
-  PULSE = 'pulse',
-  PARTICLE = 'particle',
-  GRAIN = 'grain',
-  GLOW = 'glow',
-  SHADOW = 'shadow'
+  effects: ThemeEffect[];
+  setEffects: (effects: ThemeEffect[]) => void;
+  setVariables: (vars: Record<string, string>) => void;
+  setComponentTokens: (tokens: ComponentTokens) => void;
 }

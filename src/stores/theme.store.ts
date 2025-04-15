@@ -1,15 +1,16 @@
 import { create } from 'zustand';
-import { Theme } from '@/shared/types/features/theme.types';
+import { Theme, ThemeState, ThemeStatus, ThemeContext } from '@/shared/types/features/theme.types';
+import { LogLevel, LogCategory } from '@/shared/types/core/logging.types';
+import { logger } from '@/logging/logger.service';
 
-// Example theme
-const exampleTheme: Theme = {
+const defaultTheme: Theme = {
   id: 'default',
   name: 'Default Theme',
   label: 'Default',
   description: 'Default theme',
   isDark: false,
-  status: 'active',
-  context: 'site',
+  status: ThemeStatus.ACTIVE,
+  context: ThemeContext.SITE,
   variables: {
     background: '#ffffff',
     foreground: '#000000',
@@ -74,21 +75,20 @@ const exampleTheme: Theme = {
   }
 };
 
-// Initial state with properly typed theme
-const initialState = {
-  theme: exampleTheme,
-  themes: [exampleTheme],
-  activeThemeId: exampleTheme.id,
-  isDark: exampleTheme.isDark,
-  primaryColor: exampleTheme.variables.primary,
-  backgroundColor: exampleTheme.variables.background,
-  textColor: exampleTheme.variables.foreground,
-  designTokens: exampleTheme.designTokens,
-  componentTokens: exampleTheme.componentTokens,
+const initialState: ThemeState = {
+  theme: defaultTheme,
+  themes: [defaultTheme],
+  activeThemeId: defaultTheme.id,
+  isDark: defaultTheme.isDark,
+  primaryColor: defaultTheme.variables.primary,
+  backgroundColor: defaultTheme.variables.background,
+  textColor: defaultTheme.variables.foreground,
+  designTokens: defaultTheme.designTokens,
+  componentTokens: defaultTheme.componentTokens,
   isLoading: false,
   error: null,
   isLoaded: true,
-  variables: exampleTheme.variables,
+  variables: defaultTheme.variables,
   componentStyles: {},
   animations: {}
 };
