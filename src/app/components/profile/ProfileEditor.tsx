@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
-import { LogCategory, LogLevel } from '@/shared/types';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/shared/ui';
+import { LogCategory, LogLevel } from '@/shared/types/shared.types';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/shared/ui/card';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -26,7 +26,7 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
   const displayName = user?.name || userMetadata.full_name || '';
   const bio = userMetadata.bio || '';
   const avatarUrl = user?.avatar_url || userMetadata.avatar_url || '';
-  const locationValue = userMetadata.location || ''; // Renamed to avoid conflict
+  const locationValue = userMetadata.location || '';
   const website = userMetadata.website || '';
   
   const [formData, setFormData] = useState({

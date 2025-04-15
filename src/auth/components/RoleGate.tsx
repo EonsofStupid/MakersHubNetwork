@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useAuth } from '@/auth/hooks/useAuth';
-import { UserRole, RBAC } from '@/shared/types/shared.types';
+import { UserRole, ROLES } from '@/shared/types/shared.types';
 
 interface RoleGateProps {
   children: React.ReactNode;
@@ -38,7 +38,7 @@ export const AdminGate: React.FC<Omit<RoleGateProps, 'allowedRoles'>> = ({
   fallback = null 
 }) => {
   return (
-    <RoleGate allowedRoles={RBAC.ADMIN_ONLY} fallback={fallback}>
+    <RoleGate allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]} fallback={fallback}>
       {children}
     </RoleGate>
   );
@@ -52,7 +52,7 @@ export const SuperAdminGate: React.FC<Omit<RoleGateProps, 'allowedRoles'>> = ({
   fallback = null 
 }) => {
   return (
-    <RoleGate allowedRoles={RBAC.SUPER_ADMINS} fallback={fallback}>
+    <RoleGate allowedRoles={[ROLES.SUPER_ADMIN]} fallback={fallback}>
       {children}
     </RoleGate>
   );

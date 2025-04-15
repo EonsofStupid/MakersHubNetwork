@@ -23,14 +23,14 @@ export const ROLES = {
 
 // RBAC constants for role-based policies
 export const RBAC = {
-  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  SUPER_ADMINS: [ROLES.SUPER_ADMIN],
-  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN],
-  AUTHENTICATED: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN]
+  ADMIN_ONLY: [ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[],
+  SUPER_ADMINS: [ROLES.SUPER_ADMIN] as UserRole[],
+  MODERATORS: [ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[],
+  BUILDERS: [ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[],
+  AUTHENTICATED: [ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN] as UserRole[]
 } as const;
 
-export type UserRole = keyof typeof ROLES;
+export type UserRole = typeof ROLES[keyof typeof ROLES];
 
 // User profile type
 export interface UserProfile {
@@ -76,6 +76,7 @@ export const ThemeEffectType = {
 } as const;
 
 export type ThemeEffectTypeValue = typeof ThemeEffectType[keyof typeof ThemeEffectType];
+export type ThemeEffect = ThemeEffectTypeValue;
 
 // Logging types
 export const LogCategory = {
@@ -90,15 +91,60 @@ export const LogCategory = {
   THEME: 'THEME',
   RBAC: 'RBAC',
   SYSTEM: 'SYSTEM',
-  CHAT: 'CHAT'  // Add missing CHAT category
+  CHAT: 'CHAT',
+  DEBUG: 'DEBUG'
 } as const;
+
+export type LogCategoryType = typeof LogCategory[keyof typeof LogCategory];
 
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
   WARN = 2,
   ERROR = 3,
-  CRITICAL = 4
+  CRITICAL = 4,
+  TRACE = -1,
+  SUCCESS = 5,
+  FATAL = 6,
+  SILENT = 100
+}
+
+export interface LogDetails {
+  source?: string;
+  moduleId?: string;
+  moduleName?: string;
+  path?: string;
+  errorMessage?: string;
+  required?: string;
+  requiredPerm?: string;
+  eventType?: string;
+  [key: string]: unknown;
+}
+
+export interface LogEntry {
+  id: string;
+  level: LogLevel;
+  category: LogCategoryType;
+  message: string;
+  timestamp: number;
+  details?: LogDetails;
+}
+
+export interface LogEvent {
+  entry: LogEntry;
+}
+
+export interface LogFilter {
+  level?: LogLevel;
+  category?: LogCategoryType;
+  from?: number;
+  to?: number;
+  search?: string;
+}
+
+export interface LogTransport {
+  log: (entry: LogEntry) => void;
+  setMinLevel: (level: LogLevel) => void;
 }
 
 export interface ThemeLogDetails {
@@ -128,6 +174,7 @@ export interface ThemeToken {
   token_value?: string;
   type?: string;
   keyframes?: string;
+  description?: string;
 }
 
 export interface ThemeComponent {

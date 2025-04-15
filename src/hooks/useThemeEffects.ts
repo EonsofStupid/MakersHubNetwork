@@ -1,74 +1,54 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { useCallback } from 'react';
+import { useThemeStore } from '@/stores/theme.store';
 import { ThemeEffectType, ThemeEffect } from '@/shared/types/shared.types';
 
 /**
  * Hook for managing theme effects
  */
-export function useThemeEffects() {
-  const [effects, setEffects] = useState<Record<string, ThemeEffect>>({});
+export const useThemeEffects = () => {
+  // Access theme store
+  const effects = useThemeStore(state => state.effects);
+  const setEffects = useThemeStore(state => state.setEffects);
   
-  // Add a new effect
-  const addEffect = useCallback((elementId: string, effect: Partial<ThemeEffect>) => {
-    const id = `${elementId}-${Date.now()}`;
-    const newEffect: ThemeEffect = {
-      id,
-      type: effect.type || ThemeEffectType.NONE,
-      enabled: effect.enabled !== undefined ? effect.enabled : true,
-      intensity: effect.intensity || 1,
-      selector: effect.selector,
-      config: effect.config,
-      color: effect.color
-    };
-    
-    setEffects(prev => ({
-      ...prev,
-      [id]: newEffect
-    }));
-    
-    return id;
-  }, []);
-  
-  // Remove an effect by ID
-  const removeEffect = useCallback((effectId: string) => {
-    setEffects(prev => {
-      const { [effectId]: _, ...rest } = prev;
-      return rest;
-    });
-  }, []);
-  
-  // Get effects as an array
-  const getEffects = useCallback(() => {
-    return Object.values(effects);
+  // Check if an effect is active
+  const hasEffect = useCallback((effect: ThemeEffect): boolean => {
+    return effects.includes(effect);
   }, [effects]);
   
-  // Get a specific effect by ID
-  const getEffect = useCallback((effectId: string) => {
-    return effects[effectId];
-  }, [effects]);
+  // Add a theme effect
+  const addEffect = useCallback((effect: ThemeEffect) => {
+    if (!effects.includes(effect)) {
+      setEffects([...effects, effect]);
+    }
+  }, [effects, setEffects]);
   
-  // Update an existing effect
-  const updateEffect = useCallback((effectId: string, updates: Partial<ThemeEffect>) => {
-    setEffects(prev => {
-      if (!prev[effectId]) return prev;
-      
-      return {
-        ...prev,
-        [effectId]: {
-          ...prev[effectId],
-          ...updates
-        }
-      };
-    });
-  }, []);
+  // Remove a theme effect
+  const removeEffect = useCallback((effect: ThemeEffect) => {
+    setEffects(effects.filter(e => e !== effect));
+  }, [effects, setEffects]);
+  
+  // Toggle a theme effect
+  const toggleEffect = useCallback((effect: ThemeEffect) => {
+    if (effects.includes(effect)) {
+      removeEffect(effect);
+    } else {
+      addEffect(effect);
+    }
+  }, [effects, addEffect, removeEffect]);
+  
+  // Clear all effects
+  const clearEffects = useCallback(() => {
+    setEffects([]);
+  }, [setEffects]);
   
   return {
+    effects,
+    hasEffect,
     addEffect,
     removeEffect,
-    getEffects,
-    getEffect,
-    updateEffect,
-    effects
+    toggleEffect,
+    clearEffects,
+    EFFECTS: ThemeEffectType
   };
-}
+};

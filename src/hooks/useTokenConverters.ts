@@ -1,44 +1,96 @@
 
 import { useCallback } from 'react';
-import { ThemeToken, ComponentTokens } from '@/types/theme';
+import { ThemeToken } from '@/shared/types/shared.types';
 
 /**
- * Hook to convert theme tokens to arrays for easier rendering
+ * Hook for converting theme tokens to various formats
  */
-export function useTokenConverters() {
-  /**
-   * Convert design tokens object to array format for display
-   */
-  const convertDesignTokensToArray = useCallback((tokens?: Record<string, ThemeToken>) => {
-    if (!tokens) return [];
+export const useTokenConverters = () => {
+  // Convert theme tokens to CSS variables
+  const tokensToCssVars = useCallback((tokens: ThemeToken[]): Record<string, string> => {
+    const cssVars: Record<string, string> = {};
     
-    return Object.entries(tokens).map(([key, token]) => ({
-      name: key,
-      value: token.value,
-      type: token.type,
-      description: token.description || ''
-    }));
+    tokens.forEach(token => {
+      if (token.name && token.value) {
+        cssVars[`--${token.name}`] = token.value;
+      } else if (token.token_name && token.token_value) {
+        cssVars[`--${token.token_name}`] = token.token_value;
+      }
+    });
+    
+    return cssVars;
   }, []);
   
-  /**
-   * Convert component tokens to array format for display
-   */
-  const convertComponentTokensToArray = useCallback((components?: Record<string, ComponentTokens>) => {
-    if (!components) return [];
+  // Convert theme tokens to a simpler record
+  const tokensToRecord = useCallback((tokens: ThemeToken[]): Record<string, string> => {
+    const record: Record<string, string> = {};
     
-    return Object.entries(components).map(([key, component]) => ({
-      id: key,
-      name: component.name,
-      description: component.description || '',
-      tokens: Object.entries(component.tokens).map(([tokenKey, value]) => ({
-        name: tokenKey,
-        value
-      }))
-    }));
+    tokens.forEach(token => {
+      const name = token.name || token.token_name;
+      const value = token.value || token.token_value;
+      const description = token.description;
+      
+      if (name && value) {
+        record[name] = value;
+      }
+    });
+    
+    return record;
+  }, []);
+  
+  // Convert theme tokens to tailwind config format
+  const tokensToTailwindConfig = useCallback((tokens: ThemeToken[]): any => {
+    const config: Record<string, Record<string, string>> = {
+      colors: {},
+      spacing: {},
+      fontFamily: {},
+      fontSize: {},
+      borderRadius: {},
+      boxShadow: {},
+      animation: {}
+    };
+    
+    tokens.forEach(token => {
+      const name = token.name || token.token_name;
+      const value = token.value || token.token_value;
+      const type = token.type || '';
+      
+      if (!name || !value) return;
+      
+      switch (type.toLowerCase()) {
+        case 'color':
+          config.colors[name] = value;
+          break;
+        case 'spacing':
+          config.spacing[name] = value;
+          break;
+        case 'font-family':
+          config.fontFamily[name] = value;
+          break;
+        case 'font-size':
+          config.fontSize[name] = value;
+          break;
+        case 'border-radius':
+          config.borderRadius[name] = value;
+          break;
+        case 'box-shadow':
+          config.boxShadow[name] = value;
+          break;
+        case 'animation':
+          config.animation[name] = value;
+          break;
+        default:
+          // Handle other token types
+          break;
+      }
+    });
+    
+    return config;
   }, []);
   
   return {
-    convertDesignTokensToArray,
-    convertComponentTokensToArray
+    tokensToCssVars,
+    tokensToRecord,
+    tokensToTailwindConfig
   };
-}
+};

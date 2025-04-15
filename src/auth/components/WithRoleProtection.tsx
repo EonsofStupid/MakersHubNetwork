@@ -2,7 +2,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/auth/hooks/useAuth';
-import { UserRole, RBAC } from '@/shared/types/shared.types';
+import { UserRole, ROLES } from '@/shared/types/shared.types';
 
 interface WithRoleProtectionProps {
   children: React.ReactNode;
@@ -37,27 +37,27 @@ export default function WithRoleProtection({
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   
   // Check for admin access
-  if (roles.includes('ADMIN' as UserRole) && hasRole(RBAC.ADMIN_ONLY)) {
+  if (roles.includes(ROLES.ADMIN) && hasRole([ROLES.ADMIN, ROLES.SUPER_ADMIN])) {
     return <>{children}</>;
   }
   
   // Check for super admin access
-  if (roles.includes('SUPER_ADMIN' as UserRole) && hasRole(RBAC.SUPER_ADMINS)) {
+  if (roles.includes(ROLES.SUPER_ADMIN) && hasRole([ROLES.SUPER_ADMIN])) {
     return <>{children}</>;
   }
   
   // Check for moderator access
-  if (roles.includes('MODERATOR' as UserRole) && hasRole(RBAC.MODERATORS)) {
+  if (roles.includes(ROLES.MODERATOR) && hasRole([ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN])) {
     return <>{children}</>;
   }
   
   // Check for builder access
-  if (roles.includes('BUILDER' as UserRole) && hasRole(RBAC.BUILDERS)) {
+  if (roles.includes(ROLES.BUILDER) && hasRole([ROLES.BUILDER, ROLES.ADMIN, ROLES.SUPER_ADMIN])) {
     return <>{children}</>;
   }
   
   // Check for user access
-  if (roles.includes('USER' as UserRole) && hasRole(RBAC.AUTHENTICATED)) {
+  if (roles.includes(ROLES.USER) && hasRole([ROLES.USER, ROLES.BUILDER, ROLES.MODERATOR, ROLES.ADMIN, ROLES.SUPER_ADMIN])) {
     return <>{children}</>;
   }
   

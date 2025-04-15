@@ -1,36 +1,42 @@
 
-import { ThemeEffectType } from './shared.types';
+import { ThemeToken, ThemeComponent } from './shared.types';
 
-// Theme effect interface
-export interface ThemeEffect {
-  type: ThemeEffectType;
-  intensity?: number;
-  enabled: boolean;
+export interface ThemeStoreState {
+  theme: string;
+  variables: Record<string, string>;
+  componentTokens: Record<string, Record<string, string>>;
+  isDark: boolean;
+  isLoading: boolean;
+  effects: string[];
+  error: string | null;
+  
+  // Actions
+  setTheme: (theme: string) => Promise<void>;
+  setVariables: (variables: Record<string, string>) => void;
+  setComponentTokens: (tokens: Record<string, Record<string, string>>) => void;
+  setDarkMode: (isDark: boolean) => void;
+  setEffects: (effects: string[]) => void;
+  setError: (error: string | null) => void;
 }
 
-// Theme component tokens
-export interface ComponentTokens {
-  [componentName: string]: Record<string, string>;
+export interface ThemeServiceResponse {
+  success: boolean;
+  theme?: {
+    id: string;
+    name: string;
+    label?: string;
+    description?: string;
+    tokens?: ThemeToken[];
+    components?: ThemeComponent[];
+    isDark?: boolean;
+  };
+  error?: string;
 }
 
-// Theme interface
-export interface Theme {
-  id: string;
-  name: string;
-  tokens: Record<string, string>;
-  components?: ComponentTokens;
+export interface TokenMap {
+  [key: string]: string;
 }
 
-export interface ThemeToken {
-  name: string;
-  value: string;
-  category: string;
+export interface ComponentTokenMap {
+  [component: string]: TokenMap;
 }
-
-export interface ThemeComponent {
-  name: string;
-  tokens: Record<string, string>;
-}
-
-// Re-exporting for backward compatibility
-export type { ThemeEffect, ComponentTokens, Theme, ThemeToken, ThemeComponent };

@@ -89,6 +89,15 @@ class RBACBridgeClass {
     
     return false;
   }
+  
+  /**
+   * Check if user can access admin section
+   * @param section Optional specific admin section
+   * @returns True if user can access the admin section
+   */
+  canAccessAdminSection(section?: string): boolean {
+    return this.hasAdminAccess();
+  }
 }
 
 export const RBACBridge = new RBACBridgeClass();

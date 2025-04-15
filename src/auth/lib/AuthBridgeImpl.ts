@@ -42,6 +42,11 @@ class AuthBridgeClass {
     return { user: this.getUser(), error: null };
   }
   
+  // Alias for signInWithEmail for compatibility
+  async signIn(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
+    return this.signInWithEmail(email, password);
+  }
+  
   async signUp(email: string, password: string): Promise<{ user: UserProfile | null; error: Error | null }> {
     return { user: this.getUser(), error: null };
   }

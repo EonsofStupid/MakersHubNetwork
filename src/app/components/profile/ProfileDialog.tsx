@@ -44,7 +44,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({
               Edit Profile
             </h2>
 
-            <ProfileEditor onClose={onClose} />
+            <ProfileEditor onSave={onClose} onCancel={onClose} />
           </div>
         </motion.div>
       </DialogContent>

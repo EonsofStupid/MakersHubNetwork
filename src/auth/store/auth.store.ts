@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { UserProfile, AuthStatus, AUTH_STATUS } from '@/shared/types/shared.types';
+import { UserProfile, AuthStatus, AUTH_STATUS, UserRole } from '@/shared/types/shared.types';
 import { mapUserToProfile } from '@/auth/utils/userMapper';
 import { supabase } from '@/integrations/supabase/client';
 
