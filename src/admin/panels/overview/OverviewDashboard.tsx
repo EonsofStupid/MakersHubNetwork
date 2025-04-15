@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
@@ -6,12 +5,11 @@ import { ROLES, UserRole } from '@/shared/types/shared.types';
 import { useLogger } from '@/hooks/use-logger';
 import { LogCategory } from '@/shared/types/shared.types';
 
-export function OverviewDashboard() {
+const OverviewDashboard = () => {
   const { user, isAuthenticated } = useAuthStore();
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const logger = useLogger('OverviewDashboard', LogCategory.ADMIN);
   
-  // Get user roles from RBAC bridge
   useEffect(() => {
     if (isAuthenticated) {
       const roles = RBACBridge.getRoles();
@@ -20,7 +18,7 @@ export function OverviewDashboard() {
     }
   }, [isAuthenticated, logger]);
   
-  const isSuperAdmin = RBACBridge.hasRole(ROLES.SUPER_ADMIN);
+  const isSuperAdmin = RBACBridge.hasRole(ROLES.super_admin);
   
   return (
     <div className="container py-6">
@@ -68,4 +66,6 @@ export function OverviewDashboard() {
       )}
     </div>
   );
-}
+};
+
+export default OverviewDashboard;

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
@@ -9,7 +8,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Search, UserPlus, Filter, MoreHorizontal, Trash2, UserCog, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/shared/ui/use-toast";
-import { UserRole, ROLES } from "@/shared/types/shared.types";
+import { UserRole, ROLES } from "@/shared/types/core/auth.types";
 
 interface UserData {
   id: string;
@@ -237,7 +236,7 @@ export default function UsersManagement() {
                             </td>
                             <td className="p-4">
                               <Badge variant="outline" className={getRoleBadgeStyle(user.role)}>
-                                {user.role === ROLES.SUPER_ADMIN && <Shield className="mr-1 h-3 w-3" />}
+                                {user.role === ROLES.super_admin && <Shield className="mr-1 h-3 w-3" />}
                                 {user.role.replace('_', ' ')}
                               </Badge>
                             </td>

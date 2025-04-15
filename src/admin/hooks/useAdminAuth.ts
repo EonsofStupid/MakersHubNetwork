@@ -2,7 +2,8 @@
 import { useCallback } from 'react';
 import { useAuthStore } from '@/auth/store/auth.store';
 import { RBACBridge } from '@/rbac/bridge';
-import { AUTH_STATUS, LogCategory } from '@/shared/types/core/auth.types';
+import { AUTH_STATUS } from '@/shared/types/core/auth.types';
+import { LogCategory } from '@/shared/types/core/logging.types';
 import { useLogger } from '@/hooks/use-logger';
 
 /**

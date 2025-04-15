@@ -28,7 +28,7 @@ function SidebarItem({ to, label, icon, current }: SidebarItemProps) {
   );
 }
 
-export function AdminSidebar() {
+const AdminSidebar: React.FC = () => {
   const location = useLocation();
   
   const hasAdminAccess = RBACBridge.hasAdminAccess();
@@ -70,4 +70,6 @@ export function AdminSidebar() {
       </nav>
     </div>
   );
-}
+};
+
+export default AdminSidebar;

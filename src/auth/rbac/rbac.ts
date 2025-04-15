@@ -1,5 +1,5 @@
 
-import { UserRole, ROLES } from '@/shared/types';
+import { UserRole, ROLES } from '@/shared/types/core/auth.types';
 
 /**
  * Core RBAC functionality
@@ -75,7 +75,7 @@ export function getHighestRole(userRoles: UserRole[]): UserRole {
   if (hasRole(userRoles, ROLES.moderator)) return ROLES.moderator;
   if (hasRole(userRoles, ROLES.builder)) return ROLES.builder;
   if (hasRole(userRoles, ROLES.user)) return ROLES.user;
-  return ROLES.GUEST;
+  return ROLES.guest;
 }
 
 /**
@@ -118,11 +118,11 @@ export function canAccessAdminSection(userRoles: UserRole[], section: string): b
  */
 export function getRoleLabels(): Record<UserRole, string> {
   return {
-    [ROLES.USER]: 'User',
-    [ROLES.ADMIN]: 'Admin',
-    [ROLES.SUPER_ADMIN]: 'Super Admin',
-    [ROLES.MODERATOR]: 'Moderator',
-    [ROLES.BUILDER]: 'Builder',
-    [ROLES.GUEST]: 'Guest'
+    [ROLES.user]: 'User',
+    [ROLES.admin]: 'Admin',
+    [ROLES.super_admin]: 'Super Admin',
+    [ROLES.moderator]: 'Moderator',
+    [ROLES.builder]: 'Builder',
+    [ROLES.guest]: 'Guest'
   };
 }
