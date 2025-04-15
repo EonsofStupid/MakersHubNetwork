@@ -3,6 +3,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import './styles/cyberpunk.css';
+import './styles/effects/cyber-effects.css';
 import { SystemLogger } from './logging/system-logger';
 
 // Log system startup as early as possible
