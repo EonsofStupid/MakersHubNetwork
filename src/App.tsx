@@ -1,28 +1,24 @@
 
-import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import Routes from './router/Routes';
-import { MainNav } from './app/layout/MainNav';
-import { Footer } from './app/components/Footer';
-import { Toaster } from './shared/ui/toaster';
-import { AppBootstrap } from './app/bootstrap/AppBootstrap';
-import './styles/cyberpunk.css';
-import './index.css';
+import { Toaster } from "@/components/ui/toaster";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
+import { PublicRoutes } from "./routes/PublicRoutes";
+import { AuthProvider } from "@/auth/context/AuthContext";
+import { ThemeProvider } from "@/shared/ui/theme-provider";
 
-function App() {
-  return (
-    <BrowserRouter>
-      <AppBootstrap />
-      <div className="min-h-screen flex flex-col bg-black text-white">
-        <MainNav />
-        <main className="flex-1 mt-16">
-          <Routes />
-        </main>
-        <Footer />
-      </div>
-      <Toaster />
-    </BrowserRouter>
-  );
-}
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider defaultTheme="dark">
+      <AuthProvider>
+        <BrowserRouter>
+          <PublicRoutes />
+          <Toaster />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
+);
 
 export default App;

@@ -1,3 +1,4 @@
+
 import { BaseEntity } from './common.types';
 
 export const AUTH_STATUS = {
@@ -10,6 +11,17 @@ export const AUTH_STATUS = {
 
 export type AuthStatus = keyof typeof AUTH_STATUS;
 export type AuthEventType = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED' | 'USER_UPDATED';
+
+export const ROLES = {
+  super_admin: 'super_admin',
+  admin: 'admin',
+  moderator: 'moderator',
+  builder: 'builder',
+  user: 'user',
+  guest: 'guest'
+} as const;
+
+export type UserRole = typeof ROLES[keyof typeof ROLES];
 
 export interface UserProfile extends BaseEntity {
   id: string;
@@ -35,15 +47,14 @@ export interface UserProfile extends BaseEntity {
   };
 }
 
-// RBAC types
-export const ROLES = {
-  super_admin: 'super_admin',
-  admin: 'admin',
-  moderator: 'moderator',
-  builder: 'builder',
-  user: 'user',
-  guest: 'guest'
-} as const;
+// Separate Permission type to avoid conflicts
+export type UserPermission = string;
 
-export type UserRole = typeof ROLES[keyof typeof ROLES];
-export type Permission = string;
+export interface AuthState {
+  user: UserProfile | null;
+  isAuthenticated: boolean;
+  status: AuthStatus;
+  error: Error | null;
+  roles: UserRole[];
+  initialized: boolean;
+}

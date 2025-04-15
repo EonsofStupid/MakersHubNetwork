@@ -1,8 +1,5 @@
-
 import { create } from 'zustand';
-import { Theme, ThemeState, ThemeStatus, ThemeContext, ThemeEffect, ComponentTokens } from '@/shared/types/theme.types';
-import { LogLevel, LogCategory } from '@/shared/types/core/logging.types';
-import { logger } from '@/logging/logger.service';
+import { ThemeState, Theme, ComponentTokens } from '@/shared/types/theme.types';
 
 const defaultTheme: Theme = {
   id: 'default',
@@ -10,8 +7,8 @@ const defaultTheme: Theme = {
   label: 'Default',
   description: 'Default theme',
   isDark: false,
-  status: ThemeStatus.ACTIVE,
-  context: ThemeContext.SITE,
+  status: 'active',
+  context: 'site',
   variables: {
     background: '#ffffff',
     foreground: '#000000',
@@ -76,8 +73,6 @@ const defaultTheme: Theme = {
   }
 };
 
-const initialThemeEffects: ThemeEffect[] = [];
-
 export const useThemeStore = create<ThemeState>((set) => ({
   themes: [defaultTheme],
   activeThemeId: defaultTheme.id,
@@ -91,95 +86,40 @@ export const useThemeStore = create<ThemeState>((set) => ({
   error: null,
   theme: defaultTheme,
   isLoaded: true,
-  variables: defaultTheme.variables,
+  variables: Object.entries(defaultTheme.variables).reduce((acc, [key, value]) => ({
+    ...acc,
+    [key]: String(value)
+  }), {}),
   componentStyles: {},
   animations: {},
-  effects: initialThemeEffects,
+  effects: [],
   
-  setThemes: (themes) => {
-    set({ themes });
-  },
+  setThemes: (themes) => set({ themes }),
   
-  setActiveTheme: (themeId) => {
-    set(state => {
-      const theme = state.themes?.find(t => t.id === themeId);
-      if (!theme) return state;
+  setActiveTheme: (themeId) => set((state) => {
+    const theme = state.themes?.find(t => t.id === themeId);
+    if (!theme) return state;
 
-      return {
-        activeThemeId: themeId,
-        isDark: theme.isDark || false,
-        theme,
-        designTokens: theme.designTokens || {},
-        componentTokens: theme.componentTokens || {},
-        primaryColor: theme.variables?.primary || '',
-        backgroundColor: theme.variables?.background || '',
-        textColor: theme.variables?.foreground || '',
-        variables: theme.variables || {},
-      };
-    });
-  },
+    const variables = Object.entries(theme.variables).reduce((acc, [key, value]) => ({
+      ...acc,
+      [key]: String(value)
+    }), {});
+
+    return {
+      activeThemeId: themeId,
+      isDark: theme.isDark || false,
+      theme,
+      designTokens: theme.designTokens || {},
+      componentTokens: theme.componentTokens || {},
+      primaryColor: theme.variables?.primary || '',
+      backgroundColor: theme.variables?.background || '',
+      textColor: theme.variables?.foreground || '',
+      variables
+    };
+  }),
   
-  setDesignTokens: (tokens) => {
-    set({ designTokens: tokens });
-  },
-  
-  setComponentTokens: (tokens) => {
-    set({ componentTokens: tokens });
-  },
-  
-  setIsLoading: (isLoading) => {
-    set({ isLoading });
-  },
-  
-  setError: (error) => {
-    set({ error });
-  },
-  
-  setVariables: (vars) => {
-    set({ variables: vars });
-  },
-  
-  setEffects: (effects) => {
-    set({ effects });
-  },
-  
-  loadTheme: async (themeId) => {
-    set({ isLoading: true, error: null });
-    try {
-      // Simulate theme loading with timeout
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const themes = useThemeStore.getState().themes || [];
-      const theme = themes.find(t => t.id === themeId);
-      
-      if (theme) {
-        set({ 
-          activeThemeId: theme.id,
-          isDark: theme.isDark || false,
-          primaryColor: theme.designTokens?.colors?.primary || '#0070f3',
-          backgroundColor: theme.designTokens?.colors?.background || '#ffffff',
-          textColor: theme.designTokens?.colors?.foreground || '#000000',
-          designTokens: theme.designTokens || {},
-          componentTokens: theme.componentTokens || {},
-          theme,
-          variables: theme.variables || {},
-          animations: theme.designTokens?.animations || {},
-          isLoaded: true,
-          isLoading: false
-        });
-      } else {
-        set({ 
-          error: `Theme with ID ${themeId} not found`,
-          isLoading: false
-        });
-      }
-    } catch (error) {
-      set({ 
-        error: `Failed to load theme: ${error instanceof Error ? error.message : String(error)}`,
-        isLoading: false
-      });
-    }
-  }
+  setDesignTokens: (tokens) => set({ designTokens: tokens }),
+  setComponentTokens: (tokens) => set({ componentTokens: tokens }),
+  setEffects: (effects) => set({ effects }),
+  setVariables: (vars) => set({ variables: vars })
 }));
-
-export default useThemeStore;
